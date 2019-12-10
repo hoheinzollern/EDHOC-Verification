@@ -18,14 +18,14 @@ All documentation is present in [doc](doc) and relative models in
 5. session independence (only draft11)
 
 
-The thesis [[1](doc/Petersen, Jørgensen - Formal verification of EDHOC (BSc Thesis).pdf)] present the initial verification of EDHOC,
-which was later refined into [[2](doc/Bruni, Jørgensen, Petersen, Schürmann - Formal Verification of EDHOC (SSR18).pdf)]. Finally, [[3](doc/slides-interim-2019-secdispatch-01-sessa-formal-analysis-of-edhoc-00.pdf)] is the presentation of our verification of draft11, including the session independence properties.
+The thesis [[1](doc/PJ_Formal_Verification_of_EDHOC_SSR18.pdf)] present the initial verification of EDHOC,
+which was later refined into [[2](doc/BJPS_Formal_Verification_of_EDHOC_SSR18.pdf)]. Finally, [[3](doc/slides-interim-2019-secdispatch-01-sessa-formal-analysis-of-edhoc-00.pdf)] is the presentation of our verification of draft11, including the session independence properties.
 
 Remaining to be verified: algorithms for selecting ciphers against downgrade attacks like FREAK and Logjam. Composability with OSCORE and possibly other protocols
 
 ### OSCORE
 
-This verification effort is described in the document [[4](doc/Andersen - Verification of OSCORE (BSc Thesis).pdf)]. Briefly speaking, it models a typical flow of interaction between a client and a server who have already established a security context (i.e. a common *master secret* possibly derived using EDHOC, an *ID context*, sender and recepient *IDs*, *session keys* and *sequence numbers*) where the communication is controlled by a potentially malicious proxy.
+This verification effort is described in the document [[4](doc/Andersen_Verification_of_OSCORE_BSc_Thesis.pdf)]. Briefly speaking, it models a typical flow of interaction between a client and a server who have already established a security context (i.e. a common *master secret* possibly derived using EDHOC, an *ID context*, sender and recepient *IDs*, *session keys* and *sequence numbers*) where the communication is controlled by a potentially malicious proxy.
 
 The verified properties are:
 1. Integrity, Request-response binding & Non-replayability
