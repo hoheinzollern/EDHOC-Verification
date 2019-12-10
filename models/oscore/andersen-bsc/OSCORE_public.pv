@@ -1,0 +1,204 @@
+free c: channel.
+free init_to_resp: channel[private].
+
+type host.
+type id.
+type key.
+type nonce.
+
+const emptyId:id.
+const empty:bitstring.
+
+const label_key: bitstring.
+const label_iv: bitstring.
+
+(*We imagine a server that can do 2 things, check if a lightbulb is on or off - these are to be considered payloads*)
+(*Public*)
+const isLightBulbTurnedOn : bitstring.
+const isLightBulbTurnedOff : bitstring.
+const lightbulbURIPath : bitstring.
+
+const CoAP_GETCode : bitstring.
+const CoAP_POSTCode : bitstring.
+const CoAP_CHANGEDCode : bitstring.
+const CoAP_CONTENTCode : bitstring.
+const CoAP_EMPTYCode : bitstring.
+const CoAP_CONTEXTCode : bitstring.
+
+const OSCORE_option_code : bitstring.
+
+const acknowledgement: bitstring.
+const non_confirmable: bitstring.
+const confirmable: bitstring.
+
+const coap_version_one:bitstring.
+const oscore_version_one:bitstring.
+const encrypt0:bitstring.
+const AES_CCM: bitstring.
+
+(* HKDF *)
+const HKDF_256: bitstring.
+
+fun HKDF(bitstring, bitstring, bitstring): key.
+fun alg_key_length(bitstring, bitstring): bitstring.
+fun bounded_by(bitstring):bitstring.
+fun aeadEncrypt(key, nonce, bitstring, bitstring): bitstring.
+
+fun aeadNonce(id, bitstring, key) : nonce.
+
+(* iDecrypt...
+ iknows(aeadEncrypt(k, n, plaintext, aad)) .
+ iknows(k).
+ iknows(n).
+ iknows(aad) => iknows(plaintext). *)
+reduc forall plaintext: bitstring, n: nonce, k: key, aad: bitstring; aeadDecrypt(aeadEncrypt(k, n, plaintext, aad), k, n, aad) = plaintext.
+reduc forall plaintext: bitstring, n: nonce, k: key, aad: bitstring; decrypt(aeadEncrypt(k, n, plaintext, aad), k, n) = plaintext.
+
+table security_context_lookup(host, host, id, id, bitstring, bitstring, bitstring).
+table token_to_message_lookup(host, bitstring, bitstring).
+table replay_window(host, bitstring).
+table used_tokens(host, bitstring).
+
+fun msg1(host, host): bitstring[private].
+fun msg2(host, host): bitstring[private].
+
+event integrityReq(bitstring, bitstring, bitstring).
+event integrityReqRes(bitstring, bitstring, bitstring).
+event beginInitiator(host, host, bitstring).
+event beginResponder(host, host, bitstring).
+event here.
+event endResponder(host, host, bitstring).
+event endInitiator(host, host, bitstring).
+event partial_iv_not_seen(host, bitstring, bitstring).
+event match(bitstring, bitstring).
+
+event dishonest(host).
+
+(*TEST SUITE: Each query is reachable*)
+(*
+query init:host, res: host; event(here) ==> event (dishonest(init)) || event (dishonest(res)).
+query init:host, res: host, payload: bitstring; event(beginResponder(init,res, bounded_by(payload))) ==>  event (dishonest(init)) || event (dishonest(res)).
+query init:host, res: host, payload: bitstring; event(beginInitiator(init, res, payload)) ==>  event (dishonest(init)) || event (dishonest(res)).
+query init:host, res:host, payload: bitstring; event(endResponder(init, res, payload)) ==>  event (dishonest(init)) || event (dishonest(res)).
+query init:host, res:host, payload: bitstring; event(endInitiator(init, res, payload)) ==>  event (dishonest(init)) || event (dishonest(res)).
+*)
+(*Request response*)
+query init:host, res:host, payload: bitstring; inj-event(endInitiator(init, res, bounded_by(payload))) ==> (inj-event(beginResponder(init, res, bounded_by(payload))) ==> inj-event(beginInitiator(init, res, payload)))  || event (dishonest(init)) || event (dishonest(res)).
+
+(*Injective agreement*)
+query init:host, res:host, payload: bitstring; inj-event(endResponder(init, res, payload)) ==> inj-event(beginInitiator(init, res, payload)) || event (dishonest(init)) || event (dishonest(res)).
+query init:host, res:host, payload: bitstring; inj-event(endInitiator(init, res, payload)) ==> inj-event(beginResponder(init, res, payload)) || event (dishonest(init)) || event (dishonest(res)).
+
+(*Non injective agreement*)
+query init:host, res:host, payload: bitstring; event(endResponder(init, res, payload)) ==> event(beginInitiator(init, res, payload)) || event (dishonest(init)) || event (dishonest(res)).
+query init:host, res:host, payload: bitstring; event(endInitiator(init, res, payload)) ==> event(beginResponder(init, res, payload)) || event (dishonest(init)) || event (dishonest(res)).
+
+(*Forward secrecy*)
+query i:host, r:host; attacker(msg1(i,r)) phase 1 ==> event (dishonest(i)) || event (dishonest(r)).
+query i:host, r:host; attacker(msg2(i,r)) phase 1 ==> event (dishonest(i)) || event (dishonest(r)).
+
+(*Confidentiality *)
+query i:host, r:host; attacker(msg1(i,r)) phase 0 ==> event (dishonest(i)) || event (dishonest(r)).
+query i:host, r:host; attacker(msg2(i,r)) phase 0 ==> event (dishonest(i)) || event (dishonest(r)).
+
+
+let oscore_initiator =
+  in(c, identity:host);
+  new token : bitstring;
+  new messageid : bitstring;
+  new partial_iv: bitstring;
+  in(c, endpoint: host);
+  get security_context_lookup(=identity, =endpoint, senderID:id, recipientID:id, msecret:bitstring, msalt:bitstring, idcontext:bitstring) in
+  let cvInfo = (emptyId, idcontext, AES_CCM, label_iv, alg_key_length(AES_CCM, label_iv)) in let CommonIv = HKDF(msecret, msalt, cvInfo) in
+  let senderInfo = (senderID, idcontext, AES_CCM, label_key,  alg_key_length(AES_CCM, label_key)) in let senderKey = HKDF(msecret, msalt, senderInfo) in
+
+  let aad = (encrypt0, oscore_version_one, AES_CCM, senderID, partial_iv) in
+  let aead_nonce = aeadNonce(senderID, partial_iv, CommonIv) in
+  let plaintext = ((CoAP_GETCode, isLightBulbTurnedOn), msg1(identity, endpoint)) in
+  let ciphertext = aeadEncrypt(senderKey, aead_nonce, ((CoAP_GETCode, isLightBulbTurnedOn), msg1(identity, endpoint)), aad) in
+  let oscore_option = (partial_iv, senderID, idcontext) in
+  let security_context = (endpoint, senderID, recipientID, idcontext, partial_iv, aead_nonce) in
+  insert token_to_message_lookup(identity, token, security_context);
+  event beginInitiator(identity, endpoint, (CoAP_GETCode, isLightBulbTurnedOn));
+  let msg_1 = (non_confirmable, CoAP_POSTCode, messageid, token, oscore_option, ciphertext) in
+  out(c, msg_1).
+
+
+let oscore_initiator_response_receiver =
+
+  in(c, identity:host);
+  in(c, (T:bitstring, dummyCode : bitstring, messageid : bitstring, token: bitstring, OSCORE:bitstring, ciphertext:bitstring)); (*The encrypted payload*)
+  if OSCORE = empty then
+  get token_to_message_lookup(=identity, =T, security_context:bitstring) in
+  let (endpoint:host, senderID:id, recipientID:id, idcontext:bitstring, partial_iv:bitstring, aead_nonce:nonce) = security_context in
+  get security_context_lookup(=identity, =endpoint, =senderID, =recipientID, msecret:bitstring, msalt:bitstring, =idcontext) in (*Find a security context with endpoint*)
+  let aad = (encrypt0, oscore_version_one, AES_CCM, senderID, partial_iv) in
+  let recipientInfo = (recipientID, idcontext, AES_CCM, label_key, alg_key_length(AES_CCM, label_key)) in let recipientKey = HKDF(msecret, msalt, recipientInfo) in
+  let (plaintext:bitstring, identifier:bitstring) = aeadDecrypt(ciphertext, recipientKey, aead_nonce, aad) in
+  let (code: bitstring, payload: bitstring) = plaintext in
+  event integrityReqRes(code, payload, identifier);
+  get used_tokens(=identity, acceptedT : bitstring) suchthat acceptedT = T in 0 else
+  insert used_tokens(identity, T);
+  event match(token, plaintext);
+  event endInitiator(identity, endpoint, payload);
+  event here.
+
+let oscore_responder =
+  in(c, identity:host);
+  in(c, (T:bitstring, dummyCode : bitstring, messageid : bitstring, token: bitstring, OSCORE:bitstring, ciphertext:bitstring));
+  let (partial_iv:bitstring, recipientID:id, idcontext:bitstring) = OSCORE in
+  get security_context_lookup(=identity, endpoint:host, senderID:id, =recipientID, msecret:bitstring, msalt:bitstring, =idcontext) in (*Find a security context with endpoint*)
+  let cvInfo = (emptyId, idcontext, AES_CCM, label_iv, alg_key_length(AES_CCM, label_iv)) in let commonIV = HKDF(msecret, msalt, cvInfo) in
+  let recipientInfo = (recipientID, idcontext, AES_CCM, label_key, alg_key_length(AES_CCM, label_key)) in let recipientKey = HKDF(msecret, msalt, recipientInfo) in
+  let aad = (encrypt0, oscore_version_one, AES_CCM, recipientID, partial_iv) in
+  let aead_nonce = aeadNonce(recipientID, partial_iv, commonIV) in
+
+  get replay_window(=identity, partial : bitstring) suchthat partial = partial_iv in 0 else
+  let (plaintextreceived:bitstring, identifier:bitstring) = aeadDecrypt(ciphertext, recipientKey, aead_nonce, aad) in
+  let (rcode:bitstring, payload: bitstring) = plaintextreceived in
+  insert replay_window(identity, partial_iv);
+  new responseId : bitstring;
+  let responsePayload = bounded_by(plaintextreceived) in (*Response payload is bounded by the plaintext*)
+  let sender_info = (senderID, idcontext, AES_CCM, label_key, alg_key_length(AES_CCM, label_key)) in let senderKey = HKDF(msecret, msalt, sender_info) in
+  let sender_ciphertext = aeadEncrypt(senderKey, aead_nonce, ((CoAP_CONTENTCode, responsePayload), msg2(identity, endpoint)), aad) in
+  let msg_2 = (non_confirmable, CoAP_CHANGEDCode, responseId, token, empty, sender_ciphertext) in
+  event endResponder(endpoint, identity, plaintextreceived);
+  event beginResponder(endpoint, identity, responsePayload);
+  event integrityReq(CoAP_CONTENTCode, responsePayload, msg2(identity, endpoint));
+  out(c, msg_2).
+
+let init_keys =
+    in(c, initiator: host);
+    in(c, responder: host);
+    if initiator <> responder then
+    new IDir:id; new IDri:id;
+    new msecret: bitstring; new msalt: bitstring; new idcontext: bitstring;
+    out(c, (IDir, IDri, idcontext));
+    insert security_context_lookup(initiator, responder, IDir, IDri, msecret, msalt, idcontext);
+    insert security_context_lookup(responder, initiator, IDri, IDir, msecret, msalt, idcontext);
+    (event dishonest(initiator);
+      out(c, (msecret, msalt))) |
+    (event dishonest(responder);
+      out(c, (msecret, msalt))) |
+    (phase 1; out(c, (msecret, msalt))).
+
+process
+    in(c, initiator: host);
+    in(c, responder: host);
+    new IDir:id; new IDri:id;
+    new msecret: bitstring; new msalt: bitstring; new idcontext: bitstring;
+    out(c, (IDir, IDri, idcontext));
+    insert security_context_lookup(initiator, responder, IDir, IDri, msecret, msalt, idcontext);
+    insert security_context_lookup(responder, initiator, IDri, IDir, msecret, msalt, idcontext);
+    (event dishonest(initiator);
+      out(c, (msecret, msalt))) |
+    (event dishonest(responder);
+      out(c, (msecret, msalt))) |
+    (phase 1; out(c, (msecret, msalt)))
+    |
+	(*(!init_keys) | *)
+    (!oscore_initiator) |
+    (!oscore_responder) |
+    (!oscore_initiator_response_receiver)
+    (* (!oscore_derive_new_security_protocol_init(initiator, responder)) |
+    (!ocsore_derive_new_security_context_receiver(responder)) *)
