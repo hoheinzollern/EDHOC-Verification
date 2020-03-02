@@ -1,0 +1,5320 @@
+
+
+
+
+Network Working Group                                        G. Selander
+Internet-Draft                                               J. Mattsson
+Intended status: Standards Track                            F. Palombini
+Expires: 2 September 2020                                    Ericsson AB
+                                                            1 March 2020
+
+
+               Ephemeral Diffie-Hellman Over COSE (EDHOC)
+                    draft-selander-lake-edhoc-latest
+
+Abstract
+
+   This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a
+   very compact, and lightweight authenticated Diffie-Hellman key
+   exchange with ephemeral keys.  EDHOC provides mutual authentication,
+   perfect forward secrecy, and identity protection.  EDHOC is intended
+   for usage in constrained scenarios and a main use case is to
+   establish an OSCORE security context.  By reusing COSE for
+   cryptography, CBOR for encoding, and CoAP for transport, the
+   additional code footprint can be kept very low.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 2 September 2020.
+
+Copyright Notice
+
+   Copyright (c) 2020 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 1]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   extracted from this document must include Simplified BSD License text
+   as described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Simplified BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.1.  Rationale for EDHOC . . . . . . . . . . . . . . . . . . .   5
+     1.2.  Terminology and Requirements Language . . . . . . . . . .   6
+   2.  Background  . . . . . . . . . . . . . . . . . . . . . . . . .   6
+   3.  EDHOC Overview  . . . . . . . . . . . . . . . . . . . . . . .   8
+     3.1.  Transport and Message Correlation . . . . . . . . . . . .   9
+     3.2.  Authentication Keys and Identities  . . . . . . . . . . .   9
+     3.3.  Identifiers . . . . . . . . . . . . . . . . . . . . . . .  10
+     3.4.  Cipher Suites . . . . . . . . . . . . . . . . . . . . . .  11
+     3.5.  Communication/Negotiation of Protocol Features  . . . . .  11
+     3.6.  Auxiliary Data  . . . . . . . . . . . . . . . . . . . . .  12
+     3.7.  Ephemeral Public Keys . . . . . . . . . . . . . . . . . .  12
+     3.8.  Key Derivation  . . . . . . . . . . . . . . . . . . . . .  13
+   4.  EDHOC Authenticated with Asymmetric Keys  . . . . . . . . . .  15
+     4.1.  Overview  . . . . . . . . . . . . . . . . . . . . . . . .  16
+     4.2.  EDHOC Message 1 . . . . . . . . . . . . . . . . . . . . .  18
+     4.3.  EDHOC Message 2 . . . . . . . . . . . . . . . . . . . . .  20
+     4.4.  EDHOC Message 3 . . . . . . . . . . . . . . . . . . . . .  23
+   5.  EDHOC Authenticated with Symmetric Keys . . . . . . . . . . .  26
+     5.1.  Overview  . . . . . . . . . . . . . . . . . . . . . . . .  26
+     5.2.  EDHOC Message 1 . . . . . . . . . . . . . . . . . . . . .  27
+     5.3.  EDHOC Message 2 . . . . . . . . . . . . . . . . . . . . .  28
+     5.4.  EDHOC Message 3 . . . . . . . . . . . . . . . . . . . . .  28
+   6.  Error Handling  . . . . . . . . . . . . . . . . . . . . . . .  29
+     6.1.  EDHOC Error Message . . . . . . . . . . . . . . . . . . .  29
+   7.  Transferring EDHOC and Deriving an OSCORE Context . . . . . .  31
+     7.1.  Transferring EDHOC in CoAP  . . . . . . . . . . . . . . .  31
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  33
+     8.1.  Security Properties . . . . . . . . . . . . . . . . . . .  33
+     8.2.  Cryptographic Considerations  . . . . . . . . . . . . . .  35
+     8.3.  Cipher Suites . . . . . . . . . . . . . . . . . . . . . .  36
+     8.4.  Unprotected Data  . . . . . . . . . . . . . . . . . . . .  36
+     8.5.  Denial-of-Service . . . . . . . . . . . . . . . . . . . .  36
+     8.6.  Implementation Considerations . . . . . . . . . . . . . .  37
+     8.7.  Other Documents Referencing EDHOC . . . . . . . . . . . .  38
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  38
+     9.1.  EDHOC Cipher Suites Registry  . . . . . . . . . . . . . .  38
+     9.2.  EDHOC Method Type Registry  . . . . . . . . . . . . . . .  39
+     9.3.  The Well-Known URI Registry . . . . . . . . . . . . . . .  39
+     9.4.  Media Types Registry  . . . . . . . . . . . . . . . . . .  40
+     9.5.  CoAP Content-Formats Registry . . . . . . . . . . . . . .  40
+     9.6.  Expert Review Instructions  . . . . . . . . . . . . . . .  41
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 2]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  41
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  41
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  43
+   Appendix A.  Use of CBOR, CDDL and COSE in EDHOC  . . . . . . . .  46
+     A.1.  CBOR and CDDL . . . . . . . . . . . . . . . . . . . . . .  46
+     A.2.  COSE  . . . . . . . . . . . . . . . . . . . . . . . . . .  47
+   Appendix B.  Test Vectors . . . . . . . . . . . . . . . . . . . .  47
+     B.1.  Test Vectors for EDHOC Authenticated with Signature Keys
+           (RPK) . . . . . . . . . . . . . . . . . . . . . . . . . .  47
+     B.2.  Test Vectors for EDHOC Authenticated with Symmetric Keys
+           (PSK) . . . . . . . . . . . . . . . . . . . . . . . . . .  63
+     B.3.  Test Vectors for EDHOC Authenticated with Static
+           Diffie-Hellman Keys . . . . . . . . . . . . . . . . . . .  76
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  94
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  95
+
+1.  Introduction
+
+   Security at the application layer provides an attractive option for
+   protecting Internet of Things (IoT) deployments, for example where
+   transport layer security is not sufficient
+   [I-D.hartke-core-e2e-security-reqs] or where the protection needs to
+   work over a variety of underlying protocols.  IoT devices may be
+   constrained in various ways, including memory, storage, processing
+   capacity, and energy [RFC7228].  A method for protecting individual
+   messages at the application layer suitable for constrained devices,
+   is provided by CBOR Object Signing and Encryption (COSE) [RFC8152]),
+   which builds on the Concise Binary Object Representation (CBOR)
+   [RFC7049].  Object Security for Constrained RESTful Environments
+   (OSCORE) [RFC8613] is a method for application-layer protection of
+   the Constrained Application Protocol (CoAP), using COSE.
+
+   In order for a communication session to provide forward secrecy, the
+   communicating parties can run an Elliptic Curve Diffie-Hellman (ECDH)
+   key exchange protocol with ephemeral keys, from which shared key
+   material can be derived.  This document specifies Ephemeral Diffie-
+   Hellman Over COSE (EDHOC), a lightweight key exchange protocol
+   providing perfect forward secrecy and identity protection.
+   Authentication is based on credentials established out of band, e.g.
+   from a trusted third party, such as an Authorization Server as
+   specified by [I-D.ietf-ace-oauth-authz].  EDHOC supports
+   authentication using pre-shared keys (PSK), raw public keys (RPK),
+   and public key certificates.  After successful completion of the
+   EDHOC protocol, application keys and other application specific data
+   can be derived using the EDHOC-Exporter interface.  A main use case
+   for EDHOC is to establish an OSCORE security context.  EDHOC uses
+   COSE for cryptography, CBOR for encoding, and CoAP for transport.  By
+   reusing existing libraries, the additional code footprint can be kept
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 3]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   very low.  Note that this document focuses on authentication and key
+   establishment: for integration with authorization of resource access,
+   refer to [I-D.ietf-ace-oscore-profile].
+
+   EDHOC is designed to work in highly constrained scenarios making it
+   especially suitable for network technologies such as Cellular IoT,
+   6TiSCH [I-D.ietf-6tisch-dtsecurity-zerotouch-join], and LoRaWAN
+   [LoRa1][LoRa2].  These network technologies are characterized by
+   their low throughput, low power consumption, and small frame sizes.
+   Compared to the DTLS 1.3 handshake [I-D.ietf-tls-dtls13] with ECDH
+   and connection ID, the number of bytes in EDHOC + CoAP is less than
+   1/4 when PSK authentication is used and less than 1/6 when RPK
+   authentication is used, see
+   [I-D.ietf-lwig-security-protocol-comparison].  Typical message sizes
+   for EDHOC with pre-shared keys, raw public keys with static Diffie-
+   Hellman keyss, and two different way to identify X.509 certificates
+   with signature keys are shown in Figure 1.
+
+   =====================================================================
+                  PSK       RPK       x5t     x5chain
+   ---------------------------------------------------------------------
+   message_1       38        37        37        37
+   message_2       44        46       117       110 + Certificate
+   message_3       10        20        91        84 + Certificate
+   ---------------------------------------------------------------------
+   Total           92       103       245       231 + Certificates
+   =====================================================================
+
+                  Figure 1: Typical message sizes in bytes
+
+   The ECDH exchange and the key derivation follow [SIGMA], NIST SP-
+   800-56A [SP-800-56A], and HKDF [RFC5869].  CBOR [RFC7049] and COSE
+   [RFC8152] are used to implement these standards.  The use of COSE
+   provides crypto agility and enables use of future algorithms and
+   headers designed for constrained IoT.
+
+   This document is organized as follows: Section 2 describes how EDHOC
+   builds on SIGMA-I, Section 3 specifies general properties of EDHOC,
+   including message flow, formatting of the ephemeral public keys, and
+   key derivation, Section 4 specifies EDHOC with signature key and
+   static Diffie-Hellman key authentication, Section 5 specifies EDHOC
+   with symmetric key authentication, Section 6 specifies the EDHOC
+   error message, and Section 7 describes how EDHOC can be transferred
+   in CoAP and used to establish an OSCORE security context.
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 4]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+1.1.  Rationale for EDHOC
+
+   Many constrained IoT systems today do not use any security at all,
+   and when they do, they often do not follow best practices.  One
+   reason is that many current security protocols are not designed with
+   constrained IoT in mind.  Constrained IoT systems often deal with
+   personal information, valuable business data, and actuators
+   interacting with the physical world.  Not only do such systems need
+   security and privacy, they often need end-to-end protection with
+   source authentication and perfect forward secrecy.  EDHOC and OSCORE
+   [RFC8613] enables security following current best practices to
+   devices and systems where current security protocols are impractical.
+
+   EDHOC is optimized for small message sizes and can therefore be sent
+   over a small number of radio frames.  The message size of a key
+   exchange protocol may have a large impact on the performance of an
+   IoT deployment, especially in constrained environments.  For example,
+   in a network bootstrapping setting a large number of devices turned
+   on in a short period of time may result in large latencies caused by
+   parallel key exchanges.  Requirements on network formation time in
+   constrained environments can be translated into key exchange
+   overhead.  In network technologies with duty cycle, each additional
+   frame significantly increases the latency even if no other devices
+   are transmitting.
+
+   Power consumption for wireless devices is highly dependent on message
+   transmission, listening, and reception.  For devices that only send a
+   few bytes occasionally, the battery lifetime may be impacted by a
+   heavy key exchange protocol.  A key exchange may need to be executed
+   more than once, e.g. due to a device rebooting or for security
+   reasons such as perfect forward secrecy.
+
+   EDHOC is adapted to primitives and protocols designed for the
+   Internet of Things: EDHOC is built on CBOR and COSE which enables
+   small message overhead and efficient parsing in constrained devices.
+   EDHOC is not bound to a particular transport layer, but it is
+   recommended to transport the EDHOC message in CoAP payloads.  EDHOC
+   is not bound to a particular communication security protocol but
+   works off-the-shelf with OSCORE [RFC8613] providing the necessary
+   input parameters with required properties.  Maximum code complexity
+   (ROM/Flash) is often a constraint in many devices and by reusing
+   already existing libraries, the additional code footprint for EDHOC +
+   OSCORE can be kept very low.
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 5]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+1.2.  Terminology and Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+   Readers are expected to be familiar with the terms and concepts
+   described in CBOR [RFC7049] [I-D.ietf-cbor-sequence], COSE [RFC8152],
+   and CDDL [RFC8610].  The Concise Data Definition Language (CDDL) is
+   used to express CBOR data structures [RFC7049].  Examples of CBOR and
+   CDDL are provided in Appendix A.1.
+
+2.  Background
+
+   SIGMA (SIGn-and-MAc) is a family of theoretical protocols with a
+   large number of variants [SIGMA].  Like IKEv2 [RFC7296] and (D)TLS
+   1.3 [RFC8446], EDHOC is built on a variant of the SIGMA protocol
+   which provide identity protection of the initiator (SIGMA-I), and
+   like IKEv2 [RFC7296], EDHOC implements the SIGMA-I variant as Mac-
+   then-Sign.  The SIGMA-I protocol using an authenticated encryption
+   algorithm is shown in Figure 2.
+
+     Initiator                                               Responder
+        |                          G_X                            |
+        +-------------------------------------------------------->|
+        |                                                         |
+        |  G_Y, AEAD( K_2; ID_CRED_R, Sig(R; CRED_R, G_X, G_Y) )  |
+        |<--------------------------------------------------------+
+        |                                                         |
+        |     AEAD( K_3; ID_CRED_I, Sig(I; CRED_I, G_Y, G_X) )    |
+        +-------------------------------------------------------->|
+        |                                                         |
+
+    Figure 2: Authenticated encryption variant of the SIGMA-I protocol.
+
+   The parties exchanging messages are called Initiator (I) and
+   Responder (R).  They exchange ephemeral public keys, compute the
+   shared secret, and derive symmetric application keys.
+
+   *  G_X and G_Y are the ECDH ephemeral public keys of I and R,
+      respectively.
+
+   *  CRED_I and CRED_R are the credentials containing the public
+      authentication keys of I and R, respectively.
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 6]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  ID_CRED_I and ID_CRED_R are data enabling the recipient party to
+      retrieve the credential of I and R, respectively.
+
+   *  Sig(I; . ) and S(R; . ) denote signatures made with the private
+      authentication key of I and R, respectively.
+
+   *  AEAD(K; . ) denotes authenticated encryption with additional data
+      using a key K derived from the shared secret.
+
+   In order to create a "full-fledged" protocol some additional protocol
+   elements are needed.  EDHOC adds:
+
+   *  Explicit connection identifiers C_I, C_R chosen by I and R,
+      respectively, enabling the recipient to find the protocol state.
+
+   *  Transcript hashes (hashes of message data) TH_2, TH_3, TH_4 used
+      for key derivation and as additional authenticated data.
+
+   *  Computationally independent keys derived from the ECDH shared
+      secret and used for authenticated encryption of different
+      messages.
+
+   *  Verification of a common preferred cipher suite:
+
+      -  The Initiator lists supported cipher suites in order of
+         preference
+
+      -  The Responder verifies that the selected cipher suite is the
+         first supported cipher suite
+
+   *  Method types and error handling.
+
+   *  Transport of opaque auxiliary data.
+
+   EDHOC is designed to encrypt and integrity protect as much
+   information as possible, and all symmetric keys are derived using as
+   much previous information as possible.  EDHOC is furthermore designed
+   to be as compact and lightweight as possible, in terms of message
+   sizes, processing, and the ability to reuse already existing CBOR,
+   COSE, and CoAP libraries.
+
+   To simplify for implementors, the use of CBOR in EDHOC is summarized
+   in Appendix A and test vectors including CBOR diagnostic notation are
+   given in Appendix B.
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 7]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+3.  EDHOC Overview
+
+   EDHOC consists of three messages (message_1, message_2, message_3)
+   that maps directly to the three messages in SIGMA-I, plus an EDHOC
+   error message.  EDHOC messages are CBOR Sequences
+   [I-D.ietf-cbor-sequence], where the first data item (METHOD_CORR) of
+   message_1 is an int specifying the method and the correlation
+   properties of the transport used, see Section 3.1.  The method
+   specifies the authentication methods used (signature, static DH,
+   symmetric), see Section 9.2.  An implementation may support only
+   Initiator or Responder.  An implementation may support only a single
+   method.  The Initiator and the Responder need to have agreed on a
+   single method to be used for EDHOC.
+
+   While EDHOC uses the COSE_Key, COSE_Sign1, and COSE_Encrypt0
+   structures, only a subset of the parameters is included in the EDHOC
+   messages.  The unprotected COSE header in COSE_Sign1, and
+   COSE_Encrypt0 (not included in the EDHOC message) MAY contain
+   parameters (e.g. 'alg').  After creating EDHOC message_3, the
+   Initiator can derive symmetric application keys, and application
+   protected data can therefore be sent in parallel with EDHOC
+   message_3.  The application may protect data using the algorithms
+   (AEAD, hash, etc.) in the selected cipher suite and the connection
+   identifiers (C_I, C_R).  EDHOC may be used with the media type
+   application/edhoc defined in Section 9.
+
+      Initiator                                             Responder
+         |                                                       |
+         | ------------------ EDHOC message_1 -----------------> |
+         |                                                       |
+         | <----------------- EDHOC message_2 ------------------ |
+         |                                                       |
+         | ------------------ EDHOC message_3 -----------------> |
+         |                                                       |
+         | <----------- Application Protected Data ------------> |
+         |                                                       |
+
+                        Figure 3: EDHOC message flow
+
+
+
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 8]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+3.1.  Transport and Message Correlation
+
+   Cryptographically, EDHOC does not put requirements on the lower
+   layers.  EDHOC is not bound to a particular transport layer, and can
+   be used in environments without IP.  The transport is responsible to
+   handle message loss, reordering, message duplication, fragmentation,
+   and denial of service protection, where necessary.  The Initiator and
+   the Responder need to have agreed on a transport to be used for
+   EDHOC.  It is recommended to transport EDHOC in CoAP payloads, see
+   Section 7.
+
+   EDHOC includes connection identifiers (C_I, C_R) to correlate
+   messages.  The connection identifiers C_I and C_R do not have any
+   cryptographic purpose in EDHOC.  They contain information
+   facilitating retrieval of the protocol state and may therefore be
+   very short.  The connection identifier MAY be used with an
+   application protocol (e.g.  OSCORE) for which EDHOC establishes keys,
+   in which case the connection identifiers SHALL adhere to the
+   requirements for that protocol.  Each party choses a connection
+   identifier it desires the other party to use in outgoing messages.
+
+   If the transport provides a mechanism for correlating messages, some
+   of the connection identifiers may be omitted.  There are four cases:
+
+   *  corr = 0, the transport does not provide a correlation mechanism.
+
+   *  corr = 1, the transport provides a correlation mechanism that
+      enables the Responder to correlate message_2 and message_1.
+
+   *  corr = 2, the transport provides a correlation mechanism that
+      enables the Initiator to correlate message_3 and message_2.
+
+   *  corr = 3, the transport provides a correlation mechanism that
+      enables both parties to correlate all three messages.
+
+   For example, if the key exchange is transported over CoAP, the CoAP
+   Token can be used to correlate messages, see Section 7.1.
+
+3.2.  Authentication Keys and Identities
+
+   The EDHOC message exchange may be authenticated using pre-shared keys
+   (PSK), raw public keys (RPK), or public key certificates.  The
+   certificates and RPKs can contain signature keys or static Diffie-
+   Hellman keys.  In X.509 certificates, signature keys typically have
+   key usage "digitalSignature" and Diffie-Hellman keys typically have
+   key usage "keyAgreement".  EDHOC assumes the existence of mechanisms
+   (certification authority, trusted third party, manual distribution,
+   etc.) for distributing authentication keys (public or pre-shared) and
+
+
+
+Selander, et al.        Expires 2 September 2020                [Page 9]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   identities.  Policies are set based on the identity of the other
+   party, and parties typically only allow connections from a small
+   restricted set of identities.
+
+   *  When a Public Key Infrastructure (PKI) is used, the trust anchor
+      is a Certification Authority (CA) certificate, and the identity is
+      the subject whose unique name (e.g. a domain name, NAI, or EUI) is
+      included in the other party's certificate.  Before running EDHOC
+      each party needs at least one CA public key certificate, or just
+      the public key, and a set of identities it is allowed to
+      communicate with.  Any validated public-key certificate with an
+      allowed subject name is accepted.  EDHOC provides proof that the
+      other party possesses the private authentication key corresponding
+      to the public authentication key in its certificate.  The
+      certification path provides proof that the subject of the
+      certificate owns the public key in the certificate.
+
+   *  When public keys are used but not with a PKI (RPK, self-signed
+      certificate), the trust anchor is the public authentication key of
+      the other party.  In this case, the identity is typically directly
+      associated to the public authentication key of the other party.
+      For example, the name of the subject may be a canonical
+      representation of the public key.  Alternatively, if identities
+      can be expressed in the form of unique subject names assigned to
+      public keys, then a binding to identity can be achieved by
+      including both public key and associated subject name in the
+      protocol message computation: CRED_I or CRED_R may be a self-
+      signed certificate or COSE_Key containing the public
+      authentication key and the subject name, see Figure 2.  Before
+      running EDHOC, each party need a set of public authentication
+      keys/unique associated subject names it is allowed to communicate
+      with.  EDHOC provides proof that the other party possesses the
+      private authentication key corresponding to the public
+      authentication key.
+
+   *  TODO: PSK
+
+3.3.  Identifiers
+
+   One byte connection and credential identifiers are realistic in many
+   scenarios as most constrained devices only have a few keys and
+   connections.  In cases where a node only has one connection or key,
+   the identifiers may even be the empty byte string.
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 10]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+3.4.  Cipher Suites
+
+   EDHOC cipher suites consist of an ordered set of COSE algorithms: an
+   EDHOC AEAD algorithm, an EDHOC hash algorithm, an EDHOC ECDH curve,
+   an EDHOC signature algorithm, an EDHOC signature algorithm curve, an
+   application AEAD algorithm, and an application hash algorithm from
+   the COSE Algorithms and Elliptic Curves registries.  Each cipher
+   suite is identified with a pre-defined int label.  This document
+   specifies four pre-defined cipher suites.
+
+      0. ( 10, -16, 4, -8, 6, 10, -16 )
+         (AES-CCM-16-64-128, SHA-256, X25519, EdDSA, Ed25519,
+          AES-CCM-16-64-128, SHA-256)
+
+      1. ( 30, -16, 4, -8, 6, 10, -16 )
+         (AES-CCM-16-128-128, SHA-256, X25519, EdDSA, Ed25519,
+          AES-CCM-16-64-128, SHA-256)
+
+      2. ( 10, -16, 1, -7, 1, 10, -16 )
+         (AES-CCM-16-64-128, SHA-256, P-256, ES256, P-256,
+          AES-CCM-16-64-128, SHA-256)
+
+      3. ( 30, -16, 1, -7, 1, 10, -16 )
+         (AES-CCM-16-128-128, SHA-256, P-256, ES256, P-256,
+          AES-CCM-16-64-128, SHA-256)
+
+   The different methods use the same cipher suites, but some algorithms
+   are not used in some methods.  The EDHOC signature algorithm and the
+   EDHOC signature algorithm curve are not used is methods without
+   signature authentication.
+
+   The Initiator need to have a list of cipher suites it supports in
+   order of decreasing preference.  The Responder need to have a list of
+   cipher suites it supports.
+
+3.5.  Communication/Negotiation of Protocol Features
+
+   EDHOC allows the communication or negotiation of various protocol
+   features during the execution of the protocol.
+
+   *  The Initiator proposes a cipher suite (see Section 3.4), and the
+      Responder either accepts or rejects, and may make a counter
+      proposal.
+
+   *  The Initiator decides on the correlation parameter corr (see
+      Section 3.1).  This is typically given by the transport which the
+      Initiator and the Responder have agreed on beforehand.  The
+      Responder either accepts or rejects.
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 11]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  The Initiator decides on the method parameter, see Section 9.2.
+      The Responder either accepts or rejects.
+
+   TODO: Do we want to enable parties negotiating public key method?
+
+   *  The Initiator and the Responder decide on the representation of
+      the identifier of their respective credentials, ID_CRED_I and
+      ID_CRED_R.  The decision is reflected by the label used in the
+      CBOR map, see for example Section 4.1.
+
+   TODO: Do we want to enable parties to communicate that they already
+   have or have not access to key or certificate of the other?
+
+3.6.  Auxiliary Data
+
+   In order to reduce round trips and number of messages, and in some
+   cases also streamline processing, certain security applications may
+   be integrated into EDHOC by transporting auxiliary data together with
+   the messages.  One example is the transport of third-party
+   authorization information protected outside of EDHOC
+   [I-D.selander-ace-ake-authz].  Another example is the embedding of a
+   certificate enrolment request or a newly issued certificate.
+
+   EDHOC allows opaque auxiliary data (AD) to be sent in the EDHOC
+   messages.  Unprotected Auxiliary Data (AD_1, AD_2) may be sent in
+   message_1 and message_2, respectively.  Protected Auxiliary Data
+   (AD_3) may be sent in message_3.
+
+   Since data carried in AD1 and AD2 may not be protected, and the
+   content of AD3 is available to both the Initiator and the Responder,
+   special considerations need to be made such that the availability of
+   the data a) does not violate security and privacy requirements of the
+   service which uses this data, and b) does not violate the security
+   properties of EDHOC.
+
+3.7.  Ephemeral Public Keys
+
+   The ECDH ephemeral public keys are formatted as a COSE_Key of type
+   EC2 or OKP according to Sections 13.1 and 13.2 of [RFC8152], but only
+   the 'x' parameter is included in the EDHOC messages.  For Elliptic
+   Curve Keys of type EC2, compact representation as per [RFC6090] MAY
+   be used also in the COSE_Key.  If the COSE implementation requires an
+   'y' parameter, any of the possible values of the y-coordinate can be
+   used, see Appendix C of [RFC6090].  COSE [RFC8152] always use compact
+   output for Elliptic Curve Keys of type EC2.
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 12]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+3.8.  Key Derivation
+
+   Keys and IVs in EDHOC is derived with HKDF [RFC5869] using a
+   pseudorandom key (PRK) and the EDHOC hash algorithm in the selected
+   cipher suite.  The PRKs are derived using HKDF-Extract [RFC5869].
+
+      PRK = HKDF-Extract( salt, IKM )
+
+   PRK_2e is used to derive key and IV to encrypt message_2.  PRK_3e2m
+   is used to derive keys and IVs produce a MAC in message_2 and to
+   encrypt message_3.  PRK_4x3m is used to derive keys and IVs produce a
+   MAC in message_3 and to derive application specific data.
+
+   PRK_2e is derived with the following input:
+
+   *  The salt SHALL be the PSK when EDHOC is authenticated with
+      symmetric keys, and the empty byte string when EDHOC is
+      authenticated with asymmetric keys (signature or static DH).  The
+      PSK is used as 'salt' to simplify implementation.  Note that
+      [RFC5869] specifies that if the salt is not provided, it is set to
+      a string of zeros (see Section 2.2 of [RFC5869]).  For
+      implementation purposes, not providing the salt is the same as
+      setting the salt to the empty byte string.
+
+   *  The input keying material (IKM) SHALL be the ECDH shared secret
+      G_XY (calculated from G_X and Y or G_Y and X) as defined in
+      Section 12.4.1 of [RFC8152].
+
+   Example: Assuming the use of SHA-256 the extract phase of HKDF
+   produces PRK_2e as follows:
+
+      PRK_2e = HMAC-SHA-256( salt, G_XY )
+
+   where salt = 0x (the empty byte string) in the asymmetric case and
+   salt = PSK in the symmetric case.
+
+   The pseudorandom keys PRK_3e2m and PRK_4x3m are defined as follow:
+
+   *  If the Reponder authenticates with a static Diffie-Hellman key,
+      then PRK_3e2m = HKDF-Extract( PRK_2e, G_RX ), where G_RX is the
+      ECDH shared secret calculated from G_R and X, or G_X and R, else
+      PRK_3e2m = PRK_2e.
+
+   *  If the Initiator authenticates with a static Diffie-Hellman key,
+      then PRK_4x3m = HKDF-Extract( PRK_3e2m, G_IY ), where G_IY is the
+      ECDH shared secret calculated from G_I and Y, or G_Y and I, else
+      PRK_4x3m = PRK_3e2m.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 13]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Example: Assuming the use of curve25519, the ECDH shared secrets
+   G_XY, G_RX, and G_IY are the outputs of the X25519 function
+   [RFC7748]:
+
+      G_XY = X25519( Y, G_X ) = X25519( X, G_Y )
+
+   The keys and IVs used in EDHOC are derived from PRK using HKDF-Expand
+   [RFC5869]
+
+      OKM = KDF( PRK, transcript_hash, label, length )
+          = HKDF-Expand( PRK, info, length )
+
+   where info is the CBOR encoding of
+
+   info = [
+      edhoc_aead_id : int / tstr,
+      transcript_hash : bstr,
+      label : tstr,
+      length : uint
+   ]
+
+   where
+
+   *  edhoc_aead_id is an int or tstr containing the algorithm
+      identifier of the EDHOC AEAD algorithm in the selected cipher
+      suite encoded as defined in [RFC8152].
+
+   *  transcript_hash is a bstr set to one of the transcript hashes
+      TH_2, TH_3, or TH_4 as defined in Sections 4.3.1, 4.4.1, and
+      3.8.1.
+
+   *  label is a tstr set to the name of the derived key or IV, i.e.
+      "K_2m", "IV_2m", "K_2e", "K_2ae", "IV_2ae", "K_3m", "IV_3m",
+      "K_3ae", or "IV_2ae".
+
+   *  length is the length of output keying material (OKM) in bytes
+
+   K_2ae and IV_2ae are derived using the transcript hash TH_2 and the
+   pseudorandom key PRK_2e.  K_2m and IV_2m are derived using the
+   transcript hash TH_2 and the pseudorandom key PRK_3e2m.  K_3ae and
+   IV_3ae are derived using the transcript hash TH_3 and the
+   pseudorandom key PRK_3e2m.  K_3m and IV_3m are derived using the
+   transcript hash TH_3 and the pseudorandom key PRK_4x3m.  IVs are only
+   used if the EDHOC AEAD algorithm uses IVs.
+
+   Assuming that length is smaller than the hash function output size,
+   the expand phase of HKDF consists of a single HMAC invocation
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 14]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+      OKM = first "length" bytes of HMAC( PRK, info || 0x01 )
+
+   where || means byte string concatenation.
+
+   Example: Assume the use of the algorithm AES-CCM-16-64-128 and SHA-
+   256, K_j and IV_j are therefore the first 16 and 13 bytes,
+   respectively, of
+
+      HMAC-SHA-256( PRK_j, info || 0x01 )
+
+   \calculated with (edhoc_aead_id, length) = (10, 16) and
+   (edhoc_aead_id, length) = (10, 13), respectively.
+
+3.8.1.  EDHOC-Exporter Interface
+
+   Application keys and other application specific data can be derived
+   using the EDHOC-Exporter interface defined as:
+
+      EDHOC-Exporter(label, length) = KDF(PRK_4x3m, TH_4, label, length)
+
+   where label is a tstr defined by the application and length is an
+   uint defined by the application.  The label SHALL be different for
+   each different exporter value.  The transcript hash TH_4 is a CBOR
+   encoded bstr and the input to the hash function is a CBOR Sequence.
+
+      TH_4 = H( TH_3, CIPHERTEXT_3 )
+
+   where H() is the hash function in the selected cipher suite.  Example
+   use of the EDHOC-Exporter is given in Sections 3.8.2 and 7.1.1.
+
+3.8.2.  EDHOC PSK Chaining
+
+   An application using EDHOC may want to derive new PSKs to use for
+   authentication in future EDHOC exchanges.  In this case, the new PSK
+   and the ID_PSK 'kid_value' parameter SHOULD be derived as follows
+   where length is the key length (in bytes) of the EDHOC AEAD
+   Algorithm.
+
+      PSK     = EDHOC-Exporter( "EDHOC Chaining PSK", length )
+      kid_psk = EDHOC-Exporter( "EDHOC Chaining kid_psk", 4 )
+
+4.  EDHOC Authenticated with Asymmetric Keys
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 15]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+4.1.  Overview
+
+   This section specifies authentication method = 0, 1, 2, and 3, see
+   Section 9.2.  EDHOC supports authentication with signature or static
+   Diffie-Hellman keys in the form of raw public keys (RPK) and public
+   key certificates with the requirements that:
+
+   *  Only the Responder SHALL have access to the Responder's private
+      authentication key,
+
+   *  Only the Initiator SHALL have access to the Initiator's private
+      authentication key,
+
+   *  The Initiator is able to retrieve the Responder's public
+      authentication key using ID_CRED_R,
+
+   *  The Responder is able to retrieve the Initiator's public
+      authentication key using ID_CRED_I,
+
+   where the identifiers ID_CRED_I and ID_CRED_R are COSE header_maps,
+   i.e. CBOR maps containing COSE Common Header Parameters, see
+   Section 3.1 of [RFC8152]).  ID_CRED_I and ID_CRED_R need to contain
+   parameters that can identify a public authentication key.  In the
+   following paragraph we give some examples of possible COSE header
+   parameters used.
+
+   Raw public keys are most optimally stored as COSE_Key objects and
+   identified with a 'kid' parameter:
+
+   *  ID_CRED_x = { 4 : kid_x }, where kid_x : bstr, for x = I or R.
+
+   Public key certificates can be identified in different ways.  Several
+   header parameters for identifying X.509 certificates are defined in
+   [I-D.ietf-cose-x509]:
+
+   *  by a bag of certificates with the 'x5bag' parameter; or
+
+      -  ID_CRED_x = { 32 : COSE_X509 }, for x = I or R,
+
+   *  by a certificate chain with the 'x5chain' parameter;
+
+      -  ID_CRED_x = { 33 : COSE_X509 }, for x = I or R,
+
+   *  by a hash value with the 'x5t' parameter;
+
+      -  ID_CRED_x = { 34 : COSE_CertHash }, for x = I or R,
+
+   *  by a URL with the 'x5u' parameter;
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 16]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+      -  ID_CRED_x = { 35 : uri }, for x = I or R,
+
+   In the first two examples, ID_CRED_I and ID_CRED_R contain the actual
+   credential used for authentication.  The purpose of ID_CRED_I and
+   ID_CRED_R is to facilitate retrieval of a public authentication key
+   and when they do not contain the actual credential, they may be very
+   short.  It is RECOMMENDED that they uniquely identify the public
+   authentication key as the recipient may otherwise have to try several
+   keys.  ID_CRED_I and ID_CRED_R are transported in the ciphertext, see
+   Section 4.3.2 and Section 4.4.2.
+
+   The authentication key MUST be a signature key or static Diffie-
+   Hellman key.  The Initiator and the Responder MAY use different types
+   of authentication keys, e.g. one uses a signature key and the other
+   uses a static Diffie-Hellman key.  When using a signature key, the
+   authentication is provided by a signature.  When using a static
+   Diffie-Hellman key the authentication is provided by a Message
+   Authentication Code (MAC) computed from an ephemeral-static ECDH
+   shared secret which enables significant reductions in message sizes.
+   The MAC is implemented with an AEAD algorithm.  When using a static
+   Diffie-Hellman keys the Initiator's and Responder's private
+   authentication keys are called I and R, respectively, and the public
+   authentication keys are called G_I and G_R, respectively.
+
+   The actual credentials CRED_I and CRED_R are signed or MAC:ed by the
+   Initiator and the Responder respectively, see Section 4.4.1 and
+   Section 4.3.1.  The Initiator and the Responder MAY use different
+   types of credentials, e.g. one uses RPK and the other uses
+   certificate.  When the credential is a certificate, CRED_x is end-
+   entity certificate (i.e. not the certificate chain) encoded as a CBOR
+   bstr.  When the credential is a COSE_Key, CREX_x is a CBOR map only
+   contains specific fields from the COSE_Key.  For COSE_Keys of type
+   OKP the CBOR map SHALL only include the parameters 1 (kty), -1 (crv),
+   and -2 (x-coordinate).  For COSE_Keys of type EC2 the CBOR map SHALL
+   only include the parameters 1 (kty), -1 (crv), -2 (x-coordinate), and
+   -3 (y-coordinate).  If the parties have agreed on an identity besides
+   the public key, the indentity is included in the CBOR map with the
+   label "subject name", otherwise the subject name is the empty text
+   string.  The parameters SHALL be encoded in decreasing order with int
+   labels first and text string labels last.  An example of CRED_x when
+   the RPK contains a X25519 static Diffie-Hellman key and the parties
+   have agreed on an EUI-64 identity is shown below:
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 17]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   CRED_x = {
+     1:  1,
+    -1:  4,
+    -2:  h'b1a3e89460e88d3a8d54211dc95f0b903ff205eb71912d6db8f4af980d2db83a',
+    "subject name" : "42-50-31-FF-EF-37-32-39"
+   }
+
+   Initiator                                                   Responder
+   |               METHOD_CORR, SUITES_I, G_X, C_I, AD_1               |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+   |                                                                   |
+   |   C_I, G_Y, C_R, Enc(K_2e; ID_CRED_R, Signature_or_MAC_2, AD_2)   |
+   |<------------------------------------------------------------------+
+   |                             message_2                             |
+   |                                                                   |
+   |       C_R, AEAD(K_3ae; ID_CRED_I, Signature_or_MAC_3, AD_3)       |
+   +------------------------------------------------------------------>|
+   |                             message_3                             |
+
+      Figure 4: Overview of EDHOC with asymmetric key authentication.
+
+4.2.  EDHOC Message 1
+
+4.2.1.  Formatting of Message 1
+
+   message_1 SHALL be a CBOR Sequence (see Appendix A.1) as defined
+   below
+
+   message_1 = (
+     METHOD_CORR : int,
+     SUITES_I : [ selected : suite, supported : 2* suite ] / selected : suite,
+     G_X : bstr,
+     C_I : bstr_identifier,
+     ? AD_1 : bstr,
+   )
+
+   suite = int
+   bstr_identifier = bsrt / int
+
+   where:
+
+   *  METHOD_CORR = 4 * method + corr, where method = 0, 1, 2, or 3 (see
+      Section 9.2) and the correlation parameter corr is chosen based on
+      the transport and determines which connection identifiers that are
+      omitted (see Section 3.1).
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 18]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  SUITES_I - cipher suites which the Initiator supports in order of
+      decreasing preference.  One of the supported cipher suites is
+      selected.  If a single supported cipher suite is conveyed then
+      that cipher suite is selected and the selected cipher suite is
+      encoded as an int instead of an array.
+
+   *  G_X - the ephemeral public key of the Initiator
+
+   *  C_I - variable length connection identifier.  An bstr_identifier
+      is a byte string with special encoding.  Byte strings of length
+      one is encoded as the corresponding integer - 24, i.e. h'2a' is
+      encoded as 18.
+
+   *  AD_1 - bstr containing unprotected opaque auxiliary data
+
+4.2.2.  Initiator Processing of Message 1
+
+   The Initiator SHALL compose message_1 as follows:
+
+   *  The supported cipher suites and the order of preference MUST NOT
+      be changed based on previous error messages.  However, the list
+      SUITES_I sent to the Responder MAY be truncated such that cipher
+      suites which are the least preferred are omitted.  The amount of
+      truncation MAY be changed between sessions, e.g. based on previous
+      error messages (see next bullet), but all cipher suites which are
+      more preferred than the least preferred cipher suite in the list
+      MUST be included in the list.
+
+   *  Determine the cipher suite to use with the Responder in message_1.
+      If the Initiator previously received from the Responder an error
+      message to a message_1 with diagnostic payload identifying a
+      cipher suite that the Initiator supports, then the Initiator SHALL
+      use that cipher suite.  Otherwise the first supported (i.e. the
+      most preferred) cipher suite in SUITES_I MUST be used.
+
+   *  Generate an ephemeral ECDH key pair as specified in Section 5 of
+      [SP-800-56A] using the curve in the selected cipher suite and
+      format it as a COSE_Key.  Let G_X be the 'x' parameter of the
+      COSE_Key.
+
+   *  Choose a connection identifier C_I and store it for the length of
+      the protocol.
+
+   *  Encode message_1 as a sequence of CBOR encoded data items as
+      specified in Section 4.2.1
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 19]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+4.2.3.  Responder Processing of Message 1
+
+   The Responder SHALL process message_1 as follows:
+
+   *  Decode message_1 (see Appendix A.1).
+
+   *  Verify that the selected cipher suite is supported and that no
+      prior cipher suites in SUITES_I are supported.
+
+   *  Pass AD_1 to the security application.
+
+   If any verification step fails, the Initiator MUST send an EDHOC
+   error message back, formatted as defined in Section 6, and the
+   protocol MUST be discontinued.  If V does not support the selected
+   cipher suite, then SUITES_R MUST include one or more supported cipher
+   suites.  If the Responder does not support the selected cipher suite,
+   but supports another cipher suite in SUITES_I, then SUITES_R MUST
+   include the first supported cipher suite in SUITES_I.
+
+4.3.  EDHOC Message 2
+
+4.3.1.  Formatting of Message 2
+
+   message_2 and data_2 SHALL be CBOR Sequences (see Appendix A.1) as
+   defined below
+
+   message_2 = (
+     data_2,
+     CIPHERTEXT_2 : bstr,
+   )
+
+   data_2 = (
+     ? C_I : bstr_identifier,
+     G_Y : bstr,
+     C_R : bstr_identifier,
+   )
+
+   where:
+
+   *  G_Y - the ephemeral public key of the Responder
+
+   *  C_R - variable length connection identifier
+
+4.3.2.  Responder Processing of Message 2
+
+   The Responder SHALL compose message_2 as follows:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 20]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  If corr (METHOD_CORR mod 4) equals 1 or 3, C_I is omitted,
+      otherwise C_I is not omitted.
+
+   *  Generate an ephemeral ECDH key pair as specified in Section 5 of
+      [SP-800-56A] using the curve in the selected cipher suite and
+      format it as a COSE_Key.  Let G_Y be the 'x' parameter of the
+      COSE_Key.
+
+   *  Choose a connection identifier C_R and store it for the length of
+      the protocol.
+
+   *  Compute the transcript hash TH_2 = H(message_1, data_2) where H()
+      is the hash function in the selected cipher suite.  The transcript
+      hash TH_2 is a CBOR encoded bstr and the input to the hash
+      function is a CBOR Sequence.
+
+   *  Compute an inner COSE_Encrypt0 as defined in Section 5.3 of
+      [RFC8152], with the EDHOC AEAD algorithm in the selected cipher
+      suite, K_2m, IV_2m, and the following parameters:
+
+      -  protected = << ID_CRED_R >>
+
+         o  ID_CRED_R - identifier to facilitate retrieval of CRED_R,
+            see Section 4.1
+
+      -  external_aad = << TH_2, CRED_R, ? AD_2 >>
+
+         o  CRED_R - bstr containing the credential of the Responder,
+            see Section 4.1.
+
+         o  AD_2 = bstr containing opaque unprotected auxiliary data
+
+      -  plaintext = h''
+
+      COSE constructs the input to the AEAD [RFC5116] as follows:
+
+      -  Key K = KDF( PRK_3e2m, TH_2, "K_2m", length )
+
+      -  Nonce N = KDF( PRK_3e2m, TH_2, "IV_2m", length )
+
+      -  Plaintext P = 0x (the empty string)
+
+      -  Associated data A =
+
+         [ "Encrypt0", << ID_CRED_R >>, << TH_2, CRED_R, ? AD_2 >> ]
+
+      MAC_2 is the 'ciphertext' of the inner COSE_Encrypt0.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 21]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  If the Reponder authenticates with a static Diffie-Hellman key
+      (method equals 1 or 3), then Signature_or_MAC_2 is MAC_2.  If the
+      Reponder authenticates with a signature key (method equals 0 or
+      2), then Signature_or_MAC_2 is the 'signature' of a COSE_Sign1
+      object as defined in Section 4.4 of [RFC8152] using the signature
+      algorithm in the selected cipher suite, the private authentication
+      key of the Responder, and the following parameters:
+
+      -  protected = << ID_CRED_R >>
+
+      -  external_aad = << TH_2, CRED_R, ? AD_2 >>
+
+      -  payload = MAC_2
+
+      COSE constructs the input to the Signature Algorithm as:
+
+      -  The key is the private authentication key of the Responder.
+
+      -  The message M to be signed =
+
+         [ "Signature1", << ID_CRED_R >>, << TH_2, CRED_R, ? AD_2 >>,
+         MAC_2 ]
+
+   *  CIPHERTEXT_2 is the ciphertext resulting from XOR encrypting a
+      plaintext with the following common parameters:
+
+      -  plaintext = ( ID_CRED_R / bstr_identifier, Signature_or_MAC_2,
+         ? AD_2 )
+
+         o  Note that if ID_CRED_R contains a single 'kid' parameter,
+            i.e., ID_CRED_R = { 4 : kid_R }, only the byte string kid_R
+            is conveyed in the plaintext encoded as an bstr_identifier,
+            see Section 4.1.
+
+      -  CIPHERTEXT_2 = plaintext XOR K_2e
+
+      -  K_2e = KDF( PRK_2e, TH_2, "K_2e", length ), where length is the
+         length of the plaintext.
+
+   *  Encode message_2 as a sequence of CBOR encoded data items as
+      specified in Section 4.3.1.
+
+4.3.3.  Initiator Processing of Message 2
+
+   The Initiator SHALL process message_2 as follows:
+
+   *  Decode message_2 (see Appendix A.1).
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 22]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  Retrieve the protocol state using the connection identifier C_I
+      and/or other external information such as the CoAP Token and the
+      5-tuple.
+
+   *  Decrypt CIPHERTEXT_2.  The decryption process depends on the
+      method, see Section 4.3.2.
+
+   *  Verify that the identity of the Responder is among the allowed
+      identities for this connection.
+
+   *  Verify Signature_or_MAC_2 using the algorithm in the selected
+      cipher suite.  The verification process depends on the method, see
+      Section 4.3.2.
+
+   *  Pass AD_2 to the security application.
+
+   If any verification step fails, the Responder MUST send an EDHOC
+   error message back, formatted as defined in Section 6, and the
+   protocol MUST be discontinued.
+
+4.4.  EDHOC Message 3
+
+4.4.1.  Formatting of Message 3
+
+   message_3 and data_3 SHALL be CBOR Sequences (see Appendix A.1) as
+   defined below
+
+   message_3 = (
+     data_3,
+     CIPHERTEXT_3 : bstr,
+   )
+
+   data_3 = (
+     ? C_R : bstr_identifier,
+   )
+
+4.4.2.  Initiator Processing of Message 3
+
+   The Initiator SHALL compose message_3 as follows:
+
+   *  If corr (METHOD_CORR mod 4) equals 2 or 3, C_R is omitted,
+      otherwise C_R is not omitted.
+
+   *  Compute the transcript hash TH_3 = H(TH_2 , CIPHERTEXT_2, data_3)
+      where H() is the hash function in the the selected cipher suite.
+      The transcript hash TH_3 is a CBOR encoded bstr and the input to
+      the hash function is a CBOR Sequence.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 23]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  Compute an inner COSE_Encrypt0 as defined in Section 5.3 of
+      [RFC8152], with the EDHOC AEAD algorithm in the selected cipher
+      suite, K_3m, IV_3m, and the following parameters:
+
+      -  protected = << ID_CRED_I >>
+
+         o  ID_CRED_I - identifier to facilitate retrieval of CRED_I,
+            see Section 4.1
+
+      -  external_aad = << TH_3, CRED_I, ? AD_3 >>
+
+         o  CRED_I - bstr containing the credential of the Initiator,
+            see Section 4.1.
+
+         o  AD_3 = bstr containing opaque protected auxiliary data
+
+      -  plaintext = h''
+
+      COSE constructs the input to the AEAD [RFC5116] as follows:
+
+      -  Key K = KDF( PRK_4x3m, TH_3, "K_3m", length )
+
+      -  Nonce N = KDF( PRK_4x3m, TH_3, "IV_3m", length )
+
+      -  Plaintext P = 0x (the empty string)
+
+      -  Associated data A =
+
+         [ "Encrypt0", << ID_CRED_I >>, << TH_3, CRED_I, ? AD_3 >> ]
+
+      MAC_3 is the 'ciphertext' of the inner COSE_Encrypt0.
+
+   *  If the Initiator authenticates with a static Diffie-Hellman key
+      (method equals 2 or 3), then Signature_or_MAC_3 is MAC_3.  If the
+      Initiator authenticates with a signature key (method equals 0 or
+      1), then Signature_or_MAC_3 is the 'signature' of a COSE_Sign1
+      object as defined in Section 4.4 of [RFC8152] using the signature
+      algorithm in the selected cipher suite, the private authentication
+      key of the Initiator, and the following parameters:
+
+      -  protected = << ID_CRED_I >>
+
+      -  external_aad = << TH_3, CRED_I, ? AD_3 >>
+
+      -  payload = MAC_3
+
+      COSE constructs the input to the Signature Algorithm as:
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 24]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+      -  The key is the private authentication key of the Initiator.
+
+      -  The message M to be signed =
+
+         [ "Signature1", << ID_CRED_I >>, << TH_3, CRED_I, ? AD_3 >>,
+         MAC_3 ]
+
+   *  Compute an outer COSE_Encrypt0 as defined in Section 5.3 of
+      [RFC8152], with the EDHOC AEAD algorithm in the selected cipher
+      suite, K_3ae, IV_3ae, and the following parameters.  The protected
+      header SHALL be empty.
+
+      -  external_aad = TH_3
+
+      -  plaintext = ( ID_CRED_I / bstr_identifier, Signature_or_MAC_3,
+         ? AD_3 )
+
+         o  Note that if ID_CRED_I contains a single 'kid' parameter,
+            i.e., ID_CRED_I = { 4 : kid_I }, only the byte string kid_I
+            is conveyed in the plaintext encoded as an bstr_identifier,
+            see Section 4.1.
+
+      COSE constructs the input to the AEAD [RFC5116] as follows:
+
+      -  Key K = KDF( PRK_3e2m, TH_3, "K_3ae", length )
+
+      -  Nonce N = KDF( PRK_3e2m, TH_3, "IV_3ae", length )
+
+      -  Plaintext P = ( ID_CRED_I / bstr_identifier,
+         Signature_or_MAC_3, ? AD_3 )
+
+      -  Associated data A = [ "Encrypt0", h'', TH_3 ]
+
+      CIPHERTEXT_3 is the 'ciphertext' of the outer COSE_Encrypt0.
+
+   *  Encode message_3 as a sequence of CBOR encoded data items as
+      specified in Section 4.4.1.
+
+   Pass the connection identifiers (C_I, C_R) and the application
+   algorithms in the selected cipher suite to the application.  The
+   application can now derive application keys using the EDHOC-Exporter
+   interface.
+
+4.4.3.  Responder Processing of Message 3
+
+   The Responder SHALL process message_3 as follows:
+
+   *  Decode message_3 (see Appendix A.1).
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 25]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  Retrieve the protocol state using the connection identifier C_R
+      and/or other external information such as the CoAP Token and the
+      5-tuple.
+
+   *  Decrypt and verify the outer COSE_Encrypt0 as defined in
+      Section 5.3 of [RFC8152], with the EDHOC AEAD algorithm in the
+      selected cipher suite, K_3ae, and IV_3ae.
+
+   *  Verify that the identity of the Initiator is among the allowed
+      identities for this connection.
+
+   *  Verify Signature_or_MAC_3 using the algorithm in the selected
+      cipher suite.  The verification process depends on the method, see
+      Section 4.4.2.
+
+   *  Pass AD_3, the connection identifiers (C_I, C_R), and the
+      application algorithms in the selected cipher suite to the
+      security application.  The application can now derive application
+      keys using the EDHOC-Exporter interface.
+
+   If any verification step fails, the Responder MUST send an EDHOC
+   error message back, formatted as defined in Section 6, and the
+   protocol MUST be discontinued.
+
+5.  EDHOC Authenticated with Symmetric Keys
+
+5.1.  Overview
+
+   EDHOC supports authentication with pre-shared keys (authentication
+   method = 4, see Section 9.2).  The Initiator and the Responder are
+   assumed to have a pre-shared key (PSK) with a good amount of
+   randomness and the requirement that:
+
+   *  Only the Initiator and the Responder SHALL have access to the PSK,
+
+   *  The Responder is able to retrieve the PSK using ID_PSK.
+
+   where the identifier ID_PSK is a COSE header_map (i.e. a CBOR map
+   containing COSE Common Header Parameters, see [RFC8152]) containing
+   COSE header parameter that can identify a pre-shared key.  Pre-shared
+   keys are typically stored as COSE_Key objects and identified with a
+   'kid' parameter (see [RFC8152]):
+
+   *  ID_PSK = { 4 : kid_psk } , where kid_psk : bstr
+
+   The purpose of ID_PSK is to facilitate retrieval of the PSK and in
+   the case a 'kid' parameter is used it may be very short.  It is
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 26]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   RECOMMENDED that it uniquely identify the PSK as the recipient may
+   otherwise have to try several keys.
+
+   EDHOC with symmetric key authentication is illustrated in Figure 5.
+
+   Initiator                                                   Responder
+   |           METHOD_CORR, SUITES_I, G_X, C_I, ID_PSK, AD_1           |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+   |                                                                   |
+   |               C_I, G_Y, C_R, AEAD(K_2ae; TH_2, AD_2)              |
+   |<------------------------------------------------------------------+
+   |                             message_2                             |
+   |                                                                   |
+   |                    C_R, AEAD(K_3ae; TH_3, AD_3)                   |
+   +------------------------------------------------------------------>|
+   |                             message_3                             |
+
+       Figure 5: Overview of EDHOC with symmetric key authentication.
+
+   EDHOC with symmetric key authentication is very similar to EDHOC with
+   asymmetric authentication.  In the following subsections the
+   differences compared to EDHOC with asymmetric authentication are
+   described.
+
+5.2.  EDHOC Message 1
+
+5.2.1.  Formatting of Message 1
+
+   message_1 SHALL be a CBOR Sequence (see Appendix A.1) as defined
+   below
+
+   message_1 = (
+     METHOD_CORR : int,
+     SUITES_I : [ index : uint, 2* suite ] / suite,
+     G_X : bstr,
+     C_I :  bstr_identifier,
+     ID_PSK : header_map / bstr_identifier,
+     ? AD_1 : bstr,
+   )
+
+   where:
+
+   *  METHOD_CORR = 4 * method + corr, where method = 4 and the
+      connection parameter corr is chosen based on the transport and
+      determines which connection identifiers that are omitted (see
+      Section 3.1).
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 27]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  ID_PSK - identifier to facilitate retrieval of the pre-shared key.
+      If ID_PSK contains a single 'kid' parameter, i.e., ID_PSK = { 4 :
+      kid_psk }, only the byte string kid_psk is conveyed encoded as an
+      bstr_identifier.
+
+5.3.  EDHOC Message 2
+
+5.3.1.  Processing of Message 2
+
+   *  Signature_or_MAC_2 is not used.
+
+   *  The outer COSE_Encrypt0 is computed as defined in Section 5.3 of
+      [RFC8152], with the EDHOC AEAD algorithm in the selected cipher
+      suite, K_2ae, IV_2ae, and the following parameters.  The protected
+      header SHALL be empty.
+
+      -  plaintext = ? AD_2
+
+         o  AD_2 = bstr containing opaque unprotected auxiliary data
+
+      -  external_aad = TH_2
+
+      COSE constructs the input to the AEAD [RFC5116] as follows:
+
+      -  Key K = KDF( PRK_2e, TH_2, "K_2ae", length )
+
+      -  Nonce N = KDF( PRK_2e, TH_2, "IV_2ae", length )
+
+      -  Plaintext P = ? AD_2
+
+      -  Associated data A = [ "Encrypt0", h'', TH_2 ]
+
+5.4.  EDHOC Message 3
+
+5.4.1.  Processing of Message 3
+
+   *  Signature_or_MAC_3 is not used.
+
+   *  COSE_Encrypt0 is computed as defined in Section 5.3 of [RFC8152],
+      with the EDHOC AEAD algorithm in the selected cipher suite, K_3ae,
+      IV_3ae, and the following parameters.  The protected header SHALL
+      be empty.
+
+      -  plaintext = ? AD_3
+
+         o  AD_3 = bstr containing opaque protected auxiliary data
+
+      -  external_aad = TH_3
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 28]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+      COSE constructs the input to the AEAD [RFC5116] as follows:
+
+      -  Key K = KDF( PRK_3e2m, TH_3, "K_3ae", length )
+
+      -  Nonce N = KDF( PRK_3e2m, TH_3, "IV_3ae", length )
+
+      -  Plaintext P = ? AD_3
+
+      -  Associated data A = [ "Encrypt0", h'', TH_3 ]
+
+6.  Error Handling
+
+6.1.  EDHOC Error Message
+
+   This section defines a message format for the EDHOC error message,
+   used during the protocol.  An EDHOC error message can be sent by both
+   parties as a reply to any non-error EDHOC message.  After sending an
+   error message, the protocol MUST be discontinued.  Errors at the
+   EDHOC layer are sent as normal successful messages in the lower
+   layers (e.g.  CoAP POST and 2.04 Changed).  An advantage of using
+   such a construction is to avoid issues created by usage of cross
+   protocol proxies (e.g.  UDP to TCP).
+
+   error SHALL be a CBOR Sequence (see Appendix A.1) as defined below
+
+   error = (
+     ? C_x : bstr_identifier,
+     ERR_MSG : tstr,
+     ? SUITES_R : [ supported : 2* suite ] / supported : suite,
+   )
+
+   where:
+
+   *  C_x - if error is sent by the Responder and corr (METHOD_CORR mod
+      4) equals 0 or 2 then C_x is set to C_I, else if error is sent by
+      the Initiator and corr (METHOD_CORR mod 4) equals 0 or 1 then C_x
+      is set to C_R, else C_x is omitted.
+
+   *  ERR_MSG - text string containing the diagnostic payload, defined
+      in the same way as in Section 5.5.2 of [RFC7252].  ERR_MSG MAY be
+      a 0-length text string.
+
+   *  SUITES_R - cipher suites from SUITES_I or the EDHOC cipher suites
+      registry that the Responder supports.  SUITES_R MUST only be
+      included in replies to message_1.  If a single supported cipher
+      suite is conveyed then the supported cipher suite is encoded as an
+      int instead of an array.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 29]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+6.1.1.  Example Use of EDHOC Error Message with SUITES_R
+
+   Assuming that the Initiator supports the five cipher suites 5, 6, 7,
+   8, and 9 in decreasing order of preference, Figures 6 and 7 show
+   examples of how the Responder can truncate SUITES_I and how SUITES_R
+   is used by the Responder to give the Initiator information about the
+   cipher suites that the Responder supports.  In Figure 6, the
+   Responder supports cipher suite 6 but not the selected cipher suite
+   5.
+
+   Initiator                                                   Responder
+   |        METHOD_CORR, SUITES_I = [5, 5, 6, 7], G_X, C_I, AD_1       |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+   |                                                                   |
+   |                     C_I, ERR_MSG, SUITES_R = 6                    |
+   |<------------------------------------------------------------------+
+   |                               error                               |
+   |                                                                   |
+   |         METHOD_CORR, SUITES_I = [6, 5, 6], G_X, C_I, AD_1         |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+
+           Figure 6: Example use of error message with SUITES_R.
+
+   In Figure 7, the Responder supports cipher suite 7 but not cipher
+   suites 5 and 6.
+
+   Initiator                                                   Responder
+   |         METHOD_CORR, SUITES_I = [5, 5, 6], G_X, C_I, AD_1         |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+   |                                                                   |
+   |                  C_I, ERR_MSG, SUITES_R = [7, 9]                  |
+   |<------------------------------------------------------------------+
+   |                               error                               |
+   |                                                                   |
+   |        METHOD_CORR, SUITES_I = [7, 5, 6, 7], G_X, C_I, AD_1       |
+   +------------------------------------------------------------------>|
+   |                             message_1                             |
+
+           Figure 7: Example use of error message with SUITES_R.
+
+   As the Initiator's list of supported cipher suites and order of
+   preference is fixed, and the Responder only accepts message_1 if the
+   selected cipher suite is the first cipher suite in SUITES_I that the
+   Responder supports, the parties can verify that the selected cipher
+   suite is the most preferred (by the Initiator) cipher suite supported
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 30]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   by both parties.  If the selected cipher suite is not the first
+   cipher suite in SUITES_I that the Responder supports, the Responder
+   will discontinue the protocol.
+
+7.  Transferring EDHOC and Deriving an OSCORE Context
+
+7.1.  Transferring EDHOC in CoAP
+
+   It is recommended to transport EDHOC as an exchange of CoAP [RFC7252]
+   messages.  CoAP is a reliable transport that can preserve packet
+   ordering and handle message duplication.  CoAP can also perform
+   fragmentation and protect against denial of service attacks.  It is
+   recommended to carry the EDHOC messages in Confirmable messages,
+   especially if fragmentation is used.
+
+   By default, the CoAP client is the Initiator and the CoAP server is
+   the Responder, but the roles SHOULD be chosen to protect the most
+   sensitive identity, see Section 8.  By default, EDHOC is transferred
+   in POST requests and 2.04 (Changed) responses to the Uri-Path:
+   "/.well-known/edhoc", but an application may define its own path that
+   can be discovered e.g. using resource directory
+   [I-D.ietf-core-resource-directory].
+
+   By default, the message flow is as follows: EDHOC message_1 is sent
+   in the payload of a POST request from the client to the server's
+   resource for EDHOC.  EDHOC message_2 or the EDHOC error message is
+   sent from the server to the client in the payload of a 2.04 (Changed)
+   response.  EDHOC message_3 or the EDHOC error message is sent from
+   the client to the server's resource in the payload of a POST request.
+   If needed, an EDHOC error message is sent from the server to the
+   client in the payload of a 2.04 (Changed) response.
+
+   An example of a successful EDHOC exchange using CoAP is shown in
+   Figure 8.  In this case the CoAP Token enables the Initiator to
+   correlate message_1 and message_2 so the correlation parameter corr =
+   1.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 31]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+             Client    Server
+               |          |
+               +--------->| Header: POST (Code=0.02)
+               |   POST   | Uri-Path: "/.well-known/edhoc"
+               |          | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_1
+               |          |
+               |<---------+ Header: 2.04 Changed
+               |   2.04   | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_2
+               |          |
+               +--------->| Header: POST (Code=0.02)
+               |   POST   | Uri-Path: "/.well-known/edhoc"
+               |          | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_3
+               |          |
+               |<---------+ Header: 2.04 Changed
+               |   2.04   |
+               |          |
+
+                    Figure 8: Transferring EDHOC in CoAP
+
+   The exchange in Figure 8 protects the client identity against active
+   attackers and the server identity against passive attackers.  An
+   alternative exchange that protects the server identity against active
+   attackers and the client identity against passive attackers is shown
+   in Figure 9.  In this case the CoAP Token enables the Responder to
+   correlate message_2 and message_3 so the correlation parameter corr =
+   2.
+
+             Client    Server
+               |          |
+               +--------->| Header: POST (Code=0.02)
+               |   POST   | Uri-Path: "/.well-known/edhoc"
+               |          |
+               |<---------+ Header: 2.04 Changed
+               |   2.04   | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_1
+               |          |
+               +--------->| Header: POST (Code=0.02)
+               |   POST   | Uri-Path: "/.well-known/edhoc"
+               |          | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_2
+               |          |
+               |<---------+ Header: 2.04 Changed
+               |   2.04   | Content-Format: application/edhoc
+               |          | Payload: EDHOC message_3
+               |          |
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 32]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+                    Figure 9: Transferring EDHOC in CoAP
+
+   To protect against denial-of-service attacks, the CoAP server MAY
+   respond to the first POST request with a 4.01 (Unauthorized)
+   containing an Echo option [I-D.ietf-core-echo-request-tag].  This
+   forces the initiator to demonstrate its reachability at its apparent
+   network address.  If message fragmentation is needed, the EDHOC
+   messages may be fragmented using the CoAP Block-Wise Transfer
+   mechanism [RFC7959].
+
+7.1.1.  Deriving an OSCORE Context from EDHOC
+
+   When EDHOC is used to derive parameters for OSCORE [RFC8613], the
+   parties make sure that the EDHOC connection identifiers are unique,
+   i.e. C_R MUST NOT be equal to C_I.  The CoAP client and server MUST
+   be able to retrieve the OSCORE protocol state using its chosen
+   connection identifier and optionally other information such as the
+   5-tuple.  In case that the CoAP client is the Initiator and the CoAP
+   server is the Responder:
+
+   *  The client's OSCORE Sender ID is C_R and the server's OSCORE
+      Sender ID is C_I, as defined in this document
+
+   *  The AEAD Algorithm and the hash algorithm are the application AEAD
+      and hash algorithms in the selected cipher suite.
+
+   *  The Master Secret and Master Salt are derived as follows where
+      length is the key length (in bytes) of the application AEAD
+      Algorithm.
+
+      Master Secret = EDHOC-Exporter( "OSCORE Master Secret", length )
+      Master Salt   = EDHOC-Exporter( "OSCORE Master Salt", 8 )
+
+8.  Security Considerations
+
+8.1.  Security Properties
+
+   EDHOC inherits its security properties from the theoretical SIGMA-I
+   protocol [SIGMA].  Using the terminology from [SIGMA], EDHOC provides
+   perfect forward secrecy, mutual authentication with aliveness,
+   consistency, peer awareness.  As described in [SIGMA], peer awareness
+   is provided to the Responder, but not to the Initiator.
+
+   When a Public Key Infrastructure (PKI) is used, EDHOC provides
+   identity protection of the Initiator against active attacks and
+   identity protection of the Responder against passive attacks.  When
+   PKI is not used (kid, x5t) the identity is not sent on the wire and
+   EDHOC with asymmetric authentication protects the credential
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 33]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   identifier of the Initiator against active attacks and the credential
+   identifier of the Responder against passive attacks.  The roles
+   should be assigned to protect the most sensitive identity/identifier,
+   typically that which is not possible to infer from routing
+   information in the lower layers.  EDHOC with symmetric authentication
+   does not offer protection of the PSK identifier ID_PSK.
+
+   Compared to [SIGMA], EDHOC adds an explicit method type and expands
+   the message authentication coverage to additional elements such as
+   algorithms, auxiliary data, and previous messages.  This protects
+   against an attacker replaying messages or injecting messages from
+   another session.
+
+   EDHOC also adds negotiation of connection identifiers and downgrade
+   protected negotiation of cryptographic parameters, i.e. an attacker
+   cannot affect the negotiated parameters.  A single session of EDHOC
+   does not include negotiation of cipher suites, but it enables the
+   Responder to verify that the selected cipher suite is the most
+   preferred cipher suite by the Initiator which is supported by both
+   the Initiator and the Responder.
+
+   As required by [RFC7258], IETF protocols need to mitigate pervasive
+   monitoring when possible.  One way to mitigate pervasive monitoring
+   is to use a key exchange that provides perfect forward secrecy.
+   EDHOC therefore only supports methods with perfect forward secrecy.
+   To limit the effect of breaches, it is important to limit the use of
+   symmetrical group keys for bootstrapping.  EDHOC therefore strives to
+   make the additional cost of using raw public keys and self-signed
+   certificates as small as possible.  Raw public keys and self-signed
+   certificates are not a replacement for a public key infrastructure,
+   but SHOULD be used instead of symmetrical group keys for
+   bootstrapping.
+
+   Compromise of the long-term keys (PSK or private authentication keys)
+   does not compromise the security of completed EDHOC exchanges.
+   Compromising the private authentication keys of one party lets an
+   active attacker impersonate that compromised party in EDHOC exchanges
+   with other parties, but does not let the attacker impersonate other
+   parties in EDHOC exchanges with the compromised party.  Compromising
+   the PSK lets an active attacker impersonate the Initiator in EDHOC
+   exchanges with the Responder and impersonate the Responder in EDHOC
+   exchanges with the Initiator.  Compromise of the long-term keys does
+   not enable a passive attacker to compromise future session keys.
+   Compromise of the HDKF input parameters (ECDH shared secret and/or
+   PSK) leads to compromise of all session keys derived from that
+   compromised shared secret.  Compromise of one session key does not
+   compromise other session keys.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 34]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Key compromise impersonation (KCI): In EDHOC authenticated with
+   signature keys, EDHOC provides KCI protection against an attacker
+   having access to the long term key or the ephemeral secret key.  In
+   EDHOC authenticated with symmetric keys, EDHOC provides KCI
+   protection against an attacker having access to the ephemeral secret
+   key, but not against an attacker having access to the long-term PSK.
+   With static Diffie-Hellman key authentication, KCI protection would
+   be provided against an attacker having access to the long-term
+   Diffie-Hellman key, but not to an attacker having access to the
+   ephemeral secret key.  Note that the term KCI has typically been used
+   for compromise of long-term keys, and that an attacker with access to
+   the ephemeral secret key can only attack that specific protocol run.
+
+   Repudiation: In EDHOC authenticated with signature keys, Party U
+   could theoretically prove that Party V performed a run of the
+   protocol by presenting the private ephemeral key, and vice versa.
+   Note that storing the private ephemeral keys violates the protocol
+   requirements.  With static Diffie-Hellman key authentication or PSK
+   authentication, both parties can always deny having participated in
+   the protocol.
+
+8.2.  Cryptographic Considerations
+
+   The security of the SIGMA protocol requires the MAC to be bound to
+   the identity of the signer.  Hence the message authenticating
+   functionality of the authenticated encryption in EDHOC is critical:
+   authenticated encryption MUST NOT be replaced by plain encryption
+   only, even if authentication is provided at another level or through
+   a different mechanism.  EDHOC implements SIGMA-I using the same Sign-
+   then-MAC approach as TLS 1.3.
+
+   To reduce message overhead EDHOC does not use explicit nonces and
+   instead rely on the ephemeral public keys to provide randomness to
+   each session.  A good amount of randomness is important for the key
+   generation, to provide liveness, and to protect against interleaving
+   attacks.  For this reason, the ephemeral keys MUST NOT be reused, and
+   both parties SHALL generate fresh random ephemeral key pairs.
+
+   The choice of key length used in the different algorithms needs to be
+   harmonized, so that a sufficient security level is maintained for
+   certificates, EDHOC, and the protection of application data.  The
+   Initiator and the Responder should enforce a minimum security level.
+
+   The data rates in many IoT deployments are very limited.  Given that
+   the application keys are protected as well as the long-term
+   authentication keys they can often be used for years or even decades
+   before the cryptographic limits are reached.  If the application keys
+   established through EDHOC need to be renewed, the communicating
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 35]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   parties can derive application keys with other labels or run EDHOC
+   again.
+
+8.3.  Cipher Suites
+
+   Cipher suite number 0 (AES-CCM-16-64-128, SHA-256, X25519, EdDSA,
+   Ed25519, AES-CCM-16-64-128, SHA-256) is mandatory to implement.
+   Implementations only need to implement the algorithms needed for
+   their supported methods.  For many constrained IoT devices it is
+   problematic to support more than one cipher suites, so some
+   deployments with P-256 may not support the mandatory cipher suite.
+   This is not a problem for local deployments.
+
+   The HMAC algorithm HMAC 256/64 (HMAC w/ SHA-256 truncated to 64 bits)
+   SHALL NOT be supported for use in EDHOC.
+
+8.4.  Unprotected Data
+
+   The Initiator and the Responder must make sure that unprotected data
+   and metadata do not reveal any sensitive information.  This also
+   applies for encrypted data sent to an unauthenticated party.  In
+   particular, it applies to AD_1, ID_CRED_R, AD_2, and ERR_MSG in the
+   asymmetric case, and ID_PSK, AD_1, and ERR_MSG in the symmetric case.
+   Using the same ID_PSK or AD_1 in several EDHOC sessions allows
+   passive eavesdroppers to correlate the different sessions.  The
+   communicating parties may therefore anonymize ID_PSK.  Another
+   consideration is that the list of supported cipher suites may be used
+   to identify the application.
+
+   The Initiator and the Responder must also make sure that
+   unauthenticated data does not trigger any harmful actions.  In
+   particular, this applies to AD_1 and ERR_MSG in the asymmetric case,
+   and ID_PSK, AD_1, and ERR_MSG in the symmetric case.
+
+8.5.  Denial-of-Service
+
+   EDHOC itself does not provide countermeasures against Denial-of-
+   Service attacks.  By sending a number of new or replayed message_1 an
+   attacker may cause the Responder to allocate state, perform
+   cryptographic operations, and amplify messages.  To mitigate such
+   attacks, an implementation SHOULD rely on lower layer mechanisms such
+   as the Echo option in CoAP [I-D.ietf-core-echo-request-tag] that
+   forces the initiator to demonstrate reachability at its apparent
+   network address.
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 36]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+8.6.  Implementation Considerations
+
+   The availability of a secure pseudorandom number generator and truly
+   random seeds are essential for the security of EDHOC.  If no true
+   random number generator is available, a truly random seed must be
+   provided from an external source.  As each pseudorandom number must
+   only be used once, an implementation need to get a new truly random
+   seed after reboot, or continuously store state in nonvolatile memory,
+   see ([RFC8613], Appendix B.1.1) for issues and solution approaches
+   for writing to nonvolatile memory.  If ECDSA is supported,
+   "deterministic ECDSA" as specified in [RFC6979] is RECOMMENDED.
+
+   The referenced processing instructions in [SP-800-56A] must be
+   complied with, including deleting the intermediate computed values
+   along with any ephemeral ECDH secrets after the key derivation is
+   completed.  The ECDH shared secret, keys, and IVs MUST be secret.
+   Implementations should provide countermeasures to side-channel
+   attacks such as timing attacks.  Depending on the selected curve, the
+   parties should perform various validations of each other's public
+   keys, see e.g.  Section 5 of [SP-800-56A].
+
+   The Initiator and the Responder are responsible for verifying the
+   integrity of certificates.  The selection of trusted CAs should be
+   done very carefully and certificate revocation should be supported.
+   The private authentication keys and the PSK (even though it is used
+   as salt) MUST be kept secret.
+
+   The Initiator and the Responder are allowed to select the connection
+   identifiers C_I and C_R, respectively, for the other party to use in
+   the ongoing EDHOC protocol as well as in a subsequent application
+   protocol (e.g.  OSCORE [RFC8613]).  The choice of connection
+   identifier is not security critical in EDHOC but intended to simplify
+   the retrieval of the right security context in combination with using
+   short identifiers.  If the wrong connection identifier of the other
+   party is used in a protocol message it will result in the receiving
+   party not being able to retrieve a security context (which will
+   terminate the protocol) or retrieve the wrong security context (which
+   also terminates the protocol as the message cannot be verified).
+
+   The Responder MUST finish the verification step of message_3 before
+   passing AD_3 to the application.
+
+   If two nodes unintentionally initiate two simultaneous EDHOC message
+   exchanges with each other even if they only want to complete a single
+   EDHOC message exchange, they MAY terminate the exchange with the
+   lexicographically smallest G_X.  If the two G_X values are equal, the
+   received message_1 MUST be discarded to mitigate reflection attacks.
+   Note that in the case of two simultaneous EDHOC exchanges where the
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 37]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   nodes only complete one and where the nodes have different preferred
+   cipher suites, an attacker can affect which of the two nodes'
+   preferred cipher suites will be used by blocking the other exchange.
+
+8.7.  Other Documents Referencing EDHOC
+
+   EDHOC has been analyzed in several other documents.  A formal
+   verification of EDHOC was done in [SSR18], an analysis of EDHOC for
+   certificate enrollment was done in [Kron18], the use of EDHOC in
+   LoRaWAN is analyzed in [LoRa1] and [LoRa2], the use of EDHOC in IoT
+   bootstrapping is analyzed in [Perez18], and the use of EDHOC in
+   6TiSCH is described in [I-D.ietf-6tisch-dtsecurity-zerotouch-join].
+
+9.  IANA Considerations
+
+9.1.  EDHOC Cipher Suites Registry
+
+   IANA has created a new registry titled "EDHOC Cipher Suites" under
+   the new heading "EDHOC".  The registration procedure is "Expert
+   Review".  The columns of the registry are Value, Array, Description,
+   and Reference, where Value is an integer and the other columns are
+   text strings.  The initial contents of the registry are:
+
+   Value: -24
+   Algorithms: N/A
+   Desc: Reserved for Private Use
+   Reference: [[this document]]
+
+   Value: -23
+   Algorithms: N/A
+   Desc: Reserved for Private Use
+   Reference: [[this document]]
+
+   Value: 0
+   Array: 10, 5, 4, -8, 6, 10, 5
+   Desc: AES-CCM-16-64-128, SHA-256, X25519, EdDSA, Ed25519,
+         AES-CCM-16-64-128, SHA-256
+   Reference: [[this document]]
+
+   Value: 1
+   Array: 30, 5, 4, -8, 6, 10, 5
+   Desc: AES-CCM-16-128-128, SHA-256, X25519, EdDSA, Ed25519,
+         AES-CCM-16-64-128, SHA-256
+   Reference: [[this document]]
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 38]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Value: 2
+   Array: 10, 5, 1, -7, 1, 10, 5
+   Desc: AES-CCM-16-64-128, SHA-256, P-256, ES256, P-256,
+         AES-CCM-16-64-128, SHA-256
+   Reference: [[this document]]
+
+   Value: 3
+   Array: 30, 5, 1, -7, 1, 10, 5
+   Desc: AES-CCM-16-128-128, SHA-256, P-256, ES256, P-256,
+         AES-CCM-16-64-128, SHA-256
+   Reference: [[this document]]
+
+9.2.  EDHOC Method Type Registry
+
+   IANA has created a new registry titled "EDHOC Method Type" under the
+   new heading "EDHOC".  The registration procedure is "Expert Review".
+   The columns of the registry are Value, Description, and Reference,
+   where Value is an integer and the other columns are text strings.
+   The initial contents of the registry are:
+
+   +-------+-------------------+-------------------+-------------------+
+   | Value | Initiator         | Responder         | Reference         |
+   +-------+-------------------+-------------------+-------------------+
+   |     0 | Signature Key     | Signature Key     | [[this document]] |
+   |     1 | Signature Key     | Static DH Key     | [[this document]] |
+   |     2 | Static DH Key     | Signature Key     | [[this document]] |
+   |     3 | Static DH Key     | Static DH Key     | [[this document]] |
+   |     4 | PSK               | PSK               | [[this document]] |
+   +-------+-------------------+-------------------+-------------------+
+
+                          Figure 10: Method Types
+
+9.3.  The Well-Known URI Registry
+
+   IANA has added the well-known URI 'edhoc' to the Well-Known URIs
+   registry.
+
+   *  URI suffix: edhoc
+
+   *  Change controller: IETF
+
+   *  Specification document(s): [[this document]]
+
+   *  Related information: None
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 39]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+9.4.  Media Types Registry
+
+   IANA has added the media type 'application/edhoc' to the Media Types
+   registry.
+
+   *  Type name: application
+
+   *  Subtype name: edhoc
+
+   *  Required parameters: N/A
+
+   *  Optional parameters: N/A
+
+   *  Encoding considerations: binary
+
+   *  Security considerations: See Section 7 of this document.
+
+   *  Interoperability considerations: N/A
+
+   *  Published specification: [[this document]] (this document)
+
+   *  Applications that use this media type: To be identified
+
+   *  Fragment identifier considerations: N/A
+
+   *  Additional information:
+
+      -  Magic number(s): N/A
+
+      -  File extension(s): N/A
+
+      -  Macintosh file type code(s): N/A
+
+   *  Person & email address to contact for further information: See
+      "Authors' Addresses" section.
+
+   *  Intended usage: COMMON
+
+   *  Restrictions on usage: N/A
+
+   *  Author: See "Authors' Addresses" section.
+
+   *  Change Controller: IESG
+
+9.5.  CoAP Content-Formats Registry
+
+   IANA has added the media type 'application/edhoc' to the CoAP
+   Content-Formats registry.
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 40]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   *  Media Type: application/edhoc
+
+   *  Encoding:
+
+   *  ID: TBD42
+
+   *  Reference: [[this document]]
+
+9.6.  Expert Review Instructions
+
+   The IANA Registries established in this document is defined as
+   "Expert Review".  This section gives some general guidelines for what
+   the experts should be looking for, but they are being designated as
+   experts for a reason so they should be given substantial latitude.
+
+   Expert reviewers should take into consideration the following points:
+
+   *  Clarity and correctness of registrations.  Experts are expected to
+      check the clarity of purpose and use of the requested entries.
+      Expert needs to make sure the values of algorithms are taken from
+      the right registry, when that's required.  Expert should consider
+      requesting an opinion on the correctness of registered parameters
+      from relevant IETF working groups.  Encodings that do not meet
+      these objective of clarity and completeness should not be
+      registered.
+
+   *  Experts should take into account the expected usage of fields when
+      approving point assignment.  The length of the encoded value
+      should be weighed against how many code points of that length are
+      left, the size of device it will be used on, and the number of
+      code points left that encode to that size.
+
+   *  Specifications are recommended.  When specifications are not
+      provided, the description provided needs to have sufficient
+      information to verify the points above.
+
+10.  References
+
+10.1.  Normative References
+
+   [I-D.ietf-cbor-sequence]
+              Bormann, C., "Concise Binary Object Representation (CBOR)
+              Sequences", Work in Progress, Internet-Draft, draft-ietf-
+              cbor-sequence-02, 25 September 2019, <http://www.ietf.org/
+              internet-drafts/draft-ietf-cbor-sequence-02.txt>.
+
+   [I-D.ietf-core-echo-request-tag]
+              Amsuess, C., Mattsson, J., and G. Selander, "CoAP: Echo,
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 41]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+              Request-Tag, and Token Processing", Work in Progress,
+              Internet-Draft, draft-ietf-core-echo-request-tag-08, 4
+              November 2019, <http://www.ietf.org/internet-drafts/draft-
+              ietf-core-echo-request-tag-08.txt>.
+
+   [I-D.ietf-cose-x509]
+              Schaad, J., "CBOR Object Signing and Encryption (COSE):
+              Headers for carrying and referencing X.509 certificates",
+              Work in Progress, Internet-Draft, draft-ietf-cose-x509-05,
+              4 November 2019, <http://www.ietf.org/internet-drafts/
+              draft-ietf-cose-x509-05.txt>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC5116]  McGrew, D., "An Interface and Algorithms for Authenticated
+              Encryption", RFC 5116, DOI 10.17487/RFC5116, January 2008,
+              <https://www.rfc-editor.org/info/rfc5116>.
+
+   [RFC5869]  Krawczyk, H. and P. Eronen, "HMAC-based Extract-and-Expand
+              Key Derivation Function (HKDF)", RFC 5869,
+              DOI 10.17487/RFC5869, May 2010,
+              <https://www.rfc-editor.org/info/rfc5869>.
+
+   [RFC6090]  McGrew, D., Igoe, K., and M. Salter, "Fundamental Elliptic
+              Curve Cryptography Algorithms", RFC 6090,
+              DOI 10.17487/RFC6090, February 2011,
+              <https://www.rfc-editor.org/info/rfc6090>.
+
+   [RFC6979]  Pornin, T., "Deterministic Usage of the Digital Signature
+              Algorithm (DSA) and Elliptic Curve Digital Signature
+              Algorithm (ECDSA)", RFC 6979, DOI 10.17487/RFC6979, August
+              2013, <https://www.rfc-editor.org/info/rfc6979>.
+
+   [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
+              Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
+              October 2013, <https://www.rfc-editor.org/info/rfc7049>.
+
+   [RFC7252]  Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
+              Application Protocol (CoAP)", RFC 7252,
+              DOI 10.17487/RFC7252, June 2014,
+              <https://www.rfc-editor.org/info/rfc7252>.
+
+   [RFC7748]  Langley, A., Hamburg, M., and S. Turner, "Elliptic Curves
+              for Security", RFC 7748, DOI 10.17487/RFC7748, January
+              2016, <https://www.rfc-editor.org/info/rfc7748>.
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 42]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   [RFC7959]  Bormann, C. and Z. Shelby, Ed., "Block-Wise Transfers in
+              the Constrained Application Protocol (CoAP)", RFC 7959,
+              DOI 10.17487/RFC7959, August 2016,
+              <https://www.rfc-editor.org/info/rfc7959>.
+
+   [RFC8152]  Schaad, J., "CBOR Object Signing and Encryption (COSE)",
+              RFC 8152, DOI 10.17487/RFC8152, July 2017,
+              <https://www.rfc-editor.org/info/rfc8152>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8610]  Birkholz, H., Vigano, C., and C. Bormann, "Concise Data
+              Definition Language (CDDL): A Notational Convention to
+              Express Concise Binary Object Representation (CBOR) and
+              JSON Data Structures", RFC 8610, DOI 10.17487/RFC8610,
+              June 2019, <https://www.rfc-editor.org/info/rfc8610>.
+
+   [RFC8613]  Selander, G., Mattsson, J., Palombini, F., and L. Seitz,
+              "Object Security for Constrained RESTful Environments
+              (OSCORE)", RFC 8613, DOI 10.17487/RFC8613, July 2019,
+              <https://www.rfc-editor.org/info/rfc8613>.
+
+   [SIGMA]    Krawczyk, H., "SIGMA - The 'SIGn-and-MAc' Approach to
+              Authenticated Diffie-Hellman and Its Use in the IKE-
+              Protocols (Long version)", June 2003,
+              <http://webee.technion.ac.il/~hugo/sigma-pdf.pdf>.
+
+   [SP-800-56A]
+              Barker, E., Chen, L., Roginsky, A., Vassilev, A., and R.
+              Davis, "Recommendation for Pair-Wise Key-Establishment
+              Schemes Using Discrete Logarithm Cryptography",
+              NIST Special Publication 800-56A Revision 3, April 2018,
+              <https://doi.org/10.6028/NIST.SP.800-56Ar3>.
+
+10.2.  Informative References
+
+   [CborMe]   Bormann, C., "CBOR Playground", May 2018,
+              <http://cbor.me/>.
+
+   [I-D.hartke-core-e2e-security-reqs]
+              Selander, G., Palombini, F., and K. Hartke, "Requirements
+              for CoAP End-To-End Security", Work in Progress, Internet-
+              Draft, draft-hartke-core-e2e-security-reqs-03, 29 July
+              2017, <http://www.ietf.org/internet-drafts/draft-hartke-
+              core-e2e-security-reqs-03.txt>.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 43]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   [I-D.ietf-6tisch-dtsecurity-zerotouch-join]
+              Richardson, M., "6tisch Zero-Touch Secure Join protocol",
+              Work in Progress, Internet-Draft, draft-ietf-6tisch-
+              dtsecurity-zerotouch-join-04, 8 July 2019,
+              <http://www.ietf.org/internet-drafts/draft-ietf-6tisch-
+              dtsecurity-zerotouch-join-04.txt>.
+
+   [I-D.ietf-ace-oauth-authz]
+              Seitz, L., Selander, G., Wahlstroem, E., Erdtman, S., and
+              H. Tschofenig, "Authentication and Authorization for
+              Constrained Environments (ACE) using the OAuth 2.0
+              Framework (ACE-OAuth)", Work in Progress, Internet-Draft,
+              draft-ietf-ace-oauth-authz-33, 6 February 2020,
+              <http://www.ietf.org/internet-drafts/draft-ietf-ace-oauth-
+              authz-33.txt>.
+
+   [I-D.ietf-ace-oscore-profile]
+              Palombini, F., Seitz, L., Selander, G., and M. Gunnarsson,
+              "OSCORE profile of the Authentication and Authorization
+              for Constrained Environments Framework", Work in Progress,
+              Internet-Draft, draft-ietf-ace-oscore-profile-08, 8 July
+              2019, <http://www.ietf.org/internet-drafts/draft-ietf-ace-
+              oscore-profile-08.txt>.
+
+   [I-D.ietf-core-resource-directory]
+              Shelby, Z., Koster, M., Bormann, C., Stok, P., and C.
+              Amsuess, "CoRE Resource Directory", Work in Progress,
+              Internet-Draft, draft-ietf-core-resource-directory-23, 8
+              July 2019, <http://www.ietf.org/internet-drafts/draft-
+              ietf-core-resource-directory-23.txt>.
+
+   [I-D.ietf-lwig-security-protocol-comparison]
+              Mattsson, J. and F. Palombini, "Comparison of CoAP
+              Security Protocols", Work in Progress, Internet-Draft,
+              draft-ietf-lwig-security-protocol-comparison-03, 11 March
+              2019, <http://www.ietf.org/internet-drafts/draft-ietf-
+              lwig-security-protocol-comparison-03.txt>.
+
+   [I-D.ietf-tls-dtls13]
+              Rescorla, E., Tschofenig, H., and N. Modadugu, "The
+              Datagram Transport Layer Security (DTLS) Protocol Version
+              1.3", Work in Progress, Internet-Draft, draft-ietf-tls-
+              dtls13-34, 19 November 2019, <http://www.ietf.org/
+              internet-drafts/draft-ietf-tls-dtls13-34.txt>.
+
+   [I-D.selander-ace-ake-authz]
+              Selander, G., Mattsson, J., Vucinic, M., and M.
+              Richardson, "Lightweight Authorization for Authenticated
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 44]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+              Key Exchange.", Work in Progress, Internet-Draft, draft-
+              selander-ace-ake-authz-00, 6 February 2020,
+              <http://www.ietf.org/internet-drafts/draft-selander-ace-
+              ake-authz-00.txt>.
+
+   [Kron18]   Krontiris, A., "Evaluation of Certificate Enrollment over
+              Application Layer Security", May 2018,
+              <https://www.nada.kth.se/~ann/exjobb/
+              alexandros_krontiris.pdf>.
+
+   [LoRa1]    Sanchez-Iborra, R., Sánchez-Gómez, J., Pérez, S.,
+              Fernández, P.J., Santa, J., Hernández-Ramos, J.L., and
+              A.F. Skarmeta, "Enhancing LoRaWAN Security through a
+              Lightweight and Authenticated Key Management Approach",
+              June 2018,
+              <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6021899/pdf/
+              sensors-18-01833.pdf>.
+
+   [LoRa2]    Sanchez-Iborra, R., Sánchez-Gómez, J., Pérez, S.,
+              Fernández, P.J., Santa, J., Hernández-Ramos, J.L., and
+              A.F. Skarmeta, "Internet Access for LoRaWAN Devices
+              Considering Security Issues", June 2018,
+              <https://ants.inf.um.es/~josesanta/doc/GIoTS1.pdf>.
+
+   [Perez18]  Pérez, S., Garcia-Carrillo, D., Marín-López, R.,
+              Hernández-Ramos, J., Marín-Pérez, R., and A. Skarmeta,
+              "Architecture of security association establishment based
+              on bootstrapping technologies for enabling critical IoT
+              K", October 2018, <http://www.anastacia-
+              h2020.eu/publications/Architecture_of_security_association
+              _establishment_based_on_bootstrapping_technologies_for_ena
+              bling_critical_IoT_infrastructures.pdf>.
+
+   [RFC7228]  Bormann, C., Ersue, M., and A. Keranen, "Terminology for
+              Constrained-Node Networks", RFC 7228,
+              DOI 10.17487/RFC7228, May 2014,
+              <https://www.rfc-editor.org/info/rfc7228>.
+
+   [RFC7258]  Farrell, S. and H. Tschofenig, "Pervasive Monitoring Is an
+              Attack", BCP 188, RFC 7258, DOI 10.17487/RFC7258, May
+              2014, <https://www.rfc-editor.org/info/rfc7258>.
+
+   [RFC7296]  Kaufman, C., Hoffman, P., Nir, Y., Eronen, P., and T.
+              Kivinen, "Internet Key Exchange Protocol Version 2
+              (IKEv2)", STD 79, RFC 7296, DOI 10.17487/RFC7296, October
+              2014, <https://www.rfc-editor.org/info/rfc7296>.
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 45]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
+              <https://www.rfc-editor.org/info/rfc8446>.
+
+   [SSR18]    Bruni, A., Sahl Jørgensen, T., Grønbech Petersen, T., and
+              C. Schürmann, "Formal Verification of Ephemeral Diffie-
+              Hellman Over COSE (EDHOC)", November 2018,
+              <https://www.springerprofessional.de/en/formal-
+              verification-of-ephemeral-diffie-hellman-over-cose-
+              edhoc/16284348>.
+
+Appendix A.  Use of CBOR, CDDL and COSE in EDHOC
+
+   This Appendix is intended to simplify for implementors not familiar
+   with CBOR [RFC7049], CDDL [RFC8610], COSE [RFC8152], and HKDF
+   [RFC5869].
+
+A.1.  CBOR and CDDL
+
+   The Concise Binary Object Representation (CBOR) [RFC7049] is a data
+   format designed for small code size and small message size.  CBOR
+   builds on the JSON data model but extends it by e.g. encoding binary
+   data directly without base64 conversion.  In addition to the binary
+   CBOR encoding, CBOR also has a diagnostic notation that is readable
+   and editable by humans.  The Concise Data Definition Language (CDDL)
+   [RFC8610] provides a way to express structures for protocol messages
+   and APIs that use CBOR.  [RFC8610] also extends the diagnostic
+   notation.
+
+   CBOR data items are encoded to or decoded from byte strings using a
+   type-length-value encoding scheme, where the three highest order bits
+   of the initial byte contain information about the major type.  CBOR
+   supports several different types of data items, in addition to
+   integers (int, uint), simple values (e.g. null), byte strings (bstr),
+   and text strings (tstr), CBOR also supports arrays [] of data items,
+   maps {} of pairs of data items, and sequences
+   [I-D.ietf-cbor-sequence] of data items.  Some examples are given
+   below.  For a complete specification and more examples, see [RFC7049]
+   and [RFC8610].  We recommend implementors to get used to CBOR by
+   using the CBOR playground [CborMe].
+
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 46]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+    Diagnostic          Encoded              Type
+    ------------------------------------------------------------------
+    1                   0x01                 unsigned integer
+    24                  0x1818               unsigned integer
+    -24                 0x37                 negative integer
+    -25                 0x3818               negative integer
+    null                0xf6                 simple value
+    h'12cd'             0x4212cd             byte string
+    '12cd'              0x4431326364         byte string
+    "12cd"              0x6431326364         text string
+    { 4 : h'cd' }       0xa10441cd           map
+    << 1, 2, null >>    0x430102f6           byte string
+    [ 1, 2, null ]      0x830102f6           array
+    ( 1, 2, null )      0x0102f6             sequence
+    1, 2, null          0x0102f6             sequence
+    ------------------------------------------------------------------
+
+A.2.  COSE
+
+   CBOR Object Signing and Encryption (COSE) [RFC8152] describes how to
+   create and process signatures, message authentication codes, and
+   encryption using CBOR.  COSE builds on JOSE, but is adapted to allow
+   more efficient processing in constrained devices.  EDHOC makes use of
+   COSE_Key, COSE_Encrypt0, COSE_Sign1, and COSE_KDF_Context objects.
+
+Appendix B.  Test Vectors
+
+   This appendix provides detailed test vectors to ease implementation
+   and ensure interoperability.  In addition to hexadecimal, all CBOR
+   data items and sequences are given in CBOR diagnostic notation.  The
+   test vectors use 1 byte key identifiers, 1 byte connection IDs, and
+   the default mapping to CoAP where the Initiator acts as CoAP client
+   (this means that corr = 1).
+
+B.1.  Test Vectors for EDHOC Authenticated with Signature Keys (RPK)
+
+   EDHOC with signature authentication is used:
+
+   method (Signature Authentication)
+   0
+
+   CoaP is used as transport and the Initiator acts as CoAP client:
+
+   corr (the Initiator can correlate message_1 and message_2)
+   1
+
+   No unprotected opaque auxiliary data is sent in the message
+   exchanges.
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 47]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   The pre-defined Cipher Suite 0 is in place both on the Initiator and
+   the Responder, see Section 8.3.
+
+B.1.1.  Input for the Initiator
+
+   The following are the parameters that are set in the Initiator before
+   the first message exchange.
+
+   Initiator's private authentication key (32 bytes)
+   53 21 fc 01 c2 98 20 06 3a 72 50 8f c6 39 25 1d c8 30 e2 f7 68 3e b8 e3
+   8a f1 64 a5 b9 af 9b e3
+
+   Initiator's public authentication key (32 bytes)
+   42 4c 75 6a b7 7c c6 fd ec f0 b3 ec fc ff b7 53 10 c0 15 bf 5c ba 2e c0
+   a2 36 e6 65 0c 8a b9 c7
+
+   kid value to identify the Initiator's public authentication key (1 byte)
+   a2
+
+   This test vector uses COSE_Key objects to store the raw public keys.
+   Moreover, EC2 keys with curve Ed25519 are used.  That is in agreement
+   with the Cipher Suite 0.
+
+   CRED_I =
+   << {
+     1:  1,
+    -1:  6,
+    -2:  h'424c756ab77cc6fdecf0b3ecfcffb75310c015bf5cba2ec0a236e6650c8ab9c7
+           '
+   } >>
+
+   CRED_I (bstr-wrapped COSE_Key) (CBOR-encoded) (42 bytes)
+   58 28 a3 01 01 20 06 21 58 20 42 4c 75 6a b7 7c c6 fd ec f0 b3 ec fc ff
+   b7 53 10 c0 15 bf 5c ba 2e c0 a2 36 e6 65 0c 8a b9 c7
+
+   Because COSE_Keys are used, and because kid = h'a2':
+   ~~~~~~~~~~~~~~~~~~~~~~~ ID_CRED_I = { 4: h'a2' }
+   ~~~~~~~~~~~~~~~~~~~~~~~
+
+   Note that since the map for ID_CRED_I contains a single 'kid'
+   parameter, ID_CRED_I is used when transported in the protected header
+   of the COSE Object, but only the kid_I is used when added to the
+   plaintext (see Section 4.4.2):
+
+   ID_CRED_I (in protected header) (CBOR-encoded) (4 bytes)
+   a1 04 41 a2
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 48]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   kid_I (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a2
+
+B.1.2.  Input for the Responder
+
+   The following are the parameters that are set in the Responder before
+   the first message exchange.
+
+   the Responder's private authentication key (32 bytes)
+   74 56 b3 a3 e5 8d 8d 26 dd 36 bc 75 d5 5b 88 63 a8 5d 34 72 f4 a0 1f 02
+   24 62 1b 1c b8 16 6d a9
+
+   the Responder's public authentication key (32 bytes)
+   1b 66 1e e5 d5 ef 16 72 a2 d8 77 cd 5b c2 0f 46 30 dc 78 a1 14 de 65 9c
+   7e 50 4d 0f 52 9a 6b d3
+
+   kid value to identify V's public authentication key (1 byte)
+   a3
+
+   This test vector uses COSE_Key objects to store the raw public keys.
+   Moreover, EC2 keys with curve Ed25519 are used.  That is in agreement
+   with the Cipher Suite 0.
+
+   CRED_R =
+   << {
+     1:  1,
+    -1:  6,
+    -2:  h'1b661ee5d5ef1672a2d877cd5bc20f4630dc78a114de659c7e504d0f529a6bd3
+           '
+   } >>
+
+   CRED_R (bstr-wrapped COSE_Key) (CBOR-encoded) (42 bytes)
+   58 28 a3 01 01 20 06 21 58 20 1b 66 1e e5 d5 ef 16 72 a2 d8 77 cd 5b c2
+   0f 46 30 dc 78 a1 14 de 65 9c 7e 50 4d 0f 52 9a 6b d3
+
+   Because COSE_Keys are used, and because kid = h'a3':
+   ~~~~~~~~~~~~~~~~~~~~~~~ ID_CRED_R = { 4: h'a3' }
+   ~~~~~~~~~~~~~~~~~~~~~~~
+
+   Note that since the map for ID_CRED_R contains a single 'kid'
+   parameter, ID_CRED_I is used when transported in the protected header
+   of the COSE Object, but only the kid_R is used when added to the
+   plaintext (see Section 4.4.2):
+
+   ID_CRED_R (in protected header) (CBOR-encoded) (4 bytes)
+   a1 04 41 a3
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 49]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   kid_R (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a3
+
+B.1.3.  Message 1
+
+   From the input parameters (in Appendix B.1.1):
+
+   TYPE (4 * method + corr)
+   1
+
+   suite
+   0
+
+   SUITES_I : suite
+   0
+
+   Initiator's ephemeral private key (32 bytes)
+   d4 d8 1a ba fa d9 08 a0 cc ef ef 5a d6 b0 5d 50 27 02 f1 c1 6f 23 2c 25
+   92 93 09 ac 44 1b 95 8e
+
+   G_X (X-coordinate of the ephemeral public key of the Initiator) (32 bytes)
+   b1 a3 e8 94 60 e8 8d 3a 8d 54 21 1d c9 5f 0b 90 3f f2 05 eb 71 91 2d 6d
+   b8 f4 af 98 0d 2d b8 3a
+
+   C_I (Connection identifier chosen by the Initiator) (1 byte)
+   c3
+
+   No AD_1 is provided, so AD_1 is absent from message_1.
+
+   Message_1 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   message_1 =
+   (
+     1,
+     0,
+     h'b1a3e89460e88d3a8d54211dc95f0b903ff205eb71912d6db8f4af980d2db83a',
+     h'c3'
+   )
+
+   message_1 (CBOR Sequence) (38 bytes)
+   01 00 58 20 b1 a3 e8 94 60 e8 8d 3a 8d 54 21 1d c9 5f 0b 90 3f f2 05 eb
+   71 91 2d 6d b8 f4 af 98 0d 2d b8 3a 41 c3
+
+B.1.4.  Message 2
+
+   Since TYPE mod 4 equals 1, C_I is omitted from data_2.
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 50]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Responder's ephemeral private key (32 bytes)
+   17 cd c7 bc a3 f2 a0 bd a6 0c 6d e5 b9 6f 82 a3 62 39 b4 4b de 39 7a 38
+   62 d5 29 ba 8b 3d 7c 62
+
+   G_Y (X-coordinate of the ephemeral public key of the Responder) (32 bytes)
+   8d b5 77 f9 b9 c2 74 47 98 98 7d b5 57 bf 31 ca 48 ac d2 05 a9 db 8c 32
+   0e 5d 49 f3 02 a9 64 74
+
+   C_R (Connection identifier chosen by the Responder) (1 byte)
+   c4
+
+   Data_2 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   data_2 =
+   (
+     h'8db577f9b9c2744798987db557bf31ca48acd205a9db8c320e5d49f302a96474',
+     h'c4'
+   )
+
+   data_2 (CBOR Sequence) (36 bytes)
+   58 20 8d b5 77 f9 b9 c2 74 47 98 98 7d b5 57 bf 31 ca 48 ac d2 05 a9 db
+   8c 32 0e 5d 49 f3 02 a9 64 74 41 c4
+
+   From data_2 and message_1 (from Appendix B.1.3), compute the input to
+   the transcript hash TH_2 = H( message_1, data_2 ), as a CBOR Sequence
+   of these 2 data items.
+
+   ( message_1, data_2 ) (CBOR Sequence) (74 bytes)
+   01 00 58 20 b1 a3 e8 94 60 e8 8d 3a 8d 54 21 1d c9 5f 0b 90 3f f2 05 eb
+   71 91 2d 6d b8 f4 af 98 0d 2d b8 3a 41 c3 58 20 8d b5 77 f9 b9 c2 74 47
+   98 98 7d b5 57 bf 31 ca 48 ac d2 05 a9 db 8c 32 0e 5d 49 f3 02 a9 64 74
+   41 c4
+
+   And from there, compute the transcript hash TH_2 = SHA-256(
+   message_1, data_2 )
+
+   TH_2 value (32 bytes)
+   55 50 b3 dc 59 84 b0 20 9a e7 4e a2 6a 18 91 89 57 50 8e 30 33 2b 11 da
+   68 1d c2 af dd 87 03 55
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_2 (CBOR-encoded) (34 bytes)
+   58 20 55 50 b3 dc 59 84 b0 20 9a e7 4e a2 6a 18 91 89 57 50 8e 30 33 2b
+   11 da 68 1d c2 af dd 87 03 55
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 51]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.1.4.1.  Signature Computation
+
+   COSE_Sign1 is computed with the following parameters.  From
+   Appendix B.1.2:
+
+   *  protected = bstr .cbor ID_CRED_R
+
+   *  payload = CRED_R
+
+   And from Appendix B.1.4:
+
+   *  external_aad = TH_2
+
+   The Sig_structure M_R to be signed is: [ "Signature1",
+   << ID_CRED_R >>, TH_2, CRED_R ] , as defined in Section 4.3.2:
+
+   M_R =
+   [
+     "Signature1",
+     << { 4: h'a3' } >>,
+     h'5550b3dc5984b0209ae74ea26a18918957508e30332b11da681dc2afdd870355',
+     << {
+       1:  1,
+      -1:  6,
+      -2:  h'1b661ee5d5ef1672a2d877cd5bc20f4630dc78a114de659c7e504d0f529a6b
+               d3'
+     } >>
+   ]
+
+   Which encodes to the following byte string ToBeSigned:
+
+   M_R (message to be signed with Ed25519) (CBOR-encoded) (93 bytes)
+   84 6a 53 69 67 6e 61 74 75 72 65 31 44 a1 04 41 a3 58 20 55 50 b3 dc 59
+   84 b0 20 9a e7 4e a2 6a 18 91 89 57 50 8e 30 33 2b 11 da 68 1d c2 af dd
+   87 03 55 58 28 a3 01 01 20 06 21 58 20 1b 66 1e e5 d5 ef 16 72 a2 d8 77
+   cd 5b c2 0f 46 30 dc 78 a1 14 de 65 9c 7e 50 4d 0f 52 9a 6b d3
+
+   The message is signed using the private authentication key of V, and
+   produces the following signature:
+
+   V's signature (64 bytes)
+   52 3d 99 6d fd 9e 2f 77 c7 68 71 8a 30 c3 48 77 8c 5e b8 64 dd 53 7e 55
+   5e 4a 00 05 e2 09 53 07 13 ca 14 62 0d e8 18 7e 81 99 6e e8 04 d1 53 b8
+   a1 f6 08 49 6f dc d9 3d 30 fc 1c 8b 45 be cc 06
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 52]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.1.4.2.  Key and Nonce Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK = HMAC-SHA-256(salt, G_XY)
+
+   Since this is the asymmetric case, salt is the empty byte string.
+
+   G_XY is the shared secret, and since the curve25519 is used, the ECDH
+   shared secret is the output of the X25519 function.
+
+   G_XY (32 bytes)
+   c6 1e 09 09 a1 9d 64 24 01 63 ec 26 2e 9c c4 f8 8c e7 7b e1 23 c5 ab 53
+   8d 26 b0 69 22 a5 20 67
+
+   From there, PRK is computed:
+
+   PRK (32 bytes)
+   ba 9c 2c a1 c5 62 14 a6 e0 f6 13 ed a8 91 86 8a 4c a3 e3 fa bc c7 79 8f
+   dc 01 60 80 07 59 16 71
+
+   Key K_2 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+   info for K_2 =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'5550b3dc5984b0209ae74ea26a18918957508e30332b11da681dc2af
+                   dd870355']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_2) (CBOR-encoded) (48 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 40 58 20 55 50 b3 dc 59 84 b0 20
+   9a e7 4e a2 6a 18 91 89 57 50 8e 30 33 2b 11 da 68 1d c2 af dd 87 03 55
+
+   L is the length of K_2, so 16 bytes.
+
+   From these parameters, K_2 is computed:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 53]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   K_2 (16 bytes)
+   da d7 44 af 07 c4 da 27 d1 f0 a3 8a 0c 4b 87 38
+
+   Nonce IV_2 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+   info for IV_2 =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'', h'5550b3dc5984b0209ae74ea26a18918957508e30332b11da681dc2af
+                   dd870355']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_2) (CBOR-encoded) (61 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 40 58 20 55 50 b3 dc 59 84 b0 20 9a e7 4e a2 6a 18 91 89 57 50 8e
+   30 33 2b 11 da 68 1d c2 af dd 87 03 55
+
+   L is the length of IV_2, so 13 bytes.
+
+   From these parameters, IV_2 is computed:
+
+   IV_2 (13 bytes)
+   fb a1 65 d9 08 da a7 8e 4f 84 41 42 d0
+
+B.1.4.3.  Ciphertext Computation
+
+   COSE_Encrypt0 is computed with the following parameters.  Note that
+   AD_2 is omitted.
+
+   *  empty protected header
+
+   *  external_aad = TH_2
+
+   *  plaintext = CBOR Sequence of the items kid_R, signature, in this
+      order.
+
+   with kid_R taken from Appendix B.1.2, and signature as calculated in
+   Appendix B.1.4.1.
+
+   The plaintext is the following:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 54]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   P_2  (68 bytes)
+   41 a3 58 40 52 3d 99 6d fd 9e 2f 77 c7 68 71 8a 30 c3 48 77 8c 5e b8 64
+   dd 53 7e 55 5e 4a 00 05 e2 09 53 07 13 ca 14 62 0d e8 18 7e 81 99 6e e8
+   04 d1 53 b8 a1 f6 08 49 6f dc d9 3d 30 fc 1c 8b 45 be cc 06
+
+   From the parameters above, the Enc_structure A_2 is computed.
+
+   A_2 =
+   [
+     "Encrypt0",
+     h'',
+     h'5550b3dc5984b0209ae74ea26a18918957508e30332b11da681dc2afdd870355'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+   A_2 (CBOR-encoded) (45 bytes)
+   83 68 45 6e 63 72 79 70 74 30 40 58 20 55 50 b3 dc 59 84 b0 20 9a e7 4e
+   a2 6a 18 91 89 57 50 8e 30 33 2b 11 da 68 1d c2 af dd 87 03 55
+
+   The key and nonce used are defined in Appendix B.1.4.2:
+
+   *  key = K_2
+
+   *  nonce = IV_2
+
+   Using the parameters above, the ciphertext CIPHERTEXT_2 can be
+   computed:
+
+   CIPHERTEXT_2 (76 bytes)
+   1e 6b fe 0e 77 99 ce f0 66 a3 4f 08 ef aa 90 00 6d b4 4c 90 1c f7 9b 23
+   85 3a b9 7f d8 db c8 53 39 d5 ed 80 87 78 3c f7 a4 a7 e0 ea 38 c2 21 78
+   9f a3 71 be 64 e9 3c 43 a7 db 47 d1 e3 fb 14 78 8e 96 7f dd 78 d8 80 78
+   e4 9b 78 bf
+
+B.1.4.4.  message_2
+
+   From the parameter computed in Appendix B.1.4 and Appendix B.1.4.3,
+   message_2 is computed, as the CBOR Sequence of the following items:
+   (G_Y, C_R, CIPHERTEXT_2).
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 55]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   message_2 =
+   (
+     h'8db577f9b9c2744798987db557bf31ca48acd205a9db8c320e5d49f302a96474',
+     h'c4',
+     h'1e6bfe0e7799cef066a34f08efaa90006db44c901cf79b23853ab97fd8dbc85339d5
+       ed8087783cf7a4a7e0ea38c221789fa371be64e93c43a7db47d1e3fb14788e967fdd
+       78d88078e49b78bf'
+   )
+
+   Which encodes to the following byte string:
+
+   message_2 (CBOR Sequence) (114 bytes)
+   58 20 8d b5 77 f9 b9 c2 74 47 98 98 7d b5 57 bf 31 ca 48 ac d2 05 a9 db
+   8c 32 0e 5d 49 f3 02 a9 64 74 41 c4 58 4c 1e 6b fe 0e 77 99 ce f0 66 a3
+   4f 08 ef aa 90 00 6d b4 4c 90 1c f7 9b 23 85 3a b9 7f d8 db c8 53 39 d5
+   ed 80 87 78 3c f7 a4 a7 e0 ea 38 c2 21 78 9f a3 71 be 64 e9 3c 43 a7 db
+   47 d1 e3 fb 14 78 8e 96 7f dd 78 d8 80 78 e4 9b 78 bf
+
+B.1.5.  Message 3
+
+   Since TYPE mod 4 equals 1, C_R is not omitted from data_3.
+
+   C_R (1 byte)
+   c4
+
+   Data_3 is constructed, as the CBOR Sequence of the CBOR data item
+   above.
+
+   data_3 =
+   (
+     h'c4'
+   )
+
+   data_3 (CBOR Sequence) (2 bytes)
+   41 c4
+
+   From data_3, CIPHERTEXT_2 (Appendix B.1.4.3), and TH_2
+   (Appendix B.1.4), compute the input to the transcript hash TH_2 =
+   H(TH_2 , CIPHERTEXT_2, data_3), as a CBOR Sequence of these 3 data
+   items.
+
+   ( TH_2, CIPHERTEXT_2, data_3 ) (CBOR Sequence) (114 bytes)
+   58 20 55 50 b3 dc 59 84 b0 20 9a e7 4e a2 6a 18 91 89 57 50 8e 30 33 2b
+   11 da 68 1d c2 af dd 87 03 55 58 4c 1e 6b fe 0e 77 99 ce f0 66 a3 4f 08
+   ef aa 90 00 6d b4 4c 90 1c f7 9b 23 85 3a b9 7f d8 db c8 53 39 d5 ed 80
+   87 78 3c f7 a4 a7 e0 ea 38 c2 21 78 9f a3 71 be 64 e9 3c 43 a7 db 47 d1
+   e3 fb 14 78 8e 96 7f dd 78 d8 80 78 e4 9b 78 bf 41 c4
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 56]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   And from there, compute the transcript hash TH_3 = SHA-256(TH_2 ,
+   CIPHERTEXT_2, data_3)
+
+   TH_3 value (32 bytes)
+   21 cc b6 78 b7 91 14 96 09 55 88 5b 90 a2 b8 2e 3b 2c a2 7e 8e 37 4a 79
+   07 f3 e7 85 43 67 fc 22
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_3 (CBOR-encoded) (34 bytes)
+   58 20 21 cc b6 78 b7 91 14 96 09 55 88 5b 90 a2 b8 2e 3b 2c a2 7e 8e 37
+   4a 79 07 f3 e7 85 43 67 fc 22
+
+B.1.5.1.  Signature Computation
+
+   COSE_Sign1 is computed with the following parameters.  From
+   Appendix B.1.1:
+
+   *  protected = bstr .cbor ID_CRED_I
+
+   *  payload = CRED_I
+
+   And from Appendix B.1.5:
+
+   *  external_aad = TH_3
+
+   The Sig_structure M_I to be signed is: [ "Signature1",
+   << ID_CRED_I >>, TH_3, CRED_I ] , as defined in Section 4.4.2:
+
+   M_I =
+   [
+     "Signature1",
+     << { 4: h'a2' } >>,
+     h'21ccb678b79114960955885b90a2b82e3b2ca27e8e374a7907f3e7854367fc22',
+     << {
+       1:  1,
+      -1:  6,
+      -2:  h'424c756ab77cc6fdecf0b3ecfcffb75310c015bf5cba2ec0a236e6650c8ab9
+               c7'
+     } >>
+   ]
+
+   Which encodes to the following byte string ToBeSigned:
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 57]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   M_I (message to be signed with Ed25519) (CBOR-encoded) (93 bytes)
+   84 6a 53 69 67 6e 61 74 75 72 65 31 44 a1 04 41 a2 58 20 21 cc b6 78 b7
+   91 14 96 09 55 88 5b 90 a2 b8 2e 3b 2c a2 7e 8e 37 4a 79 07 f3 e7 85 43
+   67 fc 22 58 28 a3 01 01 20 06 21 58 20 42 4c 75 6a b7 7c c6 fd ec f0 b3
+   ec fc ff b7 53 10 c0 15 bf 5c ba 2e c0 a2 36 e6 65 0c 8a b9 c7
+
+   The message is signed using the private authentication key of U, and
+   produces the following signature:
+
+   Initiator's signature (64 bytes)
+   5c 7d 7d 64 c9 61 c5 f5 2d cf 33 91 25 92 a1 af f0 2c 33 62 b0 e7 55 0e
+   4b c5 66 b7 0c 20 61 f3 c5 f6 49 e5 ed 32 3d 30 a2 6c 61 2f bb 5c bd 25
+   f3 1c 27 22 8c ea ec 64 29 31 95 41 fe 07 8e 0e
+
+B.1.5.2.  Key and Nonce Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0 ).
+
+   PRK = HMAC-SHA-256(salt, G_XY)
+
+   Since this is the asymmetric case, salt is the empty byte string.
+
+   G_XY is the shared secret, and since the curve25519 is used, the ECDH
+   shared secret is the output of the X25519 function.
+
+   G_XY (32 bytes)
+   c6 1e 09 09 a1 9d 64 24 01 63 ec 26 2e 9c c4 f8 8c e7 7b e1 23 c5 ab 53
+   8d 26 b0 69 22 a5 20 67
+
+   From there, PRK is computed:
+
+   PRK (32 bytes)
+   ba 9c 2c a1 c5 62 14 a6 e0 f6 13 ed a8 91 86 8a 4c a3 e3 fa bc c7 79 8f
+   dc 01 60 80 07 59 16 71
+
+   Key K_3 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 58]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info for K_3 =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'21ccb678b79114960955885b90a2b82e3b2ca27e8e374a7907f3e785
+                   4367fc22']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_3) (CBOR-encoded) (48 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 40 58 20 21 cc b6 78 b7 91 14 96
+   09 55 88 5b 90 a2 b8 2e 3b 2c a2 7e 8e 37 4a 79 07 f3 e7 85 43 67 fc 22
+
+   L is the length of K_3, so 16 bytes.
+
+   From these parameters, K_3 is computed:
+
+   K_3 (16 bytes)
+   e1 ac d4 76 f5 96 a4 60 72 44 a8 da 8c ff 49 df
+
+   Nonce IV_3 is the output of HKDF-Expand(PRK, info, L).info is defined
+   as follows:
+
+   info for IV_3 =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'', h'21ccb678b79114960955885b90a2b82e3b2ca27e8e374a7907f3e785
+                   4367fc22']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_3) (CBOR-encoded) (61 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 40 58 20 21 cc b6 78 b7 91 14 96 09 55 88 5b 90 a2 b8 2e 3b 2c a2
+   7e 8e 37 4a 79 07 f3 e7 85 43 67 fc 22
+
+   From these parameters, IV_3 is computed:
+
+   IV_3 (13 bytes)
+   de 53 02 13 ab a2 6a 47 1a 51 f3 d6 fb
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 59]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.1.5.3.  Ciphertext Computation
+
+   COSE_Encrypt0 is computed with the following parameters.  Note that
+   AD_3 is omitted.
+
+   *  empty protected header
+
+   *  external_aad = TH_3
+
+   *  plaintext = CBOR Sequence of the items kid_I, signature, in this
+      order.
+
+   with kid_I taken from Appendix B.1.1, and signature as calculated in
+   Appendix B.1.5.1.
+
+   The plaintext is the following:
+
+   P_3  (68 bytes)
+   41 a2 58 40 5c 7d 7d 64 c9 61 c5 f5 2d cf 33 91 25 92 a1 af f0 2c 33 62
+   b0 e7 55 0e 4b c5 66 b7 0c 20 61 f3 c5 f6 49 e5 ed 32 3d 30 a2 6c 61 2f
+   bb 5c bd 25 f3 1c 27 22 8c ea ec 64 29 31 95 41 fe 07 8e 0e
+
+   From the parameters above, the Enc_structure A_3 is computed.
+
+   A_3 =
+   [
+     "Encrypt0",
+     h'',
+     h'21ccb678b79114960955885b90a2b82e3b2ca27e8e374a7907f3e7854367fc22'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+   A_3 (CBOR-encoded) (45 bytes)
+   83 68 45 6e 63 72 79 70 74 30 40 58 20 21 cc b6 78 b7 91 14 96 09 55 88
+   5b 90 a2 b8 2e 3b 2c a2 7e 8e 37 4a 79 07 f3 e7 85 43 67 fc 22
+
+   The key and nonce used are defined in Appendix B.1.5.2:
+
+   *  key = K_3
+
+   *  nonce = IV_3
+
+   Using the parameters above, the ciphertext CIPHERTEXT_3 can be
+   computed:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 60]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   CIPHERTEXT_3 (76 bytes)
+   de 4a 83 3d 48 b6 64 74 14 2c c9 bd ce 87 d9 3a f8 35 57 9c 2d bf 1b 9e
+   2f b4 dc 66 60 0d ba c6 bb 3c c0 5c 29 0e f3 5d 51 5b 4d 7d 64 83 f5 09
+   61 43 b5 56 44 cf af d1 ff aa 7f 2b a3 86 36 57 83 1d d2 e5 bd 04 04 38
+   60 14 0d c8
+
+B.1.5.4.  message_3
+
+   From the parameter computed in Appendix B.1.5 and Appendix B.1.5.3,
+   message_3 is computed, as the CBOR Sequence of the following items:
+   (C_R, CIPHERTEXT_3).
+
+   message_3 =
+   (
+     h'c4',
+     h'de4a833d48b66474142cc9bdce87d93af835579c2dbf1b9e2fb4dc66600dbac6bb3c
+       c05c290ef35d515b4d7d6483f5096143b55644cfafd1ffaa7f2ba3863657831dd2e5
+       bd04043860140dc8'
+   )
+
+   Which encodes to the following byte string:
+
+   message_3 (CBOR Sequence) (80 bytes)
+   41 c4 58 4c de 4a 83 3d 48 b6 64 74 14 2c c9 bd ce 87 d9 3a f8 35 57 9c
+   2d bf 1b 9e 2f b4 dc 66 60 0d ba c6 bb 3c c0 5c 29 0e f3 5d 51 5b 4d 7d
+   64 83 f5 09 61 43 b5 56 44 cf af d1 ff aa 7f 2b a3 86 36 57 83 1d d2 e5
+   bd 04 04 38 60 14 0d c8
+
+B.1.5.5.  OSCORE Security Context Derivation
+
+   From the previous message exchange, the Common Security Context for
+   OSCORE [RFC8613] can be derived, as specified in Section 3.8.1.
+
+   First af all, TH_4 is computed: TH_4 = H( TH_3, CIPHERTEXT_3 ), where
+   the input to the hash function is the CBOR Sequence of TH_3 and
+   CIPHERTEXT_3
+
+   ( TH_3, CIPHERTEXT_3 ) (CBOR Sequence) (112 bytes)
+   58 20 21 cc b6 78 b7 91 14 96 09 55 88 5b 90 a2 b8 2e 3b 2c a2 7e 8e 37
+   4a 79 07 f3 e7 85 43 67 fc 22 58 4c de 4a 83 3d 48 b6 64 74 14 2c c9 bd
+   ce 87 d9 3a f8 35 57 9c 2d bf 1b 9e 2f b4 dc 66 60 0d ba c6 bb 3c c0 5c
+   29 0e f3 5d 51 5b 4d 7d 64 83 f5 09 61 43 b5 56 44 cf af d1 ff aa 7f 2b
+   a3 86 36 57 83 1d d2 e5 bd 04 04 38 60 14 0d c8
+
+   And from there, compute the transcript hash TH_4 = SHA-256( TH_3,
+   CIPHERTEXT_3 )
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 61]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   TH_4 value (32 bytes)
+   51 ed 39 32 bc ba e8 90 1c 1d 4d eb 94 bd 67 3a b4 d3 8c 34 81 96 09 ee
+   0d 5c 9d a6 e9 80 7f e5
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_4 (CBOR-encoded) (34 bytes)
+   58 20 51 ed 39 32 bc ba e8 90 1c 1d 4d eb 94 bd 67 3a b4 d3 8c 34 81 96
+   09 ee 0d 5c 9d a6 e9 80 7f e5
+
+   To derive the Master Secret and Master Salt the same HKDF-Expand
+   (PRK, info, L) is used, with different info and L.
+
+   For Master Secret:
+
+   L for Master Secret = 16
+
+   info for Master Secret =
+   [
+     "OSCORE Master Secret",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'51ed3932bcbae8901c1d4deb94bd673ab4d38c34819609ee0d5c9da6
+                   e9807fe5']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Secret) (CBOR-encoded) (68 bytes)
+   84 74 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 65 63 72 65 74 83 f6
+   f6 f6 83 f6 f6 f6 83 18 80 40 58 20 51 ed 39 32 bc ba e8 90 1c 1d 4d eb
+   94 bd 67 3a b4 d3 8c 34 81 96 09 ee 0d 5c 9d a6 e9 80 7f e5
+
+   Finally, the Master Secret value computed is:
+
+   OSCORE Master Secret (16 bytes)
+   09 02 9d b0 0c 3e 01 27 42 c3 a8 69 04 07 4c 0e
+
+   For Master Salt:
+
+   L for Master Salt = 8
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 62]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info for Master Salt =
+   [
+     "OSCORE Master Salt",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 64, h'', h'51ed3932bcbae8901c1d4deb94bd673ab4d38c34819609ee0d5c9da6
+                   e9807fe5']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Salt) (CBOR-encoded) (66 bytes)
+   84 72 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 61 6c 74 83 f6 f6 f6
+   83 f6 f6 f6 83 18 40 40 58 20 51 ed 39 32 bc ba e8 90 1c 1d 4d eb 94 bd
+   67 3a b4 d3 8c 34 81 96 09 ee 0d 5c 9d a6 e9 80 7f e5
+
+   Finally, the Master Salt value computed is:
+
+   OSCORE Master Salt (8 bytes)
+   81 02 97 22 a2 30 4a 06
+
+   The Client's Sender ID takes the value of C_R:
+
+   Client's OSCORE Sender ID (1 byte)
+   c4
+
+   The Server's Sender ID takes the value of C_I:
+
+   Server's OSCORE Sender ID (1 byte)
+   c3
+
+   The algorithms are those negociated in the cipher suite:
+
+   AEAD Algorithm
+   10
+
+   HMAC Algorithm
+   5
+
+B.2.  Test Vectors for EDHOC Authenticated with Symmetric Keys (PSK)
+
+   Symmetric EDHOC is used:
+
+   method (Symmetric Authentication)
+   1
+
+   CoaP is used as transport and the Initiator acts as CoAP client:
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 63]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   corr (the Initiator can correlate message_1 and message_2)
+   1
+
+   No unprotected opaque auxiliary data is sent in the message
+   exchanges.
+
+   The pre-defined Cipher Suite 0 is in place both on the Initiator and
+   the Responder, see Section 8.3.
+
+B.2.1.  Input for the Initiator
+
+   The following are the parameters that are set in the Initiator before
+   the first message exchange.
+
+   Initiator's ephemeral private key (32 bytes)
+   f4 0c ea f8 6e 57 76 92 33 32 b8 d8 fd 3b ef 84 9c ad b1 9c 69 96 bc 27
+   2a f1 f6 48 d9 56 6a 4c
+
+   Initiator's ephemeral public key (value of G_X) (32 bytes)
+   ab 2f ca 32 89 83 22 c2 08 fb 2d ab 50 48 bd 43 c3 55 c6 43 0f 58 88 97
+   cb 57 49 61 cf a9 80 6f
+
+   Connection identifier chosen by the Initiator (value of C_I) (1 byte)
+   c1
+
+   Pre-shared Key (PSK) (16 bytes)
+   a1 1f 8f 12 d0 87 6f 73 6d 2d 8f d2 6e 14 c2 de
+
+   kid value to identify PSK (1 byte)
+   a1
+
+   So ID_PSK is defined as the following:
+
+   ID_PSK =
+   {
+     4:h'a1'
+   }
+
+   This test vector uses COSE_Key objects to store the pre-shared key.
+
+   Note that since the map for ID_PSK contains a single 'kid' parameter,
+   ID_PSK is used when transported in the protected header of the COSE
+   Object, but only the kid is used when added to the plaintext (see
+   Section 5.1):
+
+   ID_PSK (in protected header) (CBOR-encoded) (4 bytes)
+   a1 04 41 a1
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 64]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   kid (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a1
+
+B.2.2.  Input for the Responder
+
+   The following are the parameters that are set in the Responder before
+   the first message exchange.
+
+   Responder's ephemeral private key (32 bytes)
+   d9 81 80 87 de 72 44 ab c1 b5 fc f2 8e 55 e4 2c 7f f9 c6 78 c0 60 51 81
+   f3 7a c5 d7 41 4a 7b 95
+
+   Responder's ephemeral public key (value of G_Y) (32 bytes)
+   fc 3b 33 93 67 a5 22 5d 53 a9 2d 38 03 23 af d0 35 d7 81 7b 6d 1b e4 7d
+   94 6f 6b 09 a9 cb dc 06
+
+   Connection identifier chosen by the Responder (value of C_R) (1 byte)
+   c2
+
+   Pre-shared Key (PSK) (16 bytes)
+   a1 1f 8f 12 d0 87 6f 73 6d 2d 8f d2 6e 14 c2 de
+
+   kid value to identify PSK (1 byte)
+   a1
+
+   So ID_PSK is defined as the following:
+
+   ID_PSK =
+   {
+     4:h'a1'
+   }
+
+   This test vector uses COSE_Key objects to store the pre-shared key.
+
+   Note that since the map for ID_PSK contains a single 'kid' parameter,
+   ID_PSK is used when transported in the protected header of the COSE
+   Object, but only the kid is used when added to the plaintext (see
+   Section 5.1):
+
+   ID_PSK (in protected header) (CBOR-encoded) (4 bytes)
+   a1 04 41 a1
+
+   kid (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a1
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 65]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.2.3.  Message 1
+
+   From the input parameters (in Appendix B.2.1):
+
+   TYPE (4 * method + corr)
+   5
+
+   suite
+   0
+
+   SUITES_I : suite
+   0
+
+   G_X (X-coordinate of the ephemeral public key of the Initiator) (32 bytes)
+   ab 2f ca 32 89 83 22 c2 08 fb 2d ab 50 48 bd 43 c3 55 c6 43 0f 58 88 97
+   cb 57 49 61 cf a9 80 6f
+
+   C_I (Connection identifier chosen by the Initiator) (CBOR encoded) (2 bytes)
+   41 c1
+
+   kid of ID_PSK (CBOR encoded) (2 bytes)
+   41 a1
+
+   No UAD_1 is provided, so AD_1 is absent from message_1.
+
+   Message_1 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   message_1 =
+   (
+     5,
+     0,
+     h'ab2fca32898322c208fb2dab5048bd43c355c6430f588897cb574961cfa9806f',
+     h'c1',
+     h'a1'
+   )
+
+   message_1 (CBOR Sequence) (40 bytes)
+   05 00 58 20 ab 2f ca 32 89 83 22 c2 08 fb 2d ab 50 48 bd 43 c3 55 c6 43
+   0f 58 88 97 cb 57 49 61 cf a9 80 6f 41 c1 41 a1
+
+B.2.4.  Message 2
+
+   Since TYPE mod 4 equals 1, C_I is omitted from data_2.
+
+   G_Y (X-coordinate of the ephemeral public key of the Responder) (32 bytes)
+   fc 3b 33 93 67 a5 22 5d 53 a9 2d 38 03 23 af d0 35 d7 81 7b 6d 1b e4 7d
+   94 6f 6b 09 a9 cb dc 06
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 66]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   C_R (Connection identifier chosen by the Responder) (1 byte)
+   c2
+
+   Data_2 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   data_2 =
+   (
+     h'fc3b339367a5225d53a92d380323afd035d7817b6d1be47d946f6b09a9cbdc06',
+     h'c2'
+   )
+
+   data_2 (CBOR Sequence) (36 bytes)
+   58 20 fc 3b 33 93 67 a5 22 5d 53 a9 2d 38 03 23 af d0 35 d7 81 7b 6d 1b
+   e4 7d 94 6f 6b 09 a9 cb dc 06 41 c2
+
+   From data_2 and message_1 (from Appendix B.2.3), compute the input to
+   the transcript hash TH_2 = H( message_1, data_2 ), as a CBOR Sequence
+   of these 2 data items.
+
+   ( message_1, data_2 ) (CBOR Sequence) (76 bytes)
+   05 00 58 20 ab 2f ca 32 89 83 22 c2 08 fb 2d ab 50 48 bd 43 c3 55 c6 43
+   0f 58 88 97 cb 57 49 61 cf a9 80 6f 41 c1 41 a1 58 20 fc 3b 33 93 67 a5
+   22 5d 53 a9 2d 38 03 23 af d0 35 d7 81 7b 6d 1b e4 7d 94 6f 6b 09 a9 cb
+   dc 06 41 c2
+
+   And from there, compute the transcript hash TH_2 = SHA-256(
+   message_1, data_2 )
+
+   TH_2 value (32 bytes)
+   16 4f 44 d8 56 dd 15 22 2f a4 63 f2 02 d9 c6 0b e3 c6 9b 40 f7 35 8d 34
+   1c db 7b 07 de e1 70 ca
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_2 (CBOR-encoded) (34 bytes)
+   58 20 16 4f 44 d8 56 dd 15 22 2f a4 63 f2 02 d9 c6 0b e3 c6 9b 40 f7 35
+   8d 34 1c db 7b 07 de e1 70 ca
+
+B.2.4.1.  Key and Nonce Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK = HMAC-SHA-256(salt, G_XY)
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 67]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Since this is the symmetric case, salt is the PSK:
+
+   salt (16 bytes)
+   a1 1f 8f 12 d0 87 6f 73 6d 2d 8f d2 6e 14 c2 de
+
+   G_XY is the shared secret, and since the curve25519 is used, the ECDH
+   shared secret is the output of the X25519 function.
+
+   G_XY (32 bytes)
+   d5 75 05 50 6d 8f 30 a8 60 a0 63 d0 1b 5b 7a d7 6a 09 4f 70 61 3b 4a e6
+   6c 5a 90 e5 c2 1f 23 11
+
+   From there, PRK is computed:
+
+   PRK (32 bytes)
+   aa b2 f1 3c cb 1a 4f f7 96 a9 7a 32 a4 d2 fb 62 47 ef 0b 6b 06 da 04 d3
+   d1 06 39 4b 28 76 e2 8c
+
+   Key K_2 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+   info for K_2 =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'164f44d856dd15222fa463f202d9c60be3c69b40f7358d341cdb7b07
+                   dee170ca']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_2) (CBOR-encoded) (48 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 40 58 20 16 4f 44 d8 56 dd 15 22
+   2f a4 63 f2 02 d9 c6 0b e3 c6 9b 40 f7 35 8d 34 1c db 7b 07 de e1 70 ca
+
+   L is the length of K_2, so 16 bytes.
+
+   From these parameters, K_2 is computed:
+
+   K_2 (16 bytes)
+   ac 42 6e 5e 7d 7a d6 ae 3b 19 aa bd e0 f6 25 57
+
+   Nonce IV_2 is the output of HKDF-Expand(PRK, info, L). info is
+   defined as follows:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 68]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info for IV_2 =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'', h'164f44d856dd15222fa463f202d9c60be3c69b40f7358d341cdb7b07
+                   dee170ca']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_2) (CBOR-encoded) (61 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 40 58 20 16 4f 44 d8 56 dd 15 22 2f a4 63 f2 02 d9 c6 0b e3 c6 9b
+   40 f7 35 8d 34 1c db 7b 07 de e1 70 ca
+
+   L is the length of IV_2, so 13 bytes.
+
+   From these parameters, IV_2 is computed:
+
+   IV_2 (13 bytes)
+   ff 11 2e 1c 26 8a a2 a7 7c c3 ee 6c 4d
+
+B.2.4.2.  Ciphertext Computation
+
+   COSE_Encrypt0 is computed with the following parameters.  Note that
+   AD_2 is omitted.
+
+   *  empty protected header
+
+   *  external_aad = TH_2
+
+   *  empty plaintext, since AD_2 is omitted
+
+   *  empty plaintext, since AD_2 is omitted
+
+   From the parameters above, the Enc_structure A_2 is computed.
+
+   A_2 =
+   [
+     "Encrypt0",
+     h'',
+     h'164f44d856dd15222fa463f202d9c60be3c69b40f7358d341cdb7b07dee170ca'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 69]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   A_2 (CBOR-encoded) (45 bytes)
+   83 68 45 6e 63 72 79 70 74 30 40 58 20 16 4f 44 d8 56 dd 15 22 2f a4 63
+   f2 02 d9 c6 0b e3 c6 9b 40 f7 35 8d 34 1c db 7b 07 de e1 70 ca
+
+   The key and nonce used are defined in Appendix B.2.4.1:
+
+   *  key = K_2
+
+   *  nonce = IV_2
+
+   Using the parameters above, the ciphertext CIPHERTEXT_2 can be
+   computed:
+
+   CIPHERTEXT_2 (8 bytes)
+   ba 38 b9 a3 fc 1a 58 e9
+
+B.2.4.3.  message_2
+
+   From the parameter computed in Appendix B.2.4 and Appendix B.2.4.2,
+   message_2 is computed, as the CBOR Sequence of the following items:
+   (G_Y, C_R, CIPHERTEXT_2).
+
+   message_2 =
+   (
+     h'fc3b339367a5225d53a92d380323afd035d7817b6d1be47d946f6b09a9cbdc06',
+     h'c2',
+     h'ba38b9a3fc1a58e9'
+   )
+
+   Which encodes to the following byte string:
+
+   message_2 (CBOR Sequence) (45 bytes)
+   58 20 fc 3b 33 93 67 a5 22 5d 53 a9 2d 38 03 23 af d0 35 d7 81 7b 6d 1b
+   e4 7d 94 6f 6b 09 a9 cb dc 06 41 c2 48 ba 38 b9 a3 fc 1a 58 e9
+
+B.2.5.  Message 3
+
+   Since TYPE mod 4 equals 1, C_R is not omitted from data_3.
+
+   C_R (1 byte)
+   c2
+
+   Data_3 is constructed, as the CBOR Sequence of the CBOR data item
+   above.
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 70]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   data_3 =
+   (
+     h'c2'
+   )
+
+   data_3 (CBOR Sequence) (2 bytes)
+   41 c2
+
+   From data_3, CIPHERTEXT_2 (Appendix B.2.4.2), and TH_2
+   (Appendix B.2.4), compute the input to the transcript hash TH_3 =
+   H(TH_2 , CIPHERTEXT_2, data_3), as a CBOR Sequence of these 3 data
+   items.
+
+   ( TH_2, CIPHERTEXT_2, data_3 ) (CBOR Sequence) (45 bytes)
+   58 20 16 4f 44 d8 56 dd 15 22 2f a4 63 f2 02 d9 c6 0b e3 c6 9b 40 f7 35
+   8d 34 1c db 7b 07 de e1 70 ca 48 ba 38 b9 a3 fc 1a 58 e9 41 c2
+
+   And from there, compute the transcript hash TH_3 = SHA-256(TH_2 ,
+   CIPHERTEXT_2, data_3)
+
+   TH_3 value (32 bytes)
+   11 98 aa b3 ed db 61 b8 a1 b1 93 a9 e5 60 2b 5d 5f ea 76 bc 28 52 89 54
+   81 b5 2b 8a f5 66 d7 fe
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_3 (CBOR-encoded) (34 bytes)
+   58 20 11 98 aa b3 ed db 61 b8 a1 b1 93 a9 e5 60 2b 5d 5f ea 76 bc 28 52
+   89 54 81 b5 2b 8a f5 66 d7 fe
+
+B.2.5.1.  Key and Nonce Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK = HMAC-SHA-256(salt, G_XY)
+
+   Since this is the symmetric case, salt is the PSK:
+
+   salt (16 bytes)
+   a1 1f 8f 12 d0 87 6f 73 6d 2d 8f d2 6e 14 c2 de
+
+   G_XY is the shared secret, and since the curve25519 is used, the ECDH
+   shared secret is the output of the X25519 function.
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 71]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   G_XY (32 bytes)
+   d5 75 05 50 6d 8f 30 a8 60 a0 63 d0 1b 5b 7a d7 6a 09 4f 70 61 3b 4a e6
+   6c 5a 90 e5 c2 1f 23 11
+
+   From there, PRK is computed:
+
+   PRK (32 bytes)
+   aa b2 f1 3c cb 1a 4f f7 96 a9 7a 32 a4 d2 fb 62 47 ef 0b 6b 06 da 04 d3
+   d1 06 39 4b 28 76 e2 8c
+
+   Key K_3 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+   info for K_3 =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'1198aab3eddb61b8a1b193a9e5602b5d5fea76bc2852895481b52b8a
+                   f566d7fe']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_3) (CBOR-encoded) (48 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 40 58 20 11 98 aa b3 ed db 61 b8
+   a1 b1 93 a9 e5 60 2b 5d 5f ea 76 bc 28 52 89 54 81 b5 2b 8a f5 66 d7 fe
+
+   L is the length of K_3, so 16 bytes.
+
+   From these parameters, K_3 is computed:
+
+   K_3 (16 bytes)
+   fe 75 e3 44 27 f8 3a ad 84 16 83 c6 6f a3 8a 62
+
+   Nonce IV_3 is the output of HKDF-Expand(PRK, info, L).
+
+   info is defined as follows:
+
+   info for IV_3 =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'', h'1198aab3eddb61b8a1b193a9e5602b5d5fea76bc2852895481b52b8a
+                   f566d7fe']
+   ]
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 72]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_3) (CBOR-encoded) (61 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 40 58 20 11 98 aa b3 ed db 61 b8 a1 b1 93 a9 e5 60 2b 5d 5f ea 76
+   bc 28 52 89 54 81 b5 2b 8a f5 66 d7 fe
+
+   L is the length of IV_3, so 13 bytes.
+
+   From these parameters, IV_3 is computed:
+
+   IV_3 (13 bytes)
+   60 0a 33 b4 16 de 08 23 52 67 71 ec 8a
+
+B.2.5.2.  Ciphertext Computation
+
+   COSE_Encrypt0 is computed with the following parameters.  Note that
+   AD_3 is omitted.
+
+   *  empty protected header
+
+   *  external_aad = TH_3
+
+   *  empty plaintext, since AD_3 is omitted
+
+   From the parameters above, the Enc_structure A_3 is computed.
+
+   A_3 =
+   [
+     "Encrypt0",
+     h'',
+     h'1198aab3eddb61b8a1b193a9e5602b5d5fea76bc2852895481b52b8af566d7fe'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+   A_3 (CBOR-encoded) (45 bytes)
+   83 68 45 6e 63 72 79 70 74 30 40 58 20 11 98 aa b3 ed db 61 b8 a1 b1 93
+   a9 e5 60 2b 5d 5f ea 76 bc 28 52 89 54 81 b5 2b 8a f5 66 d7 fe
+
+   The key and nonce used are defined in Appendix B.2.5.1:
+
+   *  key = K_3
+
+   *  nonce = IV_3
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 73]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Using the parameters above, the ciphertext CIPHERTEXT_3 can be
+   computed:
+
+   CIPHERTEXT_3 (8 bytes)
+   51 29 07 92 61 45 40 04
+
+B.2.5.3.  message_3
+
+   From the parameter computed in Appendix B.2.5 and Appendix B.2.5.2,
+   message_3 is computed, as the CBOR Sequence of the following items:
+   (C_R, CIPHERTEXT_3).
+
+   message_3 =
+   (
+     h'c2',
+     h'5129079261454004'
+   )
+
+   Which encodes to the following byte string:
+
+   message_3 (CBOR Sequence) (11 bytes)
+   41 c2 48 51 29 07 92 61 45 40 04
+
+B.2.5.4.  OSCORE Security Context Derivation
+
+   From the previous message exchange, the Common Security Context for
+   OSCORE [RFC8613] can be derived, as specified in Section 3.8.1.
+
+   First af all, TH_4 is computed: TH_4 = H( TH_3, CIPHERTEXT_3 ), where
+   the input to the hash function is the CBOR Sequence of TH_3 and
+   CIPHERTEXT_3
+
+   ( TH_3, CIPHERTEXT_3 ) (CBOR Sequence) (43 bytes)
+   58 20 11 98 aa b3 ed db 61 b8 a1 b1 93 a9 e5 60 2b 5d 5f ea 76 bc 28 52
+   89 54 81 b5 2b 8a f5 66 d7 fe 48 51 29 07 92 61 45 40 04
+
+   And from there, compute the transcript hash TH_4 = SHA-256( TH_3,
+   CIPHERTEXT_3 )
+
+   TH_4 value (32 bytes)
+   df 7c 9b 06 f5 dc 0e e8 86 0b 39 6c 78 c5 be b7 57 41 3f a7 b6 a9 cf 28
+   3d db 4c d4 c1 fd e4 3c
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_4 (CBOR-encoded) (34 bytes)
+   58 20 df 7c 9b 06 f5 dc 0e e8 86 0b 39 6c 78 c5 be b7 57 41 3f a7 b6 a9
+   cf 28 3d db 4c d4 c1 fd e4 3c
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 74]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   To derive the Master Secret and Master Salt the same HKDF-Expand
+   (PRK, info, L) is used, with different info and L.
+
+   For Master Secret:
+
+   L for Master Secret = 16
+
+   info for Master Secret =
+   [
+     "OSCORE Master Secret",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'df7c9b06f5dc0ee8860b396c78c5beb757413fa7b6a9cf283ddb4cd4
+                   c1fde43c']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Secret) (CBOR-encoded) (68 bytes)
+   84 74 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 65 63 72 65 74 83 f6
+   f6 f6 83 f6 f6 f6 83 18 80 40 58 20 df 7c 9b 06 f5 dc 0e e8 86 0b 39 6c
+   78 c5 be b7 57 41 3f a7 b6 a9 cf 28 3d db 4c d4 c1 fd e4 3c
+
+   Finally, the Master Secret value computed is:
+
+   OSCORE Master Secret (16 bytes)
+   8d 36 8f 09 26 2d c5 52 7f e7 19 e6 6c 91 63 75
+
+   For Master Salt:
+
+   L for Master Salt = 8
+
+   info for Master Salt =
+   [
+     "OSCORE Master Salt",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 64, h'', h'df7c9b06f5dc0ee8860b396c78c5beb757413fa7b6a9cf283ddb4cd4
+                   c1fde43c']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Salt) (CBOR-encoded) (66 bytes)
+   84 72 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 61 6c 74 83 f6 f6 f6
+   83 f6 f6 f6 83 18 40 40 58 20 df 7c 9b 06 f5 dc 0e e8 86 0b 39 6c 78 c5
+   be b7 57 41 3f a7 b6 a9 cf 28 3d db 4c d4 c1 fd e4 3c
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 75]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Finally, the Master Salt value computed is:
+
+   OSCORE Master Salt (8 bytes)
+   4d b7 06 58 c5 e9 9f b6
+
+   The Client's Sender ID takes the value of C_R:
+
+   Client's OSCORE Sender ID (1 byte)
+   c2
+
+   The Server's Sender ID takes the value of C_I:
+
+   Server's OSCORE Sender ID (1 byte)
+   c1
+
+   The algorithms are those negociated in the cipher suite:
+
+   AEAD Algorithm
+   10
+
+   HMAC Algorithm
+   5
+
+B.3.  Test Vectors for EDHOC Authenticated with Static Diffie-Hellman
+      Keys
+
+   EDHOC with static Diffie-Hellman keys and MAC authentication is used:
+
+   method (MAC Authentication)
+   3
+
+   CoaP is used as transport and the Initiator acts as CoAP client:
+
+   corr (Initiator can correlate message_1 and message_2)
+   1
+
+   No unprotected opaque auxiliary data is sent in the message
+   exchanges.
+
+   The pre-defined Cipher Suite 0 is in place both on Initiator and
+   Responder, see Section 8.3.
+
+B.3.1.  Input for the Initiator
+
+   The following are the parameters that are set in the Initiator before
+   the first message exchange.
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 76]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Initiator's private static DH authentication key (I) (32 bytes)
+   be 55 8a 0e 56 34 23 ff 74 f6 d7 7a 36 8c 35 9d 4c 21 be d2 ef 1d 09 41
+   0d 71 6c 0a e2 64 9c 19
+
+   Initiator's public static DH authentication key (G_I) (32 bytes)
+   6e 5d 68 76 a1 78 15 6c a0 b8 1d c8 0f 81 06 0f a1 a5 d1 35 13 d6 14 bc
+   c2 85 37 ef 98 90 06 44
+
+   kid value to identify the Initiator's public DH authentication key (kid_I) (1 byte)
+   a7
+
+   This test vector uses COSE_Key objects to store the raw public keys.
+   Moreover, EC2 keys with curve X25519 are used.  That is in agreement
+   with the Cipher Suite 0.
+
+   CRED_I =
+   {
+     1:  1,
+    -1:  4,
+    -2:  h'6e5d6876a178156ca0b81dc80f81060fa1a5d13513d614bcc28537ef98900644
+           '
+   }
+
+   CRED_I (COSE_Key) (40 bytes)
+   a3 01 01 20 04 21 58 20 6e 5d 68 76 a1 78 15 6c a0 b8 1d c8 0f 81 06 0f
+   a1 a5 d1 35 13 d6 14 bc c2 85 37 ef 98 90 06 44
+
+   Because COSE_Keys are used, and because kid = h'a7':
+   ~~~~~~~~~~~~~~~~~~~~~~~ ID_CRED_I = { 4: h'a7' }
+   ~~~~~~~~~~~~~~~~~~~~~~~
+
+   Note that since the map for ID_CRED_I contains a single 'kid'
+   parameter, ID_CRED_I is used when transported in the protected header
+   of the COSE Object, but only kid_I is used when added to the
+   plaintext (see Section 4.3.2 and Section 4.4.2):
+
+   ID_CRED_I (in protected header) (CBOR-encoded) (5 bytes)
+   44 a1 04 41 a7
+
+   kid_I (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a7
+
+B.3.2.  Input for the Responder
+
+   The following are the parameters that are set in the Responder before
+   the first message exchange.
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 77]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Responder's private static DH authentication key (R) (32 bytes)
+   25 d8 0d 45 a1 1b 37 2d 5a 23 57 f9 96 ed 04 8e 26 14 ab 8a 40 66 2b 89
+   91 2a 83 77 9d 58 2c 85
+
+   Responder's private static DH authentication key (G_R) (32 bytes)
+   32 82 44 f6 cd f5 f1 27 22 50 d7 cf bb a2 68 34 fb ef 25 e8 46 db 8b af
+   89 0f aa 8d 7e f6 e6 73
+
+   kid value to identify the Responder's public authentication key (kid_R) (1 byte)
+   a8
+
+   This test vector uses COSE_Key objects to store the raw public keys.
+   Moreover, EC2 keys with curve X25519 are used.  That is in agreement
+   with the Cipher Suite 0.
+
+   CRED_R =
+   {
+     1:  1,
+    -1:  4,
+    -2:  h'328244f6cdf5f1272250d7cfbba26834fbef25e846db8baf890faa8d7ef6e673
+           '
+   }
+
+   CRED_R (COSE_Key) (40 bytes)
+   a3 01 01 20 04 21 58 20 32 82 44 f6 cd f5 f1 27 22 50 d7 cf bb a2 68 34
+   fb ef 25 e8 46 db 8b af 89 0f aa 8d 7e f6 e6 73
+
+   Because COSE_Keys are used, and because kid = h'a8':
+
+   ID_CRED_R =
+   {
+     4:  h'a8'
+   }
+
+   Note that since the map for ID_CRED_R contains a single 'kid'
+   parameter, ID_CRED_R is used when transported in the protected header
+   of the COSE Object, but only the kid_R is used when added to the
+   plaintext (see Section 4.4.2):
+
+   ID_CRED_R (in protected header) (CBOR-encoded) (5 bytes)
+   44 a1 04 41 a8
+
+   kid_R (in plaintext) (CBOR-encoded) (2 bytes)
+   41 a8
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 78]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.3.3.  Message 1
+
+   From the input parameters (in Appendix B.1.1):
+
+   METHOD_CORR (4 * method + corr)
+   13
+
+   suite
+   0
+
+   SUITES_I : suite
+   0
+
+   Initiator's ephemeral private key (32 bytes)
+   11 34 9f 62 e8 d8 13 ed 79 d2 7d 57 dd 41 b9 af ec 4d d9 5e c4 d2 88 0e
+   72 0d 50 e6 37 fe c9 19
+
+   G_X (X-coordinate of the ephemeral public key of the Initiator) (32 bytes)
+   65 22 d2 2d 50 87 46 6e a1 22 9b fb ee b8 52 9e 56 e1 d9 cb c7 79 cb 36
+   74 a9 42 91 fd 9b 1a 08
+
+   C_I (Connection identifier chosen by the Initiator) (1 byte)
+   c7
+
+   No AD_1 is provided, so AD_1 is absent from message_1.
+
+   Message_1 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   message_1 =
+   (
+     13,
+     0,
+     h'6522d22d5087466ea1229bfbeeb8529e56e1d9cbc779cb3674a94291fd9b1a08',
+     h'c7'
+   )
+
+   message_1 (CBOR Sequence) (38 bytes)
+   0d 00 58 20 65 22 d2 2d 50 87 46 6e a1 22 9b fb ee b8 52 9e 56 e1 d9 cb
+   c7 79 cb 36 74 a9 42 91 fd 9b 1a 08 41 c7
+
+B.3.4.  Message 2
+
+   Since corr equals 1, C_I is omitted from data_2.
+
+   The Responder generates an ephemeral ECDH key pair:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 79]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Responder's ephemeral private key (32 bytes)
+   25 08 17 7e 3f 55 3e c0 5f 24 26 f5 0f 21 0c 7a bf 54 2e 53 23 b8 45 9e
+   17 52 33 be 6e 67 bb 91
+
+   G_Y (X-coordinate of the ephemeral public key of the Responder) (32 bytes)
+   4a cd 37 41 73 cc 6f 2b 55 c7 59 ef 6e 78 2c a3 07 e7 98 21 f4 da 89 a6
+   78 07 7f 8b 79 6a 3f 65
+
+   The Responder also choses a connection identifier:
+
+   C_R (Connection identifier chosen by the Responder) (1 byte)
+   c8
+
+   Data_2 is constructed, as the CBOR Sequence of the CBOR data items
+   above.
+
+   data_2 =
+   (
+     h'4acd374173cc6f2b55c759ef6e782ca307e79821f4da89a678077f8b796a3f65',
+     h'c8'
+   )
+
+   data_2 (CBOR Sequence) (36 bytes)
+   58 20 4a cd 37 41 73 cc 6f 2b 55 c7 59 ef 6e 78 2c a3 07 e7 98 21 f4 da
+   89 a6 78 07 7f 8b 79 6a 3f 65 41 c8
+
+   From data_2 and message_1 (from Appendix B.3.3), compute the input to
+   the transcript hash TH_2 = H( message_1, data_2 ), as a CBOR Sequence
+   of these 2 data items.
+
+   ( message_1, data_2 ) (CBOR Sequence) (74 bytes)
+   0d 00 58 20 65 22 d2 2d 50 87 46 6e a1 22 9b fb ee b8 52 9e 56 e1 d9 cb
+   c7 79 cb 36 74 a9 42 91 fd 9b 1a 08 41 c7 58 20 4a cd 37 41 73 cc 6f 2b
+   55 c7 59 ef 6e 78 2c a3 07 e7 98 21 f4 da 89 a6 78 07 7f 8b 79 6a 3f 65
+   41 c8
+
+   And from there, compute the transcript hash TH_2 = SHA-256(
+   message_1, data_2 )
+
+   TH_2 value (32 bytes)
+   4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4 65 23
+   18 e0 ed 18 26 cb 21 c3
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_2 (CBOR-encoded) (34 bytes)
+   58 20 4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4
+   65 23 18 e0 ed 18 26 cb 21 c3
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 80]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.3.4.1.  MAC Computation
+
+   Since method equals 3, a COSE_Encrypt0 is calculated.
+
+B.3.4.1.1.  Key and Nonce Computation
+
+   The key and nonce for calculating the MAC are calculated as follows,
+   as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK_2e = HMAC-SHA-256 (salt, G_XY)
+
+   Since this is the asymmetric case, salt is the empty byte string.
+
+   G_XY is the ECDH shared secret, and since the curve25519 is used, the
+   ECDH shared secret is the output of the X25519 function.
+
+   G_XY (32 bytes)
+   12 2d f9 44 2b 2e 81 3c 3a 00 29 04 af 63 99 e0 f3 1c d5 96 7d 49 2a e6
+   02 0b c2 d7 7c cb 4f 28
+
+   From there, PRK_2e is computed:
+
+   PRK_2e (32 bytes)
+   f1 8c ca 1d af 06 1a f1 40 94 19 26 19 a4 dd 5e 9e 41 94 fc 42 fe 5e 20
+   d0 27 9d 8d d3 1f ad 8f
+
+   PRK_3e2m = HKDF-Extract (PRK_2e, G_RX)
+
+   G_RX is the ECDH shared secret calculated from G_X received in
+   Appendix B.3.3 and R in Appendix B.3.2, and since the curve25519 is
+   used, the ECDH shared secret is the output of the X25519 function.
+
+   G_RX (32 bytes)
+   5f 40 10 ca 84 52 1e 2d e8 71 7c f4 d9 66 ab 33 96 86 6c 4c 74 f3 85 96
+   dd 8f 23 b6 c4 83 99 2e
+
+   From there, PRK_3e2m is computed:
+
+   PRK_3e2m (32 bytes)
+   08 4a 87 01 49 07 ed 85 12 90 42 55 e1 8a df a8 39 53 92 28 29 48 8f f4
+   66 44 87 1e 07 1d 42 80
+
+   Key K_2m is the output of HKDF-Expand(PRK_3e2m, info, L).
+
+   info is defined as follows:
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 81]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info for K_2m =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'a10441a8', h'4f922e15502cecfb04b3afd8051fae4f98d56b2451c46523
+                           18e0ed1826cb21c3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_2m) (CBOR-encoded) (52 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 44 a1 04 41 a8 58 20 4f 92 2e 15
+   50 2c ec fb 04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4 65 23 18 e0 ed 18
+   26 cb 21 c3
+
+   L is the length of K_2m, so 16 bytes.
+
+   From these parameters, K_2m is computed:
+
+   K_2m (16 bytes)
+   55 9d 43 46 34 44 83 e2 05 6b 18 5d 5a 78 b5 1e
+
+   Nonce IV_2m is the output of HKDF-Expand(PRK_3e2m, info, L).
+
+   info is defined as follows:
+
+   info for IV_2m =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'a10441a8', h'4f922e15502cecfb04b3afd8051fae4f98d56b2451c46523
+                           18e0ed1826cb21c3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_2m) (CBOR-encoded) (65 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 44 a1 04 41 a8 58 20 4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae
+   4f 98 d5 6b 24 51 c4 65 23 18 e0 ed 18 26 cb 21 c3
+
+   L is the length of IV_2m, so 13 bytes.
+
+   From these parameters, IV_2m is computed:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 82]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   IV_2m (13 bytes)
+   a2 8b 02 5a 26 89 6e 38 6d 10 e4 fa 55
+
+B.3.4.1.2.  MAC Computation
+
+   COSE_Encrypt0 is computed with the following parameters.
+
+   *  protected header = CBOR-encoded ID_CRED_R
+
+   *  external_aad = CBOR Sequence of CRED_R and TH_2, in this order
+
+   *  empty plaintext
+
+   Protected header: ID_CRED_R (CBOR-encoded) (5 bytes)
+   44 a1 04 41 a8
+
+   The external_aad is the following:
+
+   ( CRED_R , TH_2 ) (CBOR Sequence) (72 bytes)
+   a3 01 01 20 04 21 58 20 32 82 44 f6 cd f5 f1 27 22 50 d7 cf bb a2 68 34
+   fb ef 25 e8 46 db 8b af 89 0f aa 8d 7e f6 e6 73 4f 92 2e 15 50 2c ec fb
+   04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4 65 23 18 e0 ed 18 26 cb 21 c3
+
+   Which encodes to the following byte string:
+
+    CRED_R , TH_2 ) (CBOR Sequence) (CBOR-encoded) (74 bytes)
+   58 48 a3 01 01 20 04 21 58 20 32 82 44 f6 cd f5 f1 27 22 50 d7 cf bb a2
+   68 34 fb ef 25 e8 46 db 8b af 89 0f aa 8d 7e f6 e6 73 4f 92 2e 15 50 2c
+   ec fb 04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4 65 23 18 e0 ed 18 26 cb
+   21 c3
+
+   From the parameters above, the Enc_structure A_2 is computed.
+
+   A_2m =
+   [
+     "Encrypt0",
+     h'a10441a8',
+     h'a301012004215820328244f6cdf5f1272250d7cfbba26834fbef25e846db8baf890f
+       aa8d7ef6e6734f922e15502cecfb04b3afd8051fae4f98d56b2451c4652318e0ed18
+       26cb21c3'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 83]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   A_2m (CBOR-encoded) (89 bytes)
+   83 68 45 6e 63 72 79 70 74 30 44 a1 04 41 a8 58 48 a3 01 01 20 04 21 58
+   20 32 82 44 f6 cd f5 f1 27 22 50 d7 cf bb a2 68 34 fb ef 25 e8 46 db 8b
+   af 89 0f aa 8d 7e f6 e6 73 4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae
+   4f 98 d5 6b 24 51 c4 65 23 18 e0 ed 18 26 cb 21 c3
+
+   The key and nonce used are defined in Appendix B.3.4.2:
+
+   *  key = K_2m
+
+   *  nonce = IV_2m
+
+   Using the parameters above, the ciphertext MAC_2 can be computed:
+
+   MAC_2 (9 bytes)
+   7b cd b0 21 74 bc dc 69 05
+
+B.3.4.2.  Key and Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK_2e = HMAC-SHA-256(salt, G_XY) as defined in Appendix B.3.4.1.1
+
+   PRK_2e (32 bytes)
+   f1 8c ca 1d af 06 1a f1 40 94 19 26 19 a4 dd 5e 9e 41 94 fc 42 fe 5e 20
+   d0 27 9d 8d d3 1f ad 8f
+
+   Key K_2e is the output of HKDF-Expand(PRK_2e, info, L).
+
+   info is defined as follows:
+
+   info for K_2e =
+   [
+     XOR-ENCRYPTION,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'4f922e15502cecfb04b3afd8051fae4f98d56b2451c46523
+                           18e0ed1826cb21c3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 84]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info (K_2e) (CBOR-encoded) (62 bytes)
+   84 6e 58 4f 52 2d 45 4e 43 52 59 50 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6
+   83 18 80 40 58 20 4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae 4f 98 d5
+   6b 24 51 c4 65 23 18 e0 ed 18 26 cb 21 c3
+
+   L is the length of K_2e, so 12 bytes.
+
+   From these parameters, K_2e is computed:
+
+   K_2e (12 bytes)
+   7f bd 09 bd 68 e9 cc 97 09 48 21 04
+
+B.3.4.3.  Ciphertext Computation
+
+   CIPHERTEXT_2 is the ciphertext resulting from XOR encrypting a
+   plaintext with the following common parameters
+
+   *  plaintext = CBOR Sequence of the items kid_R and MAC_2, in this
+      order.
+
+   with kid_R taken from Appendix B.3.2, and MAC_2 as calculated in
+   Appendix B.3.4.1.2.
+
+   The plaintext is the following:
+
+   P_2  (12 bytes)
+   41 a8 49 7b cd b0 21 74 bc dc 69 05
+
+   The key used is defined in Appendix B.3.4.2:
+
+   *  key = K_2e
+
+   Using the parameters above, the ciphertext CIPHERTEXT_2 can be
+   computed:
+
+   CIPHERTEXT_2 (12 bytes)
+   3e 15 40 c6 a5 59 ed e3 b5 94 48 01
+
+B.3.4.4.  message_2
+
+   From the parameter computed in Appendix B.3.4 and Appendix B.3.4.3,
+   message_2 is computed, as the CBOR Sequence of the following items:
+   (G_Y, C_R, CIPHERTEXT_2).
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 85]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   message_2 =
+   (
+     h'4acd374173cc6f2b55c759ef6e782ca307e79821f4da89a678077f8b796a3f65',
+     h'c8',
+     h'3e1540c6a559ede3b5944801'
+   )
+
+   Which encodes to the following byte string:
+
+   message_2 (CBOR Sequence) (49 bytes)
+   58 20 4a cd 37 41 73 cc 6f 2b 55 c7 59 ef 6e 78 2c a3 07 e7 98 21 f4 da
+   89 a6 78 07 7f 8b 79 6a 3f 65 41 c8 4c 3e 15 40 c6 a5 59 ed e3 b5 94 48
+   01
+
+B.3.5.  Message 3
+
+   Since corr equals 1, C_R is not omitted from data_3.
+
+   C_R (1 byte)
+   c8
+
+   Data_3 is constructed, as the CBOR Sequence of the CBOR data item
+   above.
+
+   data_3 =
+   (
+     h'c8'
+   )
+
+   data_3 (CBOR Sequence) (2 bytes)
+   41 c8
+
+   From data_3, CIPHERTEXT_2 (Appendix B.1.4.3), and TH_2
+   (Appendix B.1.4), compute the input to the transcript hash TH_2 =
+   H(TH_2 , CIPHERTEXT_2, data_3), as a CBOR Sequence of these 3 data
+   items.
+
+   ( TH_2, CIPHERTEXT_2, data_3 ) (CBOR Sequence) (49 bytes)
+   58 20 4f 92 2e 15 50 2c ec fb 04 b3 af d8 05 1f ae 4f 98 d5 6b 24 51 c4
+   65 23 18 e0 ed 18 26 cb 21 c3 4c 3e 15 40 c6 a5 59 ed e3 b5 94 48 01 41
+   c8
+
+   And from there, compute the transcript hash TH_3 = SHA-256(TH_2 ,
+   CIPHERTEXT_2, data_3)
+
+   TH_3 value (32 bytes)
+   b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb
+   f9 8d 4c df 70 5d c1 b3
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 86]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_3 (CBOR-encoded) (34 bytes)
+   58 20 b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0
+   2c bb f9 8d 4c df 70 5d c1 b3
+
+B.3.5.1.  MAC Computation
+
+   Since method equals 3, a COSE_Encrypt0 is calculated.
+
+B.3.5.1.1.  Key and Nonce Computation
+
+   The key and nonce for calculating the MAC are calculated as follows,
+   as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   PRK_4x3m = HMAC-SHA-256 (PRK_3e2m, G_IY)
+
+   G_IY is the ECDH shared secret, and since the curve25519 is used, the
+   ECDH shared secret is the output of the X25519 function.
+
+   G_IY (32 bytes)
+   9f 70 4c 69 61 ae 11 4e 0f 06 53 e3 fa 72 0d 98 9d e4 79 63 b5 6f a3 a3
+   c3 c6 5f 0a 5b 6b 7f 20
+
+   From there, PRK_4x3m is computed:
+
+   PRK_4x3m  (32 bytes)
+   f1 df af 80 cb 4b b6 a8 1c 83 ad 2e d7 bb ed d5 ac bc 7b b2 b2 a8 a5 ea
+   8d fb 24 b9 45 1f fe 20
+
+   Key K_3m is the output of HKDF-Expand(PRK_I, info, L).
+
+   info is defined as follows:
+
+   info for K_3m =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'a10441a7', h'b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbb
+                           f98d4cdf705dc1b3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 87]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info (K_3m) (CBOR-encoded) (52 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 44 a1 04 41 a7 58 20 b0 06 6f 45
+   98 29 14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df
+   70 5d c1 b3
+
+   L is the length of K_3m, so 16 bytes.
+
+   From these parameters, K_3m is computed:
+
+   K_3m (16 bytes)
+   ed 5e 7f db e6 86 e5 e9 d8 ad c3 d9 95 e4 16 b3
+
+   Nonce IV_3m is the output of HKDF-Expand(PRK_4x3m, info, L).
+
+   info is defined as follows:
+
+   info for IV_3m =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'a10441a7', h'b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbb
+                           f98d4cdf705dc1b3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (IV_3m) (CBOR-encoded) (65 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 44 a1 04 41 a7 58 20 b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f
+   42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+   L is the length of IV_3m, so 13 bytes.
+
+   From these parameters, IV_3m is computed:
+
+   IV_3m (13 bytes)
+   90 3d e5 21 1c 09 e6 79 8c ce 30 4c c2
+
+B.3.5.1.2.  MAC Computation
+
+   COSE_Encrypt0 is computed with the following parameters.
+
+   *  protected header = CBOR-encoded ID_CRED_I
+
+   *  external_aad = CBOR Sequence of CRED_I and TH_3, in this order
+
+   *  empty plaintext
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 88]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   Protected header: ID_CRED_I (CBOR-encoded) (5 bytes)
+   44 a1 04 41 a7
+
+   The external_aad is the following:
+
+   ( CRED_I , TH_3 ) (CBOR Sequence) (72 bytes)
+   a3 01 01 20 04 21 58 20 6e 5d 68 76 a1 78 15 6c a0 b8 1d c8 0f 81 06 0f
+   a1 a5 d1 35 13 d6 14 bc c2 85 37 ef 98 90 06 44 b0 06 6f 45 98 29 14 95
+   82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+   Which encodes to the following byte string:
+
+   ( CRED_I , TH_3 ) (CBOR Sequence) (CBOR-encoded) (74 bytes)
+   58 48 a3 01 01 20 04 21 58 20 6e 5d 68 76 a1 78 15 6c a0 b8 1d c8 0f 81
+   06 0f a1 a5 d1 35 13 d6 14 bc c2 85 37 ef 98 90 06 44 b0 06 6f 45 98 29
+   14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d
+   c1 b3
+
+   From the parameters above, the Enc_structure A_3m is computed.
+
+   A_3m =
+   [
+     "Encrypt0",
+     h'a10441a7',
+     h'a3010120042158206e5d6876a178156ca0b81dc80f81060fa1a5d13513d614bcc285
+       37ef98900644b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbbf98d4cdf
+       705dc1b3'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+   A_3m (CBOR-encoded) (89 bytes)
+   83 68 45 6e 63 72 79 70 74 30 44 a1 04 41 a7 58 48 a3 01 01 20 04 21 58
+   20 6e 5d 68 76 a1 78 15 6c a0 b8 1d c8 0f 81 06 0f a1 a5 d1 35 13 d6 14
+   bc c2 85 37 ef 98 90 06 44 b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f
+   42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+   The key and nonce used are defined in Appendix B.3.5.2:
+
+   *  key = K_3m
+
+   *  nonce = IV_3m
+
+   Using the parameters above, the ciphertext MAC_3 can be computed:
+
+   MAC_3 (9 bytes)
+   05 82 46 79 2e f2 17 65 99
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 89]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+B.3.5.2.  Key and Nonce Computation
+
+   The key and nonce for calculating the ciphertext are calculated as
+   follows, as specified in Section 3.8.
+
+   HKDF SHA-256 is the HKDF used (as defined by cipher suite 0).
+
+   Key K_3 is the output of HKDF-Expand(PRK_3e2m, info, L).
+
+   info is defined as follows:
+
+   info for K_3ae =
+   [
+     10,
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbb
+                           f98d4cdf705dc1b3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+   info (K_3ae) (CBOR-encoded) (48 bytes)
+   84 0a 83 f6 f6 f6 83 f6 f6 f6 83 18 80 40 58 20 b0 06 6f 45 98 29 14 95
+   82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+   L is the length of K_3ae, so 16 bytes.
+
+   From these parameters, K_3ae is computed:
+
+   K_3ae (16 bytes)
+   b9 97 30 d0 ca a7 97 25 50 61 50 f1 0c 37 9b 46
+
+   Nonce IV_3ae is the output of HKDF-Expand(PRK_3e2m, info, L).
+
+   info is defined as follows:
+
+   info for IV_3ae =
+   [
+     "IV-GENERATION",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 104, h'', h'b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbb
+                           f98d4cdf705dc1b3']
+   ]
+
+   Which as a CBOR encoded data item is:
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 90]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info (IV_3ae) (CBOR-encoded) (61 bytes)
+   84 6d 49 56 2d 47 45 4e 45 52 41 54 49 4f 4e 83 f6 f6 f6 83 f6 f6 f6 83
+   18 68 40 58 20 b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37
+   f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+   L is the length of IV_3ae, so 13 bytes.
+
+   From these parameters, IV_3ae is computed:
+
+   IV_3ae (13 bytes)
+   6a 27 26 3e 34 30 2e df 61 da 74 82 7f
+
+B.3.5.3.  Ciphertext Computation
+
+   COSE_Encrypt0 is computed with the following parameters.  Note that
+   AD_3 is omitted.
+
+   *  empty protected header
+
+   *  external_aad = TH_3
+
+   *  plaintext = CBOR Sequence of the items kid_R, MAC_3, in this
+      order.
+
+   with kid_R taken from Appendix B.3.2, and MAC_3 as calculated in
+   Appendix B.3.4.1.2.
+
+   The plaintext is the following:
+
+   P_3  (12 bytes)
+   41 a7 49 05 82 46 79 2e f2 17 65 99
+
+   From the parameters above, the Enc_structure A_3 is computed.
+
+   A_3 =
+   [
+     "Encrypt0",
+     h'',
+     h'b0066f4598291495828f0a2e8c0b6f4210f737f317e02cbbf98d4cdf705dc1b3'
+   ]
+
+   Which encodes to the following byte string to be used as Additional
+   Authenticated Data:
+
+   A_3 (CBOR-encoded) (45 bytes)
+   83 68 45 6e 63 72 79 70 74 30 40 58 20 b0 06 6f 45 98 29 14 95 82 8f 0a
+   2e 8c 0b 6f 42 10 f7 37 f3 17 e0 2c bb f9 8d 4c df 70 5d c1 b3
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 91]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   The key and nonce used are defined in Appendix B.3.5.2:
+
+   *  key = K_3ae
+
+   *  nonce = IV_3ae
+
+   Using the parameters above, the ciphertext CIPHERTEXT_3 can be
+   computed:
+
+   CIPHERTEXT_3 (20 bytes)
+   b4 88 c1 e0 b9 ac 2c 93 15 49 fa 60 98 60 26 30 7f 19 15 72
+
+B.3.5.4.  message_3
+
+   From the parameter computed in Appendix B.3.5 and Appendix B.3.5.3,
+   message_3 is computed, as the CBOR Sequence of the following items:
+   (C_I, CIPHERTEXT_3).
+
+   message_3 =
+   (
+     h'c7',
+     h'b488c1e0b9ac2c931549fa60986026307f191572'
+   )
+
+   Which encodes to the following byte string:
+
+   message_3 (CBOR Sequence) (23 bytes)
+   41 c8 54 b4 88 c1 e0 b9 ac 2c 93 15 49 fa 60 98 60 26 30 7f 19 15 72
+
+B.3.5.5.  OSCORE Security Context Derivation
+
+   From the previous message exchange, the Common Security Context for
+   OSCORE [RFC8613] can be derived, as specified in Section 3.8.1.
+
+   First af all, TH_4 is computed: TH_4 = H( TH_3, CIPHERTEXT_3 ), where
+   the input to the hash function is the CBOR Sequence of TH_3 and
+   CIPHERTEXT_3
+
+   ( TH_3, CIPHERTEXT_3 ) (CBOR Sequence) (55 bytes)
+   58 20 b0 06 6f 45 98 29 14 95 82 8f 0a 2e 8c 0b 6f 42 10 f7 37 f3 17 e0
+   2c bb f9 8d 4c df 70 5d c1 b3 54 b4 88 c1 e0 b9 ac 2c 93 15 49 fa 60 98
+   60 26 30 7f 19 15 72
+
+   And from there, compute the transcript hash TH_4 = SHA-256( TH_3,
+   CIPHERTEXT_3 )
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 92]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   TH_4 value (32 bytes)
+   a2 a8 a2 13 02 91 cb 91 68 02 ab 78 e6 ef 6b e9 de b7 b6 33 da 2c 28 b3
+   bf 5f 06 bc 2c d1 12 e5
+
+   When encoded as a CBOR bstr, that gives:
+
+   TH_4 (CBOR-encoded) (34 bytes)
+   58 20 a2 a8 a2 13 02 91 cb 91 68 02 ab 78 e6 ef 6b e9 de b7 b6 33 da 2c
+   28 b3 bf 5f 06 bc 2c d1 12 e5
+
+   To derive the Master Secret and Master Salt the same HKDF-Expand
+   (PRK, info, L) is used, with different info and L.
+
+   For Master Secret:
+
+   L for Master Secret = 16
+
+   info for Master Secret =
+   [
+     "OSCORE Master Secret",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 128, h'', h'a2a8a2130291cb916802ab78e6ef6be9deb7b633da2c28b3
+                           bf5f06bc2cd112e5']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Secret) (CBOR-encoded) (68 bytes)
+   84 74 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 65 63 72 65 74 83 f6
+   f6 f6 83 f6 f6 f6 83 18 80 40 58 20 a2 a8 a2 13 02 91 cb 91 68 02 ab 78
+   e6 ef 6b e9 de b7 b6 33 da 2c 28 b3 bf 5f 06 bc 2c d1 12 e5
+
+   Finally, the Master Secret value computed is:
+
+   OSCORE Master Secret (16 bytes)
+   79 a1 02 48 12 94 1b bf d0 73 46 9b e9 c6 0e c5
+
+   For Master Salt:
+
+   L for Master Salt = 8
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 93]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   info for Master Salt =
+   [
+     "OSCORE Master Salt",
+     [ null, null, null ],
+     [ null, null, null ],
+     [ 64, h'', h'a2a8a2130291cb916802ab78e6ef6be9deb7b633da2c28b3
+                           bf5f06bc2cd112e5']
+   ]
+
+   When encoded as a CBOR bstr, that gives:
+
+   info (OSCORE Master Salt) (CBOR-encoded) (66 bytes)
+   84 72 4f 53 43 4f 52 45 20 4d 61 73 74 65 72 20 53 61 6c 74 83 f6 f6 f6
+   83 f6 f6 f6 83 18 40 40 58 20 a2 a8 a2 13 02 91 cb 91 68 02 ab 78 e6 ef
+   6b e9 de b7 b6 33 da 2c 28 b3 bf 5f 06 bc 2c d1 12 e5
+
+   Finally, the Master Salt value computed is:
+
+   OSCORE Master Salt (8 bytes)
+   a2 98 5a 5d 84 e9 6e 15
+
+   The Client's Sender ID takes the value of C_R:
+
+   Client's OSCORE Sender ID (1 byte)
+   c8
+
+   The Server's Sender ID takes the value of C_I:
+
+   Server's OSCORE Sender ID (1 byte)
+   c7
+
+   The algorithms are those negociated in the cipher suite:
+
+   AEAD Algorithm
+   10
+
+   HMAC Algorithm
+   5
+
+Acknowledgments
+
+   The authors want to thank Alessandro Bruni, Karthikeyan Bhargavan,
+   Martin Disch, Theis Groenbech Petersen, Dan Harkins, Klaus Hartke,
+   Russ Housley, Alexandros Krontiris, Ilari Liusvaara, Karl Norrman,
+   Salvador Perez, Eric Rescorla, Michael Richardson, Thorvald Sahl
+   Joergensen, Jim Schaad, Carsten Schuermann, Ludwig Seitz, Stanislav
+   Smyshlyaev, Valery Smyslov, Rene Struik, and Erik Thormarker for
+   reviewing and commenting on intermediate versions of the draft.  We
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 94]
+
+Internet-Draft Ephemeral Diffie-Hellman Over COSE (EDHOC)     March 2020
+
+
+   are especially indebted to Jim Schaad for his continuous reviewing
+   and implementation of different versions of the draft.
+
+Authors' Addresses
+
+   Göran Selander
+   Ericsson AB
+
+   Email: goran.selander@ericsson.com
+
+
+   John Preuß Mattsson
+   Ericsson AB
+
+   Email: john.mattsson@ericsson.com
+
+
+   Francesca Palombini
+   Ericsson AB
+
+   Email: francesca.palombini@ericsson.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Selander, et al.        Expires 2 September 2020               [Page 95]
