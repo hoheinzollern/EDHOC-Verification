@@ -1,0 +1,54 @@
+(*
+ * types
+ *)
+type dhElt.
+
+
+(*
+ * Modes
+ *)
+const EH_PSK:bitstring.
+const EH_SIGMA:bitstring.
+const EH_Noise:bitstring.
+
+(*
+ * Intermediate keys
+ *)
+
+(* First parameter is the salt intended to ensure unique inputs.
+ * Second parameter is the DH-secret g^xy.
+ * The PRK functions below model the output from a call to the
+ * HKDF-extract function (Section 3.8 of EDHOC).
+ *)
+(* KARL: APP_2A functions and friends in original model very marked
+ *        as [private].
+ *       What is that capture in the "real" world?
+ *       My assumption is that key derivation functions are public, but
+ *       that the attacker can't compute their output unless he can compute
+ *       the dhElt (i.e., the g^xy).
+ *)
+(* Signature mode (SIGMA): salt is fixed: it is the empty string *)
+fun PRK_sig_2e(dhElt): bitstring.
+fun PRK_sig_3e2m(dhElt): bitstring.
+fun PRK_sig_4x3m(dhElt): bitstring.
+
+(* Static DH-mode (Noise): salts are chained and therefore we wrap
+ * the output in a HKDF function.
+ * KARL: is there a nicer way to encode functions in functions?
+ *)
+fun HKDF_extract(bitstring, dhElt): bitstring.
+
+(* First PRK uses the DH-secret as input.
+ * Second PRK uses first PRK and g^rx as input.
+ * Third PRK uses second PRK and g^iy as input.
+ *)
+fun PRK_stat_2e(dhElt): bitstring.
+letfun PRK_stat_3e2m(g_xy: dhElt, g_rx: dhElt) = HKDF_extract(PRK_stat_2e(g_xy), g_rx).
+letfun PRK_stat_4x3m(g_xy: dhElt, g_iy: dhElt) = HKDF_extract(PRK_stat_3e2m(g_xy), g_iy).
+
+(* PSK mode: all salts are the PSK *)
+fun PRK_psk_2e(bitstring, dhElt): bitstring.
+fun PRK_psk_3e2m(bitstring, dhElt): bitstring.
+fun PRK_psk_4x3m(bitstring, dhElt): bitstring.
+
+
