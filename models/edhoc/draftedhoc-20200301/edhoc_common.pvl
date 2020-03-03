@@ -1,54 +1,164 @@
-(*
- * types
- *)
+(* types *)
+free c: channel.
+free c2: channel.
+free s: channel[private].
+free s2: channel[private].
+type host. (* U, V *)
+type pkey. (* E_U, E_V *)
+type skey. (* skU, skV *)
+type key. (* K_i *)
 type dhElt.
+type exponent. (* x & y *)
+type pkID.(*  id(pkU) & id(pkV)  *)
+type algorithmID.
+type ctxID.
+
+(* Message Types *)
+free T1: bitstring. free T4: bitstring.
+free T2: bitstring. free T5: bitstring.
+free T3: bitstring. free T6: bitstring.
+
+(* AlgorithmIDs *)
+free OSCORE: bitstring.
+free EDHOC_PSK_Chaining: algorithmID.
+free EDHOC: algorithmID.
+free EDHOC_PRESHARED: algorithmID.
+
+free empty: key.
+free emptyString: bitstring.
+
+(* Creating public keys *)
+fun pk(skey): pkey.
+
+(* Shared Key Encryption *)
+fun aeadEncrypt(bitstring, key, bitstring): bitstring.
+reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
+reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
+
+(* Signing *)
+fun sign(bitstring, skey): bitstring.
+reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
+
+(* Identifier function for the public keys *)
+fun idI(pkey): pkID[private].
+fun idR(pkey): pkID[private].
+
+fun APP_2A(pkey, skey, bitstring, key): bitstring [private].
+fun APP_2A'(pkey, skey, bitstring, key): bitstring [private].
+fun APP_3A(skey, pkey, bitstring, key): bitstring [private].
+
+fun APP_2S(key, bitstring, key): bitstring [private].
+fun APP_2S'(key, bitstring, key): bitstring [private].
+fun APP_3S(key, bitstring, key): bitstring [private].
 
 
-(*
- * Modes
+(* Hash function *)
+fun hash(bitstring): bitstring.
+
+(* Diffie Hellman *)
+const g: dhElt.
+fun exp(dhElt, exponent): dhElt.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+(* Authentication events Symmetric *)
+event startInitiatorS(host, host, key, dhElt).
+event startResponderS(host, host, key, dhElt).
+event midInitiatorS(host, host, key, dhElt).
+event endInitiatorS(host, host, key, dhElt).
+event endResponderS(host, host, key, dhElt).
+
+(* Authentication events Asymmetric *)
+event startInitiatorA(host, host, dhElt, skey, ctxID).
+event startResponderA(host, host, dhElt, skey, ctxID).
+event midInitiatorA(host, host, dhElt).
+event endInitiatorA(host, host, dhElt).
+event endResponderA(host, host, dhElt).
+
+(* Authentication events Symmetric *)
+event agreeHashStart3S(host, host, key, bitstring, key).
+event agreeHashStart2S(host, host, key, bitstring, key).
+
+event agreeHashEnd2S(host, host, key, bitstring).
+event agreeHashEnd3S(host, host, key, bitstring).
+
+(* Authentication events Asymmetric *)
+event agreeHashStart3A(host, host, key, bitstring, skey).
+event agreeHashStart2A(host, host, key, bitstring, skey).
+
+event agreeHashEnd2A(host, host, key, bitstring).
+event agreeHashEnd3A(host, host, key, bitstring).
+
+event LTK_Reveal(skey).
+event PSK_Reveal(key).
+event SessK2A_Reveal(key, skey).
+event SessK3A_Reveal(key, skey).
+event SessK2S_Reveal(key).
+event SessK3S_Reveal(key).
+
+(* Methods. After prefix follows the credential type used by initiator
+ * and then the credential type used by responder.
  *)
-const EH_PSK:bitstring.
-const EH_SIGMA:bitstring.
-const EH_Noise:bitstring.
+const EH_PSK_PSK:bitstring.
+const EH_SIG_SIG:bitstring.
+const EH_STATIC_SIG:bitstring.
+const EH_SIG_STATIC:bitstring.
+const EH_STATIC_STATIC:bitstring.
 
-(*
- * Intermediate keys
- *)
-
-(* First parameter is the salt intended to ensure unique inputs.
- * Second parameter is the DH-secret g^xy.
- * The PRK functions below model the output from a call to the
- * HKDF-extract function (Section 3.8 of EDHOC).
- *)
-(* KARL: APP_2A functions and friends in original model very marked
- *        as [private].
- *       What is that capture in the "real" world?
- *       My assumption is that key derivation functions are public, but
- *       that the attacker can't compute their output unless he can compute
- *       the dhElt (i.e., the g^xy).
- *)
-(* Signature mode (SIGMA): salt is fixed: it is the empty string *)
-fun PRK_sig_2e(dhElt): bitstring.
-fun PRK_sig_3e2m(dhElt): bitstring.
-fun PRK_sig_4x3m(dhElt): bitstring.
-
-(* Static DH-mode (Noise): salts are chained and therefore we wrap
- * the output in a HKDF function.
- * KARL: is there a nicer way to encode functions in functions?
+(* HKDF
+ * Both the extract and expand functions take a salt as first parameter.
+ * The second parameter of the extract function is an element from the
+ * DH-group (e.g., g^xy).
+ * The second parameter of the expand function is a key.
  *)
 fun HKDF_extract(bitstring, dhElt): bitstring.
+fun HKDF_expand(bitstring, bitstring): bitstring.
 
-(* First PRK uses the DH-secret as input.
- * Second PRK uses first PRK and g^rx as input.
- * Third PRK uses second PRK and g^iy as input.
- *)
-fun PRK_stat_2e(dhElt): bitstring.
-letfun PRK_stat_3e2m(g_xy: dhElt, g_rx: dhElt) = HKDF_extract(PRK_stat_2e(g_xy), g_rx).
-letfun PRK_stat_4x3m(g_xy: dhElt, g_iy: dhElt) = HKDF_extract(PRK_stat_3e2m(g_xy), g_iy).
+(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
+letfun PRK_sig_sig_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+letfun PRK_stat_stat_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+letfun PRK_sig_stat_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+letfun PRK_stat_sig_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
 
-(* PSK mode: all salts are the PSK *)
-fun PRK_psk_2e(bitstring, dhElt): bitstring.
-fun PRK_psk_3e2m(bitstring, dhElt): bitstring.
-fun PRK_psk_4x3m(bitstring, dhElt): bitstring.
+letfun PRK_sig_sig_3e2m(G_XY: dhElt) = PRK_sig_sig_2e(G_XY).
+letfun PRK_psk_psk_3e2m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_2e(PSK, G_XY).
+letfun PRK_stat_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_stat_stat_2e(G_XY), G_RX).
+letfun PRK_sig_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_stat_stat_2e(G_XY), G_RX).
+letfun PRK_stat_sig_3e2m(G_XY: dhElt) = PRK_stat_sig_2e(G_XY).
+
+letfun PRK_sig_sig_4x3m(G_XY: dhElt) = PRK_sig_sig_3e2m(G_XY).
+letfun PRK_psk_psk_4x3m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_3e2m(PSK, G_XY).
+letfun PRK_stat_stat_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
+             HKDF_extract(PRK_stat_stat_3e2m(G_XY, G_RX), G_IY).
+letfun PRK_sig_stat_4x3m(G_XY: dhElt, G_RX: dhElt) = PRK_sig_stat_3e2m(G_XY, G_RX).
+letfun PRK_stat_sig_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
+             HKDF_extract(PRK_stat_stat_3e2m(G_XY, G_RX), G_IY).
+
+(* Encryption/Integrity key and IV derivations (see Section 3.8) *)
+type label.
+const LABEL_K_2m: label.
+const LABEL_IV_2m: label.
+const LABEL_K_2e: label.
+const LABEL_K_2ae: label.
+const LABEL_IV_2ae: label.
+const LABEL_K_3m: label.
+const LABEL_IV_3m: label.
+const LABEL_K_3ae: label.
+const LABEL_IV_2ae: label.
+
+type keyLength.
+const KEYLENGTH_256.    (* KARL: I'm unsure if we need this, but put it here for now *)
+const KEYLENGTH_128.
+
+type algoID.    (* KARL: I'm unsure if we need this, but put it here for now *)
+const ALGO1.
+const ALGO2.
+
+
+letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, LENGTH: keyLength, ALGO: algoID) =
+    HKDF_expand((ALGO, TH, LABEL, LENGTH), PRK)
+
+letfun K_2ae(PRK: bitstring, TH: bitstring, LENGTH: keyLength, ALGO: algoID) =
+    KDF(PRK, TH, LABEL_K_2ae, LENGTH, ALGO)
 
 
