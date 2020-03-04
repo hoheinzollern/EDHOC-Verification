@@ -31,7 +31,15 @@ type byteString.
 type hexString.
 free emptyTextString: textString.
 free emptyHexString: hexString.
-free emptyByteString: byteString.
+free emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
+                                          takes other input types as well, making
+                                          them all bitstring seems simplest.
+                                          Further, from a modelling perspective
+                                          I don't think we will test any properties
+                                          that depends on the encoding so I propse
+                                          we use only one emptyString of type
+                                          bitstring.
+                                  *)
 
 (* Creating public keys *)
 fun pk(skey): pkey.
@@ -119,13 +127,13 @@ const EH_STATIC_STATIC:bitstring.
 fun HKDF_extract(bitstring, dhElt): bitstring.
 fun HKDF_expand(bitstring, bitstring): bitstring.
 
-(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
+(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC
  *
  * When both I and R use PSK, use the PRK_psk_psk_2e function.
  * If any of I and R use static or sign method, use the PRK_asym_2e function.
  *)
-letfun PRK_asym_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
-letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+letfun PRK_asym_2e(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
+letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
 
 (* KARL: I don't haromize the naming further even though sig_sig and stat_sig
  *       could be the same function here and stat_stat and sig_stat could
@@ -151,14 +159,15 @@ letfun PRK_stat_sig_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
 (* Encryption/Integrity key and IV derivations (see Section 3.8) *)
 type label.
 const LABEL_K_2m: label.
-const LABEL_IV_2m: label.
-const LABEL_K_2e: label.
+const LABEL_IV_2m: label.   (* for completeness only, not used in model *)
+const LABEL_K_2e: label.    (* KARL: mentioned in spec, but not used by spec? *)
 const LABEL_K_2ae: label.
-const LABEL_IV_2ae: label.
+const LABEL_IV_2ae: label.  (* for completeness only, not used in model *)
 const LABEL_K_3m: label.
-const LABEL_IV_3m: label.
+const LABEL_IV_3m: label.   (* for completeness only, not used in model *)
 const LABEL_K_3ae: label.
-const LABEL_IV_2ae: label.
+const LABEL_IV_3ae: label.  (* for completeness only, not used in model *)
+(* KARL: spec lists IV_2ae twice, but it should probably be IV_3ae the last time *)
 
 (* The key length for the algorithms are defined by the cipher suite.
  * That is, there each single code-point corresponds to a fixed set algorithms
@@ -167,13 +176,36 @@ const LABEL_IV_2ae: label.
  * implicit from the algorith ID.
  *)
 type algoID.
-const ALGO1.
-const ALGO2.
+const ALGO1: algoID.
+const ALGO2: algoID.
 
+(* The info structure is modeled by the tuple (ALGO, TH, LABEL).
+ * Note that the lenth is excluded because it is implied by the
+ * algoID (see comment on type algoID above).
+ *
+ * The AEADs take both a key and an IV as input. Both the key and
+ * the IV are derived by applying the KDF to a PRK, but with different labels.
+ * Becuase of this, both of them are essentially keys and we can view the pair
+ * as a single long key. Further, because we don't
+ * take key-lengths into account in the symbolic model, we may just as well
+ * model the pair as a single object. In fact, to simplify the model even more,
+ * may even ignore the IVs, and this is what we do.
+ *
+ * Macro parameter names indicate which key and TH to use.
+ *)
 letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, ALGO: algoID) =
-    HKDF_expand((ALGO, TH, LABEL), PRK)
+    HKDF_expand((ALGO, TH, LABEL), PRK).
 
-letfun K_2ae(PRK: bitstring, TH: bitstring, ALGO: algoID) =
-    KDF(PRK, TH, LABEL_K_2ae, ALGO)
+letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, ALGO: algoID) =
+    KDF(PRK_2e, TH_2, LABEL_K_2ae, ALGO).
+
+letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, ALGO: algoID) =
+    KDF(PRK_3e2m, TH_2, LABEL_K_2m, ALGO).
+
+letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, ALGO: algoID) =
+    KDF(PRK_3e2m, TH_3, LABEL_K_3ae, ALGO).
+
+letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, ALGO: algoID) =
+    KDF(PRK_4x3m, TH_3, LABEL_K_3m, ALGO).
 
 
