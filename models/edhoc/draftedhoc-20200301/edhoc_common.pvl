@@ -128,7 +128,7 @@ letfun PRK_asym_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
 letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
 
 (* KARL: I don't haromize the naming further even though sig_sig and stat_sig
- *       could be the same functino here and stat_stat and sig_stat could
+ *       could be the same function here and stat_stat and sig_stat could
  *       be the same function. Rationale: I prefer to do the thinking here
  *       once and for all and then just call the correct function from the
  *       protocol models based on an obvious name, inseatd of having to redo
@@ -160,19 +160,20 @@ const LABEL_IV_3m: label.
 const LABEL_K_3ae: label.
 const LABEL_IV_2ae: label.
 
-type keyLength.
-const KEYLENGTH_256.    (* KARL: I'm unsure if we need this, but put it here for now *)
-const KEYLENGTH_128.    (* Todo: If algoID ==> keyLength then we can model
-                                 it as one constant. Check spec *)
-
-type algoID.    (* KARL: I'm unsure if we need this, but put it here for now *)
+(* The key length for the algorithms are defined by the cipher suite.
+ * That is, there each single code-point corresponds to a fixed set algorithms
+ * and key lengths (see Section 3.4). Therefore, we can model both selected
+ * algorithm and selected key-length with a single term: the key length is
+ * implicit from the algorith ID.
+ *)
+type algoID.
 const ALGO1.
 const ALGO2.
 
-letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, LENGTH: keyLength, ALGO: algoID) =
-    HKDF_expand((ALGO, TH, LABEL, LENGTH), PRK)
+letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, ALGO: algoID) =
+    HKDF_expand((ALGO, TH, LABEL), PRK)
 
-letfun K_2ae(PRK: bitstring, TH: bitstring, LENGTH: keyLength, ALGO: algoID) =
-    KDF(PRK, TH, LABEL_K_2ae, LENGTH, ALGO)
+letfun K_2ae(PRK: bitstring, TH: bitstring, ALGO: algoID) =
+    KDF(PRK, TH, LABEL_K_2ae, ALGO)
 
 
