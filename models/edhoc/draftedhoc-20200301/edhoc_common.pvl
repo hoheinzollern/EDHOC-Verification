@@ -25,7 +25,13 @@ free EDHOC: algorithmID.
 free EDHOC_PRESHARED: algorithmID.
 
 free empty: key.
-free emptyString: bitstring.
+
+type textString.
+type byteString.
+type hexString.
+free emptyTextString: textString.
+free emptyHexString: hexString.
+free emptyByteString: byteString.
 
 (* Creating public keys *)
 fun pk(skey): pkey.
@@ -114,17 +120,25 @@ fun HKDF_extract(bitstring, dhElt): bitstring.
 fun HKDF_expand(bitstring, bitstring): bitstring.
 
 (* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
-letfun PRK_sig_sig_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
+ *
+ * When both I and R use PSK, use the PRK_psk_psk_2e function.
+ * If any of I and R use static or sign method, use the PRK_asym_2e function.
+ *)
+letfun PRK_asym_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
 letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
-letfun PRK_stat_stat_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
-letfun PRK_sig_stat_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
-letfun PRK_stat_sig_2e(G_XY: dhElt) = HKDF_extract(emptyString, G_XY).
 
-letfun PRK_sig_sig_3e2m(G_XY: dhElt) = PRK_sig_sig_2e(G_XY).
+(* KARL: I don't haromize the naming further even though sig_sig and stat_sig
+ *       could be the same functino here and stat_stat and sig_stat could
+ *       be the same function. Rationale: I prefer to do the thinking here
+ *       once and for all and then just call the correct function from the
+ *       protocol models based on an obvious name, inseatd of having to redo
+ *       the thinking for each method-let-definition.
+ *)
+letfun PRK_sig_sig_3e2m(G_XY: dhElt) = PRK_asym_2e(G_XY).
 letfun PRK_psk_psk_3e2m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_2e(PSK, G_XY).
-letfun PRK_stat_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_stat_stat_2e(G_XY), G_RX).
-letfun PRK_sig_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_stat_stat_2e(G_XY), G_RX).
-letfun PRK_stat_sig_3e2m(G_XY: dhElt) = PRK_stat_sig_2e(G_XY).
+letfun PRK_stat_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G_XY), G_RX).
+letfun PRK_sig_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G_XY), G_RX).
+letfun PRK_stat_sig_3e2m(G_XY: dhElt) = PRK_asym_2e(G_XY).
 
 letfun PRK_sig_sig_4x3m(G_XY: dhElt) = PRK_sig_sig_3e2m(G_XY).
 letfun PRK_psk_psk_4x3m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_3e2m(PSK, G_XY).
@@ -148,12 +162,12 @@ const LABEL_IV_2ae: label.
 
 type keyLength.
 const KEYLENGTH_256.    (* KARL: I'm unsure if we need this, but put it here for now *)
-const KEYLENGTH_128.
+const KEYLENGTH_128.    (* Todo: If algoID ==> keyLength then we can model
+                                 it as one constant. Check spec *)
 
 type algoID.    (* KARL: I'm unsure if we need this, but put it here for now *)
 const ALGO1.
 const ALGO2.
-
 
 letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, LENGTH: keyLength, ALGO: algoID) =
     HKDF_expand((ALGO, TH, LABEL, LENGTH), PRK)
