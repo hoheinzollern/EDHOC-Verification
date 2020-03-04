@@ -169,15 +169,20 @@ const LABEL_K_3ae: label.
 const LABEL_IV_3ae: label.  (* for completeness only, not used in model *)
 (* KARL: spec lists IV_2ae twice, but it should probably be IV_3ae the last time *)
 
-(* The key length for the algorithms are defined by the cipher suite.
+(* The key length for the AEAD transforms are defined by the cipher suite.
  * That is, there each single code-point corresponds to a fixed set algorithms
  * and key lengths (see Section 3.4). Therefore, we can model both selected
- * algorithm and selected key-length with a single term: the key length is
- * implicit from the algorith ID.
+ * AEAD and selected key-length with a single term: the key length is
+ * implicit from the identifier of the AEAD.
+ *
+ * We probably will have to model cipher suites as well later on.
+ * Some cipher suites have the same AEAD so we cannot use the cipher suite ID
+ * as input to these key derivations: there could be collisions on AEAD
+ * identifiers even if the cipher suite identifiers differ.
  *)
-type algoID.
-const ALGO1: algoID.
-const ALGO2: algoID.
+type aeadID.
+const aead0: aeadID.      (* There are only two AEADs defined *)
+const aead1: aeadID.
 
 (* The info structure is modeled by the tuple (ALGO, TH, LABEL).
  * Note that the lenth is excluded because it is implied by the
@@ -193,19 +198,19 @@ const ALGO2: algoID.
  *
  * Macro parameter names indicate which key and TH to use.
  *)
-letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, ALGO: algoID) =
-    HKDF_expand((ALGO, TH, LABEL), PRK).
+letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, AEAD: aeadID) =
+    HKDF_expand((AEAD, TH, LABEL), PRK).
 
-letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, ALGO: algoID) =
-    KDF(PRK_2e, TH_2, LABEL_K_2ae, ALGO).
+letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, AEAD: aeadID) =
+    KDF(PRK_2e, TH_2, LABEL_K_2ae, AEAD).
 
-letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, ALGO: algoID) =
-    KDF(PRK_3e2m, TH_2, LABEL_K_2m, ALGO).
+letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, AEAD: aeadID) =
+    KDF(PRK_3e2m, TH_2, LABEL_K_2m, AEAD).
 
-letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, ALGO: algoID) =
-    KDF(PRK_3e2m, TH_3, LABEL_K_3ae, ALGO).
+letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, AEAD: aeadID) =
+    KDF(PRK_3e2m, TH_3, LABEL_K_3ae, AEAD).
 
-letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, ALGO: algoID) =
-    KDF(PRK_4x3m, TH_3, LABEL_K_3m, ALGO).
+letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: aeadID) =
+    KDF(PRK_4x3m, TH_3, LABEL_K_3m, AEAD).
 
 
