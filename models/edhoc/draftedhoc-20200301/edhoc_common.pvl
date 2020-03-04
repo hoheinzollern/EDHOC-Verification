@@ -179,10 +179,13 @@ const LABEL_IV_3ae: label.  (* for completeness only, not used in model *)
  * Some cipher suites have the same AEAD so we cannot use the cipher suite ID
  * as input to these key derivations: there could be collisions on AEAD
  * identifiers even if the cipher suite identifiers differ.
+ *
+ * The KDF needs to be able to take AEAD IDs, but also other types as input
+ * for its fourth parameter. Therefore we model all elements that are passed
+ * as arguments to the fourth parameter as bitstring.
  *)
-type aeadID.
-const aead0: aeadID.      (* There are only two AEADs defined *)
-const aead1: aeadID.
+const aead0: bitstring.      (* There are only two AEADs defined *)
+const aead1: bitstring.
 
 (* The info structure is modeled by the tuple (ALGO, TH, LABEL).
  * Note that the lenth is excluded because it is implied by the
@@ -198,19 +201,24 @@ const aead1: aeadID.
  *
  * Macro parameter names indicate which key and TH to use.
  *)
-letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, AEAD: aeadID) =
+letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, AEAD: bitstring) =
     HKDF_expand((AEAD, TH, LABEL), PRK).
 
-letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, AEAD: aeadID) =
+letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, AEAD: bitstring) =
     KDF(PRK_2e, TH_2, LABEL_K_2ae, AEAD).
 
-letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, AEAD: aeadID) =
+letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, AEAD: bitstring) =
     KDF(PRK_3e2m, TH_2, LABEL_K_2m, AEAD).
 
-letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, AEAD: aeadID) =
+letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, AEAD: bitstring) =
     KDF(PRK_3e2m, TH_3, LABEL_K_3ae, AEAD).
 
-letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: aeadID) =
+letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =
     KDF(PRK_4x3m, TH_3, LABEL_K_3m, AEAD).
 
+(* Key exporter interface (section 3.8.1).
+ * The LABEL and the LENGTH are values supplied by the application.
+ *)
+letfun EDHOC_exporter(PRK_4x3m: bitstring, TH_4: bitstring, LABEL: label, LENGTH: bitstring) =
+    KDF(PRK_4x3m, TH_4, LABEL, LENGTH).
 
