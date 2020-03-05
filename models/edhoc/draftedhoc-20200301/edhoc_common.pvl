@@ -49,11 +49,19 @@ fun aeadEncrypt(bitstring, key, bitstring): bitstring.
 reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
 reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
 
+(* XOR Encryption
+ * WARNING: this is not the full theory of XOR, we need an answer why is this
+ *          enough to model the encryption that we do.
+ *)
+fun xorEncrypt(bitstring, bitstring): bitstring.
+reduc forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),x) = y;
+      forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),y) = x.
+
 (* Signing *)
 fun sign(bitstring, key): bitstring.
 (* def for message recovery: reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x. *)
 reduc forall x: bitstring, y: key; verify(x, sign(x, y), pk(y)) = true;
-forall x: bitstring, y: key; verify(x, aeadEncrypt(emptyHexString, y, x), y) = true. 
+forall x: bitstring, y: key; verify(x, aeadEncrypt(emptyHexString, y, x), y) = true.
 
 (* Identifier function for the public keys *)
 fun idI(key): pkID[private].
@@ -75,6 +83,9 @@ fun hash(bitstring): bitstring.
 const g: dhElt.
 fun exp(dhElt, exponent): dhElt.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+(* TODO: probably only one of these two functions will be used *)
+fun dhEltToKey(dhElt): key[typeConverter].
+fun keyToDhElt(key): dhElt[typeConverter].
 
 (* Authentication events Symmetric *)
 event startInitiatorS(host, host, key, dhElt).
@@ -146,7 +157,7 @@ letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: bitstring, methodR: bits
     if methodR = METHOD_STAT then HKDF_extract(PRK_2e_asym(G_XY), G_RX)
     else PRK_2e_asym(G_XY).
 letfun PRK_4x3m_sym(PSK: bitstring, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
-letfun PRK_4x3m_asym(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
+letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
     if methodI = METHOD_STAT then HKDF_extract(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR), G_IY)
     else PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
 

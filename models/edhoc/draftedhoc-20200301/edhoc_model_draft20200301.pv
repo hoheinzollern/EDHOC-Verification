@@ -22,6 +22,8 @@
  *           see what the security implications are (perhaps just add a
  *           pointer to the security considerations section).
  *
+ * NOTE: capital and lowercase with underscore comes from the spec, 
+ *       camelCase are additions from the model
  *)
 set reconstructTrace = false.
 
@@ -165,7 +167,7 @@ query skU:key, skV:key, S_V:bitstring, K_2:key;
 
 event startInitiatorSigSig(host, host, dhElt, key, ctxID).
 
-let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
+let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
     methodI: bitstring, methodR: bitstring) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
@@ -188,7 +190,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
    *       Minimally, U and V must agree on the resulting values when EDHOC
    *       completes.
    *)
-  let msg_1: bitstring = (EH_SIG_SIG, S_I, G_X, C_I, AD_1) in
+  let msg_1: bitstring = ((METHOD_SIG, METHOD_SIG), S_I, G_X, C_I, AD_1) in
   out(c, msg_1);
   in(c, msg_2: bitstring);
   let (data_2: bitstring, CIPHERTEXT_2: bitstring) = msg_2 in
@@ -197,6 +199,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
    * and cover the case that C_I is inlcuded in the message.
    *)
   let (=C_I, G_Y: dhElt, C_R: ctxID) = data_2 in
+  let G_XY: dhElt = exp(G_Y, x) in
 
   (* The hash function should be the one used for the KDF, which is negotiated.
    * KARL: If we do model ciphersuite negotiation then we shold not use a
@@ -205,7 +208,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
    * anything else than static algos though.
    *)
   let TH_2: bitstring = hash((msg_1, data_2)) in
-  let PRK_2e: bitstring = PRK_asym_2e(exp(G_Y, x)) in
+  let PRK_2e: bitstring = PRK_2e_asym(G_XY) in
   
   (* For now we fix the AEAD to be aead0, in the same spirit as the fixed hash *)
   let K_2ae: bitstring = K_2ae_KDF(PRK_2e, TH_2, aead0) in
@@ -218,7 +221,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
   (* The decryption here is the XOR decryption.
    * The plaintext then comprises either a MAC_2 or an Signature_2 object.
    *)
-  let plainText:bitstring = decrypt(CIPHERTEXT_2, K_2ae, aad_2) in
+  let plainText:bitstring = xorDecrypt(CIPHERTEXT_2, K_2ae) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText in
 
   (* The second parameter of the PRK_3e2m derivation is the PSK, which will be 
@@ -226,7 +229,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
    * The third parameter is the G_R, i.e., the responders public static DH key.
    *)
   let PRK_3e2m: bitstring =
-        PRK_3e2m_deriv(G_XY, emptyHexString, pkV, methodI, methodR) in
+        PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
   let K_2m: bitstring = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
   (* MAC_2 covers addData_2 and the empty string.
@@ -246,9 +249,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
-  let rAuth: bool = if methodR = METHOD_SIG then
-                       let signContent = (addData_2, MAC_2) in
-                       verify(verifObj, verifObj, pkV) = true
+  let rAuth: bool = if verify(verifObj, verifObj, pkV)
                     else
                        MAC_2 = verifObj
                     in
@@ -259,8 +260,8 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: key,
   *)
   let data_3: bitstring = (C_R) in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let PRK_4x3m: bitsting = 
-  let K_3m: bitstring = K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =
+  let PRK_4x3m: bitstring = PRK_4x3m_asym(G_XY, pkV, pkU, methodI, methodR) in
+(*  let K_3m: bitstring = K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =*)
   
   let aad_3: bitstring = hash((msg_2, data_3)) in
   let K_3: key = HKDF(K, aad_3, empty, EDHOC) in
