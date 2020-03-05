@@ -124,7 +124,7 @@ const EH_SIG_STATIC:bitstring.
 const EH_STATIC_STATIC:bitstring.
 *)
 
-const METHOD_STATIC:bitstring.
+const METHOD_STAT:bitstring.
 const METHOD_SIG:bitstring.
 const METHOD_PSK:bitstring.
 
@@ -137,50 +137,18 @@ const METHOD_PSK:bitstring.
 fun HKDF_extract(bitstring, dhElt): bitstring.
 fun HKDF_expand(bitstring, bitstring): bitstring.
 
-(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC
- *
- * When both I and R use PSK, use the PRK_psk_psk_2e function.
- * If any of I and R use static or sign method, use the PRK_asym_2e function.
- *)
-letfun PRK_asym_2e(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
-letfun PRK_psk_psk_2e(PSK: bitstring, G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
+(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
+letfun PRK_2e_asym(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
+letfun PRK_2e_sym(PSK: bitstring, G_XY: dhElt) = HKDF_extract(PSK, G_XY).
 
-(* KARL: I don't haromize the naming further even though sig_sig and stat_sig
- *       could be the same function here and stat_stat and sig_stat could
- *       be the same function. Rationale: I prefer to do the thinking here
- *       once and for all and then just call the correct function from the
- *       protocol models based on an obvious name, inseatd of having to redo
- *       the thinking for each method-let-definition.
- *)
-letfun PRK_sig_sig_3e2m(G_XY: dhElt) = PRK_asym_2e(G_XY).
-letfun PRK_psk_psk_3e2m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_2e(PSK, G_XY).
-letfun PRK_stat_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G_XY), G_RX).
-letfun PRK_sig_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G_XY), G_RX).
-letfun PRK_stat_sig_3e2m(G_XY: dhElt) = PRK_asym_2e(G_XY).
-
-(* KARL: can lose one level of indirection in the right hand side. *)
-letfun PRK_3e2m_deriv(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, methodI: bitstring, methodR: bitstring) =
-    if (methodI, methodR) = (METHOD_SIG, METHOD_SIG) then PRK_sig_sig_3e2m(G_XY) else
-    if (methodI, methodR) = (METHOD_PSK, METHOD_PSK) then PRK_psk_psk_3e2m(PSK, G_XY) else
-    if (methodI, methodR) = (METHOD_STAT, METHOD_STAT) then PRK_stat_stat_3e2m(G_XY, G_RX) else
-    if (methodI, methodR) = (METHOD_SIG, METHOD_STAT) then PRK_sig_stat_3e2m(G_XY, G_RX) else
-    if (methodI, methodR) = (METHOD_STAT, METHOD_SIG) then PRK_stat_sig_3e2m(G_XY)
-
-letfun PRK_sig_sig_4x3m(G_XY: dhElt) = PRK_sig_sig_3e2m(G_XY).
-letfun PRK_psk_psk_4x3m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_3e2m(PSK, G_XY).
-letfun PRK_stat_stat_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
-             HKDF_extract(PRK_stat_stat_3e2m(G_XY, G_RX), G_IY).
-letfun PRK_sig_stat_4x3m(G_XY: dhElt, G_RX: dhElt) = PRK_sig_stat_3e2m(G_XY, G_RX).
-letfun PRK_stat_sig_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
-             HKDF_extract(PRK_stat_sig_3e2m(G_XY), G_IY).
-
-(* KARL: can lose one level of indirection in the right hand side. *)
-letfun PRK_4x3m_deriv(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
-    if (methodI, methodR) = (METHOD_SIG, METHOD_SIG) then PRK_sig_sig_4x3m(G_XY) else
-    if (methodI, methodR) = (METHOD_PSK, METHOD_PSK) then PRK_psk_psk_4x3m(PSK, G_XY) else
-    if (methodI, methodR) = (METHOD_STAT, METHOD_STAT) then PRK_stat_stat_4x3m(G_XY, G_RX, G_IY) else
-    if (methodI, methodR) = (METHOD_SIG, METHOD_STAT) then PRK_sig_stat_4x3m(G_XY, G_RX) else
-    if (methodI, methodR) = (METHOD_STAT, METHOD_SIG) then PRK_stat_sig_4x3m(G_XY, G_IY)
+letfun PRK_3e2m_sym(PSK: bitstring, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
+letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: bitstring, methodR: bitstring) =
+    if methodR = METHOD_STAT then HKDF_extract(PRK_2e_asym(G_XY), G_RX)
+    else PRK_2e_asym(G_XY).
+letfun PRK_4x3m_sym(PSK: bitstring, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
+letfun PRK_4x3m_asym(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
+    if methodI = METHOD_STAT then HKDF_extract(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR), G_IY)
+    else PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
 
 (* Encryption/Integrity key and IV derivations (see Section 3.8) *)
 type label.
