@@ -60,8 +60,8 @@ reduc forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),x) = y;
 (* Signing *)
 fun sign(bitstring, key): bitstring.
 (* def for message recovery: reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x. *)
-reduc forall x: bitstring, y: key; verify(x, sign(x, y), pk(y)) = true;
-forall x: bitstring, y: key; verify(x, aeadEncrypt(emptyHexString, y, x), y) = true.
+reduc forall x: bitstring, y: key, z: key; verify(x, sign(x, y), pk(y), z) = true;
+forall x: bitstring, y: key, z: key; verify(x, aeadEncrypt(emptyHexString, z, x), y, z) = true.
 
 (* Identifier function for the public keys *)
 fun idI(key): pkID[private].
@@ -86,6 +86,7 @@ equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 (* TODO: probably only one of these two functions will be used *)
 fun dhEltToKey(dhElt): key[typeConverter].
 fun keyToDhElt(key): dhElt[typeConverter].
+fun keyToBitstring(key): bitstring[typeConverter].
 
 (* Authentication events Symmetric *)
 event startInitiatorS(host, host, key, dhElt).
@@ -145,20 +146,20 @@ const METHOD_PSK:bitstring.
  * DH-group (e.g., g^xy).
  * The second parameter of the expand function is a key.
  *)
-fun HKDF_extract(bitstring, dhElt): bitstring.
-fun HKDF_expand(bitstring, bitstring): bitstring.
+fun HKDF_extract(bitstring, dhElt): key.
+fun HKDF_expand(bitstring, key): key.
 
 (* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
 letfun PRK_2e_asym(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
-letfun PRK_2e_sym(PSK: bitstring, G_XY: dhElt) = HKDF_extract(PSK, G_XY).
+letfun PRK_2e_sym(PSK: key, G_XY: dhElt) = HKDF_extract(keyToBitstring(PSK), G_XY).
 
-letfun PRK_3e2m_sym(PSK: bitstring, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
+letfun PRK_3e2m_sym(PSK: key, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
 letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: bitstring, methodR: bitstring) =
-    if methodR = METHOD_STAT then HKDF_extract(PRK_2e_asym(G_XY), G_RX)
+    if methodR = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_2e_asym(G_XY)), G_RX)
     else PRK_2e_asym(G_XY).
-letfun PRK_4x3m_sym(PSK: bitstring, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
+letfun PRK_4x3m_sym(PSK: key, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
 letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
-    if methodI = METHOD_STAT then HKDF_extract(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR), G_IY)
+    if methodI = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR)), G_IY)
     else PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
 
 (* Encryption/Integrity key and IV derivations (see Section 3.8) *)
@@ -206,24 +207,24 @@ const aead1: bitstring.
  *
  * Macro parameter names indicate which key and TH to use.
  *)
-letfun KDF(PRK: bitstring, TH: bitstring, LABEL: label, AEAD: bitstring) =
+letfun KDF(PRK: key, TH: bitstring, LABEL: label, AEAD: bitstring) =
     HKDF_expand((AEAD, TH, LABEL), PRK).
 
-letfun K_2ae_KDF(PRK_2e: bitstring, TH_2: bitstring, AEAD: bitstring) =
+letfun K_2ae_KDF(PRK_2e: key, TH_2: bitstring, AEAD: bitstring) =
     KDF(PRK_2e, TH_2, LABEL_K_2ae, AEAD).
 
-letfun K_2m_KDF(PRK_3e2m: bitstring, TH_2: bitstring, AEAD: bitstring) =
+letfun K_2m_KDF(PRK_3e2m: key, TH_2: bitstring, AEAD: bitstring) =
     KDF(PRK_3e2m, TH_2, LABEL_K_2m, AEAD).
 
-letfun K_3ae_KDF(PRK_3e2m: bitstring, TH_3: bitstring, AEAD: bitstring) =
+letfun K_3ae_KDF(PRK_3e2m: key, TH_3: bitstring, AEAD: bitstring) =
     KDF(PRK_3e2m, TH_3, LABEL_K_3ae, AEAD).
 
-letfun K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =
+letfun K_3m_KDF(PRK_4x3m: key, TH_3: bitstring, AEAD: bitstring) =
     KDF(PRK_4x3m, TH_3, LABEL_K_3m, AEAD).
 
 (* Key exporter interface (section 3.8.1).
  * The LABEL and the LENGTH are values supplied by the application.
  *)
-letfun EDHOC_exporter(PRK_4x3m: bitstring, TH_4: bitstring, LABEL: label, LENGTH: bitstring) =
+letfun EDHOC_exporter(PRK_4x3m: key, TH_4: bitstring, LABEL: label, LENGTH: bitstring) =
     KDF(PRK_4x3m, TH_4, LABEL, LENGTH).
 

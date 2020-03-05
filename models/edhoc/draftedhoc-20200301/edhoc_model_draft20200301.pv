@@ -208,10 +208,10 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * anything else than static algos though.
    *)
   let TH_2: bitstring = hash((msg_1, data_2)) in
-  let PRK_2e: bitstring = PRK_2e_asym(G_XY) in
-  
+  let PRK_2e: key = PRK_2e_asym(G_XY) in
+
   (* For now we fix the AEAD to be aead0, in the same spirit as the fixed hash *)
-  let K_2ae: bitstring = K_2ae_KDF(PRK_2e, TH_2, aead0) in
+  let K_2ae: key = K_2ae_KDF(PRK_2e, TH_2, aead0) in
 
   (* CIPHERTEXT_2 contains a COSE_Encrypt0 object. The COSE_Encrypt0 object
    * has three main parts, unprotected headers, protected headers and
@@ -221,23 +221,23 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   (* The decryption here is the XOR decryption.
    * The plaintext then comprises either a MAC_2 or an Signature_2 object.
    *)
-  let plainText:bitstring = xorDecrypt(CIPHERTEXT_2, K_2ae) in
+  let plainText:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2ae)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText in
 
-  (* The second parameter of the PRK_3e2m derivation is the PSK, which will be 
+  (* The second parameter of the PRK_3e2m derivation is the PSK, which will be
    * unused in this case, i.e., an asym cases.
    * The third parameter is the G_R, i.e., the responders public static DH key.
    *)
-  let PRK_3e2m: bitstring =
+  let PRK_3e2m: key =
         PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
-  let K_2m: bitstring = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
+  let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
   (* MAC_2 covers addData_2 and the empty string.
    * Signature_2 covers addData_2 and MAC_2 itself.
    * DIFF: In spec MAC_2 is also computed over a constant "Encrypt0" and the
    * Signature_2 is computed over a constant "Signature1". We ignore that in
    * the model.
-   * 
+   *
    * EDHOC Section 4.3.2 defines the COSE_Encrpt0 objects content:
    * Protected: ID_CRED_R              ==> V in the model's aadData_2
    * external_aad: TH_2, CRED_R, AD_2  ==> (TH_2, pkV, AD_2) aadData_2
@@ -248,19 +248,15 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
-  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
-  let rAuth: bool = if verify(verifObj, verifObj, pkV)
-                    else
-                       MAC_2 = verifObj
-                    in
-  if rAuth then
+  if verify(addData_2, verifObj, pkV, K_2m) then
+
   (* KARL: commenting these out until start looking at the queries
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
   *)
   let data_3: bitstring = (C_R) in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let PRK_4x3m: bitstring = PRK_4x3m_asym(G_XY, pkV, pkU, methodI, methodR) in
+  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, pkV, pkU, methodI, methodR) in
 (*  let K_3m: bitstring = K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =*)
   
   let aad_3: bitstring = hash((msg_2, data_3)) in
