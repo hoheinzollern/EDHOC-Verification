@@ -1,109 +1,16 @@
+(* Basic assumptions and limitations:
+ * - We model all cipher suites as a single fixed algorithms; no negotiation
+ *   - Initiator sends a cipher suite proposal and Responder always accepts it
+ * - We always send context identifiers C_I and C_R
+ * - We don't model the CORR parameter
+ * - We send aux data in all messages where it can occur (AD1, AD2, AD3)
+ *)
 set reconstructTrace = false.
 
 (* Macro definitions *)
 letfun revealSessKeys() = false.
 letfun maliciousPrincipals() = true.
 letfun asymmToSymm() = false.
-
-(* Types *)
-free c: channel.
-free c2: channel.
-free s: channel[private].
-free s2: channel[private].
-type host. (* U, V *)
-type pkey. (* E_U, E_V *)
-type skey. (* skU, skV *)
-type key. (* K_i *)
-type exponent. (* x & y *)
-type pkID.(*  id(pkU) & id(pkV)  *)
-type algorithmID.
-type ctxID.
-
-
-(* Message Types *)
-free T1: bitstring. free T4: bitstring.
-free T2: bitstring. free T5: bitstring.
-free T3: bitstring. free T6: bitstring.
-
-(* AlgorithmIDs *)
-free OSCORE: bitstring.
-free EDHOC_PSK_Chaining: algorithmID.
-free EDHOC: algorithmID.
-free EDHOC_PRESHARED: algorithmID.
-
-free empty: key.
-
-(* Creating public keys *)
-fun pk(skey): pkey.
-
-(* Shared Key Encryption *)
-fun aeadEncrypt(bitstring, key, bitstring): bitstring.
-reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
-reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
-
-(* Signing *)
-fun sign(bitstring, skey): bitstring.
-reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
-
-(* Identifier function for the public keys *)
-fun idI(pkey): pkID[private].
-fun idR(pkey): pkID[private].
-
-fun APP_2A(pkey, skey, bitstring, key): bitstring [private].
-fun APP_2A'(pkey, skey, bitstring, key): bitstring [private].
-fun APP_3A(skey, pkey, bitstring, key): bitstring [private].
-
-fun APP_2S(key, bitstring, key): bitstring [private].
-fun APP_2S'(key, bitstring, key): bitstring [private].
-fun APP_3S(key, bitstring, key): bitstring [private].
-
-(* Key derivation functions *)
-fun HKDF(dhElt, bitstring, key, algorithmID): key.
-reduc forall x: dhElt, aad: bitstring, y: key, algID: algorithmID; getAlgorithm(HKDF(x,aad,y,algID)) = algID.
-
-(* Hash function *)
-fun hash(bitstring): bitstring.
-
-(* Diffie Hellman *)
-const g: dhElt.
-fun exp(dhElt, exponent): dhElt.
-equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
-
-(* Authentication events Symmetric *)
-event startInitiatorS(host, host, key, dhElt).
-event startResponderS(host, host, key, dhElt).
-event midInitiatorS(host, host, key, dhElt).
-event endInitiatorS(host, host, key, dhElt).
-event endResponderS(host, host, key, dhElt).
-
-(* Authentication events Asymmetric *)
-event startInitiatorA(host, host, dhElt, skey, ctxID).
-event startResponderA(host, host, dhElt, skey, ctxID).
-event midInitiatorA(host, host, dhElt).
-event endInitiatorA(host, host, dhElt).
-event endResponderA(host, host, dhElt).
-
-
-(* Authentication events Symmetric *)
-event agreeHashStart3S(host, host, key, bitstring, key).
-event agreeHashStart2S(host, host, key, bitstring, key).
-
-event agreeHashEnd2S(host, host, key, bitstring).
-event agreeHashEnd3S(host, host, key, bitstring).
-
-(* Authentication events Asymmetric *)
-event agreeHashStart3A(host, host, key, bitstring, skey).
-event agreeHashStart2A(host, host, key, bitstring, skey).
-
-event agreeHashEnd2A(host, host, key, bitstring).
-event agreeHashEnd3A(host, host, key, bitstring).
-
-event LTK_Reveal(skey).
-event PSK_Reveal(key).
-event SessK2A_Reveal(key, skey).
-event SessK3A_Reveal(key, skey).
-event SessK2S_Reveal(key).
-event SessK3S_Reveal(key).
 
 (* Privacy *)
 (*
@@ -238,12 +145,13 @@ query skU:skey, skV:skey, S_V:bitstring, K_2:key;
 *)
 
 
-(* KARL: what are the [] after new variables? *)
-let initiatorAsym(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
-  new x[]: exponent; let G_X = exp(g, x) in new S_U[]: bitstring;
-  new AD_1[]: bitstring; new C_I[]: bitstring;
-  (* KARL: Note to self, need to cover S_U here as well, right? *)
-  event startInitiatorA(U, V, G_X, skU, C_I);
+event startInitiatorSigSig(host, host, dhElt, skey, ctxID).
+
+let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
+  new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
+  new AD_1[]: bitstring; new C_I[]: ctxID;
+  (* KARL: Note to self, need to cover S_I here as well, right? *)
+  event startInitiatorSigSig(U, V, G_X, skU, C_I);
   (* KARL: the original model uses these Tx-tags. They don't exist in the real
    *       protocol. If we can do without them and still terminate, I think
    *       we should. Otherwise, we need a rationale why the real protocol
@@ -261,16 +169,47 @@ let initiatorAsym(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
    *       Minimally, U and V must agree on the resulting values when EDHOC
    *       completes.
    *)
-  let msg_1: bitstring = (T1, EH_SIGMA, S_U, G_X, C_I, AD_1) in
-  out(c, msg_1); in(c, msg_2: bitstring);
-  let (data_2: bitstring, COSE_ENC_2: bitstring) = msg_2 in
-  let (=T2, =S_U, xS_V: bitstring, xE_V: dhElt) = data_2 in
-  let aad_2: bitstring = hash((msg_1, data_2)) in
-  let K: dhElt = exp(xE_V, x) in
+  let msg_1: bitstring = (EH_SIG_SIG, S_I, G_X, C_I, AD_1) in
+  out(c, msg_1);
+  in(c, msg_2: bitstring);
+  let (data_2: bitstring, CIPHERTEXT_2: bitstring) = msg_2 in
 
-  let K_2: key = HKDF(K, aad_2, empty, EDHOC) in
-  let signature_2: bitstring = aeadDecrypt(COSE_ENC_2, K_2, aad_2) in
+  (* Because we don't model the CORR parameter, we assumme the worst
+   * and cover the case that C_I is inlcuded in the message.
+   *)
+  let (=C_I, G_Y: dhElt, C_R: ctxID) = data_2 in
+
+  (* The hash function should be the one used for the KDF, which is negotiated.
+   * KARL: If we do model ciphersuite negotiation then we shold not use a
+   * static hash function like this. Similar for the KDF and the AEAD.
+   * As long as we do not model multi-session negotiation I see no need to model
+   * anything else than static algos though.
+   *)
+  let TH_2: bitstring = hash((msg_1, data_2)) in
+  let PRK_2e: bitstring = PRK_asym_2e(exp(G_Y, x)) in
+  
+  (* For now we fix the AEAD to be aead0, in the same spirit as the fixed hash *)
+  let K_2ae: bitstring = K_2ae_KDF(PRK_2e, TH_2, aead0) in
+
+  (* CIPHERTEXT_2 contains a COSE_Encrypt0 object. The COSE_Encrypt0 object
+   * has three main parts, unprotected headers, protected headers and
+   * ciphertext. RFC 8152 is not entirely clear, but it seems as if
+   * the protected headers should be part of the AAD for the AEAD.
+   * EDHOC Section 4.3.2:
+   * Protected: ID_CRED_R              ==> (V in the model)
+   * external_aad: TH_2, CRED_R, AD_2  ==> (TH_2, pkV, AD_2) in the model
+   *)
+  (* The decryption here is the XOR decryption *)
+  let plainText: bitstring = decrypt(CIPHERTEXT_2, K_2ae, aad_2) in
+  let (=V, signature_2:bitstring, AD_2) = plainText in
+  let aad_2 = (V, TH_2, pkV, AD_2) in
+
+  (* This AEAD decryption is the so called "inner COSE_Encrypt0", which is an
+   * encryption of the empty string for the only purpose of producing a MAC.
+   *)
+  let MAC_2 = aeadEncrypt(emptyHexString, K_2ae, aad_2) in
   let (=idR(pkV), =aad_2, APP_2A: bitstring) = verify(signature_2, pkV) in
+
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
   let data_3: bitstring = (T3, xS_V) in
@@ -388,7 +327,7 @@ process
   (!new U: host;
     new skU: skey;
     let pkU = pk(skU) in
-    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
+    !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
     out(c, (pkU));
     ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
  (* KARL: Is it so that once something is written to a channel it can be read
