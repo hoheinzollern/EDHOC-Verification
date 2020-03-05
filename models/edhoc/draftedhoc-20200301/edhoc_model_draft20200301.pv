@@ -164,15 +164,23 @@ query skU:key, skV:key, S_V:bitstring, K_2:key;
    (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
 *)
 
+(* Gavin Lowe auth hierarchy style authentication *)
+(* event evRunning(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4) *)
+event evRunning(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
+event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
 
-event startInitiatorSigSig(host, host, dhElt, key, ctxID).
+(* Sanity *)
+event evInitiatorCompleted.
+
 
 let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
     methodI: bitstring, methodR: bitstring) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (* KARL: Note to self, need to cover S_I here as well, right? *)
+  (*
   event startInitiatorSigSig(U, V, G_X, skU, C_I);
+   *)
   (* KARL: Original model did not include Method "negotaion". I add that now,
    *       but ignore the CORR, which I think only relates to underlying
    *       transport.
@@ -265,15 +273,18 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   let addData_3o = TH_3 in
   let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, addData_3o) in
   let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
-  (*
-  event agreeHashStart3A(U, V, K_3, aad_3, skU);
-  *)
-  out(c, msg_3).
+
+  (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
+  let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
+  event evRunning(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
+  out(c, msg_3);
+  event evCommit(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
   (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
    *)
+  event evInitiatorCompleted.
 
 let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   (* TODO: responder should learn its method from the METHOD parameter in
