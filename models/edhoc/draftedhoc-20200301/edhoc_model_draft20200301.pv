@@ -12,7 +12,7 @@
  * TODO: CORR investigate whether it is OK to exclude it. It seems to be OK
  *       after initial back-of-the-envelope analysis.
  *
- * WoW: put a FEEDBACK tag on comments that wants to send info back to the 
+ * WoW: put a FEEDBACK tag on comments that wants to send info back to the
  *      spec writers about unclarities or inconsitencies etc.
  *
  * FEEDBACK: 4.1: first four bullets state that the initiator shold be able to
@@ -22,7 +22,7 @@
  *           see what the security implications are (perhaps just add a
  *           pointer to the security considerations section).
  *
- * NOTE: capital and lowercase with underscore comes from the spec, 
+ * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
  *)
 set reconstructTrace = false.
@@ -173,13 +173,7 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (* KARL: Note to self, need to cover S_I here as well, right? *)
   event startInitiatorSigSig(U, V, G_X, skU, C_I);
-  (* KARL: the original model uses these Tx-tags. They don't exist in the real
-   *       protocol. If we can do without them and still terminate, I think
-   *       we should. Otherwise, we need a rationale why the real protocol
-   *       is still secure or what our analysis will miss by using the tags
-   *       I suppose.
-   *)
-  (* KARL: Original model did not include Mode "negotaion". I add that now,
+  (* KARL: Original model did not include Method "negotaion". I add that now,
    *       but ignore the CORR, which I think only relates to underlying
    *       transport.
    *)
@@ -218,16 +212,9 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * ciphertext. RFC 8152 is not entirely clear, but it seems as if
    * the protected headers should be part of the AAD for the AEAD.
    *)
-  (* The decryption here is the XOR decryption.
-   * The plaintext then comprises either a MAC_2 or an Signature_2 object.
-   *)
+   (* The verifObj contains either a MAC_2 or an Signature_2 object *)
   let plainText:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2ae)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText in
-
-  (* The second parameter of the PRK_3e2m derivation is the PSK, which will be
-   * unused in this case, i.e., an asym cases.
-   * The third parameter is the G_R, i.e., the responders public static DH key.
-   *)
   let PRK_3e2m: key =
         PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
@@ -248,7 +235,11 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
-  if verify(addData_2, verifObj, pkV, K_2m) then
+  (* KARL: WARNING: The Signature is computed over the MAC_2 as well,
+   * That got lost in the harmonized function. I added it back Thu evening.
+   *)
+  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
+  if verify(addData_2, MAC_2, verifObj, pkV, K_2m) then
 
   (* KARL: commenting these out until start looking at the queries
   event agreeHashEnd2A(U, V, K_2, aad_2);
