@@ -51,7 +51,8 @@ reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad
 
 (* Signing *)
 fun sign(bitstring, skey): bitstring.
-reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
+(* def for message recovery: reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x. *)
+reduc forall x: bitstring, y: skey; verify(x, sign(x, y), pk(y)) = true.
 
 (* Identifier function for the public keys *)
 fun idI(pkey): pkID[private].
