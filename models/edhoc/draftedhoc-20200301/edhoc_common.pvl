@@ -4,9 +4,9 @@ free c2: channel.
 free s: channel[private].
 free s2: channel[private].
 type host. (* U, V *)
-type pkey. (* E_U, E_V *)
-type skey. (* skU, skV *)
-type key. (* K_i *)
+type key. (* E_U, E_V *)
+ (* skU, skV *)
+ (* K_i *)
 type dhElt.
 type exponent. (* x & y *)
 type pkID.(*  id(pkU) & id(pkV)  *)
@@ -29,9 +29,9 @@ free empty: key.
 type textString.
 type byteString.
 type hexString.
-free emptyTextString: textString.
-free emptyHexString: hexString.
-free emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
+const emptyTextString: bitstring.
+const emptyHexString: bitstring.
+const emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
                                           takes other input types as well, making
                                           them all bitstring seems simplest.
                                           Further, from a modelling perspective
@@ -42,7 +42,7 @@ free emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
                                   *)
 
 (* Creating public keys *)
-fun pk(skey): pkey.
+fun pk(key): key.
 
 (* Shared Key Encryption *)
 fun aeadEncrypt(bitstring, key, bitstring): bitstring.
@@ -50,17 +50,18 @@ reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y,
 reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
 
 (* Signing *)
-fun sign(bitstring, skey): bitstring.
+fun sign(bitstring, key): bitstring.
 (* def for message recovery: reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x. *)
-reduc forall x: bitstring, y: skey; verify(x, sign(x, y), pk(y)) = true.
+reduc forall x: bitstring, y: key; verify(x, sign(x, y), pk(y)) = true;
+forall x: bitstring, y: key; verify(x, aeadEncrypt(emptyHexString, y, x), y) = true. 
 
 (* Identifier function for the public keys *)
-fun idI(pkey): pkID[private].
-fun idR(pkey): pkID[private].
+fun idI(key): pkID[private].
+fun idR(key): pkID[private].
 
-fun APP_2A(pkey, skey, bitstring, key): bitstring [private].
-fun APP_2A'(pkey, skey, bitstring, key): bitstring [private].
-fun APP_3A(skey, pkey, bitstring, key): bitstring [private].
+fun APP_2A(key, key, bitstring, key): bitstring [private].
+fun APP_2A'(key, key, bitstring, key): bitstring [private].
+fun APP_3A(key, key, bitstring, key): bitstring [private].
 
 fun APP_2S(key, bitstring, key): bitstring [private].
 fun APP_2S'(key, bitstring, key): bitstring [private].
@@ -83,8 +84,8 @@ event endInitiatorS(host, host, key, dhElt).
 event endResponderS(host, host, key, dhElt).
 
 (* Authentication events Asymmetric *)
-event startInitiatorA(host, host, dhElt, skey, ctxID).
-event startResponderA(host, host, dhElt, skey, ctxID).
+event startInitiatorA(host, host, dhElt, key, ctxID).
+event startResponderA(host, host, dhElt, key, ctxID).
 event midInitiatorA(host, host, dhElt).
 event endInitiatorA(host, host, dhElt).
 event endResponderA(host, host, dhElt).
@@ -97,16 +98,16 @@ event agreeHashEnd2S(host, host, key, bitstring).
 event agreeHashEnd3S(host, host, key, bitstring).
 
 (* Authentication events Asymmetric *)
-event agreeHashStart3A(host, host, key, bitstring, skey).
-event agreeHashStart2A(host, host, key, bitstring, skey).
+event agreeHashStart3A(host, host, key, bitstring, key).
+event agreeHashStart2A(host, host, key, bitstring, key).
 
 event agreeHashEnd2A(host, host, key, bitstring).
 event agreeHashEnd3A(host, host, key, bitstring).
 
-event LTK_Reveal(skey).
+event LTK_Reveal(key).
 event PSK_Reveal(key).
-event SessK2A_Reveal(key, skey).
-event SessK3A_Reveal(key, skey).
+event SessK2A_Reveal(key, key).
+event SessK3A_Reveal(key, key).
 event SessK2S_Reveal(key).
 event SessK3S_Reveal(key).
 

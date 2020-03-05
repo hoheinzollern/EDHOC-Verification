@@ -43,13 +43,13 @@ query x:key; attacker (idR(pk(new skU))) phase 1 ==>
 
 (* Secrecy Asymmetric *)
 (*
-query skU:skey, skV:skey, S_V:bitstring, K_2:key;
+query skU:key, skV:key, S_V:bitstring, K_2:key;
   attacker (APP_2A(pk(skU),skV,S_V,K_2)) phase 0 ==>
    (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
-query skU:skey, skV:skey, S_V:bitstring, K_2:key;
+query skU:key, skV:key, S_V:bitstring, K_2:key;
   attacker (APP_2A'(pk(skU),skV,S_V,K_2)) phase 0 ==>
    (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
-query skU:skey, skV:skey, S_U:bitstring, K_3:key;
+query skU:key, skV:key, S_U:bitstring, K_3:key;
   attacker (APP_3A(skU,pk(skV),S_U,K_3)) phase 0 ==>
    (event (LTK_Reveal(skV)) || event (SessK3A_Reveal(K_3, new skU))).
 *)
@@ -69,13 +69,13 @@ query PSK:key, S_V:bitstring, K_3 : key;
 
 (* Perfect Forward Secrecy Asymmetric *)
 (*
-query skU:skey, skV:skey, S_V:bitstring, K_2:key;
+query skU:key, skV:key, S_V:bitstring, K_2:key;
   attacker (APP_2A(pk(skU),skV,S_V,K_2)) phase 1 ==>
     (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
-query skU:skey, skV:skey, S_V:bitstring, K_2:key;
+query skU:key, skV:key, S_V:bitstring, K_2:key;
   attacker (APP_2A'(pk(skU),skV,S_V,K_2)) phase 1 ==>
     (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
-query skU:skey, skV:skey, S_U:bitstring, K_3:key;
+query skU:key, skV:key, S_U:bitstring, K_3:key;
   attacker (APP_3A(skU,pk(skV),S_U,K_3)) phase 1 ==>
     (event (LTK_Reveal(skV)) || event (SessK3A_Reveal(K_3, new skU))).
 *)
@@ -95,13 +95,13 @@ query PSK:key, S_V:bitstring, K_3 : key;
 
 (* Injective agreement Asymmetric *)
 (*
-query U: host, U': host, V: host, E_V: dhElt, skV : skey;
+query U: host, U': host, V: host, E_V: dhElt, skV : key;
   inj-event (midInitiatorA(U, V, E_V)) ==>
     (inj-event (startResponderA(U', V, E_V, skV)) || event (LTK_Reveal(skV))).
-query U: host, V: host, E_U: dhElt, skU : skey;
+query U: host, V: host, E_U: dhElt, skU : key;
   inj-event (endResponderA(U, V, E_U)) ==>
     (inj-event (startInitiatorA(U, V, E_U, skU)) || event (LTK_Reveal(skU))).
-query U: host, U': host, V: host, E_V: dhElt, skV : skey;
+query U: host, U': host, V: host, E_V: dhElt, skV : key;
   inj-event (endInitiatorA(U, V, E_V)) ==>
     inj-event (startResponderA(U', V, E_V, skV)) || event (LTK_Reveal(skV)).
 *)
@@ -121,10 +121,10 @@ query U: host, V: host, PSK: key, E_U: dhElt;
 
 (* CONTENT (algorithm) agreement Asymmetric *)
 (*
-query U: host, V: host, K_2: key, skV : skey, aad_2 : bitstring;
+query U: host, V: host, K_2: key, skV : key, aad_2 : bitstring;
   event (agreeHashEnd2A(U, V, K_2, aad_2)) ==>
     (event (agreeHashStart2A(U, V, K_2, aad_2, skV)) || event (LTK_Reveal(skV)) || event (SessK2A_Reveal(K_2, new skU))).
-query U: host, V: host, K_3: key, skU : skey, aad_3 : bitstring;
+query U: host, V: host, K_3: key, skU : key, aad_3 : bitstring;
   event (agreeHashEnd3A(U, V, K_3, aad_3)) ==>
     (event (agreeHashStart3A(U, V, K_3, aad_3, skU)) || event (LTK_Reveal(skU)) || event (SessK3A_Reveal(K_3, new skU))).
 *)
@@ -153,7 +153,7 @@ query U: host, V: host, K_3: key, PSK : key, aad_3 : bitstring;
  *       he should still not get the session key, i.e., sesssion key independence.
  *)
 (*
-query skU:skey, skV:skey, S_V:bitstring, K_2:key;
+query skU:key, skV:key, S_V:bitstring, K_2:key;
   attacker(
 
   attacker (APP_2A(pk(skU),skV,S_V,K_2)) phase 0 ==>
@@ -161,9 +161,9 @@ query skU:skey, skV:skey, S_V:bitstring, K_2:key;
 *)
 
 
-event startInitiatorSigSig(host, host, dhElt, skey, ctxID).
+event startInitiatorSigSig(host, host, dhElt, key, ctxID).
 
-let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
+let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (* KARL: Note to self, need to cover S_I here as well, right? *)
@@ -223,11 +223,6 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
   (* This AEAD decryption is the so called "inner COSE_Encrypt0", which is an
    * encryption of the empty string for the only purpose of producing a MAC.
    *)
-  let ver = aeadEncrypt(emptyHexString, K_2ae, aad_2) in
-     or SIGNATURE2
-  if vwrifywefionweuio  then
-      
-
   let (=idR(pkV), =aad_2, APP_2A: bitstring) = verify(signature_2, pkV) in
 
   event agreeHashEnd2A(U, V, K_2, aad_2);
@@ -245,7 +240,7 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
 
-let responderAsym(V: host, U: host, skV: skey, pkV: pkey, pkU: pkey) =
+let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   (* TODO: responder should learn its method from the METHOD parameter in
    * message 1 (static/static, static/sign etc).
    *)
@@ -261,10 +256,7 @@ let responderAsym(V: host, U: host, skV: skey, pkV: pkey, pkU: pkey) =
   let APP_2A = APP_2A(pkU,skV,S_V,K_2) in
   let APP_2A' = APP_2A'(pkU,skV,S_V,K_2) in
   (* TODO: write all asym-modes in one let-expression. *)
-  let verificationToken = if static then
-     mac-computation
-  else
-     sign((idR(pk(skV)), aad_2, APP_2A), skV) in
+  let verificationToken = sign((idR(pk(skV)), aad_2, APP_2A), skV) in
   let COSE_ENC_2: bitstring = aeadEncrypt(signature_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_ENC_2) in
 
@@ -352,7 +344,7 @@ let responderSym(V: host, U: host, PSK: key) =
 
 process
   (!new U: host;
-    new skU: skey;
+    new skU: key;
     let pkU = pk(skU) in
     !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
     out(c, (pkU));
@@ -362,8 +354,8 @@ process
           that a party is tricked into running the protocol with itself (a type
           of reflection attack).
   *)
-  (!in(s, (U:host, skU:skey, pkU:pkey));
-    in(s, (V:host, skV:skey, pkV:pkey));
+  (!in(s, (U:host, skU:key, pkU:key));
+    in(s, (V:host, skV:key, pkV:key));
     new random[]: bitstring;
     let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
     out(s2, (U, V, PSK)); out(s2, (U, V, PSK));
@@ -371,8 +363,8 @@ process
            reveald before the protocol is run?
    *)
     ((if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK)) | phase 1; out(c, PSK)) ) |
-  (!in(s, (U:host, skU:skey, pkU:pkey));
-    in(s, (V:host, skV:skey, pkV:pkey));
+  (!in(s, (U:host, skU:key, pkU:key));
+    in(s, (V:host, skV:key, pkV:key));
     (initiatorAsym(U, V, skU, pkU, pkV) |
      responderAsym(V, U, skV, pkV, pkU)) ) |
   (!in(s2, (U:host, V:host, PSK:key));
