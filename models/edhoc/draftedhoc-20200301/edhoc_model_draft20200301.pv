@@ -11,14 +11,16 @@
  *
  * TODO: CORR investigate whether it is OK to exclude it. It seems to be OK
  *       after initial back-of-the-envelope analysis.
+ *
  * WoW: put a FEEDBACK tag on comments that wants to send info back to the 
  *      spec writers about unclarities or inconsitencies etc.
+ *
  * FEEDBACK: 4.1: first four bullets state that the initiator shold be able to
- *           retrieve "the" key of the responder. Singular.  Later in the section
- *           it is stated that the responder may have to try several keys.
- *           This seems inconsitent and should at least be discussed to see
- *           what the security implications are (perhaps just add a pointer
- *           to the security considerations section).
+ *           retrieve "the" key of the responder. Singular.  Later in the
+ *           section it is stated that the responder may have to try several
+ *           keys. This seems inconsitent and should at least be discussed to
+ *           see what the security implications are (perhaps just add a
+ *           pointer to the security considerations section).
  *
  *)
 set reconstructTrace = false.
@@ -163,7 +165,8 @@ query skU:skey, skV:skey, S_V:bitstring, K_2:key;
 
 event startInitiatorSigSig(host, host, dhElt, skey, ctxID).
 
-let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
+let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey,
+    methodI: bitstring, methodR: bitstring) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (* KARL: Note to self, need to cover S_I here as well, right? *)
@@ -211,28 +214,54 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
    * has three main parts, unprotected headers, protected headers and
    * ciphertext. RFC 8152 is not entirely clear, but it seems as if
    * the protected headers should be part of the AAD for the AEAD.
-   * EDHOC Section 4.3.2:
-   * Protected: ID_CRED_R              ==> (V in the model)
-   * external_aad: TH_2, CRED_R, AD_2  ==> (TH_2, pkV, AD_2) in the model
    *)
-  (* The decryption here is the XOR decryption *)
-  let plainText: bitstring = decrypt(CIPHERTEXT_2, K_2ae, aad_2) in
-  let (=V, signature_2:bitstring, AD_2) = plainText in
-  let aad_2 = (V, TH_2, pkV, AD_2) in
-
-  (* This AEAD decryption is the so called "inner COSE_Encrypt0", which is an
-   * encryption of the empty string for the only purpose of producing a MAC.
+  (* The decryption here is the XOR decryption.
+   * The plaintext then comprises either a MAC_2 or an Signature_2 object.
    *)
-  let ver = aeadEncrypt(emptyHexString, K_2ae, aad_2) in
-     or SIGNATURE2
-  if vwrifywefionweuio  then
-      
+  let plainText:bitstring = decrypt(CIPHERTEXT_2, K_2ae, aad_2) in
+  let (=V, verifObj:bitstring, AD_2:bitstring) = plainText in
 
-  let (=idR(pkV), =aad_2, APP_2A: bitstring) = verify(signature_2, pkV) in
+  (* The second parameter of the PRK_3e2m derivation is the PSK, which will be 
+   * unused in this case, i.e., an asym cases.
+   * The third parameter is the G_R, i.e., the responders public static DH key.
+   *)
+  let PRK_3e2m: bitstring =
+        PRK_3e2m_deriv(G_XY, emptyHexString, pkV, methodI, methodR) in
+  let K_2m: bitstring = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
+  (* MAC_2 covers addData_2 and the empty string.
+   * Signature_2 covers addData_2 and MAC_2 itself.
+   * DIFF: In spec MAC_2 is also computed over a constant "Encrypt0" and the
+   * Signature_2 is computed over a constant "Signature1". We ignore that in
+   * the model.
+   * 
+   * EDHOC Section 4.3.2 defines the COSE_Encrpt0 objects content:
+   * Protected: ID_CRED_R              ==> V in the model's aadData_2
+   * external_aad: TH_2, CRED_R, AD_2  ==> (TH_2, pkV, AD_2) aadData_2
+   *
+   * The following AEAD encryption is the so called "inner COSE_Encrypt0",
+   * which is an encryption of the empty string for the only purpose of
+   * producing a MAC.
+   * We need it both for verifying MAC_2 and for verifying Signature1.
+   *)
+  let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
+  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
+  let rAuth: bool = if methodR = METHOD_SIG then
+                       let signContent = (addData_2, MAC_2) in
+                       verify(verifObj, verifObj, pkV) = true
+                    else
+                       MAC_2 = verifObj
+                    in
+  if rAuth then
+  (* KARL: commenting these out until start looking at the queries
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
-  let data_3: bitstring = (T3, xS_V) in
+  *)
+  let data_3: bitstring = (C_R) in
+  let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
+  let PRK_4x3m: bitsting = 
+  let K_3m: bitstring = K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =
+  
   let aad_3: bitstring = hash((msg_2, data_3)) in
   let K_3: key = HKDF(K, aad_3, empty, EDHOC) in
   let APP_3A = APP_3A(skU,pkV,S_U,K_3) in

@@ -113,11 +113,19 @@ event SessK3S_Reveal(key).
 (* Methods. After prefix follows the credential type used by initiator
  * and then the credential type used by responder.
  *)
+(*
+ * KARL: These are probably no longer needed that we use a two-dimensional 
+ * view of the method
 const EH_PSK_PSK:bitstring.
 const EH_SIG_SIG:bitstring.
 const EH_STATIC_SIG:bitstring.
 const EH_SIG_STATIC:bitstring.
 const EH_STATIC_STATIC:bitstring.
+*)
+
+const METHOD_STATIC:bitstring.
+const METHOD_SIG:bitstring.
+const METHOD_PSK:bitstring.
 
 (* HKDF
  * Both the extract and expand functions take a salt as first parameter.
@@ -149,13 +157,29 @@ letfun PRK_stat_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G
 letfun PRK_sig_stat_3e2m(G_XY: dhElt, G_RX: dhElt) = HKDF_extract(PRK_asym_2e(G_XY), G_RX).
 letfun PRK_stat_sig_3e2m(G_XY: dhElt) = PRK_asym_2e(G_XY).
 
+(* KARL: can lose one level of indirection in the right hand side. *)
+letfun PRK_3e2m_deriv(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, methodI: bitstring, methodR: bitstring) =
+    if (methodI, methodR) = (METHOD_SIG, METHOD_SIG) then PRK_sig_sig_3e2m(G_XY) else
+    if (methodI, methodR) = (METHOD_PSK, METHOD_PSK) then PRK_psk_psk_3e2m(PSK, G_XY) else
+    if (methodI, methodR) = (METHOD_STAT, METHOD_STAT) then PRK_stat_stat_3e2m(G_XY, G_RX) else
+    if (methodI, methodR) = (METHOD_SIG, METHOD_STAT) then PRK_sig_stat_3e2m(G_XY, G_RX) else
+    if (methodI, methodR) = (METHOD_STAT, METHOD_SIG) then PRK_stat_sig_3e2m(G_XY)
+
 letfun PRK_sig_sig_4x3m(G_XY: dhElt) = PRK_sig_sig_3e2m(G_XY).
 letfun PRK_psk_psk_4x3m(PSK: bitstring, G_XY: dhElt) = PRK_psk_psk_3e2m(PSK, G_XY).
 letfun PRK_stat_stat_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
              HKDF_extract(PRK_stat_stat_3e2m(G_XY, G_RX), G_IY).
 letfun PRK_sig_stat_4x3m(G_XY: dhElt, G_RX: dhElt) = PRK_sig_stat_3e2m(G_XY, G_RX).
 letfun PRK_stat_sig_4x3m(G_XY: dhElt, G_RX: dhElt, G_IY: dhElt) =
-             HKDF_extract(PRK_stat_stat_3e2m(G_XY, G_RX), G_IY).
+             HKDF_extract(PRK_stat_sig_3e2m(G_XY), G_IY).
+
+(* KARL: can lose one level of indirection in the right hand side. *)
+letfun PRK_4x3m_deriv(G_XY: dhElt, PSK: bitstring, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
+    if (methodI, methodR) = (METHOD_SIG, METHOD_SIG) then PRK_sig_sig_4x3m(G_XY) else
+    if (methodI, methodR) = (METHOD_PSK, METHOD_PSK) then PRK_psk_psk_4x3m(PSK, G_XY) else
+    if (methodI, methodR) = (METHOD_STAT, METHOD_STAT) then PRK_stat_stat_4x3m(G_XY, G_RX, G_IY) else
+    if (methodI, methodR) = (METHOD_SIG, METHOD_STAT) then PRK_sig_stat_4x3m(G_XY, G_RX) else
+    if (methodI, methodR) = (METHOD_STAT, METHOD_SIG) then PRK_stat_sig_4x3m(G_XY, G_IY)
 
 (* Encryption/Integrity key and IV derivations (see Section 3.8) *)
 type label.
