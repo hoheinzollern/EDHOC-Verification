@@ -213,8 +213,8 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * the protected headers should be part of the AAD for the AEAD.
    *)
    (* The verifObj contains either a MAC_2 or an Signature_2 object *)
-  let plainText:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2ae)) in
-  let (=V, verifObj:bitstring, AD_2:bitstring) = plainText in
+  let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2ae)) in
+  let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
   let PRK_3e2m: key =
         PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
@@ -235,6 +235,7 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
+
   (* KARL: WARNING: The Signature is computed over the MAC_2 as well,
    * That got lost in the harmonized function. I added it back Thu evening.
    *)
@@ -245,22 +246,34 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
   *)
-  let data_3: bitstring = (C_R) in
+  let data_3: ctxID = C_R in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, pkV, pkU, methodI, methodR) in
-(*  let K_3m: bitstring = K_3m_KDF(PRK_4x3m: bitstring, TH_3: bitstring, AEAD: bitstring) =*)
-  
-  let aad_3: bitstring = hash((msg_2, data_3)) in
-  let K_3: key = HKDF(K, aad_3, empty, EDHOC) in
-  let APP_3A = APP_3A(skU,pkV,S_U,K_3) in
-  let signature_3: bitstring = sign((idI(pk(skU)), aad_3, APP_3A), skU) in
-  let COSE_ENC_3: bitstring = aeadEncrypt(signature_3, K_3, aad_3) in
-  let msg_3: bitstring = (data_3, COSE_ENC_3) in
+  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, keyToDhElt(pkV), keyToDhElt(pkU), methodI, methodR) in
+  let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
+  new AD_3[]: bitstring;
+  let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
+  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
+  (* authI is the "inner COSE_Encrypt0" object *)
+  let authI: bitstring = if methodI = METHOD_STAT then
+                            MAC_3
+                         else  (* We are not in PSK-method, so ... *)
+                            sign(addData_3i, MAC_3, skU)
+                         in
+  (* Now compute the "outer COSE_Encrypt0" object *)
+  let plainText3 = (pkU, authI, AD_3) in
+  let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
+  let addData_3o = TH_3 in
+  let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, addData_3o) in
+  let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
+  (*
   event agreeHashStart3A(U, V, K_3, aad_3, skU);
-  out(c, msg_3);
+  *)
+  out(c, msg_3).
+  (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
+   *)
 
 let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   (* TODO: responder should learn its method from the METHOD parameter in

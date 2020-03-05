@@ -83,7 +83,6 @@ fun hash(bitstring): bitstring.
 const g: dhElt.
 fun exp(dhElt, exponent): dhElt.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
-(* TODO: probably only one of these two functions will be used *)
 fun dhEltToKey(dhElt): key[typeConverter].
 fun keyToDhElt(key): dhElt[typeConverter].
 fun keyToBitstring(key): bitstring[typeConverter].
