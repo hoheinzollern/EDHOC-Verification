@@ -4,6 +4,22 @@
  * - We always send context identifiers C_I and C_R
  * - We don't model the CORR parameter
  * - We send aux data in all messages where it can occur (AD1, AD2, AD3)
+ *
+ * WoW: put in a DIFF tag an explain what is different or assumed compared
+ *      to the specification in the place where it happens. If it affect
+ *      multiple places, put it in the first palce it happens.
+ *
+ * TODO: CORR investigate whether it is OK to exclude it. It seems to be OK
+ *       after initial back-of-the-envelope analysis.
+ * WoW: put a FEEDBACK tag on comments that wants to send info back to the 
+ *      spec writers about unclarities or inconsitencies etc.
+ * FEEDBACK: 4.1: first four bullets state that the initiator shold be able to
+ *           retrieve "the" key of the responder. Singular.  Later in the section
+ *           it is stated that the responder may have to try several keys.
+ *           This seems inconsitent and should at least be discussed to see
+ *           what the security implications are (perhaps just add a pointer
+ *           to the security considerations section).
+ *
  *)
 set reconstructTrace = false.
 
@@ -207,7 +223,11 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
   (* This AEAD decryption is the so called "inner COSE_Encrypt0", which is an
    * encryption of the empty string for the only purpose of producing a MAC.
    *)
-  let MAC_2 = aeadEncrypt(emptyHexString, K_2ae, aad_2) in
+  let ver = aeadEncrypt(emptyHexString, K_2ae, aad_2) in
+     or SIGNATURE2
+  if vwrifywefionweuio  then
+      
+
   let (=idR(pkV), =aad_2, APP_2A: bitstring) = verify(signature_2, pkV) in
 
   event agreeHashEnd2A(U, V, K_2, aad_2);
@@ -226,6 +246,9 @@ let initiatorSigSig(U: host, V: host, skU: skey, pkU: pkey, pkV: pkey) =
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
 
 let responderAsym(V: host, U: host, skV: skey, pkV: pkey, pkU: pkey) =
+  (* TODO: responder should learn its method from the METHOD parameter in
+   * message 1 (static/static, static/sign etc).
+   *)
   new y[]: exponent; let E_V: dhElt = exp(g, y) in new S_V[]: bitstring;
   new C_U[]: bitstring;
   event startResponderA(U, V, E_V, skV, C_U);
@@ -237,7 +260,11 @@ let responderAsym(V: host, U: host, skV: skey, pkV: pkey, pkU: pkey) =
   let K_2: key = HKDF(K, aad_2, empty, EDHOC) in
   let APP_2A = APP_2A(pkU,skV,S_V,K_2) in
   let APP_2A' = APP_2A'(pkU,skV,S_V,K_2) in
-  let signature_2: bitstring = sign((idR(pk(skV)), aad_2, APP_2A), skV) in
+  (* TODO: write all asym-modes in one let-expression. *)
+  let verificationToken = if static then
+     mac-computation
+  else
+     sign((idR(pk(skV)), aad_2, APP_2A), skV) in
   let COSE_ENC_2: bitstring = aeadEncrypt(signature_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_ENC_2) in
 
