@@ -52,7 +52,7 @@ const g: G.
 fun exp(G, exponent): G.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 
-(* Authentication events Symmetric *)
+(* Authentication events Symmetric -- doesn't work with the definitions in the common file *)
 event startInitiatorS(host, host, G, bitstring, bitstring).
 event startResponderS(host, host, G, bitstring, bitstring).
 event midInitiatorS(host, host, G, bitstring, bitstring).
