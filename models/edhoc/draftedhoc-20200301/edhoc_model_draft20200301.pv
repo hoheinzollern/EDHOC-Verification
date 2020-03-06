@@ -35,7 +35,8 @@
  *   - S_I and S_R  (inj-agreement)
  *   - U and V      (Confidentiality, privacy(?))
  *)
-set reconstructTrace = false.
+
+set attacker = passive.
 
 (* Macro definitions *)
 letfun revealSessKeys() = false.
@@ -185,10 +186,9 @@ event evInitiatorCompleted.
 event evResponderCompleted.
 event evReach.
 
-(*query event(evInitiatorCompleted).
+query event(evInitiatorCompleted).
 query event(evResponderCompleted).
-*)
-query event(evReach).
+(*query event(evReach).*)
 
 
 
@@ -321,7 +321,7 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
   let (=C_R) = data_3 in
-  let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_2)) in
+  let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, keyToDhElt(pkV), keyToDhElt(pkU), methodI, methodR) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
   let addData_3o: bitstring = TH_3 in
@@ -343,14 +343,17 @@ process
   (!new U: host;
     new skU: key;
     let pkU = pk(skU) in
-    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
-    out(c, (pkU));
-    ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
-  (!in(s, (U:host, skU:key, pkU:key));
+    (!out(s, (U, skU, pkU))) | out(c, (pkU))
+    (*if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) |
+    (phase 1; out(c, skU)*)
+  ) | (
+   !in(s, (U:host, skU:key, pkU:key));
     in(s, (V:host, skV:key, pkV:key));
-     event evReach;
-    (initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
-     responderAsym(V, U, skV, pkV, pkU)) )
+    (*initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
+    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_SIG) |*)
+    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_STAT) |
+    (*initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_STAT) |*)
+    responderAsym(V, U, skV, pkV, pkU) )
 
 (*
 process
