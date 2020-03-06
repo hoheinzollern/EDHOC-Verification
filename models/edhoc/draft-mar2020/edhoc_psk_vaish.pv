@@ -24,6 +24,8 @@ free EDHOC_PRESHARED: algorithmID.
 
 free empty: key.
 
+letfun ciphersuiteAgree() = true.
+
 (* Creating public keys *)
 fun pk(skey): pkey.
 
@@ -75,7 +77,7 @@ query attacker (idR(pk(new skU))) phase 0.
 query attacker (new AD_2) phase 0.
 query attacker (new AD_3) phase 0.
 
-(* APP_2S, At completion *)
+(* AD_2, At completion *)
 query attacker (new AD_2') phase 1.
 query attacker (new AD_2') phase 0.
 
@@ -94,11 +96,12 @@ query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; event (endRespon
 (* Agreement on TH_3 -- from responder -- and TH_4 -- from initiator *)
 
 
-let initiatorSym(U: host, V: host, S_I: bitstring, PSK: key, ID_PSK: bitstring) =
+let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent; 
   let E_U: G = exp(g, x) in 
   new C_I: bitstring;
   new aead: bitstring;
+  new S_U: bitstring;
   new AD_1: bitstring; 
   new AD_3: bitstring;
   new Mc: int;
@@ -125,7 +128,7 @@ let initiatorSym(U: host, V: host, S_I: bitstring, PSK: key, ID_PSK: bitstring) 
   out(c, msg_3);
   event endInitiatorS(U, V, xE_V, AD_2).
 	
-let responderSym(V: host, U: host, S_R: bitstring, PSK: key, ID_PSK: bitstring) = 
+let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) = 
   new y: exponent;
   let E_V: G = exp(g, y) in
   new C_R: bitstring;
@@ -133,44 +136,45 @@ let responderSym(V: host, U: host, S_R: bitstring, PSK: key, ID_PSK: bitstring) 
   new AD_2': bitstring;
   event startResponderS(U, V, E_V, C_R, AD_2);
   in(c, msg_1: bitstring);
-  let (Mc: int, =S_R, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
-  let data_2: bitstring = (xC_U, E_V, C_R) in
-  let TH_2: bitstring = hash((msg_1, data_2)) in
-  let G_XY: dhElt = exp(xE_U, y) in
-  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
-  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
-  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
-  let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
-  let msg_2: bitstring = (data_2, COSE_enc_2) in
-  out(c, msg_2);
-  in(c, msg_3: bitstring);
-  let (=C_R, COSE_enc_3: bitstring) = msg_3 in
-  let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
-  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
-  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
-  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
-  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
-	event endResponderS(U, V, xE_U, AD_1, AD_3);
-  let COSE_ENC_2': bitstring = aeadEncrypt(AD_2', K_2, aad_2) in
-  let msg_2': bitstring = (data_2, COSE_ENC_2') in
-  out(c2, msg_2').
+  let (Mc: int, xS_U, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
+  if ciphersuiteAgree then
+	  let data_2: bitstring = (xC_U, E_V, C_R) in
+	  let TH_2: bitstring = hash((msg_1, data_2)) in
+	  let G_XY: dhElt = exp(xE_U, y) in
+	  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
+	  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
+	  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
+	  let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
+	  let msg_2: bitstring = (data_2, COSE_enc_2) in
+	  out(c, msg_2);
+	  in(c, msg_3: bitstring);
+	  let (=C_R, COSE_enc_3: bitstring) = msg_3 in
+	  let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
+	  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
+	  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
+	  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
+	  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
+		event endResponderS(U, V, xE_U, AD_1, AD_3);
+	  let COSE_ENC_2': bitstring = aeadEncrypt(AD_2', K_2, aad_2) in
+	  let msg_2': bitstring = (data_2, COSE_ENC_2') in
+	  out(c2, msg_2').
 	
-	process
-	  (!new U: host;
-	    new skU: skey;
-		new S_I: bitstring;
-		new S_R: bitstring;
-		new ID_PSK: bitstring; 
-	    let pkU = pk(skU) in
-	    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
-	    out(c, (pkU)); phase 1; out(c, skU) ) |
-	  (!in(s, (U:host, skU:skey, pkU:pkey));
-	    in(s, (V:host, skV:skey, pkV:pkey));
-	    new random: bitstring;
-	    let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
-	    out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; out(c, PSK) ) |
-	  (!in(s, (U:host, skU:skey, pkU:pkey));
-	    in(s, (V:host, skV:skey, pkV:pkey));
-	  (!in(s2, (U:host, V:host, PSK:key));
-	    (initiatorSym(U, V, S_I, PSK, ID_PSK) |
-	     responderSym(V, U, S_R, PSK, ID_PSK)) )
+		process
+		  (!new U: host;
+		    new skU: skey;
+			new S_I: bitstring;
+			new S_R: bitstring;
+			new ID_PSK: bitstring; 
+		    let pkU = pk(skU) in
+		    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
+		    out(c, (pkU)); phase 1; out(c, skU) ) |
+		  (!in(s, (U:host, skU:skey, pkU:pkey));
+		    in(s, (V:host, skV:skey, pkV:pkey));
+		    new random: bitstring;
+		    let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
+		    out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; out(c, PSK) ) |
+		  (!in(s, (U:host, skU:skey, pkU:pkey));
+		    in(s, (V:host, skV:skey, pkV:pkey));
+		  (!in(s2, (U:host, V:host, PSK:key));
+		    (initiatorSym(U, V, S_I, PSK, ID_PSK) |
+		     responderSym(V, U, S_R, PSK, ID_PSK)) )
