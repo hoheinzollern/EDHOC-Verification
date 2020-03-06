@@ -250,9 +250,9 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
   (* authI is the "inner COSE_Encrypt0" object *)
   let authI: bitstring = if methodI = METHOD_STAT then
-                            MAC_3
-                         else  (* We are not in PSK-method, so ... *)
                             sign(addData_3i, MAC_3, skU)
+                         else
+                            MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
   let plainText3 = (pkU, authI, AD_3) in
@@ -311,82 +311,25 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   out(c, msg_2);
 
   in(c, msg_3: bitstring);
-  let (data_3: bitstring, COSE_ENC_3: bitstring) = msg_3 in
-  let (=T3, =S_V) = data_3 in
-  let aad_3: bitstring = hash((msg_2, data_3)) in
-  let K_3: key = HKDF(K, aad_3, empty, EDHOC) in
-  let signature_3: bitstring = aeadDecrypt(COSE_ENC_3, K_3, aad_3) in
-  let (=idI(pkU), =aad_3, APP_3A: bitstring) = verify(signature_3, pkU) in
+  let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
+  let (=C_R) = data_3 in
+  let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_2)) in
+  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, keyToDhElt(pkV), keyToDhElt(pkU), methodI, methodR) in
+  let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
+  let addData_3o: bitstring = TH_3 in
+  let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, addData_3o) in
+  let (pkU: key, verifObj3: bitstring, AD_3: bitstring) = plainText3 in
+  let U: host = id(pkU) in
+  let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
+  let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
+  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
+  if verify(addData_3i, MAC_3, verifObj3, pkU, K_3m) then
+  0.
+
+(*
   event agreeHashEnd3A(U, V, K_3, aad_3);
   event endResponderA(U, V, xE_U);
-  let signature_2': bitstring = sign((idR(pkV), aad_2, APP_2A'), skV) in
-  let COSE_ENC_2': bitstring = aeadEncrypt(signature_2', K_2, aad_2) in
-  let msg_2': bitstring = (data_2, COSE_ENC_2') in
-  out(c2, msg_2');
-  (if asymmToSymm() then
-   let PSK' = HKDF(K, hash(msg_3), empty, EDHOC_PSK_Chaining) in
-   out(s2, (U, V, PSK'))) |
-  (if revealSessKeys() then
-    (event SessK3A_Reveal(K_3, skV); out(c, K_3))).
-
-
-let initiatorSym(U: host, V: host, PSK: key) =
-  new x[]: exponent; let E_U: dhElt = exp(g, x) in new S_U[]: bitstring;
-  new APP_1S[]: bitstring;
-  event startInitiatorS(U, V, PSK, E_U);
-  let msg_1: bitstring = (T4, S_U, E_U, APP_1S) in
-  out(c, msg_1); in(c, msg_2: bitstring);
-  let (data_2: bitstring, COSE_ENC_2: bitstring) = msg_2 in
-  let (=T5, =S_U, xS_V: bitstring, xE_V: dhElt) = data_2 in
-  let aad_2: bitstring = hash((msg_1, data_2)) in
-  let K: dhElt = exp(xE_V, x) in
-  let K_2: key = HKDF(K, aad_2, PSK, EDHOC) in
-  let (APP_2S: bitstring) = aeadDecrypt(COSE_ENC_2, K_2, aad_2) in
-  event agreeHashEnd2S(U, V, K_2, aad_2);
-  event midInitiatorS(U, V, PSK, xE_V);
-  let data_3: bitstring = (T6, xS_V) in
-  let aad_3: bitstring = hash((msg_2, data_3)) in
-  let K_3: key = HKDF(K, aad_3, PSK, EDHOC) in
-  let APP_3S = APP_3S(PSK, S_U, K_3) in
-  let msg_3: bitstring = (data_3, aeadEncrypt(APP_3S, K_3, aad_3)) in
-  event agreeHashStart3S(U, V, K_3, aad_3, PSK);
-  out(c, msg_3);
-  event endInitiatorS(U, V, PSK, xE_V);
-  (if revealSessKeys() then
-    (event SessK2S_Reveal(K_2); out(c, K_2))).
-
-let responderSym(V: host, U: host, PSK: key) =
-  new y[]: exponent; let E_V: dhElt = exp(g, y) in new S_V[]: bitstring;
-  event startResponderS(U, V, PSK, E_V);
-  in(c, msg_1: bitstring);
-  let (=T4, xS_U: bitstring, xE_U: dhElt, APP_1S: bitstring) = msg_1 in
-  let data_2: bitstring = (T5, xS_U, S_V, E_V) in
-  let aad_2: bitstring = hash((msg_1, data_2)) in
-  let K: dhElt = exp(xE_U, y) in
-  let K_2: key = HKDF(K, aad_2, PSK, EDHOC) in
-  let APP_2S = APP_2S(PSK, S_V, K_2) in
-  let APP_2S' = APP_2S'(PSK, S_V, K_2) in
-  let msg_2: bitstring = (data_2, aeadEncrypt(APP_2S, K_2, aad_2)) in
-
-  event agreeHashStart2S(U, V, K_2, aad_2, PSK);
-  out(c, msg_2);
-
-  in(c, msg_3: bitstring);
-  let (data_3: bitstring, COSE_ENC_3: bitstring) = msg_3 in
-  let (=T6, =S_V) = data_3 in
-  let aad_3: bitstring = hash((msg_2, data_3)) in
-  let K_3: key = HKDF(K, aad_3, PSK, EDHOC) in
-  let (APP_3S: bitstring) = aeadDecrypt(COSE_ENC_3, K_3, aad_3) in
-  event agreeHashEnd3S(U, V, K_3, aad_3);
-  event endResponderS(U, V, PSK, xE_U);
-  let COSE_ENC_2': bitstring = aeadEncrypt(APP_2S', K_2, aad_2) in
-  let msg_2': bitstring = (data_2, COSE_ENC_2') in
-  out(c2, msg_2');
-  (if asymmToSymm() && (getAlgorithm(PSK) = EDHOC_PRESHARED) then
-   let PSK' = HKDF(K, hash(msg_3), PSK, EDHOC_PSK_Chaining) in
-   out(s2, (U, V, PSK'))) |
-  (if revealSessKeys() then
-    (event SessK3S_Reveal(K_3); out(c, K_3))).
+*)
 
 
 process
