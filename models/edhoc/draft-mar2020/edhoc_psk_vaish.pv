@@ -11,7 +11,7 @@ type exponent. (* x & y *)
 type pkID.(*  id(pkU) & id(pkV)  *)
 type algorithmID.
 
-(* Message Types *)
+(* Message Types *) 
 free T1: bitstring. free T4: bitstring.
 free T2: bitstring. free T5: bitstring.
 free T3: bitstring. free T6: bitstring.
