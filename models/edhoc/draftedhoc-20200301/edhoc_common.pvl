@@ -58,10 +58,10 @@ reduc forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),x) = y;
       forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),y) = x.
 
 (* Signing. First parameter is the additional data. The second is MAC_2 or MAC_3 *)
-fun sign(bitstring, bitstring, key): bitstring.
+fun sign(bitstring, key): bitstring.
 (* def for message recovery: reduc forall x1: bitstring, x2: bitstring, y: skey; verify(sign(x1, x2, y), pk(y)) = x. *)
-reduc forall x1: bitstring, x2: bitstring, y: key, z: key; verify(x1, x2, sign(x1, x2, y), pk(y), z) = true;
-      forall x1: bitstring, x2: bitstring, y: key, z: key; verify(x1, x2, aeadEncrypt(emptyHexString, z, x1), y, z) = true.
+reduc forall x: bitstring, y: key, z: key; verify(x, sign(x, y), pk(y), z) = true;
+      forall x1: bitstring, x2: bitstring, y: key, z: key; verify((x1, x2), aeadEncrypt(emptyHexString, z, x1), y, z) = true.
 
 (* Identifier function for the public keys *)
 fun idI(key): pkID[private].

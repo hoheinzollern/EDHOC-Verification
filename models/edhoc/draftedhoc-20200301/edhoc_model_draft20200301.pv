@@ -182,9 +182,17 @@ event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bi
 
 (* Sanity *)
 event evInitiatorCompleted.
+event evResponderCompleted.
+event evReach.
+
+(*query event(evInitiatorCompleted).
+query event(evResponderCompleted).
+*)
+query event(evReach).
 
 
-let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
+
+let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
     methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
@@ -235,7 +243,7 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
-  if verify(addData_2, MAC_2, verifObj, pkV, K_2m) then
+  if verify((addData_2, MAC_2), verifObj, pkV, K_2m) then
 
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
@@ -250,15 +258,15 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
   (* authI is the "inner COSE_Encrypt0" object *)
   let authI: bitstring = if methodI = METHOD_STAT then
-                            sign(addData_3i, MAC_3, skU)
+                            sign((addData_3i, MAC_3), skU)
                          else
                             MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
   let plainText3 = (pkU, authI, AD_3) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
-  let addData_3o = TH_3 in
-  let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, addData_3o) in
+  let aadData_3o = TH_3 in
+  let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, aadData_3o) in
   let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
@@ -301,7 +309,7 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   new AD_2: bitstring;
   let protAndExtAad: bitstring = (V, TH_2, pkV, AD_2) in
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, protAndExtAad) in
-  let verifObj:bitstring = sign(protAndExtAad, MAC_2, skV) in
+  let verifObj:bitstring = sign((protAndExtAad, MAC_2), skV) in
   let plainText: bitstring = (V, verifObj, AD_2) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
   let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
@@ -318,20 +326,33 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
   let addData_3o: bitstring = TH_3 in
   let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, addData_3o) in
-  let (pkU: key, verifObj3: bitstring, AD_3: bitstring) = plainText3 in
-  let U: host = id(pkU) in
+  (* We identify identities with their public keys *)
+  let (=pkU, verifObj3: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
-  if verify(addData_3i, MAC_3, verifObj3, pkU, K_3m) then
-  0.
+  if verify((addData_3i, MAC_3), verifObj3, pkU, K_3m) then
+  event evResponderCompleted.
 
 (*
   event agreeHashEnd3A(U, V, K_3, aad_3);
   event endResponderA(U, V, xE_U);
 *)
 
+process
+  (!new U: host;
+    new skU: key;
+    let pkU = pk(skU) in
+    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
+    out(c, (pkU));
+    ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
+  (!in(s, (U:host, skU:key, pkU:key));
+    in(s, (V:host, skV:key, pkV:key));
+     event evReach;
+    (initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
+     responderAsym(V, U, skV, pkV, pkU)) )
 
+(*
 process
   (!new U: host;
     new skU: key;
@@ -343,10 +364,7 @@ process
     in(s, (V:host, skV:key, pkV:key));
     new random[]: bitstring;
     let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
-    out(s2, (U, V, PSK)); out(s2, (U, V, PSK));
-  (* KARL: is there any property we hope to be able to prove if the PSK is
-           reveald before the protocol is run?
-   *)
+    out(s2, (U, V, PSK)); out(s2, (U, V, PSK))
     ((if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK)) | phase 1; out(c, PSK)) ) |
   (!in(s, (U:host, skU:key, pkU:key));
     in(s, (V:host, skV:key, pkV:key));
@@ -355,3 +373,5 @@ process
   (!in(s2, (U:host, V:host, PSK:key));
     (initiatorSym(U, V, PSK) |
      responderSym(V, U, PSK)) )
+*)
+
