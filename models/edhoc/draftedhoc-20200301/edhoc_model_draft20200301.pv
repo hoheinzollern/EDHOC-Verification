@@ -186,10 +186,10 @@ event evInitiatorCompleted.
 event evResponderCompleted.
 event evReach.
 
-query event(evInitiatorCompleted).
+(*query event(evInitiatorCompleted).
 query event(evResponderCompleted).
-(*query event(evReach).*)
-
+*)
+query event(evReach).
 
 
 let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
@@ -223,7 +223,7 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
   let G_RX: dhElt = exp(keyToDhElt(pkV), x) in
   let PRK_3e2m: key =
-        PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
+        PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
   (* MAC_2 covers addData_2 and the empty string.
@@ -244,6 +244,7 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
   if verify((addData_2, MAC_2), verifObj, pkV, K_2m) then
+event evReach;
 
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
@@ -251,7 +252,8 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
   *)
   let data_3: ctxID = C_R in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, keyToDhElt(pkV), keyToDhElt(pkU), methodI, methodR) in
+  let G_IY: dhElt = exp(G_Y, keyToExp(skU)) in (* only used if methodI=static *)
+  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   new AD_3[]: bitstring;
   let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
@@ -301,6 +303,7 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   if IandRSupportSameCiphersuite() = true then
   let data_2: bitstring = (C_I, G_Y, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
+  let G_IY: dhElt = exp(keyToDhElt(pkU), y) in (* only used if methodI=static *)
   let G_RX: dhElt = exp(G_X, keyToExp(skV)) in (* only used if methodR=static *)
   let G_XY: dhElt = exp(G_X, y) in
   let PRK_3e2m: key =
@@ -309,29 +312,34 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   new AD_2: bitstring;
   let protAndExtAad: bitstring = (V, TH_2, pkV, AD_2) in
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, protAndExtAad) in
-  let verifObj:bitstring = sign((protAndExtAad, MAC_2), skV) in
-  let plainText: bitstring = (V, verifObj, AD_2) in
+  let authR: bitstring = if methodR = METHOD_STAT then
+                            sign((protAndExtAad, MAC_2), skV)
+                         else
+                            MAC_2
+                         in
+  let plainText: bitstring = (V, authR, AD_2) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
   let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
   out(c, msg_2);
-
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
   let (=C_R) = data_3 in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, keyToDhElt(pkV), keyToDhElt(pkU), methodI, methodR) in
+  let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
   let addData_3o: bitstring = TH_3 in
   let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, addData_3o) in
   (* We identify identities with their public keys *)
-  let (=pkU, verifObj3: bitstring, AD_3: bitstring) = plainText3 in
+  let (=pkU, verifObj: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
-  if verify((addData_3i, MAC_3), verifObj3, pkU, K_3m) then
+  if verify((addData_3i, MAC_3), verifObj, pkU, K_3m) then
+  (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
+  let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
   event evResponderCompleted.
 
 (*
@@ -349,10 +357,10 @@ process
   ) | (
    !in(s, (U:host, skU:key, pkU:key));
     in(s, (V:host, skV:key, pkV:key));
-    (*initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_SIG) |*)
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_STAT) |
-    (*initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_STAT) |*)
+(*    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
+    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_SIG) |
+    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_STAT) |*)
+    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_STAT) |
     responderAsym(V, U, skV, pkV, pkU) )
 
 (*
