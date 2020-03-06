@@ -26,11 +26,14 @@
  *
  * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
- * 
+ *
  * PROPERTIES:
  * - data/key material to protect:
- *   - the master key (PRK_4x3m, TH_4), 
- *   - the application data AD_1, AD_2, AD_3
+ *   - the final session key (PRK_4x3m, TH_4),  (Agreement, Confidentiality)
+ *   - the application data AD_1, AD_2, AD_3  (Confident/Integrity for AD_3 (and AD_2?), integrity for AD_1)
+ *   - C_I and C_R  (Agreement)
+ *   - S_I and S_R  (Agreement)
+ *   - U and V      (Confidentiality, privacy(?))
  *)
 set reconstructTrace = false.
 
