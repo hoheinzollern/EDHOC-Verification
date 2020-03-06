@@ -26,6 +26,11 @@
  *
  * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
+ * 
+ * PROPERTIES:
+ * - data/key material to protect:
+ *   - the master key (PRK_4x3m, TH_4), 
+ *   - the application data AD_1, AD_2, AD_3
  *)
 set reconstructTrace = false.
 
