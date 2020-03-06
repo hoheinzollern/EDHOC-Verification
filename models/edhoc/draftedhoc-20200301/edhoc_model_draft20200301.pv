@@ -29,10 +29,10 @@
  *
  * PROPERTIES:
  * - data/key material to protect:
- *   - the final session key (PRK_4x3m, TH_4),  (Agreement, Confidentiality)
+ *   - the final session key (PRK_4x3m, TH_4),  (inj-greement, Confidentiality)
  *   - the application data AD_1, AD_2, AD_3  (Confident/Integrity for AD_3 (and AD_2?), integrity for AD_1)
- *   - C_I and C_R  (Agreement)
- *   - S_I and S_R  (Agreement)
+ *   - C_I and C_R  (inj-agreement)
+ *   - S_I and S_R  (inj-agreement)
  *   - U and V      (Confidentiality, privacy(?))
  *)
 set reconstructTrace = false.
@@ -188,20 +188,8 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
     methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
-  (* KARL: Note to self, need to cover S_I here as well, right? *)
   (*
   event startInitiatorSigSig(U, V, G_X, skU, C_I);
-   *)
-  (* KARL: Original model did not include session identifiers. I don't think
-   *       they affect the protocol as such, but the resulting OSCORE context
-   *       is supposed to be identified by this, so presumably the identifiers
-   *       need to be used as a link between EDHOC and OSCORE model in some way.
-   *       Minimally, U and V must agree on the resulting values when EDHOC
-   *       completes.
-   *  PROP: inj-agreement on C_I and C_R.
-   *        Rationale for why this is the only interesting property for
-   *        C_I and C_R is needed. Hand-waving arg made in specification.
-   *
    *)
   let msg_1: bitstring = ((methodI, methodR), S_I, G_X, C_I, AD_1) in
   out(c, msg_1);
@@ -213,13 +201,6 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    *)
   let (=C_I, G_Y: dhElt, C_R: ctxID) = data_2 in
   let G_XY: dhElt = exp(G_Y, x) in
-
-  (* The hash function should be the one used for the KDF, which is negotiated.
-   * KARL: If we do model ciphersuite negotiation then we shold not use a
-   * static hash function like this. Similar for the KDF and the AEAD.
-   * As long as we do not model multi-session negotiation I see no need to model
-   * anything else than static algos though.
-   *)
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
   let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
@@ -253,14 +234,10 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
-
-  (* KARL: WARNING: The Signature is computed over the MAC_2 as well,
-   * That got lost in the harmonized function. I added it back Thu evening.
-   *)
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
   if verify(addData_2, MAC_2, verifObj, pkV, K_2m) then
 
-  (* KARL: commenting these out until start looking at the queries
+  (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
   *)
@@ -419,11 +396,6 @@ process
     !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
     out(c, (pkU));
     ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
- (* KARL: Is it so that once something is written to a channel it can be read
-          infinitely many times?  Otherwise, it seems this will not capture
-          that a party is tricked into running the protocol with itself (a type
-          of reflection attack).
-  *)
   (!in(s, (U:host, skU:key, pkU:key));
     in(s, (V:host, skV:key, pkV:key));
     new random[]: bitstring;
