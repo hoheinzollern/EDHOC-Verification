@@ -32,7 +32,7 @@ fun aeadEncrypt(bitstring, key, bitstring): bitstring.
 reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
 reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
 
-(* Signing *)
+(* Signing -- Needs to be removed/made consistent with common file *)
 fun sign(bitstring, skey): bitstring.
 reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
 
@@ -53,6 +53,7 @@ fun exp(G, exponent): G.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 
 (* Authentication events Symmetric -- doesn't work with the definitions in the common file *)
+(* Right now using both host names, DH element, responder's connection identifier, second plaintext. Not sure what else we need to add! *)
 event startInitiatorS(host, host, G, bitstring, bitstring).
 event startResponderS(host, host, G, bitstring, bitstring).
 event midInitiatorS(host, host, G, bitstring, bitstring).
@@ -61,12 +62,11 @@ event endResponderS(host, host, G, bitstring, bitstring).
 
 
 (* Injective agreement Symmetric *)
-(* Vaishnavi: Not sure how useful/important the connection identifiers C_I and C_R are. Can we skip them entirely in the model? *)
 query U: host, U': host, V: host, E_V: G, C_R: bitstring, A_2: bitstring; inj-event (midInitiatorS(U, V, E_V, C_R, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
 query U: host, U': host, V: host, E_V: G, A_2: bitstring, C_R: bitstring; inj-event (endInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
 query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; inj-event (endResponderS(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorS(U, V, E_U, A_1, A_3)).
 
-
+(* Vaishnavi: I think the following queries should work. Not sure if this is all we need though. *)
 (* Privacy *)
 query attacker (idI(pk(new skU))) phase 0.
 query attacker (idR(pk(new skU))) phase 0.
@@ -91,11 +91,12 @@ query attacker (idR(pk(new skU))) phase 1.
 query U: host, V: host, E_V: G, A_2: bitstring; event (endInitiatorS(U, V, E_V, A_2)).
 query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; event (endResponderS(U, V, E_U, A_1, A_3)).
 
+(* Agreement on TH_3 -- from responder -- and TH_4 -- from initiator *)
 
-let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
+
+let initiatorSym(U: host, V: host, S_I: bitstring, PSK: key, ID_PSK: bitstring) =
   new x: exponent; 
   let E_U: G = exp(g, x) in 
-  new S_U: bitstring; (* Actually a strange tuple in the document. How to capture that? Also never used wrt any properties -- do we need this at all? *)
   new C_I: bitstring;
   new aead: bitstring;
   new AD_1: bitstring; 
@@ -124,7 +125,7 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   out(c, msg_3);
   event endInitiatorS(U, V, xE_V, AD_2).
 	
-let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
+let responderSym(V: host, U: host, S_R: bitstring, PSK: key, ID_PSK: bitstring) = 
   new y: exponent;
   let E_V: G = exp(g, y) in
   new C_R: bitstring;
@@ -132,7 +133,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new AD_2': bitstring;
   event startResponderS(U, V, E_V, C_R, AD_2);
   in(c, msg_1: bitstring);
-  let (Mc: int, xS_U: bitstring, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
+  let (Mc: int, =S_R, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
   let data_2: bitstring = (xC_U, E_V, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let G_XY: dhElt = exp(xE_U, y) in
@@ -144,9 +145,10 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (=C_R, COSE_enc_3: bitstring) = msg_3 in
-  let aad_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
+  let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
   let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
   let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
+  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
   let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
 	event endResponderS(U, V, xE_U, AD_1, AD_3);
   let COSE_ENC_2': bitstring = aeadEncrypt(AD_2', K_2, aad_2) in
@@ -156,6 +158,9 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
 	process
 	  (!new U: host;
 	    new skU: skey;
+		new S_I: bitstring;
+		new S_R: bitstring;
+		new ID_PSK: bitstring; 
 	    let pkU = pk(skU) in
 	    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
 	    out(c, (pkU)); phase 1; out(c, skU) ) |
@@ -167,8 +172,5 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
 	  (!in(s, (U:host, skU:skey, pkU:pkey));
 	    in(s, (V:host, skV:skey, pkV:pkey));
 	  (!in(s2, (U:host, V:host, PSK:key));
-	    (initiatorSym(U, V, PSK) |
-	     responderSym(V, U, PSK)) )
-
-  
-  
+	    (initiatorSym(U, V, S_I, PSK, ID_PSK) |
+	     responderSym(V, U, S_R, PSK, ID_PSK)) )
