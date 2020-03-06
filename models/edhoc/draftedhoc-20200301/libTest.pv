@@ -1,0 +1,35 @@
+(* Sanity *)
+event evReach.
+query event(evReach).
+
+event evExpGXV_EQ_expGVX.
+event evExpPkV_EQ_expGVsk.
+event evExpReach.
+query event(evExpReach) ==> event(evExpGXV_EQ_expGVX).
+query event(evExpReach) ==> event(evExpPkV_EQ_expVsk).
+
+let tstExp1() =
+    new v: exponent;
+    let G_R: dhElt = exp(g, v) in
+    new x: exponent;
+    let G_X: dhElt = exp(g, x) in
+    if exp(G_X, v) = exp(G_R, x) then
+         event evExpGXV_EQ_expGVX. (* Should happen *)
+
+let tstExp2() =
+    new v: exponent;
+    let G_R: dhElt = exp(g, v) in
+    new x: exponent;
+    let G_X: dhElt = exp(g, x) in
+    new skV: key;
+    let pkV: key = pk(skV) in
+    if not(exp(keyToDhElt(pkV), x) = exp(G_X, keyToExp(skV))) then
+         event evExpPkV_EQ_expVsk. (* Should happen *)
+
+
+
+
+process
+  tstExp1();
+  tstExp2();
+  event evExpReach
