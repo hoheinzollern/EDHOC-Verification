@@ -1,0 +1,195 @@
+free c: channel.
+free c2: channel.
+free s: channel[private].
+free s2: channel[private].
+type host. (* U, V *)
+type pkey. (* E_U, E_V *)
+type skey. (* skU, skV *)
+type key. (* K_i *)
+type G. (* Commonly known g *)
+type exponent. (* x & y *)
+type pkID.(*  id(pkU) & id(pkV)  *)
+type algorithmID.
+
+(* Message Types *)
+free T1: bitstring. free T4: bitstring.
+free T2: bitstring. free T5: bitstring.
+free T3: bitstring. free T6: bitstring.
+
+(* AlgorithmIDs *)
+free OSCORE: bitstring.
+free EDHOC_PSK_Chaining: algorithmID.
+free EDHOC: algorithmID.
+free EDHOC_PRESHARED: algorithmID.
+
+free empty: key.
+
+(* Creating public keys *)
+fun pk(skey): pkey.
+
+(* Shared Key Encryption *)
+fun aeadEncrypt(bitstring, key, bitstring): bitstring.
+reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
+reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
+
+(* Signing *)
+fun sign(bitstring, skey): bitstring.
+reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
+
+(* Identifier function for the public keys *)
+fun idI(pkey): pkID[private].
+fun idR(pkey): pkID[private].
+
+(* Key derivation functions *)
+fun HKDF(G, bitstring, key, algorithmID): key.
+reduc forall x: G, aad: bitstring, y: key, algID: algorithmID; getAlgorithm(HKDF(x,aad,y,algID)) = algID.
+
+(* Hash function *)
+fun hash(bitstring): bitstring.
+
+(* Diffie Hellman *)
+const g: G.
+fun exp(G, exponent): G.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+(* Authentication events Symmetric *)
+event startInitiatorS(host, host, G, bitstring, bitstring).
+event startResponderS(host, host, G, bitstring).
+event midInitiatorS(host, host, G, bitstring).
+event endInitiatorS(host, host, G, bitstring).
+event endResponderS(host, host, G, bitstring, bitstring).
+
+(* Authentication events Asymmetric *)
+event startInitiatorA(host, host, G, bitstring, bitstring).
+event startResponderA(host, host, G, bitstring).
+event midInitiatorA(host, host, G, bitstring).
+event endInitiatorA(host, host, G, bitstring).
+event endResponderA(host, host, G, bitstring, bitstring).
+
+
+(* Injective agreement Symmetric *)
+query U: host, U': host, V: host, E_V: G, A_2: bitstring; inj-event (midInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, A_2)).
+query U: host, U': host, V: host, E_V: G, A_2: bitstring; inj-event (endInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, A_2)).
+query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; inj-event (endResponderS(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorS(U, V, E_U, A_1, A_3)).
+
+(* Injective agreement Asymmetric *)
+query U: host, U': host, V: host, E_V: G, A_2: bitstring; inj-event (midInitiatorA(U, V, E_V, A_2)) ==> inj-event (startResponderA(U', V, E_V, A_2)).
+query U: host, U': host, V: host, E_V: G, A_2: bitstring; inj-event (endInitiatorA(U, V, E_V, A_2)) ==> inj-event (startResponderA(U', V, E_V, A_2)).
+query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; inj-event (endResponderA(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorA(U, V, E_U, A_1, A_3)).
+
+(* Privacy *)
+query attacker (idI(pk(new skU))) phase 0.
+query attacker (idR(pk(new skU))) phase 0.
+
+(* Secrecy Symmetric *)
+query attacker (new APP_2S) phase 0.
+query attacker (new APP_3S) phase 0.
+
+(* Secrecy Asymmetric *)
+query attacker (new APP_2A) phase 0.
+query attacker (new APP_3A) phase 0.
+
+(* APP_2A, At completion *)
+query attacker (new APP_2A') phase 1.
+query attacker (new APP_2A') phase 0.
+
+(* APP_2S, At completion *)
+query attacker (new APP_2S') phase 1.
+query attacker (new APP_2S') phase 0.
+
+(* Foward Secrecy Symmetric *)
+query attacker (new APP_2S) phase 1.
+query attacker (new APP_3S) phase 1.
+
+(* Forward Secrecy Asymmetric *)
+query attacker (new APP_2A) phase 1.
+query attacker (new APP_3A) phase 1.
+
+(* Privacy *)
+query attacker (idI(pk(new skU))) phase 1.
+query attacker (idR(pk(new skU))) phase 1.
+
+(* Termination Symmetric *)
+query U: host, V: host, E_V: G, A_2: bitstring; event (endInitiatorS(U, V, E_V, A_2)).
+query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; event (endResponderS(U, V, E_U, A_1, A_3)).
+
+(* Termination Asymmetric *)
+query U: host, V: host, E_V: G, A_2: bitstring; event (endInitiatorA(U, V, E_V, A_2)).
+query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; event (endResponderA(U, V, E_U, A_1, A_3)).
+
+let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
+  new x: exponent; 
+  let E_U: G = exp(g, x) in 
+  new S_U: bitstring; (* Actually a strange tuple in the document. How to capture that? Also never used wrt any properties -- do we need this at all? *)
+  new C_U: bitstring;
+  new aead: bitstring;
+  new AD_1: bitstring; 
+  new AD_3: bitstring;
+  new Mc: int;
+  event startInitiatorS(U, V, E_U, APP_1S, APP_3S);
+  let msg_1: bitstring = (Mc, S_U, E_U, C_U, ID_PSK, AD_1) in		
+  out(c, msg_1); 
+  in(c, msg_2: bitstring);
+  let (data_2: bitstring, COSE_enc_2: bitstring) = msg_2 in
+  let (=C_U, xE_V: G, xC_R: bitstring) = data_2 in
+  let TH_2: bitstring = hash((msg_1, data_2)) in
+  let G_XY: dhElt = exp(xE_V, x) in
+  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
+  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
+  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
+  let AD_2: bitstring = aeadDecrypt(COSE_enc_2, K_2, aad_2) in
+  event midInitiatorS(U, V, xE_V, xC_R, AD_2);
+  let data_3: bitstring = xC_R in
+  let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
+  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
+  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
+  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
+  let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
+  let msg_3: bitstring = (data_3, COSE_enc_3) in
+  out(c, msg_3);
+  event endInitiatorS(U, V, xE_V, AD_2).
+	
+let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
+  new y: exponent;
+  let E_V: G = exp(g, y) in
+  new C_R: bitstring;
+  new AD_2: bitstring;
+  event startResponderS(U, V, E_V, AD_2);
+  in(c, msg_1: bitstring);
+  let (Mc: int, xS_U: bitstring, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
+  let data_2: bitstring = (xC_U, E_V, C_R) in
+  let TH_2: bitstring = hash((msg_1, data_2)) in
+  let G_XY: dhElt = exp(xE_U, y) in
+  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
+  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
+  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
+  let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
+  let msg_2: bitstring = (data_2, COSE_enc_2) in
+  out(c, msg_2);
+  in(c, msg_3: bitstring);
+  let (=C_R, COSE_enc_3: bitstring) = msg_3 in
+  let aad_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
+  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
+  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
+  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
+	event endResponderS(U, V, xE_U, AD_1, AD_3).
+	
+	process
+	  (!new U: host;
+	    new skU: skey;
+	    let pkU = pk(skU) in
+	    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
+	    out(c, (pkU)); phase 1; out(c, skU) ) |
+	  (!in(s, (U:host, skU:skey, pkU:pkey));
+	    in(s, (V:host, skV:skey, pkV:pkey));
+	    new random: bitstring;
+	    let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
+	    out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; out(c, PSK) ) |
+	  (!in(s, (U:host, skU:skey, pkU:pkey));
+	    in(s, (V:host, skV:skey, pkV:pkey));
+	  (!in(s2, (U:host, V:host, PSK:key));
+	    (initiatorSym(U, V, PSK) |
+	     responderSym(V, U, PSK)) )
+
+  
+  
