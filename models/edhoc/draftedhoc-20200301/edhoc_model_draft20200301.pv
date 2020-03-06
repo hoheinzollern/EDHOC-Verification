@@ -2,6 +2,8 @@
  * - We model all cipher suites as a single fixed algorithms; no negotiation
  *   - Initiator sends a cipher suite proposal and Responder always accepts it
  * - We always send context identifiers C_I and C_R
+ *   - C_I and C_R are chosen by EDHOC it says in 4.2.2 and 4.3.1.
+ *     So, EDHOC has some control over how they are selected.
  * - We don't model the CORR parameter
  * - We send aux data in all messages where it can occur (AD1, AD2, AD3)
  *
@@ -31,6 +33,7 @@ set reconstructTrace = false.
 letfun revealSessKeys() = false.
 letfun maliciousPrincipals() = true.
 letfun asymmToSymm() = false.
+letfun IandRSupportSameCiphersuite() = true.
 
 (* Privacy *)
 (*
@@ -174,16 +177,12 @@ event evInitiatorCompleted.
 
 
 let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
-    methodI: bitstring, methodR: bitstring) =
+    methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (* KARL: Note to self, need to cover S_I here as well, right? *)
   (*
   event startInitiatorSigSig(U, V, G_X, skU, C_I);
-   *)
-  (* KARL: Original model did not include Method "negotaion". I add that now,
-   *       but ignore the CORR, which I think only relates to underlying
-   *       transport.
    *)
   (* KARL: Original model did not include session identifiers. I don't think
    *       they affect the protocol as such, but the resulting OSCORE context
@@ -191,8 +190,12 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    *       need to be used as a link between EDHOC and OSCORE model in some way.
    *       Minimally, U and V must agree on the resulting values when EDHOC
    *       completes.
+   *  PROP: inj-agreement on C_I and C_R.
+   *        Rationale for why this is the only interesting property for
+   *        C_I and C_R is needed. Hand-waving arg made in specification.
+   *
    *)
-  let msg_1: bitstring = ((METHOD_SIG, METHOD_SIG), S_I, G_X, C_I, AD_1) in
+  let msg_1: bitstring = ((methodI, methodR), S_I, G_X, C_I, AD_1) in
   out(c, msg_1);
   in(c, msg_2: bitstring);
   let (data_2: bitstring, CIPHERTEXT_2: bitstring) = msg_2 in
@@ -211,9 +214,7 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    *)
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
-
-  (* For now we fix the AEAD to be aead0, in the same spirit as the fixed hash *)
-  let K_2ae: key = K_2ae_KDF(PRK_2e, TH_2, aead0) in
+  let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
 
   (* CIPHERTEXT_2 contains a COSE_Encrypt0 object. The COSE_Encrypt0 object
    * has three main parts, unprotected headers, protected headers and
@@ -221,8 +222,9 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
    * the protected headers should be part of the AAD for the AEAD.
    *)
    (* The verifObj contains either a MAC_2 or an Signature_2 object *)
-  let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2ae)) in
+  let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2e)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
+  let G_RX: dhElt = exp(keyToDhElt(pkV), x) in
   let PRK_3e2m: key =
         PRK_3e2m_asym(G_XY, keyToDhElt(pkV), methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
@@ -276,9 +278,13 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
+(*
   event evRunning(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
+*)
   out(c, msg_3);
+(*
   event evCommit(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
+*)
   (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
@@ -287,26 +293,36 @@ let initiatorSigSig(U: host, V: host, skU: key, pkU: key, pkV: key,
   event evInitiatorCompleted.
 
 let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
-  (* TODO: responder should learn its method from the METHOD parameter in
-   * message 1 (static/static, static/sign etc).
-   *)
-  new y[]: exponent; let E_V: dhElt = exp(g, y) in new S_V[]: bitstring;
-  new C_U[]: bitstring;
+  new y[]: exponent;
+  let G_Y: dhElt = exp(g, y) in
+  new S_R[]: bitstring;
+  new C_R[]: bitstring;
+  (*
   event startResponderA(U, V, E_V, skV, C_U);
+   *)
   in(c, msg_1: bitstring);
-  let (=T1, xS_U: bitstring, xE_U: dhElt, APP_1A: bitstring) = msg_1 in
-  let data_2: bitstring = (T2, xS_U, S_V, E_V) in
-  let aad_2: bitstring = hash((msg_1, data_2)) in
-  let K: dhElt = exp(xE_U, y) in
-  let K_2: key = HKDF(K, aad_2, empty, EDHOC) in
-  let APP_2A = APP_2A(pkU,skV,S_V,K_2) in
-  let APP_2A' = APP_2A'(pkU,skV,S_V,K_2) in
-  (* TODO: write all asym-modes in one let-expression. *)
-  let verificationToken = sign((idR(pk(skV)), aad_2, APP_2A), skV) in
-  let COSE_ENC_2: bitstring = aeadEncrypt(signature_2, K_2, aad_2) in
-  let msg_2: bitstring = (data_2, COSE_ENC_2) in
-
-  event agreeHashStart2A(U, V, K_2, aad_2, skV);
+  let ((methodI: method, methodR: method), S_I: bitstring, G_X: dhElt, C_I: ctxID, AD_1: bitstring) = msg_1 in
+  (* DIFF: model does not send an error message back if R does not support
+   * the proposed ciphersuite.  Instead the model just halts.
+   *)
+  if IandRSupportSameCiphersuite() = true then
+  let data_2: bitstring = (C_I, G_Y, C_R) in
+  let TH_2: bitstring = hash((msg_1, data_2)) in
+  let G_RX: dhElt = exp(G_X, keyToExp(skV)) in (* only used if methodR=static *)
+  let G_XY: dhElt = exp(G_X, y) in
+  let PRK_3e2m: key =
+        PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
+  let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
+  new AD_2: bitstring;
+  let protAndExtAad: bitstring = (V, TH_2, pkV, AD_2) in
+  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, protAndExtAad) in
+  let verifObj:bitstring = sign(protAndExtAad, MAC_2, skV) in
+  let plainText: bitstring = (V, verifObj, AD_2) in
+  let PRK_2e: key = PRK_2e_asym(G_XY) in
+  let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
+  let CIPHERTEXT_2: bitstring = xorEncrypt(plainText, keyToBitstring(K_2e)) in
+  let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
+(* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
   out(c, msg_2);
 
   in(c, msg_3: bitstring);

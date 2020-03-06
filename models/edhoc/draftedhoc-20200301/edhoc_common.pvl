@@ -86,6 +86,7 @@ equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 fun dhEltToKey(dhElt): key[typeConverter].
 fun keyToDhElt(key): dhElt[typeConverter].
 fun keyToBitstring(key): bitstring[typeConverter].
+fun keyToExp(key): exponent[typeConverter].
 
 (* Authentication events Symmetric *)
 event startInitiatorS(host, host, key, dhElt).
@@ -122,22 +123,11 @@ event SessK3A_Reveal(key, key).
 event SessK2S_Reveal(key).
 event SessK3S_Reveal(key).
 
-(* Methods. After prefix follows the credential type used by initiator
- * and then the credential type used by responder.
- *)
-(*
- * KARL: These are probably no longer needed that we use a two-dimensional 
- * view of the method
-const EH_PSK_PSK:bitstring.
-const EH_SIG_SIG:bitstring.
-const EH_STATIC_SIG:bitstring.
-const EH_SIG_STATIC:bitstring.
-const EH_STATIC_STATIC:bitstring.
-*)
-
-const METHOD_STAT:bitstring.
-const METHOD_SIG:bitstring.
-const METHOD_PSK:bitstring.
+(* Methods *)
+type method.
+const METHOD_STAT:method.
+const METHOD_SIG:method.
+const METHOD_PSK:method.
 
 (* HKDF
  * Both the extract and expand functions take a salt as first parameter.
@@ -153,11 +143,11 @@ letfun PRK_2e_asym(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
 letfun PRK_2e_sym(PSK: key, G_XY: dhElt) = HKDF_extract(keyToBitstring(PSK), G_XY).
 
 letfun PRK_3e2m_sym(PSK: key, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
-letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: bitstring, methodR: bitstring) =
+letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: method, methodR: method) =
     if methodR = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_2e_asym(G_XY)), G_RX)
     else PRK_2e_asym(G_XY).
 letfun PRK_4x3m_sym(PSK: key, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
-letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, methodR: bitstring) =
+letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: method, methodR: method) =
     if methodI = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR)), G_IY)
     else PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
 
@@ -165,8 +155,7 @@ letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: bitstring, m
 type label.
 const LABEL_K_2m: label.
 const LABEL_IV_2m: label.   (* for completeness only, not used in model *)
-const LABEL_K_2e: label.    (* KARL: mentioned in spec, but not used by spec? *)
-const LABEL_K_2ae: label.
+const LABEL_K_2e: label.
 const LABEL_IV_2ae: label.  (* for completeness only, not used in model *)
 const LABEL_K_3m: label.
 const LABEL_IV_3m: label.   (* for completeness only, not used in model *)
@@ -209,8 +198,8 @@ const aead1: bitstring.
 letfun KDF(PRK: key, TH: bitstring, LABEL: label, AEAD: bitstring) =
     HKDF_expand((AEAD, TH, LABEL), PRK).
 
-letfun K_2ae_KDF(PRK_2e: key, TH_2: bitstring, AEAD: bitstring) =
-    KDF(PRK_2e, TH_2, LABEL_K_2ae, AEAD).
+letfun K_2e_KDF(PRK_2e: key, TH_2: bitstring, AEAD: bitstring) =
+    KDF(PRK_2e, TH_2, LABEL_K_2e, AEAD).
 
 letfun K_2m_KDF(PRK_3e2m: key, TH_2: bitstring, AEAD: bitstring) =
     KDF(PRK_3e2m, TH_2, LABEL_K_2m, AEAD).
