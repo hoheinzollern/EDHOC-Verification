@@ -1,180 +1,124 @@
-free c: channel.
-free c2: channel.
-free s: channel[private].
-free s2: channel[private].
-type host. (* U, V *)
-type pkey. (* E_U, E_V *)
-type skey. (* skU, skV *)
-type key. (* K_i *)
-type G. (* Commonly known g *)
-type exponent. (* x & y *)
-type pkID.(*  id(pkU) & id(pkV)  *)
-type algorithmID.
 
-(* Message Types *) 
-free T1: bitstring. free T4: bitstring.
-free T2: bitstring. free T5: bitstring.
-free T3: bitstring. free T6: bitstring.
-
-(* AlgorithmIDs *)
-free OSCORE: bitstring.
-free EDHOC_PSK_Chaining: algorithmID.
-free EDHOC: algorithmID.
-free EDHOC_PRESHARED: algorithmID.
-
-free empty: key.
-
-letfun ciphersuiteAgree() = true.
-
-(* Creating public keys *)
-fun pk(skey): pkey.
-
-(* Shared Key Encryption *)
-fun aeadEncrypt(bitstring, key, bitstring): bitstring.
-reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
-reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
-
-(* Signing -- Needs to be removed/made consistent with common file *)
-fun sign(bitstring, skey): bitstring.
-reduc forall x: bitstring, y: skey; verify(sign(x, y), pk(y)) = x.
-
-(* Identifier function for the public keys *)
-fun idI(pkey): pkID[private].
-fun idR(pkey): pkID[private].
-
-(* Key derivation functions *)
-fun HKDF(G, bitstring, key, algorithmID): key.
-reduc forall x: G, aad: bitstring, y: key, algID: algorithmID; getAlgorithm(HKDF(x,aad,y,algID)) = algID.
-
-(* Hash function *)
-fun hash(bitstring): bitstring.
-
-(* Diffie Hellman *)
-const g: G.
-fun exp(G, exponent): G.
-equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
-
+(*****************************)
 (* Authentication events Symmetric -- doesn't work with the definitions in the common file *)
 (* Right now using both host names, DH element, responder's connection identifier, second plaintext. Not sure what else we need to add! *)
-event startInitiatorS(host, host, G, bitstring, bitstring).
-event startResponderS(host, host, G, bitstring, bitstring).
-event midInitiatorS(host, host, G, bitstring, bitstring).
-event endInitiatorS(host, host, G, bitstring).
-event endResponderS(host, host, G, bitstring, bitstring).
-
+(* event startInitiatorS(host, host, dhElt, ctxID). *)
+(* event startResponderS(host, host, dhElt, bitstring, bitstring).
+event midInitiatorS(host, host, dhElt, bitstring, bitstring).
+event endInitiatorS(host, host, dhElt, bitstring).
+event endResponderS(host, host, dhElt, bitstring, bitstring). *)
 
 (* Injective agreement Symmetric *)
-query U: host, U': host, V: host, E_V: G, C_R: bitstring, A_2: bitstring; inj-event (midInitiatorS(U, V, E_V, C_R, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
-query U: host, U': host, V: host, E_V: G, A_2: bitstring, C_R: bitstring; inj-event (endInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
-query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; inj-event (endResponderS(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorS(U, V, E_U, A_1, A_3)).
+(* query U: host, U': host, V: host, E_V: dhElt, PSK: key, C_R: bitstring, A_2: bitstring; inj-event (midInitiatorS(U, V, E_V, C_R, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
+query U: host, U': host, V: host, E_V: dhElt, A_2: bitstring, C_R: bitstring; inj-event (endInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
+query U: host, V: host, E_U: dhElt, PSK: key, C_I: bitstring, A_1: bitstring, A_3: bitstring; inj-event (endResponderS(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorS(U, V, E_U, PSK, C_I)). *)
 
 (* Vaishnavi: I think the following queries should work. Not sure if this is all we need though. *)
 (* Privacy *)
-query attacker (idI(pk(new skU))) phase 0.
-query attacker (idR(pk(new skU))) phase 0.
+(* query attacker (idI(pk(new skU))) phase 0.
+query attacker (idR(pk(new skU))) phase 0. *)
 
 (* Secrecy Symmetric *)
-query attacker (new AD_2) phase 0.
-query attacker (new AD_3) phase 0.
+(* query attacker (new AD_2) phase 0.
+query attacker (new AD_3) phase 0. *)
 
 (* AD_2, At completion *)
-query attacker (new AD_2') phase 1.
-query attacker (new AD_2') phase 0.
+(* query attacker (new AD_2') phase 1.
+query attacker (new AD_2') phase 0. *)
 
 (* Foward Secrecy Symmetric *)
-query attacker (new AD_2) phase 1.
-query attacker (new AD_3) phase 1.
+(* query attacker (new AD_2) phase 1.
+query attacker (new AD_3) phase 1. *)
 
 (* Privacy *)
-query attacker (idI(pk(new skU))) phase 1.
-query attacker (idR(pk(new skU))) phase 1.
+(* query attacker (idI(pk(new skU))) phase 1.
+query attacker (idR(pk(new skU))) phase 1. *)
 
 (* Termination Symmetric *)
-query U: host, V: host, E_V: G, A_2: bitstring; event (endInitiatorS(U, V, E_V, A_2)).
-query U: host, V: host, E_U: G, A_1: bitstring, A_3: bitstring; event (endResponderS(U, V, E_U, A_1, A_3)).
+(* query U: host, V: host, E_V: dhElt, A_2: bitstring; event (endInitiatorS(U, V, E_V, A_2)).
+query U: host, V: host, E_U: dhElt, A_1: bitstring, A_3: bitstring; event (endResponderS(U, V, E_U, A_1, A_3)).  *)
+
+(*********************************************)
 
 (* Agreement on TH_3 -- from responder -- and TH_4 -- from initiator *)
+
+query event(evInitiatorCompleted).
+query event(evResponderCompleted).
+query event(evReach).
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent; 
-  let E_U: G = exp(g, x) in 
-  new C_I: bitstring;
+  let E_U: dhElt = exp(g, x) in 
+  new C_I: ctxID;
   new aead: bitstring;
   new S_U: bitstring;
   new AD_1: bitstring; 
   new AD_3: bitstring;
-  new Mc: int;
-  event startInitiatorS(U, V, E_U, AD_1, AD_3);
+  new Mc: bitstring;
+  (* event startInitiatorS(U, V, E_U, PSK, C_I); *)
   let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in		
   out(c, msg_1); 
   in(c, msg_2: bitstring);
   let (data_2: bitstring, COSE_enc_2: bitstring) = msg_2 in
-  let (=C_U, xE_V: G, xC_R: bitstring) = data_2 in
+  let (=C_I, xE_V: dhElt, xC_R: ctxID) = data_2 in
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let G_XY: dhElt = exp(xE_V, x) in
-  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
-  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
-  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
+  let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
+  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+  let aad_2: bitstring = (emptyHexString, TH_2) in
   let AD_2: bitstring = aeadDecrypt(COSE_enc_2, K_2, aad_2) in
-  event midInitiatorS(U, V, xE_V, xC_R, AD_2);
-  let data_3: bitstring = xC_R in
+  event evReach;
+  (* event midInitiatorS(U, V, xE_V, xC_R, AD_2); *)
+  let data_3: ctxID = xC_R in
   let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
-  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
-  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
-  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
+  let aad_3: bitstring = (emptyHexString, TH_3) in
+  let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
+  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
   out(c, msg_3);
-  event endInitiatorS(U, V, xE_V, AD_2).
+  (* event endInitiatorS(U, V, xE_V, AD_2). *)
+  let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
+  event evInitiatorCompleted.
 	
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) = 
   new y: exponent;
-  let E_V: G = exp(g, y) in
-  new C_R: bitstring;
+  let E_V: dhElt = exp(g, y) in
+  new C_R: ctxID;
   new AD_2: bitstring;
   new AD_2': bitstring;
-  event startResponderS(U, V, E_V, C_R, AD_2);
+  new aead: bitstring;
+  (* event startResponderS(U, V, E_V, C_R, AD_2); *)
   in(c, msg_1: bitstring);
-  let (Mc: int, xS_U, xE_U: G, xC_U: bitstring, =ID_PSK, AD_1: bitstring) = msg_1 in
-  if ciphersuiteAgree then
+  let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_U: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
+  if IandRSupportSameCiphersuite() = true then
 	  let data_2: bitstring = (xC_U, E_V, C_R) in
 	  let TH_2: bitstring = hash((msg_1, data_2)) in
 	  let G_XY: dhElt = exp(xE_U, y) in
-	  let PRK_2e: bitstring = PRK_psk_psk_2e(PSK, G_XY) in
-	  let K_2: bitstring = K_2ae(PRK_2e, TH_2, LABEL_K_2ae, aead) in
-	  let aad_2: bitstring = ("Encrypt0", emptyHexString, TH_2) in
+	  let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
+	  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+	  let aad_2: bitstring = (emptyHexString, TH_2) in
 	  let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
 	  let msg_2: bitstring = (data_2, COSE_enc_2) in
 	  out(c, msg_2);
 	  in(c, msg_3: bitstring);
 	  let (=C_R, COSE_enc_3: bitstring) = msg_3 in
-	  let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
-	  let PRK_3e2m: bitstring = PRK_psk_psk_3e2m(PSK, G_XY) in
-	  let K_3: bitstring = K_3ae_KDF(PRK_3e2m, aead) in
-	  let aad_3: bitstring = ("Encrypt0", emptyHexString, TH_3) in
+	  let TH_3: bitstring = hash((hash((msg_1, msg_2)), C_R)) in
+	  let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
+	  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
+	  let aad_3: bitstring = (emptyHexString, TH_3) in
 	  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
-		event endResponderS(U, V, xE_U, AD_1, AD_3);
-	  let COSE_ENC_2': bitstring = aeadEncrypt(AD_2', K_2, aad_2) in
-	  let msg_2': bitstring = (data_2, COSE_ENC_2') in
-	  out(c2, msg_2').
-	
-		process
-		  (!new U: host;
-		    new skU: skey;
-			new S_I: bitstring;
-			new S_R: bitstring;
-			new ID_PSK: bitstring; 
-		    let pkU = pk(skU) in
-		    out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
-		    out(c, (pkU)); phase 1; out(c, skU) ) |
-		  (!in(s, (U:host, skU:skey, pkU:pkey));
-		    in(s, (V:host, skV:skey, pkV:pkey));
-		    new random: bitstring;
-		    let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
-		    out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; out(c, PSK) ) |
-		  (!in(s, (U:host, skU:skey, pkU:pkey));
-		    in(s, (V:host, skV:skey, pkV:pkey));
-		  (!in(s2, (U:host, V:host, PSK:key));
-		    (initiatorSym(U, V, S_I, PSK, ID_PSK) |
-		     responderSym(V, U, S_R, PSK, ID_PSK)) )
+	  let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
+	  (* event endResponderS(U, V, xE_U, AD_1, AD_3); *)
+	  event evResponderCompleted.
+		
+process 
+(!new U: host;
+  new skU: key;
+  new ID_PSK: bitstring;
+  let pkU = pk(skU) in 
+  (!out(s, (U, skU, pkU)) | out(c, pkU) ) | 
+  (!in(s, (U:host, skU:key, pkU:key)); in(s, (V:host, skV:key, pkV:key)); new PSK: key; out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; (out(c, PSK) |
+	initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)) )
+) 
