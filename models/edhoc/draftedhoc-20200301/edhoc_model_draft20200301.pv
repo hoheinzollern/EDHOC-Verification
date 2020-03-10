@@ -242,8 +242,14 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
   let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
+  
+  (* NOTE: the spec does not specify how to check the signature, depending on 
+     whether it's using static DH or COSE_Sign
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
-  if verify((addData_2, MAC_2), verifObj, pkV, K_2m) then
+  if (methodR = METHOD_SIG && verifySign((addData_2, MAC_2), verifObj, pkV)) ||*)
+
+  if (methodR = METHOD_SIG && verifyAEADSign(addData_2, verifObj, pkV, K_2m)) ||
+     (methodR = METHOD_STAT && verifyAEAD(addData_2, verifObj, K_2m) then
 event evReach;
 
   (*

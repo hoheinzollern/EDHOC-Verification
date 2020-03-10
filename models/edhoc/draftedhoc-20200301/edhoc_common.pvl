@@ -41,9 +41,6 @@ const emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
                                           bitstring.
                                   *)
 
-(* Creating public keys *)
-fun pk(key): key.
-
 (* Shared Key Encryption *)
 fun aeadEncrypt(bitstring, key, bitstring): bitstring.
 reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
@@ -56,12 +53,6 @@ reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad
 fun xorEncrypt(bitstring, bitstring): bitstring.
 reduc forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),x) = y;
       forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),y) = x.
-
-(* Signing. First parameter is the additional data. The second is MAC_2 or MAC_3 *)
-fun sign(bitstring, key): bitstring.
-(* def for message recovery: reduc forall x1: bitstring, x2: bitstring, y: skey; verify(sign(x1, x2, y), pk(y)) = x. *)
-reduc forall x: bitstring, y: key, z: key; verify(x, sign(x, y), pk(y), z) = true;
-      forall x1: bitstring, x2: bitstring, y: key, z: key; verify((x1, x2), aeadEncrypt(emptyHexString, z, x1), y, z) = true.
 
 (* Identifier function for the public keys *)
 fun idI(key): pkID[private].
@@ -87,6 +78,17 @@ fun dhEltToKey(dhElt): key[typeConverter].
 fun keyToDhElt(key): dhElt[typeConverter].
 fun keyToBitstring(key): bitstring[typeConverter].
 fun keyToExp(key): exponent[typeConverter].
+
+(* Signing. First parameter is the additional data. The second is MAC_2 or MAC_3 *)
+fun sign(bitstring, exponent): bitstring.
+(* def for message recovery: reduc forall x1: bitstring, x2: bitstring, y: skey; verify(sign(x1, x2, y), pk(y)) = x. *)
+(* This can be an alternative version for checking the signature in two steps *)
+reduc forall x: bitstring, g: dhElt, y: exponent; verifySign(x, sign(x, y), exp(g, y)) = true;
+
+reduc forall x: bitstring, g: dhElt, y: exponent, z: key;
+   verifyAEADSign(x, sign((x, aeadEncrypt(emptyHexString, k, x)), y), exp(g, y)) = true;
+
+reduc forall x: bitstring, z: key; verifyAEAD(x, aeadEncrypt(emptyHexString, z, x), z) = true.
 
 (* Authentication events Symmetric *)
 event startInitiatorS(host, host, key, dhElt).
