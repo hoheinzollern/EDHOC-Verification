@@ -1,22 +1,27 @@
+(* Sanity *)
+(* event evInitiatorCompleted.
+event evResponderCompleted.
+event evReach.
+event evInitiatorStarted.
+event evResponderStarted. *)
 
 (*****************************)
-(* Authentication events Symmetric -- doesn't work with the definitions in the common file *)
-(* Right now using both host names, DH element, responder's connection identifier, second plaintext. Not sure what else we need to add! *)
-(* event startInitiatorS(host, host, dhElt, ctxID). *)
-(* event startResponderS(host, host, dhElt, bitstring, bitstring).
-event midInitiatorS(host, host, dhElt, bitstring, bitstring).
-event endInitiatorS(host, host, dhElt, bitstring).
-event endResponderS(host, host, dhElt, bitstring, bitstring). *)
+(* Authentication events Symmetric *)
+(* event startInitiatorS(host, host, key, dhElt).
+event startResponderS(host, host, key, dhElt).
+event midInitiatorS(host, host, key, dhElt).
+event endInitiatorS(host, host, key, dhElt).
+event endResponderS(host, host, key, dhElt). *)
 
 (* Injective agreement Symmetric *)
-(* query U: host, U': host, V: host, E_V: dhElt, PSK: key, C_R: bitstring, A_2: bitstring; inj-event (midInitiatorS(U, V, E_V, C_R, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
-query U: host, U': host, V: host, E_V: dhElt, A_2: bitstring, C_R: bitstring; inj-event (endInitiatorS(U, V, E_V, A_2)) ==> inj-event (startResponderS(U', V, E_V, C_R, A_2)).
-query U: host, V: host, E_U: dhElt, PSK: key, C_I: bitstring, A_1: bitstring, A_3: bitstring; inj-event (endResponderS(U, V, E_U, A_1, A_3)) ==> inj-event (startInitiatorS(U, V, E_U, PSK, C_I)). *)
+query U: host, U': host, V: host, E_V: dhElt, PSK: key; inj-event (midInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
+query U: host, U': host, V: host, E_V: dhElt, PSK: key; inj-event (endInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
+query U: host, V: host, E_U: dhElt, PSK: key; inj-event (endResponderS(U, V, PSK, E_U)) ==> inj-event (startInitiatorS(U, V, PSK, E_U)).
 
-(* Vaishnavi: I think the following queries should work. Not sure if this is all we need though. *)
+(* Vaishnavi: Need to modify the following queries to work in this model. *)
 (* Privacy *)
 (* query attacker (idI(pk(new skU))) phase 0.
-query attacker (idR(pk(new skU))) phase 0. *)
+query attacker (idR(pk(new skU))) phase 0.  *)
 
 (* Secrecy Symmetric *)
 (* query attacker (new AD_2) phase 0.
@@ -35,16 +40,18 @@ query attacker (new AD_3) phase 1. *)
 query attacker (idR(pk(new skU))) phase 1. *)
 
 (* Termination Symmetric *)
-(* query U: host, V: host, E_V: dhElt, A_2: bitstring; event (endInitiatorS(U, V, E_V, A_2)).
-query U: host, V: host, E_U: dhElt, A_1: bitstring, A_3: bitstring; event (endResponderS(U, V, E_U, A_1, A_3)).  *)
+query U: host, V: host, E_V: dhElt, PSK: key; event (endInitiatorS(U, V, PSK, E_V)).
+query U: host, V: host, E_U: dhElt, PSK: key; event (endResponderS(U, V, PSK, E_U)).  
 
 (*********************************************)
 
 (* Agreement on TH_3 -- from responder -- and TH_4 -- from initiator *)
 
-query event(evInitiatorCompleted).
-query event(evResponderCompleted).
-query event(evReach).
+(* query event(evInitiatorCompleted).
+query event(evResponderCompleted). *)
+(* query event(evReach). *)
+(* query event(evInitiatorStarted). *)
+(* query event(evResponderStarted). *)
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -56,9 +63,10 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new AD_1: bitstring; 
   new AD_3: bitstring;
   new Mc: bitstring;
-  (* event startInitiatorS(U, V, E_U, PSK, C_I); *)
+  event startInitiatorS(U, V, PSK, E_U);
   let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in		
   out(c, msg_1); 
+  (* event evInitiatorStarted; *)
   in(c, msg_2: bitstring);
   let (data_2: bitstring, COSE_enc_2: bitstring) = msg_2 in
   let (=C_I, xE_V: dhElt, xC_R: ctxID) = data_2 in
@@ -68,8 +76,8 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
   let aad_2: bitstring = (emptyHexString, TH_2) in
   let AD_2: bitstring = aeadDecrypt(COSE_enc_2, K_2, aad_2) in
-  event evReach;
-  (* event midInitiatorS(U, V, xE_V, xC_R, AD_2); *)
+  (* event evReach; *)
+  event midInitiatorS(U, V, PSK, xE_V);
   let data_3: ctxID = xC_R in
   let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
   let aad_3: bitstring = (emptyHexString, TH_3) in
@@ -78,9 +86,8 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
   out(c, msg_3);
-  (* event endInitiatorS(U, V, xE_V, AD_2). *)
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
-  event evInitiatorCompleted.
+  event endInitiatorS(U, V, PSK, xE_V).
 	
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) = 
   new y: exponent;
@@ -89,8 +96,9 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new AD_2: bitstring;
   new AD_2': bitstring;
   new aead: bitstring;
-  (* event startResponderS(U, V, E_V, C_R, AD_2); *)
+  event startResponderS(U, V, PSK, E_V);
   in(c, msg_1: bitstring);
+  (* event evResponderStarted; *)
   let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_U: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
   if IandRSupportSameCiphersuite() = true then
 	  let data_2: bitstring = (xC_U, E_V, C_R) in
@@ -110,8 +118,8 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
 	  let aad_3: bitstring = (emptyHexString, TH_3) in
 	  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
 	  let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
-	  (* event endResponderS(U, V, xE_U, AD_1, AD_3); *)
-	  event evResponderCompleted.
+	  event endResponderS(U, V, PSK, xE_U).
+	  
 		
 process 
 (!new U: host;
