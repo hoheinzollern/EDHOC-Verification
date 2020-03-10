@@ -186,9 +186,9 @@ event evInitiatorCompleted.
 event evResponderCompleted.
 event evReach(bitstring).
 
-(*query event(evInitiatorCompleted).
+query event(evInitiatorCompleted).
 query event(evResponderCompleted).
-*)
+
 query x: bitstring;
       event(evReach(x)).
 
@@ -339,8 +339,8 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let (=U, verifObj: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  if (methodR = METHOD_SIG && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
-     (methodR = METHOD_STAT && verifyAEAD(aadData_3i, verifObj, K_3m)) then
+  if (methodR = METHOD_STAT && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
+     (methodR = METHOD_SIG && verifyAEAD(aadData_3i, verifObj, K_3m)) then
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
