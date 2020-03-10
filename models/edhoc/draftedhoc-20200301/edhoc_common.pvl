@@ -82,11 +82,12 @@ fun keyToExp(key): exponent[typeConverter].
 (* Signing. First parameter is the additional data. The second is MAC_2 or MAC_3 *)
 fun sign(bitstring, exponent): bitstring.
 (* def for message recovery: reduc forall x1: bitstring, x2: bitstring, y: skey; verify(sign(x1, x2, y), pk(y)) = x. *)
-(* This can be an alternative version for checking the signature in two steps *)
-reduc forall x: bitstring, g: dhElt, y: exponent; verifySign(x, sign(x, y), exp(g, y)) = true;
+(* This can be an alternative version for checking the signature in two steps
+reduc forall x: bitstring, y: exponent; verifySign(x, sign(x, y), exp(g, y)) = true;
+ *)
+reduc forall x: bitstring, y: exponent, k: key;
+   verifyAEADSign(x, sign((x, aeadEncrypt(emptyHexString, k, x)), y), k, exp(g, y)) = true.
 
-reduc forall x: bitstring, g: dhElt, y: exponent, z: key;
-   verifyAEADSign(x, sign((x, aeadEncrypt(emptyHexString, k, x)), y), exp(g, y)) = true;
 
 reduc forall x: bitstring, z: key; verifyAEAD(x, aeadEncrypt(emptyHexString, z, x), z) = true.
 

@@ -192,7 +192,7 @@ query event(evResponderCompleted).
 query event(evReach).
 
 
-let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
+let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
     methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
@@ -221,13 +221,12 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
    (* The verifObj contains either a MAC_2 or an Signature_2 object *)
   let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2e)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
-  let G_RX: dhElt = exp(keyToDhElt(pkV), x) in
-  let PRK_3e2m: key =
-        PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
+  let G_RX: dhElt = exp(pkV, x) in
+  let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
-  (* MAC_2 covers addData_2 and the empty string.
-   * Signature_2 covers addData_2 and MAC_2 itself.
+  (* MAC_2 covers aadData_2 and the empty string.
+   * Signature_2 covers aadData_2 and MAC_2 itself.
    * DIFF: In spec MAC_2 is also computed over a constant "Encrypt0" and the
    * Signature_2 is computed over a constant "Signature1". We ignore that in
    * the model.
@@ -241,15 +240,15 @@ let initiatorAsym(U: host, V: host, skU: key, pkU: key, pkV: key,
    * producing a MAC.
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
-  let addData_2: bitstring = (V, TH_2, pkV, AD_2) in
-  
-  (* NOTE: the spec does not specify how to check the signature, depending on 
+  let aadData_2: bitstring = (V, TH_2, pkV, AD_2) in
+  (* NOTE: the spec does not specify how to check the signature, depending on
      whether it's using static DH or COSE_Sign
-  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, addData_2) in
-  if (methodR = METHOD_SIG && verifySign((addData_2, MAC_2), verifObj, pkV)) ||*)
+  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, aadData_2) in
+  if (methodR = METHOD_SIG && verifySign((aadData_2, MAC_2), verifObj, pkV)) ||
+  *)
 
-  if (methodR = METHOD_SIG && verifyAEADSign(addData_2, verifObj, pkV, K_2m)) ||
-     (methodR = METHOD_STAT && verifyAEAD(addData_2, verifObj, K_2m) then
+  if (methodR = METHOD_SIG && verifyAEADSign(aadData_2, verifObj, K_2m, pkV)) ||
+     (methodR = METHOD_STAT && verifyAEAD(aadData_2, verifObj, K_2m)) then
 event evReach;
 
   (*
@@ -258,20 +257,20 @@ event evReach;
   *)
   let data_3: ctxID = C_R in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let G_IY: dhElt = exp(G_Y, keyToExp(skU)) in (* only used if methodI=static *)
+  let G_IY: dhElt = exp(G_Y, skU) in (* only used if methodI=static *)
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   new AD_3[]: bitstring;
-  let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
+  let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
+  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, aadData_3i) in
   (* authI is the "inner COSE_Encrypt0" object *)
   let authI: bitstring = if methodI = METHOD_STAT then
-                            sign((addData_3i, MAC_3), skU)
+                            sign((aadData_3i, MAC_3), skU)
                          else
                             MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
-  let plainText3 = (pkU, authI, AD_3) in
+  let plainText3 = (U, authI, AD_3) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
   let aadData_3o = TH_3 in
   let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, aadData_3o) in
@@ -293,7 +292,7 @@ event evReach;
    *)
   event evInitiatorCompleted.
 
-let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
+let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
   let G_Y: dhElt = exp(g, y) in
   new S_R[]: bitstring;
@@ -309,11 +308,10 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   if IandRSupportSameCiphersuite() = true then
   let data_2: bitstring = (C_I, G_Y, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
-  let G_IY: dhElt = exp(keyToDhElt(pkU), y) in (* only used if methodI=static *)
-  let G_RX: dhElt = exp(G_X, keyToExp(skV)) in (* only used if methodR=static *)
+  let G_IY: dhElt = exp(pkU, y) in   (* only used if methodI=static *)
+  let G_RX: dhElt = exp(G_X, skV) in (* only used if methodR=static *)
   let G_XY: dhElt = exp(G_X, y) in
-  let PRK_3e2m: key =
-        PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
+  let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
   new AD_2: bitstring;
   let protAndExtAad: bitstring = (V, TH_2, pkV, AD_2) in
@@ -323,10 +321,10 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
                          else
                             MAC_2
                          in
-  let plainText: bitstring = (V, authR, AD_2) in
+  let plainText2: bitstring = (V, authR, AD_2) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
   let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
-  let CIPHERTEXT_2: bitstring = xorEncrypt(plainText, keyToBitstring(K_2e)) in
+  let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
   out(c, msg_2);
@@ -336,14 +334,14 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
-  let addData_3o: bitstring = TH_3 in
-  let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, addData_3o) in
-  (* We identify identities with their public keys *)
-  let (=pkU, verifObj: bitstring, AD_3: bitstring) = plainText3 in
+  let aadData_3o: bitstring = TH_3 in
+  let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, aadData_3o) in
+  let (=U, verifObj: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
-  let addData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, addData_3i) in
-  if verify((addData_3i, MAC_3), verifObj, pkU, K_3m) then
+  let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
+  if (methodR = METHOD_SIG && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
+     (methodR = METHOD_STAT && verifyAEAD(aadData_3i, verifObj, K_3m)) then
+
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
   event evResponderCompleted.
@@ -354,15 +352,15 @@ let responderAsym(V: host, U: host, skV: key, pkV: key, pkU: key) =
 *)
 
 process
-  (!new U: host;
-    new skU: key;
-    let pkU = pk(skU) in
+  (!new U: host;              (* In EDHOC: ID_CRED_R or ID_CRED_I *)
+    new skU: exponent;        (* private key *)
+    let pkU = exp(g, skU) in  (* In EDHOC: CRED_R or CRED_I *)
     (!out(s, (U, skU, pkU))) | out(c, (pkU))
     (*if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) |
     (phase 1; out(c, skU)*)
   ) | (
-   !in(s, (U:host, skU:key, pkU:key));
-    in(s, (V:host, skV:key, pkV:key));
+   !in(s, (U:host, skU:exponent, pkU:dhElt));
+    in(s, (V:host, skV:exponent, pkV:dhElt));
 (*    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
     initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_SIG) |
     initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_STAT) |*)
@@ -372,8 +370,8 @@ process
 (*
 process
   (!new U: host;
-    new skU: key;
-    let pkU = pk(skU) in
+    new skU: exponent;
+    let pkU = exp(g, skU) in
     !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
     out(c, (pkU));
     ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
