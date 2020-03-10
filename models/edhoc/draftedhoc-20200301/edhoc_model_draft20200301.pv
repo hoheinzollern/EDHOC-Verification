@@ -183,12 +183,16 @@ event evRunning(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, b
 event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
 
 (* Sanity *)
-event evInitiatorCompleted.
-event evResponderCompleted.
-
-query event(evInitiatorCompleted).
-query event(evResponderCompleted).
-
+event evInitiatorCompleted(method, method).
+event evResponderCompleted(method, method).
+query event(evInitiatorCompleted(METHOD_SIG, METHOD_SIG)).
+query event(evInitiatorCompleted(METHOD_SIG, METHOD_STAT)).
+query event(evInitiatorCompleted(METHOD_STAT, METHOD_SIG)).
+query event(evInitiatorCompleted(METHOD_STAT, METHOD_STAT)).
+query event(evResponderCompleted(METHOD_SIG, METHOD_SIG)).
+query event(evResponderCompleted(METHOD_SIG, METHOD_STAT)).
+query event(evResponderCompleted(METHOD_STAT, METHOD_SIG)).
+query event(evResponderCompleted(METHOD_STAT, METHOD_STAT)).
 
 let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
     methodI: method, methodR: method) =
@@ -287,7 +291,7 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
    *)
-  event evInitiatorCompleted.
+  event evInitiatorCompleted(methodI, methodR).
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -336,25 +340,25 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let (=U, verifObj: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  if (methodR = METHOD_STAT && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
-     (methodR = METHOD_SIG && verifyAEAD(aadData_3i, verifObj, K_3m)) then
+  if (methodI = METHOD_STAT && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
+     (methodI = METHOD_SIG && verifyAEAD(aadData_3i, verifObj, K_3m)) then
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
-  event evResponderCompleted.
+  event evResponderCompleted(methodI, methodR).
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
-  new x: exponent; 
-  let E_U: dhElt = exp(g, x) in 
+  new x: exponent;
+  let E_U: dhElt = exp(g, x) in
   new C_I: ctxID;
   new S_U: bitstring;
-  new AD_1: bitstring; 
+  new AD_1: bitstring;
   new AD_3: bitstring;
   new Mc: bitstring;
   event startInitiatorS(U, V, PSK, E_U);
   let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in
-  out(c, msg_1); 
+  out(c, msg_1);
   (* event evInitiatorStarted; *)
   in(c, msg_2: bitstring);
   let (data_2: bitstring, COSE_enc_2: bitstring) = msg_2 in
@@ -376,8 +380,8 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   out(c, msg_3);
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
   event endInitiatorS(U, V, PSK, xE_V).
-	
-let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) = 
+
+let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
   let E_V: dhElt = exp(g, y) in
   new C_R: ctxID;
@@ -396,7 +400,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let aad_2: bitstring = (emptyHexString, TH_2) in
   let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_enc_2) in
-	  event evStart((U, V, PRK_2e));
+	  (* event evStart((U, V, PRK_2e)); *)  (* KARL: I removed this to be able to compile *)
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (=C_R, COSE_enc_3: bitstring) = msg_3 in
