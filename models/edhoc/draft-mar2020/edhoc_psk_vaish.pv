@@ -100,7 +100,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   in(c, msg_1: bitstring);
   (* event evResponderStarted; *)
   let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_U: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
-  if IandRSupportSameCiphersuite() = true then
+  (* if IandRSupportSameCiphersuite() = true then*)
 	  let data_2: bitstring = (xC_U, E_V, C_R) in
 	  let TH_2: bitstring = hash((msg_1, data_2)) in
 	  let G_XY: dhElt = exp(xE_U, y) in
@@ -123,10 +123,14 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
 		
 process 
 (!new U: host;
-  new skU: key;
+  new skU: exponent;
   new ID_PSK: bitstring;
-  let pkU = pk(skU) in 
+  let pkU = exp(g,skU) in 
   (!out(s, (U, skU, pkU)) | out(c, pkU) ) | 
-  (!in(s, (U:host, skU:key, pkU:key)); in(s, (V:host, skV:key, pkV:key)); new PSK: key; out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; (out(c, PSK) |
-	initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)) )
+  (!in(s, (U:host, skU:exponent, pkU:dhElt));
+    in(s, (V:host, skV:exponent, pkV:dhElt));
+    new PSK: key; out(s2, (U, V, PSK)); out(s2, (U, V, PSK));
+    (phase 1; out(c, PSK)) |
+    (initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK))
+  )
 ) 

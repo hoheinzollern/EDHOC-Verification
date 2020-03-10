@@ -119,7 +119,7 @@ event agreeHashStart2A(host, host, key, bitstring, key).
 event agreeHashEnd2A(host, host, key, bitstring).
 event agreeHashEnd3A(host, host, key, bitstring).
 
-event LTK_Reveal(key).
+event LTK_Reveal(exponent).
 event PSK_Reveal(key).
 event SessK2A_Reveal(key, key).
 event SessK3A_Reveal(key, key).
