@@ -185,12 +185,9 @@ event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bi
 (* Sanity *)
 event evInitiatorCompleted.
 event evResponderCompleted.
-event evReach(bitstring).
 
 query event(evInitiatorCompleted).
 query event(evResponderCompleted).
-
-query x: bitstring; event(evReach(x)).
 
 
 let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
@@ -351,13 +348,12 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent; 
   let E_U: dhElt = exp(g, x) in 
   new C_I: ctxID;
-  new aead: bitstring;
   new S_U: bitstring;
   new AD_1: bitstring; 
   new AD_3: bitstring;
   new Mc: bitstring;
   event startInitiatorS(U, V, PSK, E_U);
-  let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in		
+  let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in
   out(c, msg_1); 
   (* event evInitiatorStarted; *)
   in(c, msg_2: bitstring);
@@ -366,17 +362,15 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let G_XY: dhElt = exp(xE_V, x) in
   let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
-  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead0) in (* ALE: using a default ciphersuite *)
   let aad_2: bitstring = (emptyHexString, TH_2) in
   let AD_2: bitstring = aeadDecrypt(COSE_enc_2, K_2, aad_2) in
-	  event evReach((U, V, PSK));
-  (* event evReach; *)
   event midInitiatorS(U, V, PSK, xE_V);
   let data_3: ctxID = xC_R in
   let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
   let aad_3: bitstring = (emptyHexString, TH_3) in
   let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
-  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
+  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead0) in
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
   out(c, msg_3);
@@ -389,26 +383,26 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new C_R: ctxID;
   new AD_2: bitstring;
   new AD_2': bitstring;
-  new aead: bitstring;
   event startResponderS(U, V, PSK, E_V);
   in(c, msg_1: bitstring);
   (* event evResponderStarted; *)
-  let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_U: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
+  let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_I: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
   if IandRSupportSameCiphersuite() = true then
-  let data_2: bitstring = (xC_U, E_V, C_R) in
+  let data_2: bitstring = (xC_I, E_V, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let G_XY: dhElt = exp(xE_U, y) in
   let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
-  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead0) in (* ALE: using a default ciphersuite *)
   let aad_2: bitstring = (emptyHexString, TH_2) in
   let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_enc_2) in
+	  event evStart((U, V, PRK_2e));
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (=C_R, COSE_enc_3: bitstring) = msg_3 in
   let TH_3: bitstring = hash((hash((msg_1, msg_2)), C_R)) in
   let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
-  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
+  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead0) in
   let aad_3: bitstring = (emptyHexString, TH_3) in
   let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
