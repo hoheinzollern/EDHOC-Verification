@@ -71,7 +71,7 @@ fun APP_3S(key, bitstring, key): bitstring [private].
 fun hash(bitstring): bitstring.
 
 (* Diffie Hellman *)
-const g: dhElt.
+const g: dhElt [data].
 fun exp(dhElt, exponent): dhElt.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 fun dhEltToKey(dhElt): key[typeConverter].

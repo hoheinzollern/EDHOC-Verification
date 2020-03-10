@@ -184,12 +184,13 @@ event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bi
 (* Sanity *)
 event evInitiatorCompleted.
 event evResponderCompleted.
-event evReach.
+event evReach(bitstring).
 
 (*query event(evInitiatorCompleted).
 query event(evResponderCompleted).
 *)
-query event(evReach).
+query x: bitstring, y: bitstring, k: key, g_x: dhElt;
+      event(evReach(x,y,k,g_x)).
 
 
 let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
@@ -247,9 +248,8 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
   if (methodR = METHOD_SIG && verifySign((aadData_2, MAC_2), verifObj, pkV)) ||
   *)
 
-  if (methodR = METHOD_SIG && verifyAEADSign(aadData_2, verifObj, K_2m, pkV)) ||
-     (methodR = METHOD_STAT && verifyAEAD(aadData_2, verifObj, K_2m)) then
-event evReach;
+  if (methodR = METHOD_STAT && verifyAEADSign(aadData_2, verifObj, K_2m, pkV)) ||
+     (methodR = METHOD_SIG && verifyAEAD(aadData_2, verifObj, K_2m)) then
 
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
