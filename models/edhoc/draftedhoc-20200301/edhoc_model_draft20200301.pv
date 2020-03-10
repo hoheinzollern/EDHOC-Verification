@@ -182,6 +182,7 @@ query skU:key, skV:key, S_V:bitstring, K_2:key;
 event evRunning(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
 event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
 
+
 (* Sanity *)
 event evInitiatorCompleted(method, method).
 event evResponderCompleted(method, method).
@@ -220,7 +221,7 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
    * ciphertext. RFC 8152 is not entirely clear, but it seems as if
    * the protected headers should be part of the AAD for the AEAD.
    *)
-   (* The verifObj contains either a MAC_2 or an Signature_2 object *)
+   (* The verifObj contains either a MAC_2 or a Signature_2 object *)
   let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2e)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
   let G_RX: dhElt = exp(pkV, x) in
@@ -242,15 +243,17 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
    * producing a MAC.
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
-  let aadData_2: bitstring = (V, TH_2, pkV, AD_2) in
+  let protected2: host = V in (* ID_CRED_R in protected header *)
+  let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
+  let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
+
   (* NOTE: the spec does not specify how to check the signature, depending on
      whether it's using static DH or COSE_Sign
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, aadData_2) in
   if (methodR = METHOD_SIG && verifySign((aadData_2, MAC_2), verifObj, pkV)) ||
   *)
-
-  if (methodR = METHOD_STAT && verifyAEADSign(aadData_2, verifObj, K_2m, pkV)) ||
-     (methodR = METHOD_SIG && verifyAEAD(aadData_2, verifObj, K_2m)) then
+  if (methodR = METHOD_STAT && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
+     (methodR = METHOD_SIG && verifyAEAD(assocData2, verifObj, K_2m)) then
 
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
@@ -262,19 +265,21 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   new AD_3[]: bitstring;
-  let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, aadData_3i) in
+  let protected3: host = U in  (* ID_CRED_I in protected header *)
+  let extAad3: bitstring = (TH_3, pkU, AD_3) in (* external_aad *)
+  let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
+  let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, assocData3) in
   (* authI is the "inner COSE_Encrypt0" object *)
   let authI: bitstring = if methodI = METHOD_STAT then
-                            sign((aadData_3i, MAC_3), skU)
+                            sign((assocData3, MAC_3), skU)
                          else
                             MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
   let plainText3 = (U, authI, AD_3) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
-  let aadData_3o = TH_3 in
-  let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, aadData_3o) in
+  let extAad3_outer = TH_3 in
+  let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, extAad3_outer) in
   let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
@@ -315,10 +320,12 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
   new AD_2: bitstring;
-  let protAndExtAad: bitstring = (V, TH_2, pkV, AD_2) in
-  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, protAndExtAad) in
+  let protected2: host = V in (* ID_CRED_R in protected header *)
+  let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
+  let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
+  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, assocData2) in
   let authR: bitstring = if methodR = METHOD_STAT then
-                            sign((protAndExtAad, MAC_2), skV)
+                            sign((assocData2, MAC_2), skV)
                          else
                             MAC_2
                          in
@@ -335,13 +342,15 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
-  let aadData_3o: bitstring = TH_3 in
-  let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, aadData_3o) in
+  let extAad3_outer: bitstring = TH_3 in
+  let plainText3: bitstring = aeadDecrypt(CIPHERTEXT_3, K_3ae, extAad3_outer) in
   let (=U, verifObj: bitstring, AD_3: bitstring) = plainText3 in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
-  let aadData_3i: bitstring = (U, TH_3, pkU, AD_3) in
-  if (methodI = METHOD_STAT && verifyAEADSign(aadData_3i, verifObj, K_3m, pkU)) ||
-     (methodI = METHOD_SIG && verifyAEAD(aadData_3i, verifObj, K_3m)) then
+  let protected3: host = U in (* ID_CRED_I in protected header *)
+  let extAad3: bitstring = (TH_3, pkU, AD_3) in (* external_aad *)
+  let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
+  if (methodI = METHOD_STAT && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
+     (methodI = METHOD_SIG && verifyAEAD(assocData3, verifObj, K_3m)) then
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
