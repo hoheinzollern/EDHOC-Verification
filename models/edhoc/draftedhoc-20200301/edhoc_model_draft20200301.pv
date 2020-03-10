@@ -177,15 +177,31 @@ query skU:key, skV:key, S_V:bitstring, K_2:key;
    (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
 *)
 
-(* Gavin Lowe auth hierarchy style authentication *)
-(* event evRunning(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4) *)
-event evRunning(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
-event evCommit(host, host, key, key, bitstring, bitstring, dhElt, dhElt, key, bitstring).
+(* Gavin Lowe auth hierarchy style agreement on session key.
+ *
+ * KARL: interestingly we can't get agreement on PRK or TH_4 it seems!?
+ *       It is because Initiator cannot know that Responder
+ *       has computed TH_4 appropriately.
+ *)
+(* event evRunning(U, V, methodI, methodR, PRK_4x3m, TH_4) *)
+event evRunningI(host, host, method, method, key, bitstring).
+event evRunningR(host, host, method, method).
+event evCommitI(host, host, method, method, key, bitstring).
+event evCommitR(host, host, method, method, key, bitstring).
+
+(* Session key agreement *)
+query U: host, V: host, methodI: method, methodR: method, prk: key, th4: bitstring;
+      event(evCommitR(U, V, methodI, methodR, prk, th4)) ==>
+        event(evRunningI(U, V, methodI, methodR, prk, th4)).
+query U: host, V: host, methodI: method, methodR: method, prk: key, th4: bitstring;
+      event(evCommitI(U, V, methodI, methodR, prk, th4)) ==>
+        event(evRunningR(U, V, methodI, methodR)).
 
 
 (* Sanity *)
 event evInitiatorCompleted(method, method).
 event evResponderCompleted(method, method).
+(*
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_SIG)).
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_STAT)).
 query event(evInitiatorCompleted(METHOD_STAT, METHOD_SIG)).
@@ -194,6 +210,7 @@ query event(evResponderCompleted(METHOD_SIG, METHOD_SIG)).
 query event(evResponderCompleted(METHOD_SIG, METHOD_STAT)).
 query event(evResponderCompleted(METHOD_STAT, METHOD_SIG)).
 query event(evResponderCompleted(METHOD_STAT, METHOD_STAT)).
+*)
 
 let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
     methodI: method, methodR: method) =
@@ -284,13 +301,9 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
-(*
-  event evRunning(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
-*)
+  event evRunningI(U, V, methodI, methodR, PRK_4x3m, TH_4);
   out(c, msg_3);
-(*
-  event evCommit(U, V, pkU, pkV, methodI, methodR, G_X, G_Y, PRK_4x3m, TH_4);
-*)
+  event evCommitI(U, V, methodI, methodR, PRK_4x3m, TH_4);
   (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
@@ -335,6 +348,7 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
+  event evRunningR(U, V, methodI, methodR);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
@@ -354,6 +368,7 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
+  event evCommitR(U, V, methodI, methodR, PRK_4x3m, TH_4);
   event evResponderCompleted(methodI, methodR).
 
 
