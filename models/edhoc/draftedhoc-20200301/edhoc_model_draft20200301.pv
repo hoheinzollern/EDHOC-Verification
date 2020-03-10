@@ -36,11 +36,12 @@
  *   - U and V      (Confidentiality, privacy(?))
  *)
 
+set reconstructTrace = true.
 set attacker = passive.
 
 (* Macro definitions *)
 letfun revealSessKeys() = false.
-letfun maliciousPrincipals() = true.
+letfun maliciousPrincipals() = false.
 letfun asymmToSymm() = false.
 letfun IandRSupportSameCiphersuite() = true.
 
@@ -189,8 +190,7 @@ event evReach(bitstring).
 query event(evInitiatorCompleted).
 query event(evResponderCompleted).
 
-query x: bitstring;
-      event(evReach(x)).
+query x: bitstring; event(evReach(x)).
 
 
 let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
@@ -434,16 +434,19 @@ process
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK))
   ) | (
-   !in(s, (U:host, skU:exponent, pkU:dhElt));
+   !in(s, (methodI:method, methodR:method));
+    in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_SIG) |
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_SIG) |
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_SIG, METHOD_STAT) |
-    initiatorAsym(U, V, skU, pkU, pkV, METHOD_STAT, METHOD_STAT) |
+    initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
   ) | (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
+  ) | !(
+    out(s, (METHOD_SIG, METHOD_SIG)) |
+    out(s, (METHOD_SIG, METHOD_STAT)) |
+    out(s, (METHOD_STAT, METHOD_SIG)) |
+    out(s, (METHOD_STAT, METHOD_STAT))
   )
 
 (*
