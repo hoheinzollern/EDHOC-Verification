@@ -15,7 +15,8 @@
  *       after initial back-of-the-envelope analysis.
  *
  * WoW: put a FEEDBACK tag on comments that wants to send info back to the
- *      spec writers about unclarities or inconsitencies etc.
+ *      spec writers about unclarities or inconsitencies etc. Also good to
+ *      write in paper to show impact on standard.
  *
  * FEEDBACK: 4.1: first four bullets state that the initiator shold be able to
  *           retrieve "the" key of the responder. Singular.  Later in the
@@ -23,6 +24,13 @@
  *           keys. This seems inconsitent and should at least be discussed to
  *           see what the security implications are (perhaps just add a
  *           pointer to the security considerations section).
+ *
+ * FEEDBACK: EDHOC protocol does not check whether combination of CI/CR is unique
+ *           as requested by reqs doc.
+ *
+ * FEEDBACK: EDHOC accepts a set of acceptable IDs to connect to, but protocol
+ *           does not enforce this and happily connects to whomever has a valid
+ *           cert/raw public key/PSK.
  *
  * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
@@ -32,7 +40,7 @@
  *   - the final session key (PRK_4x3m, TH_4),  (inj-greement, Confidentiality)
  *   - the application data AD_1, AD_2, AD_3  (Confident/Integrity for AD_3 (and AD_2?), integrity for AD_1)
  *   - C_I and C_R  (inj-agreement)
- *   - S_I and S_R  (inj-agreement)
+ *   - S_I and S_R  (inj-agreement)  (take these last)
  *   - U and V      (Confidentiality, privacy(?))
  *)
 
@@ -177,25 +185,23 @@ query skU:key, skV:key, S_V:bitstring, K_2:key;
    (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
 *)
 
-(* Gavin Lowe auth hierarchy style agreement on session key.
- *
- * KARL: interestingly we can't get agreement on PRK or TH_4 it seems!?
- *       It is because Initiator cannot know that Responder
- *       has computed TH_4 appropriately.
- *)
-(* event evRunning(U, V, methodI, methodR, PRK_4x3m, TH_4) *)
-event evRunningI(host, host, method, method, key, bitstring).
-event evRunningR(host, host, method, method).
-event evCommitI(host, host, method, method, key, bitstring).
-event evCommitR(host, host, method, method, key, bitstring).
 
-(* Session key agreement *)
-query U: host, V: host, methodI: method, methodR: method, prk: key, th4: bitstring;
-      event(evCommitR(U, V, methodI, methodR, prk, th4)) ==>
-        event(evRunningI(U, V, methodI, methodR, prk, th4)).
-query U: host, V: host, methodI: method, methodR: method, prk: key, th4: bitstring;
-      event(evCommitI(U, V, methodI, methodR, prk, th4)) ==>
-        event(evRunningR(U, V, methodI, methodR)).
+(* Entity authentication *)
+(* (initiator, responder, sessionKeyMaterial) *)
+event evRunningI(host, host, dhElt, dhElt, dhElt).
+event evCommitI(host, host, dhElt, dhElt, dhElt).
+
+(* (responder, sessionKeyMaterial)
+ * Responder does not know who Initiator is yet, so we can't bind in I
+ *)
+event evRunningR(host, dhElt, dhElt, dhElt).
+(* When completed Responder knows who I is, so both hostnames included *)
+event evCommitR(host, host, dhElt, dhElt, dhElt).
+
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt;
+      inj-event(evCommitI(U, V, gxy, giy, grx)) ==> inj-event(evRunningR(V, gxy, giy, grx)).
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt;
+      inj-event(evCommitR(U, V, gxy, giy, grx)) ==> inj-event(evRunningI(U, V, gxy, giy, grx)).
 
 
 (* Sanity *)
@@ -241,6 +247,12 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
    (* The verifObj contains either a MAC_2 or a Signature_2 object *)
   let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2e)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
+(* KARL: not sure this is in the spec or not. Either way: the spec talks
+ * about protection against reflection attacks in Section 8.6, so it should be
+ * inlcuded: not allowed for initator to communicate with itself.
+ *)
+if not (V = U) then
+
   let G_RX: dhElt = exp(pkV, x) in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
@@ -264,14 +276,13 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
 
-  (* NOTE: the spec does not specify how to check the signature, depending on
+  (* FEEDBACK: the spec does not specify how to check the signature, depending on
      whether it's using static DH or COSE_Sign
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, aadData_2) in
   if (methodR = METHOD_SIG && verifySign((aadData_2, MAC_2), verifObj, pkV)) ||
   *)
   if (methodR = METHOD_STAT && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
      (methodR = METHOD_SIG && verifyAEAD(assocData2, verifObj, K_2m)) then
-
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
@@ -301,15 +312,15 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
-  event evRunningI(U, V, methodI, methodR, PRK_4x3m, TH_4);
+  event evRunningI(U, V, G_XY, G_IY, G_RX);
   out(c, msg_3);
-  event evCommitI(U, V, methodI, methodR, PRK_4x3m, TH_4);
   (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
    *)
-  event evInitiatorCompleted(methodI, methodR).
+  event evCommitI(U, V, G_XY, G_IY, G_RX);
+  event evInitiatorCompleted(methodI, methodR). (* Sanity *)
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -336,10 +347,11 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let protected2: host = V in (* ID_CRED_R in protected header *)
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
+  (* TODO: assocData2 should map to arrays of COSE structs similar to spec *)
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, assocData2) in
   let authR: bitstring = if methodR = METHOD_STAT then
                             sign((assocData2, MAC_2), skV)
-                         else
+                         else (* i.e., METHOD_SIG *)
                             MAC_2
                          in
   let plainText2: bitstring = (V, authR, AD_2) in
@@ -348,7 +360,7 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
-  event evRunningR(U, V, methodI, methodR);
+  event evRunningR(V, G_XY, G_IY, G_RX);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
@@ -365,11 +377,10 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   if (methodI = METHOD_STAT && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
      (methodI = METHOD_SIG && verifyAEAD(assocData3, verifObj, K_3m)) then
-
-  (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
-  event evCommitR(U, V, methodI, methodR, PRK_4x3m, TH_4);
-  event evResponderCompleted(methodI, methodR).
+
+  event evCommitR(U, V, G_XY, G_IY, G_RX);
+  event evResponderCompleted(methodI, methodR). (* Sanity *)
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -465,9 +476,9 @@ process
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) | !(
-    out(s, (METHOD_SIG, METHOD_SIG)) |
+(*    out(s, (METHOD_SIG, METHOD_SIG)) |
     out(s, (METHOD_SIG, METHOD_STAT)) |
-    out(s, (METHOD_STAT, METHOD_SIG)) |
+    out(s, (METHOD_STAT, METHOD_SIG)) | *)
     out(s, (METHOD_STAT, METHOD_STAT))
   )
 
