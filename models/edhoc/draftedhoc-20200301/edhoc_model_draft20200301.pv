@@ -234,13 +234,15 @@ query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
  *       i.e., (K_3ae, TH_4) even for the symmetric case. Have to go for G_XY.
  *)
 event evLTKRevealSym(bitstring).
-event evRunningISym(host, host, bitstring, dhElt).
-event evRunningRSym(host, host, bitstring, dhElt).
-event evCommitISym(host, host, bitstring, dhElt).
-event evCommitRSym(host, host, bitstring, dhElt).
+event evRunningISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 
-query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt;
-        inj-event(evCommitISym(U, V, PSK_ID, G_XY)) && attacker(G_XY) ==>
+query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
+      S_I: bitstring;
+        inj-event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
+     && attacker(G_XY) ==>
              inj-event(evLTKRevealSym(PSK_ID)).
 
 
@@ -291,12 +293,14 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
 (*
  * SYM case
  *)
-query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt;
-    inj-event(evCommitISym(U, V, ID_PSK, G_XY)) ==>
-        inj-event(evRunningRSym(U, V, ID_PSK, G_XY)).
-query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt;
-    inj-event(evCommitRSym(U, V, ID_PSK, G_XY)) ==>
-        inj-event(evRunningISym(U, V, ID_PSK, G_XY)).
+query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
+      S_I: bitstring;
+    inj-event(evCommitISym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)) ==>
+        inj-event(evRunningRSym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)).
+query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
+      S_I: bitstring;
+    inj-event(evCommitRSym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)) ==>
+        inj-event(evRunningISym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)).
 
 (* Sanity *)
 event evCompletedISym().
@@ -564,12 +568,12 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent;
   let E_U: dhElt = exp(g, x) in
   new C_I: ctxID;
-  new S_U: bitstring;
+  new S_I: bitstring;
   new AD_1: bitstring;
   new AD_3: bitstring;
   new Mc: bitstring;
   event startInitiatorS(U, V, PSK, E_U);
-  let msg_1: bitstring = (Mc, S_U, E_U, C_I, ID_PSK, AD_1) in
+  let msg_1: bitstring = (Mc, S_I, E_U, C_I, ID_PSK, AD_1) in
   out(c, msg_1);
   (* event evInitiatorStarted; *)
   in(c, msg_2: bitstring);
@@ -590,11 +594,11 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
-  event evRunningISym(U, V, ID_PSK, G_XY);
+  event evRunningISym(U, V, ID_PSK, G_XY, C_I, xC_R, S_I);
   out(c, msg_3);
   (* event endInitiatorS(U, V, PSK, xE_V); *)
   event evCompletedISym();
-  event evCommitISym(U, V, ID_PSK, G_XY).
+  event evCommitISym(U, V, ID_PSK, G_XY, C_I, xC_R, S_I).
 
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
@@ -605,7 +609,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   event startResponderS(U, V, PSK, E_V);
   in(c, msg_1: bitstring);
   (* event evResponderStarted; *)
-  let (Mc: bitstring, xS_U: bitstring, xE_U: dhElt, xC_I: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
+  let (Mc: bitstring, xS_I: bitstring, xE_U: dhElt, xC_I: ctxID, =ID_PSK, AD_1: bitstring) = msg_1 in
   if IandRSupportSameCiphersuite() = true then
   let data_2: bitstring = (xC_I, E_V, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
@@ -616,7 +620,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_enc_2) in
 	  (* event evStart((U, V, PRK_2e)); *)  (* KARL: I removed this to be able to compile *)
-  event evRunningRSym(U, V, ID_PSK, G_XY);
+  event evRunningRSym(U, V, ID_PSK, G_XY, xC_I, C_R, xS_I);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (=C_R, COSE_enc_3: bitstring) = msg_3 in
@@ -626,7 +630,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let aad_3: bitstring = (emptyHexString, TH_3) in
   let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
-  event evCommitRSym(U, V, ID_PSK, G_XY);
+  event evCommitRSym(U, V, ID_PSK, G_XY, xC_I, C_R, xS_I);
   event evCompletedRSym();
   event endResponderS(U, V, PSK, xE_U).
 
