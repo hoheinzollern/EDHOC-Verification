@@ -18,6 +18,10 @@
  *      spec writers about unclarities or inconsitencies etc. Also good to
  *      write in paper to show impact on standard.
  *
+ * WoW: When making fixes to the protocol (i.e., improving the spec), then
+ *      add a macro-flag and an if statement implementing the fix only
+ *      when the flag is true.
+ *
  * FEEDBACK: 4.1: first four bullets state that the initiator shold be able to
  *           retrieve "the" key of the responder. Singular.  Later in the
  *           section it is stated that the responder may have to try several
@@ -26,11 +30,13 @@
  *           pointer to the security considerations section).
  *
  * FEEDBACK: EDHOC protocol does not check whether combination of CI/CR is unique
- *           as requested by reqs doc.
+ *           as requested by reqs doc it seems.
  *
  * FEEDBACK: EDHOC accepts a set of acceptable IDs to connect to, but protocol
  *           does not enforce this and happily connects to whomever has a valid
- *           cert/raw public key/PSK.
+ *           cert/raw public key/PSK. The version we verify does check this,
+ *           but does so because we gave prior verbal feedback to the spec
+ *           authors about the problem.
  *
  * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
@@ -44,14 +50,15 @@
  *   - U and V      (Confidentiality, privacy(?))
  *)
 
-set reconstructTrace = true.
+set reconstructTrace = false.
 set attacker = passive.
 
 (* Macro definitions *)
-letfun revealSessKeys() = false.
-letfun maliciousPrincipals() = false.
+letfun revealSessKey() = true.
+letfun maliciousPrincipals() = true.
 letfun asymmToSymm() = false.
 letfun IandRSupportSameCiphersuite() = true.
+
 
 (* Privacy *)
 (*
@@ -177,32 +184,78 @@ query U: host, V: host, K_3: key, PSK : key, aad_3 : bitstring;
  *       Specifically, even if he knows other session keys but not the LTK,
  *       he should still not get the session key, i.e., sesssion key independence.
  *)
-(*
-query skU:key, skV:key, S_V:bitstring, K_2:key;
-  attacker(
-
-  attacker (APP_2A(pk(skU),skV,S_V,K_2)) phase 0 ==>
-   (event (LTK_Reveal(skU)) || event (SessK2A_Reveal(K_2, new skU))).
-*)
-
-
-(* Entity authentication *)
 (* (initiator, responder, sessionKeyMaterial) *)
-event evRunningI(host, host, dhElt, dhElt, dhElt).
-event evCommitI(host, host, dhElt, dhElt, dhElt).
-
+event evRunningI(host, host, dhElt, dhElt, dhElt, method, method).
+event evCommitI(host, host, dhElt, dhElt, dhElt, method, method).
 (* (responder, sessionKeyMaterial)
  * Responder does not know who Initiator is yet, so we can't bind in I
  *)
-event evRunningR(host, dhElt, dhElt, dhElt).
+event evRunningR(host, dhElt, dhElt, dhElt, method, method).
 (* When completed Responder knows who I is, so both hostnames included *)
-event evCommitR(host, host, dhElt, dhElt, dhElt).
+event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
+event evLTKReveal(host).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
+      mI: method, mR:method;
+        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
+             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
 
-query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt;
-      inj-event(evCommitI(U, V, gxy, giy, grx)) ==> inj-event(evRunningR(V, gxy, giy, grx)).
-query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt;
-      inj-event(evCommitR(U, V, gxy, giy, grx)) ==> inj-event(evRunningI(U, V, gxy, giy, grx)).
 
+
+(*
+ * Agreement for all cases except when Initator uses STATic DH key
+ *)
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
+      inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
+         inj-event(evRunningR(V, gxy, giy, grx, mI, mR)).
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
+      inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
+         inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
+
+(*
+ * Special (weaker) case: Initator uses static DH key
+ *)
+(* Implicit authentication for Initiator when using STATic DH key
+ * KARL: Def in Delpech de Saint Guilheim et. al. says:
+ *   forall l. accept(l) ==> forall l'. sameKey(l, l') ==> l'.pid = l.id
+ *   I here use an equivalent form which better fits with the queries.
+ *
+ * KARL: Question: I suppose this means that we will also only be able
+ *                 to show implicit agreement on the other params, e.g., C_I
+ *                 and roles etc.
+ *)
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
+      U': host, V': host, mI: method, mR: method;
+         inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_STAT, mR))
+      && inj-event(evCommitR(U', V', gxy, giy, grx, mI, mR))
+      ==> U' = U.
+
+(* Note that the responder can still get full agreement, and this is because
+ * he also gets key confirmation in becasue of the MAC in the AEAD in message 3.
+ *)
+query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
+       mR: method, mI: method;
+      inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_STAT, mR)) ==>
+         inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
 
 (* Sanity *)
 event evInitiatorCompleted(method, method).
@@ -234,8 +287,8 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
    * and cover the case that C_I is inlcuded in the message.
    *)
   let (=C_I, G_Y: dhElt, C_R: ctxID) = data_2 in
-  let G_XY: dhElt = exp(G_Y, x) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
+  let G_XY: dhElt = exp(G_Y, x) in
   let PRK_2e: key = PRK_2e_asym(G_XY) in
   let K_2e: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
 
@@ -253,7 +306,11 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
  *)
 if not (V = U) then
 
-  let G_RX: dhElt = exp(pkV, x) in
+  let G_RX: dhElt = if (methodR = METHOD_STAT) then
+                        exp(pkV, x)
+                    else
+                        dummyDhElt
+                    in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
@@ -272,6 +329,11 @@ if not (V = U) then
    * producing a MAC.
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
+  let G_IY: dhElt = if (methodI = METHOD_STAT) then
+                        exp(G_Y, skU)
+                    else
+                        dummyDhElt
+                    in
   let protected2: host = V in (* ID_CRED_R in protected header *)
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
@@ -289,7 +351,6 @@ if not (V = U) then
   *)
   let data_3: ctxID = C_R in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
-  let G_IY: dhElt = exp(G_Y, skU) in (* only used if methodI=static *)
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
   new AD_3[]: bitstring;
@@ -311,16 +372,18 @@ if not (V = U) then
   let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
-  let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
-  event evRunningI(U, V, G_XY, G_IY, G_RX);
+  (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
+  event evRunningI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_3);
   (*
   event endInitiatorA(U, V, xE_V);
   (if revealSessKeys() then
      (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
    *)
-  event evCommitI(U, V, G_XY, G_IY, G_RX);
-  event evInitiatorCompleted(methodI, methodR). (* Sanity *)
+  event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evInitiatorCompleted(methodI, methodR); (* Sanity *)
+  if revealSessKey() = true then
+    out(c, (G_XY, G_IY, G_RX)).
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -338,13 +401,80 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   if IandRSupportSameCiphersuite() = true then
   let data_2: bitstring = (C_I, G_Y, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
-  let G_IY: dhElt = exp(pkU, y) in   (* only used if methodI=static *)
-  let G_RX: dhElt = exp(G_X, skV) in (* only used if methodR=static *)
+
+(* KARL: To avoid reflection attacks. Search for comment on reflection
+ * attacks at the initiator for more info.
+ *)
+if not (pkU = pkV) then
+
+(* KARL: When initiator uses static method, we get no identity hiding at all
+ *       becase responder needs public key.
+ * FEEDBACK: question: how did responder know which public key to use?
+ *                     Message 1 does not contain any hints, does it?
+ *)
+
+(* KARL: when responder uses static key, then the protocol does not seem
+ *       able to guarnetee agreement on G_IY.
+ *)
+  let G_IY: dhElt = if (methodI = METHOD_STAT) then
+                        exp(pkU, y)
+                    else
+                        dummyDhElt
+                    in
+  let G_RX: dhElt = if (methodR = METHOD_STAT) then
+                        exp(G_X, skV)
+                    else
+                        dummyDhElt
+                    in
   let G_XY: dhElt = exp(G_X, y) in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
   new AD_2: bitstring;
   let protected2: host = V in (* ID_CRED_R in protected header *)
+
+(* KARL:  Protocol weakness.
+
+Problem: does not provide explicit key authentication when
+Initiator I is using STAT credentials. Assume two initiators I and I'.
+One responder R.
+
+only including the necessary information elements the problem is the
+follwoing:
+
+I -> R: g^x
+I'-> R: g^x'
+R -> I: (g^I')^y    // This is G_IY where the attacker has switched the receivers
+                    // I and I'.
+
+Start/Running event at R may be based on (g^I')^y.
+End/Commit event at I is based on (g^I)^y.
+
+Initiator I will not detect this because he does not verify any computation
+based on (g^I')^y. That value just goes into session key derivations and into
+key derivations for message 3.
+The responder may detetct the mismatch when receiving message 3
+but at that point the Initiator has already completed the protocol assuming
+it went well. So the attacker made I accept without a matching partner.
+
+Solution(s) If one is willing to provide the responder with the public key
+of the initator:
+ - It is probably possible to prove implicit key authentication, along the lines:
+   If I accepts run presumably with R and there is someone else who calculates
+   the same session key, then that someone else must be R.
+ - Fix EDHOC by giving the Initiator something to verify in message 2 that
+   depends on its own public key. Several options. Here are some simple ones:
+    - Include G_IY in the transcript hash TH_2. (After AEAD was changed to
+      XOR encryption there is no longer a reason to not inlcude the information
+      in message 2 in TH_2.)
+    - Include G_IY in external_aad in message 2.
+   Both these options will make the keys to protect message 2 dependent on
+   I s public key. This means that when I veriies the MAC_2, the verification
+   will now fail if the responder/attacker had sent the Initiator a message
+   with (g^I')^y.
+
+Solution if one want Initiator identity hiding:
+ - Show implicit authentication instead for explicit.
+*)
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
   (* TODO: assocData2 should map to arrays of COSE structs similar to spec *)
@@ -360,7 +490,7 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
-  event evRunningR(V, G_XY, G_IY, G_RX);
+  event evRunningR(V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
@@ -377,10 +507,12 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   if (methodI = METHOD_STAT && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
      (methodI = METHOD_SIG && verifyAEAD(assocData3, verifObj, K_3m)) then
-  let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in
+  (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
 
-  event evCommitR(U, V, G_XY, G_IY, G_RX);
-  event evResponderCompleted(methodI, methodR). (* Sanity *)
+  event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evResponderCompleted(methodI, methodR); (* Sanity *)
+  if revealSessKey() = true then
+    out(c, (G_XY, G_IY, G_RX)).
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -458,27 +590,33 @@ process
     new skU: exponent;        (* private key *)
     let pkU = exp(g, skU) in  (* In EDHOC: CRED_R or CRED_I *)
     (!out(s, (U, skU, pkU))) | out(c, (pkU)) |
-    (if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU))
-  ) | (
+    (if maliciousPrincipals() then event evLTKReveal(U); out(c, skU))
+  ) |
+(*
+  (
    !in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     new ID_PSK: bitstring;
     new PSK: key;
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK))
-  ) | (
+  ) | *)
+  (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
-  ) | (
+  )
+(* | (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
-  ) | !(
+  )
+*)
+ | !(
 (*    out(s, (METHOD_SIG, METHOD_SIG)) |
     out(s, (METHOD_SIG, METHOD_STAT)) |
-    out(s, (METHOD_STAT, METHOD_SIG)) | *)
+    out(s, (METHOD_STAT, METHOD_SIG)) *)
     out(s, (METHOD_STAT, METHOD_STAT))
   )
 
@@ -489,7 +627,7 @@ process
     let pkU = exp(g, skU) in
     !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
     out(c, (pkU));
-    ((if maliciousPrincipals() then event LTK_Reveal(skU); out(c, skU)) | phase 1; out(c, skU)) ) |
+    ((if maliciousPrincipals() then eventLTK_Reveal(U, skU); out(c, skU)) | phase 1; out(c, skU)) ) |
   (!in(s, (U:host, skU:key, pkU:key));
     in(s, (V:host, skV:key, pkV:key));
     new random[]: bitstring;
