@@ -132,6 +132,7 @@ const METHOD_STAT:method.
 const METHOD_SIG:method.
 const METHOD_PSK:method.
 
+
 (* HKDF
  * Both the extract and expand functions take a salt as first parameter.
  * The second parameter of the extract function is an element from the
@@ -216,3 +217,6 @@ letfun K_3m_KDF(PRK_4x3m: key, TH_3: bitstring, aeadId: bitstring) =
 letfun EDHOC_exporter(PRK_4x3m: key, TH_4: bitstring, l: label, length: bitstring) =
     KDF(PRK_4x3m, TH_4, l, length).
 
+
+(* Event and query helper functions *)
+const dummyDhElt: dhElt.
