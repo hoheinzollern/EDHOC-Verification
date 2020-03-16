@@ -183,53 +183,81 @@ query U: host, V: host, K_3: key, PSK : key, aad_3 : bitstring;
  *       We don't accept that he got it any other way.
  *       Specifically, even if he knows other session keys but not the LTK,
  *       he should still not get the session key, i.e., sesssion key independence.
+ *
+ * KARL: Question: now we the attacker is only allowed to count attacks as wins
+ *                 when one of the parites has accepted the run.
+ *                 That is the only way I know how to be able to define
+ *                 "the" session key. OTOH, one could consider also the original
+ *                 key (Li and Schäge). If you have no concerns, I OK with
+ *                 the current notion of "the" key. Otherwise I need suggestions
+ *                 on how to enode the session key query.
  *)
-(* (initiator, responder, sessionKeyMaterial) *)
+(*
+ * ASYM case
+ *)
 event evRunningI(host, host, dhElt, dhElt, dhElt, method, method).
 event evCommitI(host, host, dhElt, dhElt, dhElt, method, method).
-(* (responder, sessionKeyMaterial)
- * Responder does not know who Initiator is yet, so we can't bind in I
- *)
 event evRunningR(host, dhElt, dhElt, dhElt, method, method).
-(* When completed Responder knows who I is, so both hostnames included *)
 event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
-event evLTKReveal(host).
+event evLTKRevealAsym(host).
+(*
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
-             (event(evLTKReveal(U)) || event(evLTKReveal(V))).
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+*)
 
+(*
+ * SYM case
+ *
+ * KARL: Even here it seems we can't get agreement on the actual session key
+ *       i.e., (K_3ae, TH_4) even for the symmetric case.
+ *)
+event evLTKRevealSym(bitstring).
+event evRunningISym(host, host, bitstring, dhElt).
+event evRunningRSym(host, host, bitstring, dhElt).
+event evCommitISym(host, host, bitstring, dhElt).
+event evCommitRSym(host, host, bitstring, dhElt).
+
+(*
+query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt;
+        event(evCommitISym(U, V, PSK_ID, G_XY)) && attacker(G_XY) ==>
+             event(evLTKRevealSym(PSK_ID)).
+*)
 
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
+ * ASYM case
  *)
+(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
       inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
          inj-event(evRunningR(V, gxy, giy, grx, mI, mR)).
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
       inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
          inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
+*)
 
 (*
  * Special (weaker) case: Initator uses static DH key
@@ -243,23 +271,32 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: meth
  *                 to show implicit agreement on the other params, e.g., C_I
  *                 and roles etc.
  *)
+
+(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
       U': host, V': host, mI: method, mR: method;
          inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_STAT, mR))
       && inj-event(evCommitR(U', V', gxy, giy, grx, mI, mR))
       ==> U' = U.
+*)
 
 (* Note that the responder can still get full agreement, and this is because
  * he also gets key confirmation in becasue of the MAC in the AEAD in message 3.
  *)
+(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
        mR: method, mI: method;
       inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_STAT, mR)) ==>
          inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
+*)
 
 (* Sanity *)
+event evCompletedISym().
+event evCompletedRSym().
 event evInitiatorCompleted(method, method).
 event evResponderCompleted(method, method).
+query event(evCompletedISym()).
+query event(evCompletedRSym()).
 (*
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_SIG)).
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_STAT)).
@@ -544,9 +581,12 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead0) in
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
-  out(c, msg_3);
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
-  event endInitiatorS(U, V, PSK, xE_V).
+  event evRunningISym(U, V, ID_PSK, G_XY);
+  out(c, msg_3);
+  (* event endInitiatorS(U, V, PSK, xE_V); *)
+  event evCompletedISym();
+  event evCommitISym(U, V, ID_PSK, G_XY).
 
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
@@ -568,6 +608,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
   let msg_2: bitstring = (data_2, COSE_enc_2) in
 	  (* event evStart((U, V, PRK_2e)); *)  (* KARL: I removed this to be able to compile *)
+  event evRunningRSym(U, V, ID_PSK, G_XY);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (=C_R, COSE_enc_3: bitstring) = msg_3 in
@@ -577,6 +618,8 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let aad_3: bitstring = (emptyHexString, TH_3) in
   let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
+  event evCommitRSym(U, V, ID_PSK, G_XY);
+  event evCompletedRSym();
   event endResponderS(U, V, PSK, xE_U).
 
 
@@ -590,30 +633,28 @@ process
     new skU: exponent;        (* private key *)
     let pkU = exp(g, skU) in  (* In EDHOC: CRED_R or CRED_I *)
     (!out(s, (U, skU, pkU))) | out(c, (pkU)) |
-    (if maliciousPrincipals() then event evLTKReveal(U); out(c, skU))
+    (if maliciousPrincipals() then event evLTKRevealAsym(U); out(c, skU))
   ) |
-(*
   (
    !in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     new ID_PSK: bitstring;
     new PSK: key;
     out(s2, (U, V, PSK, ID_PSK));
-    (if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK))
-  ) | *)
+    (if maliciousPrincipals() then event evLTKRevealSym(ID_PSK); out(c, PSK))
+  ) |
   (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
-  )
-(* | (
+  ) |
+  (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
-  )
-*)
- | !(
+  ) |
+ !(
 (*    out(s, (METHOD_SIG, METHOD_SIG)) |
     out(s, (METHOD_SIG, METHOD_STAT)) |
     out(s, (METHOD_STAT, METHOD_SIG)) *)
