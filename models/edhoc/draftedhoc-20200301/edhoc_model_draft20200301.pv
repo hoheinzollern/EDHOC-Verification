@@ -50,7 +50,7 @@
  *   - U and V      (Confidentiality, privacy(?))
  *)
 
-set reconstructTrace = false.
+set reconstructTrace = true.
 set attacker = passive.
 
 (* Macro definitions *)
@@ -231,7 +231,7 @@ query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
  * SYM case
  *
  * KARL: Even here it seems we can't get agreement on the actual session key
- *       i.e., (K_3ae, TH_4) even for the symmetric case.
+ *       i.e., (K_3ae, TH_4) even for the symmetric case. Have to go for G_XY.
  *)
 event evLTKRevealSym(bitstring).
 event evRunningISym(host, host, bitstring, dhElt).
@@ -239,11 +239,9 @@ event evRunningRSym(host, host, bitstring, dhElt).
 event evCommitISym(host, host, bitstring, dhElt).
 event evCommitRSym(host, host, bitstring, dhElt).
 
-(*
 query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt;
-        event(evCommitISym(U, V, PSK_ID, G_XY)) && attacker(G_XY) ==>
-             event(evLTKRevealSym(PSK_ID)).
-*)
+        inj-event(evCommitISym(U, V, PSK_ID, G_XY)) && attacker(G_XY) ==>
+             inj-event(evLTKRevealSym(PSK_ID)).
 
 
 (*
@@ -289,6 +287,16 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
       inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_STAT, mR)) ==>
          inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
 *)
+
+(*
+ * SYM case
+ *)
+query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt;
+    inj-event(evCommitISym(U, V, ID_PSK, G_XY)) ==>
+        inj-event(evRunningRSym(U, V, ID_PSK, G_XY)).
+query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt;
+    inj-event(evCommitRSym(U, V, ID_PSK, G_XY)) ==>
+        inj-event(evRunningISym(U, V, ID_PSK, G_XY)).
 
 (* Sanity *)
 event evCompletedISym().
@@ -643,6 +651,7 @@ process
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event evLTKRevealSym(ID_PSK); out(c, PSK))
   ) |
+(*
   (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
@@ -650,6 +659,7 @@ process
     initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
   ) |
+*)
   (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
