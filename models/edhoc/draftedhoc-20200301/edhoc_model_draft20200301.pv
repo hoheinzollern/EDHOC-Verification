@@ -200,7 +200,16 @@ event evCommitI(host, host, dhElt, dhElt, dhElt, method, method).
 event evRunningR(host, dhElt, dhElt, dhElt, method, method).
 event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
 event evLTKRevealAsym(host).
+event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
+event reach.
+
+query event(reach).
+
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt;
+        event(evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX)) ==>
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 (*
+OLD queries -- No longer needed (?)
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
       mI: method, mR:method;
         event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
@@ -244,7 +253,6 @@ query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
         inj-event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
      && attacker(G_XY) ==>
              inj-event(evLTKRevealSym(PSK_ID)).
-
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
@@ -293,6 +301,7 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
 (*
  * SYM case
  *)
+(*
 query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
       S_I: bitstring;
     inj-event(evCommitISym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)) ==>
@@ -301,6 +310,7 @@ query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
       S_I: bitstring;
     inj-event(evCommitRSym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)) ==>
         inj-event(evRunningISym(U, V, ID_PSK, G_XY, C_I, C_R, S_I)).
+*)
 
 (* Sanity *)
 event evCompletedISym().
@@ -353,7 +363,9 @@ let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
  * about protection against reflection attacks in Section 8.6, so it should be
  * inlcuded: not allowed for initator to communicate with itself.
  *)
+(*
 if not (V = U) then
+*)
 
   let G_RX: dhElt = if (methodR = METHOD_STAT) then
                         exp(pkV, x)
@@ -432,7 +444,9 @@ if not (V = U) then
   event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    out(c, (G_XY, G_IY, G_RX)).
+    event reach;
+    in(c, =(G_XY, G_IY, G_RX));
+    event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -454,7 +468,9 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
 (* KARL: To avoid reflection attacks. Search for comment on reflection
  * attacks at the initiator for more info.
  *)
+(*
 if not (pkU = pkV) then
+*)
 
 (* KARL: When initiator uses static method, we get no identity hiding at all
  *       becase responder needs public key.
@@ -561,7 +577,8 @@ Solution if one want Initiator identity hiding:
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    out(c, (G_XY, G_IY, G_RX)).
+    in(c, =(G_XY, G_IY, G_RX));
+    event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -647,7 +664,9 @@ process
     (!out(s, (U, skU, pkU))) | out(c, (pkU)) |
     (if maliciousPrincipals() then event evLTKRevealAsym(U); out(c, skU))
   ) |
+(*
   (
+
    !in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     new ID_PSK: bitstring;
@@ -655,7 +674,7 @@ process
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event evLTKRevealSym(ID_PSK); out(c, PSK))
   ) |
-(*
+*)
   (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
@@ -663,11 +682,12 @@ process
     initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
   ) |
-*)
+(*
   (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) |
+*)
  !(
 (*    out(s, (METHOD_SIG, METHOD_SIG)) |
     out(s, (METHOD_SIG, METHOD_STAT)) |
