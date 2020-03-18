@@ -202,12 +202,32 @@ event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
 event evLTKRevealAsym(host).
 event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
 event reach.
+event evKG_XYIReach.
+event evKG_XYI(bitstring, host, host, dhElt).
+event evKG_IYIReach.
+event evKG_IYI(bitstring, host, host, dhElt).
+event evKG_RXIReach.
+event evKG_RXI(bitstring, host, host, dhElt).
+event evKG_XReach. (* Trivially reachable -- But not rached! *)
 
-query event(reach).
+query event(evKG_XReach).
 
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt;
-        event(evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX)) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+query event(evKG_XYIReach).
+query sid: bitstring, U: host, V: host, G_XY: dhElt;
+        inj-event(evKG_XYI(sid, U, V, G_XY)) ==>
+             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+
+query event(evKG_IYIReach).
+query sid: bitstring, U: host, V: host, G_IY: dhElt;
+        inj-event(evKG_IYI(sid, U, V, G_IY)) ==>
+             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+
+
+query event(evKG_RXIReach).
+query sid: bitstring, U: host, V: host, G_RX: dhElt;
+        inj-event(evKG_RXI(sid, U, V, G_RX)) ==>
+             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+
 (*
 OLD queries -- No longer needed (?)
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
@@ -317,9 +337,9 @@ event evCompletedISym().
 event evCompletedRSym().
 event evInitiatorCompleted(method, method).
 event evResponderCompleted(method, method).
+(*
 query event(evCompletedISym()).
 query event(evCompletedRSym()).
-(*
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_SIG)).
 query event(evInitiatorCompleted(METHOD_SIG, METHOD_STAT)).
 query event(evInitiatorCompleted(METHOD_STAT, METHOD_SIG)).
@@ -330,8 +350,8 @@ query event(evResponderCompleted(METHOD_STAT, METHOD_SIG)).
 query event(evResponderCompleted(METHOD_STAT, METHOD_STAT)).
 *)
 
-let initiatorAsym(U: host, V: host, skU: exponent, pkU: dhElt, pkV: dhElt,
-    methodI: method, methodR: method) =
+let initiatorAsym(sid: bitstring, U: host, V: host, skU: exponent,
+     pkU: dhElt, pkV: dhElt, methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
   (*
@@ -436,19 +456,23 @@ if not (V = U) then
   (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
   event evRunningI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_3);
-  (*
-  event endInitiatorA(U, V, xE_V);
-  (if revealSessKeys() then
-     (event SessK2A_Reveal(K_2, skU); out(c, K_2))).
-   *)
+
   event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    event reach;
+    ((in(c, =G_XY); event evKG_XYI(sid, U, V, G_XY); event evKG_XYIReach) |
+     (in(c, =G_IY); event evKG_IYI(sid, U, V, G_IY); event evKG_XYIReach) |
+     (in(c, =G_X); event evKG_XReach) |  (* THIS ONE SHOULD BE POSSIBLE TO REACH FOR SURE, but for some reason it is not!? *)
+     (in(c, =G_RX); event evKG_RXI(sid, U, V, G_RX); event evKG_XYIReach))
+  else
+    0.
+(*
     in(c, =(G_XY, G_IY, G_RX));
     event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
+*)
 
-let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
+let responderAsym(sid: bitstring, V: host, U: host, skV: exponent,
+                 pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
   let G_Y: dhElt = exp(g, y) in
   new S_R[]: bitstring;
@@ -679,8 +703,9 @@ process
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
-    initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
-    responderAsym(V, U, skV, pkV, pkU)
+    new sid:bitstring;
+    initiatorAsym(sid, U, V, skU, pkU, pkV, methodI, methodR) |
+    responderAsym(sid, V, U, skV, pkV, pkU)
   ) |
 (*
   (
