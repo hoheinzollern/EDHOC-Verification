@@ -420,10 +420,7 @@ if not (V = U) then
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
 
   (* FEEDBACK: the spec does not specify how to check the signature, depending on
-     whether it's using static DH or COSE_Sign
-  let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, aadData_2) in
-  if (methodR = METHOD_SIG && verifySign((aadData_2, MAC_2), verifObj, pkV)) ||
-  *)
+     whether it's using static DH or COSE_Sign *)
   if (methodR = METHOD_STAT && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
      (methodR = METHOD_SIG && verifyAEAD(assocData2, verifObj, K_2m)) then
   (*
@@ -468,7 +465,16 @@ if not (V = U) then
 
   event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
-  if revealSessKey() = true then
+  (* KARL: If attacker injects G_X (and possibly in G_Y, but how did he
+   *       forge the signature in that case?), then he knows G_XY, so
+   *       both parties must check that G_X and G_Y are not equal to g.
+   *       I put the inequality check here at the end rather than when
+   *       they receive messages to simplify model.
+   *       Proverif has not complained about this yet, but as a pre-caution.
+   *       FEEDBACK: don't think this is new in the protocol world, and it
+   *                 may already be covered by the spec.
+   *)
+  if revealSessKey() = true  &&  G_IY <> g  &&  G_RX <> g then
     ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach) |
      (in(c, =G_IY); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
      (in(c, =G_RX); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))
@@ -715,11 +721,10 @@ process
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) |
  !(
-(*    out(s, (METHOD_SIG, METHOD_SIG)) | *)
-    out(s, (METHOD_SIG, METHOD_STAT)) (* |
+    out(s, (METHOD_SIG, METHOD_SIG)) (*  |
+    out(s, (METHOD_SIG, METHOD_STAT)) |
     out(s, (METHOD_STAT, METHOD_SIG)) |
-    out(s, (METHOD_STAT, METHOD_STAT))
-*)
+    out(s, (METHOD_STAT, METHOD_STAT))*)
   )
 
 (*
