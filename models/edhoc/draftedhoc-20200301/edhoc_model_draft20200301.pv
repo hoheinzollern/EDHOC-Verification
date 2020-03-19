@@ -203,11 +203,11 @@ event evLTKRevealAsym(host).
 event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
 event reach.
 event evKG_XYIReach.
-event evKG_XYI(bitstring, host, host, dhElt).
+event evKG_XYI(host, host, dhElt).
 event evKG_IYIReach.
-event evKG_IYI(bitstring, host, host, dhElt).
+event evKG_IYI(host, host, dhElt, dhElt).
 event evKG_RXIReach.
-event evKG_RXI(bitstring, host, host, dhElt).
+event evKG_RXI(host, host, dhElt, dhElt).
 
 (* Session ID is (U, V, G_XY)  *)
 query event(evKG_XYIReach).
@@ -710,10 +710,11 @@ process
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) |
  !(
-    out(s, (METHOD_SIG, METHOD_SIG)) |
-    out(s, (METHOD_SIG, METHOD_STAT)) |
+(*    out(s, (METHOD_SIG, METHOD_SIG)) | *)
+    out(s, (METHOD_SIG, METHOD_STAT)) (* |
     out(s, (METHOD_STAT, METHOD_SIG)) |
     out(s, (METHOD_STAT, METHOD_STAT))
+*)
   )
 
 (*
