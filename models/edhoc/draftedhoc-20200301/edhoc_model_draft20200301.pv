@@ -215,6 +215,7 @@ query U: host, V: host, G_XY: dhElt;
         event(evKG_XYI(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
+(*
 query event(evKG_IYIReach).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt;
         event(evKG_IYI(U, V, G_XY, G_IY)) ==>
@@ -439,11 +440,15 @@ if not (V = U) then
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, assocData3) in
   (* authI is the "inner COSE_Encrypt0" object *)
-(* IDEA:  (if methodI = METHOD_STAT then proc_init_2(env, sign...)) |
-  (if methodI = METHOD_SIG then proc_init_2(env, MAC_3)).
-
-
-let proc_init_2(env, authI) *)
+  (* KARL: I tried Alessandro's idea to avoid the else branch in one place
+   *       but it only shaved off from 64 seconds to 60 seconds on my machine
+   *       while cluttering the model quite a bit.  So we stick with the
+   *       else-branch for now and only resort to the else-branch avoidance
+   *       if we really have to. So far the speed is acceptable. The idea is:
+   *       (if methodI = METHOD_STAT then initiatorAsymEnd(env, sign...)) |
+   *       (if methodI = METHOD_SIG then initiatorAsymEnd(env, MAC_3)).
+   *       KEEP THIS COMMENT so we/I don't forget the trick.
+   *)
   let authI: bitstring = if methodI = METHOD_STAT then
                             sign((assocData3, MAC_3), skU)
                          else if methodI = METHOD_SIG then
