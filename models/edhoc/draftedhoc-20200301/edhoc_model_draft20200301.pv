@@ -55,6 +55,7 @@ set attacker = active.
 
 (* Macro definitions *)
 letfun revealSessKey() = true.
+letfun revealSessState() = true.
 letfun maliciousPrincipals() = true.
 letfun asymmToSymm() = false.
 letfun IandRSupportSameCiphersuite() = true.
@@ -204,10 +205,14 @@ event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
 event reach.
 event evKG_XYIReach.
 event evKG_XYI(host, host, dhElt).
+(*
+ KARL: Proven that they are not reachable in the current form, but need
+       to see how their secrecy relates to key and entity authenticatinon.
 event evKG_IYIReach.
 event evKG_IYI(host, host, dhElt, dhElt).
 event evKG_RXIReach.
 event evKG_RXI(host, host, dhElt, dhElt).
+*)
 
 (* Session ID is (U, V, G_XY)  *)
 query event(evKG_XYIReach).
@@ -225,6 +230,7 @@ query event(evKG_RXIReach).
 query U: host, V: host, G_XY: dhElt, G_RX: dhElt;
         event(evKG_RXI(U, V, G_XY, G_RX)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+*)
 
 (*
 OLD queries -- No longer needed (?)
@@ -474,10 +480,21 @@ if not (V = U) then
    *       FEEDBACK: don't think this is new in the protocol world, and it
    *                 may already be covered by the spec.
    *)
-  if revealSessKey() = true  &&  G_Y <> g  &&  G_X <> g then
-    ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach) |
-     (in(c, =G_IY); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
-     (in(c, =G_RX); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))
+(*
+  if revealSessKey() = true  &&  G_Y <> g  &&  G_X <> g
+                             && G_RX <> dummyDhElt &&  G_IY <> dummyDhElt then
+*)
+  if revealSessKey() = true then
+    ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach))
+(*
+     KARL: y not known to initiator and x not to responder.
+           G_IY and G_RX were proven not reachable.
+     TODO: think about how to model this. Related to authentication and
+           agreement of session key (maybe?)
+     (if revealSessState() = true then
+        ((in(c, =y); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
+         (in(c, =x); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))))
+*)
   else
     0.
 (*
