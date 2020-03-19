@@ -51,7 +51,7 @@
  *)
 
 set reconstructTrace = true.
-set attacker = passive.
+set attacker = active.
 
 (* Macro definitions *)
 letfun revealSessKey() = true.
@@ -208,25 +208,22 @@ event evKG_IYIReach.
 event evKG_IYI(bitstring, host, host, dhElt).
 event evKG_RXIReach.
 event evKG_RXI(bitstring, host, host, dhElt).
-event evKG_XReach. (* Trivially reachable -- But not rached! *)
-
-query event(evKG_XReach).
 
 query event(evKG_XYIReach).
 query sid: bitstring, U: host, V: host, G_XY: dhElt;
-        inj-event(evKG_XYI(sid, U, V, G_XY)) ==>
-             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+        event(evKG_XYI(sid, U, V, G_XY)) ==>
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 query event(evKG_IYIReach).
 query sid: bitstring, U: host, V: host, G_IY: dhElt;
-        inj-event(evKG_IYI(sid, U, V, G_IY)) ==>
-             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+        event(evKG_IYI(sid, U, V, G_IY)) ==>
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 
 query event(evKG_RXIReach).
 query sid: bitstring, U: host, V: host, G_RX: dhElt;
-        inj-event(evKG_RXI(sid, U, V, G_RX)) ==>
-             (inj-event(evLTKRevealAsym(U)) || inj-event(evLTKRevealAsym(V))).
+        event(evKG_RXI(sid, U, V, G_RX)) ==>
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 (*
 OLD queries -- No longer needed (?)
@@ -270,9 +267,9 @@ event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 
 query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
       S_I: bitstring;
-        inj-event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
+        event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
      && attacker(G_XY) ==>
-             inj-event(evLTKRevealSym(PSK_ID)).
+             event(evLTKRevealSym(PSK_ID)).
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
@@ -440,9 +437,14 @@ if not (V = U) then
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, assocData3) in
   (* authI is the "inner COSE_Encrypt0" object *)
+(* IDEA:  (if methodI = METHOD_STAT then proc_init_2(env, sign...)) |
+  (if methodI = METHOD_SIG then proc_init_2(env, MAC_3)).
+
+
+let proc_init_2(env, authI) *)
   let authI: bitstring = if methodI = METHOD_STAT then
                             sign((assocData3, MAC_3), skU)
-                         else
+                         else if methodI = METHOD_SIG then
                             MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
@@ -462,7 +464,6 @@ if not (V = U) then
   if revealSessKey() = true then
     ((in(c, =G_XY); event evKG_XYI(sid, U, V, G_XY); event evKG_XYIReach) |
      (in(c, =G_IY); event evKG_IYI(sid, U, V, G_IY); event evKG_XYIReach) |
-     (in(c, =G_X); event evKG_XReach) |  (* THIS ONE SHOULD BE POSSIBLE TO REACH FOR SURE, but for some reason it is not!? *)
      (in(c, =G_RX); event evKG_RXI(sid, U, V, G_RX); event evKG_XYIReach))
   else
     0.
@@ -570,7 +571,7 @@ Solution if one want Initiator identity hiding:
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, assocData2) in
   let authR: bitstring = if methodR = METHOD_STAT then
                             sign((assocData2, MAC_2), skV)
-                         else (* i.e., METHOD_SIG *)
+                         else if methodR = METHOD_SIG then
                             MAC_2
                          in
   let plainText2: bitstring = (V, authR, AD_2) in
@@ -688,9 +689,7 @@ process
     (!out(s, (U, skU, pkU))) | out(c, (pkU)) |
     (if maliciousPrincipals() then event evLTKRevealAsym(U); out(c, skU))
   ) |
-(*
   (
-
    !in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
     new ID_PSK: bitstring;
@@ -698,7 +697,6 @@ process
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event evLTKRevealSym(ID_PSK); out(c, PSK))
   ) |
-*)
   (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
@@ -707,16 +705,14 @@ process
     initiatorAsym(sid, U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(sid, V, U, skV, pkV, pkU)
   ) |
-(*
   (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) |
-*)
  !(
-(*    out(s, (METHOD_SIG, METHOD_SIG)) |
+    out(s, (METHOD_SIG, METHOD_SIG)) |
     out(s, (METHOD_SIG, METHOD_STAT)) |
-    out(s, (METHOD_STAT, METHOD_SIG)) *)
+    out(s, (METHOD_STAT, METHOD_SIG)) |
     out(s, (METHOD_STAT, METHOD_STAT))
   )
 
