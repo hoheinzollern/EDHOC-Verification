@@ -209,20 +209,20 @@ event evKG_IYI(bitstring, host, host, dhElt).
 event evKG_RXIReach.
 event evKG_RXI(bitstring, host, host, dhElt).
 
+(* Session ID is (U, V, G_XY)  *)
 query event(evKG_XYIReach).
-query sid: bitstring, U: host, V: host, G_XY: dhElt;
-        event(evKG_XYI(sid, U, V, G_XY)) ==>
+query U: host, V: host, G_XY: dhElt;
+        event(evKG_XYI(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 query event(evKG_IYIReach).
-query sid: bitstring, U: host, V: host, G_IY: dhElt;
-        event(evKG_IYI(sid, U, V, G_IY)) ==>
+query U: host, V: host, G_XY: dhElt, G_IY: dhElt;
+        event(evKG_IYI(U, V, G_XY, G_IY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
-
 query event(evKG_RXIReach).
-query sid: bitstring, U: host, V: host, G_RX: dhElt;
-        event(evKG_RXI(sid, U, V, G_RX)) ==>
+query U: host, V: host, G_XY: dhElt, G_RX: dhElt;
+        event(evKG_RXI(U, V, G_XY, G_RX)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 (*
@@ -265,11 +265,13 @@ event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 
+(*
 query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
       S_I: bitstring;
         event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
      && attacker(G_XY) ==>
              event(evLTKRevealSym(PSK_ID)).
+*)
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
@@ -347,7 +349,7 @@ query event(evResponderCompleted(METHOD_STAT, METHOD_SIG)).
 query event(evResponderCompleted(METHOD_STAT, METHOD_STAT)).
 *)
 
-let initiatorAsym(sid: bitstring, U: host, V: host, skU: exponent,
+let initiatorAsym(U: host, V: host, skU: exponent,
      pkU: dhElt, pkV: dhElt, methodI: method, methodR: method) =
   new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
   new AD_1[]: bitstring; new C_I[]: ctxID;
@@ -462,9 +464,9 @@ let proc_init_2(env, authI) *)
   event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYI(sid, U, V, G_XY); event evKG_XYIReach) |
-     (in(c, =G_IY); event evKG_IYI(sid, U, V, G_IY); event evKG_XYIReach) |
-     (in(c, =G_RX); event evKG_RXI(sid, U, V, G_RX); event evKG_XYIReach))
+    ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach) |
+     (in(c, =G_IY); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
+     (in(c, =G_RX); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))
   else
     0.
 (*
@@ -472,8 +474,7 @@ let proc_init_2(env, authI) *)
     event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
 *)
 
-let responderAsym(sid: bitstring, V: host, U: host, skV: exponent,
-                 pkV: dhElt, pkU: dhElt) =
+let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
   let G_Y: dhElt = exp(g, y) in
   new S_R[]: bitstring;
@@ -701,9 +702,8 @@ process
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
     in(s, (V:host, skV:exponent, pkV:dhElt));
-    new sid:bitstring;
-    initiatorAsym(sid, U, V, skU, pkU, pkV, methodI, methodR) |
-    responderAsym(sid, V, U, skV, pkV, pkU)
+    initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
+    responderAsym(V, U, skV, pkV, pkU)
   ) |
   (
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
