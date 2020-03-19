@@ -421,8 +421,8 @@ if not (V = U) then
 
   (* FEEDBACK: the spec does not specify how to check the signature, depending on
      whether it's using static DH or COSE_Sign *)
-  if (methodR = METHOD_STAT && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
-     (methodR = METHOD_SIG && verifyAEAD(assocData2, verifObj, K_2m)) then
+  if (methodR = METHOD_SIG && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
+     (methodR = METHOD_STAT && verifyAEAD(assocData2, verifObj, K_2m)) then
   (*
   event agreeHashEnd2A(U, V, K_2, aad_2);
   event midInitiatorA(U, V, xE_V);
@@ -446,9 +446,9 @@ if not (V = U) then
    *       (if methodI = METHOD_SIG then initiatorAsymEnd(env, MAC_3)).
    *       KEEP THIS COMMENT so we/I don't forget the trick.
    *)
-  let authI: bitstring = if methodI = METHOD_STAT then
+  let authI: bitstring = if methodI = METHOD_SIG then
                             sign((assocData3, MAC_3), skU)
-                         else if methodI = METHOD_SIG then
+                         else if methodI = METHOD_STAT then
                             MAC_3
                          in
   (* Now compute the "outer COSE_Encrypt0" object *)
@@ -474,7 +474,7 @@ if not (V = U) then
    *       FEEDBACK: don't think this is new in the protocol world, and it
    *                 may already be covered by the spec.
    *)
-  if revealSessKey() = true  &&  G_IY <> g  &&  G_RX <> g then
+  if revealSessKey() = true  &&  G_Y <> g  &&  G_X <> g then
     ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach) |
      (in(c, =G_IY); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
      (in(c, =G_RX); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))
@@ -581,9 +581,9 @@ Solution if one want Initiator identity hiding:
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
   (* TODO: assocData2 should map to arrays of COSE structs similar to spec *)
   let MAC_2: bitstring = aeadEncrypt(emptyHexString, K_2m, assocData2) in
-  let authR: bitstring = if methodR = METHOD_STAT then
+  let authR: bitstring = if methodR = METHOD_SIG then
                             sign((assocData2, MAC_2), skV)
-                         else if methodR = METHOD_SIG then
+                         else if methodR = METHOD_STAT then
                             MAC_2
                          in
   let plainText2: bitstring = (V, authR, AD_2) in
@@ -607,8 +607,8 @@ Solution if one want Initiator identity hiding:
   let protected3: host = U in (* ID_CRED_I in protected header *)
   let extAad3: bitstring = (TH_3, pkU, AD_3) in (* external_aad *)
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
-  if (methodI = METHOD_STAT && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
-     (methodI = METHOD_SIG && verifyAEAD(assocData3, verifObj, K_3m)) then
+  if (methodI = METHOD_SIG && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
+     (methodI = METHOD_STAT && verifyAEAD(assocData3, verifObj, K_3m)) then
   (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
 
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
