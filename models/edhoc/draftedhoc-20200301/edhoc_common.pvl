@@ -149,11 +149,11 @@ letfun PRK_2e_sym(PSK: key, G_XY: dhElt) = HKDF_extract(keyToBitstring(PSK), G_X
 letfun PRK_3e2m_sym(PSK: key, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
 letfun PRK_3e2m_asym(G_XY: dhElt, G_RX: dhElt, methodI: method, methodR: method) =
     if methodR = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_2e_asym(G_XY)), G_RX)
-    else PRK_2e_asym(G_XY).
+    else if methodR = METHOD_SIG then PRK_2e_asym(G_XY).
 letfun PRK_4x3m_sym(PSK: key, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
 letfun PRK_4x3m_asym(G_XY: dhElt, G_RX: dhElt, G_IY:dhElt, methodI: method, methodR: method) =
     if methodI = METHOD_STAT then HKDF_extract(keyToBitstring(PRK_3e2m_asym(G_XY, G_RX, methodI, methodR)), G_IY)
-    else PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
+    else if methodI = METHOD_SIG then PRK_3e2m_asym(G_XY, G_RX, methodI, methodR).
 
 (* Encryption/Integrity key and IV derivations (see Section 3.8) *)
 type label.

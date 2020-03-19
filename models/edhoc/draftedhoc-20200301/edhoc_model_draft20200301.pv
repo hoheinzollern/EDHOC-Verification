@@ -393,11 +393,7 @@ let initiatorAsym(U: host, V: host, skU: exponent,
 if not (V = U) then
 *)
 
-  let G_RX: dhElt = if (methodR = METHOD_STAT) then
-                        exp(pkV, x)
-                    else
-                        dummyDhElt
-                    in
+  let G_RX: dhElt = exp(pkV, x) in  (* NOTE: was dummyDHElt if methodR = METHOD_SIG *)
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
 
@@ -416,11 +412,7 @@ if not (V = U) then
    * producing a MAC.
    * We need it both for verifying MAC_2 and for verifying Signature1.
    *)
-  let G_IY: dhElt = if (methodI = METHOD_STAT) then
-                        exp(G_Y, skU)
-                    else
-                        dummyDhElt
-                    in
+  let G_IY: dhElt = exp(G_Y, skU) in  (* NOTE: was dummyDHElt if methodI = METHOD_SIG *)
   let protected2: host = V in (* ID_CRED_R in protected header *)
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
@@ -535,16 +527,8 @@ if not (pkU = pkV) then
 (* KARL: when responder uses static key, then the protocol does not seem
  *       able to guarnetee agreement on G_IY.
  *)
-  let G_IY: dhElt = if (methodI = METHOD_STAT) then
-                        exp(pkU, y)
-                    else
-                        dummyDhElt
-                    in
-  let G_RX: dhElt = if (methodR = METHOD_STAT) then
-                        exp(G_X, skV)
-                    else
-                        dummyDhElt
-                    in
+  let G_IY: dhElt = exp(pkU, y) in (* NOTE: was dummyDHElt if methodI = METHOD_SIG *)
+  let G_RX: dhElt = exp(G_X, skV) in (* NOTE: was dummyDHElt if methodR = METHOD_SIG *)
   let G_XY: dhElt = exp(G_X, y) in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
