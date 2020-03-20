@@ -606,7 +606,7 @@ Solution if one want Initiator identity hiding:
 
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
-  in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym;
+  in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym.
 (*
      KARL: y not known to initiator and x not to responder.
            G_IY and G_RX were proven not reachable.
@@ -614,7 +614,7 @@ Solution if one want Initiator identity hiding:
            agreement of session key (maybe?)
      (if revealSessState() = true then
         ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReachAsym) |
-         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym))))
+         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym)))
 *)
 
 
