@@ -205,19 +205,35 @@ event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
 event reach.
 event evKG_XYIReach.
 event evKG_XYI(host, host, dhElt).
+event evKG_XYRReach.
+event evKG_XYR(host, host, dhElt).
 (*
  KARL: Proven that they are not reachable in the current form, but need
        to see how their secrecy relates to key and entity authenticatinon.
 event evKG_IYIReach.
 event evKG_IYI(host, host, dhElt, dhElt).
+event evKG_IYRReach.
+event evKG_IYR(host, host, dhElt, dhElt).
 event evKG_RXIReach.
 event evKG_RXI(host, host, dhElt, dhElt).
+event evKG_RXRReach.
+event evKG_RXR(host, host, dhElt, dhElt).
 *)
 
 (* Session ID is (U, V, G_XY)  *)
 query event(evKG_XYIReach).
 query U: host, V: host, G_XY: dhElt;
         event(evKG_XYI(U, V, G_XY)) ==>
+             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+
+(* KARL: This redoes some of the work of the previous query.
+ *       I'd like to have an or of the two premises in a single query,
+ *       but that is not allowed by Proverif's grammar. Any good ideas
+ *       for work arounds?
+ *)
+query event(evKG_XYRReach).
+query U: host, V: host, G_XY: dhElt;
+        event(evKG_XYR(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 (*
@@ -615,8 +631,18 @@ Solution if one want Initiator identity hiding:
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    in(c, =(G_XY, G_IY, G_RX));
-    event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
+    ((in(c, =G_XY); event evKG_XYR(U, V, G_XY); event evKG_XYRReach))
+(*
+     KARL: y not known to initiator and x not to responder.
+           G_IY and G_RX were proven not reachable.
+     TODO: think about how to model this. Related to authentication and
+           agreement of session key (maybe?)
+     (if revealSessState() = true then
+        ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReach) |
+         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReach))))
+*)
+  else
+    0.
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -722,10 +748,10 @@ process
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
   ) |
  !(
-    out(s, (METHOD_SIG, METHOD_SIG)) (*  |
+    out(s, (METHOD_SIG, METHOD_SIG))  |
     out(s, (METHOD_SIG, METHOD_STAT)) |
     out(s, (METHOD_STAT, METHOD_SIG)) |
-    out(s, (METHOD_STAT, METHOD_STAT))*)
+    out(s, (METHOD_STAT, METHOD_STAT))
   )
 
 (*
