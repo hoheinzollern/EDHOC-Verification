@@ -54,8 +54,8 @@ set reconstructTrace = true.
 set attacker = active.
 
 (* Macro definitions *)
-letfun revealSessKey() = true.
-letfun revealSessState() = true.
+letfun revealSessKey() = true. (* Currently has no effect *)
+letfun revealSessState() = true. (* Currently has no effect *)
 letfun maliciousPrincipals() = true.
 letfun asymmToSymm() = false.
 letfun IandRSupportSameCiphersuite() = true.
@@ -475,19 +475,16 @@ if not (V = U) then
   if revealSessKey() = true  &&  G_Y <> g  &&  G_X <> g
                              && G_RX <> dummyDhElt &&  G_IY <> dummyDhElt then
 *)
-  if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYIAsym(U, V, G_XY); event evKG_XYIReachAsym))
+   in(c, =G_XY); event evKG_XYIAsym(U, V, G_XY); event evKG_XYIReachAsym.
 (*
      KARL: y not known to initiator and x not to responder.
            G_IY and G_RX were proven not reachable.
      TODO: think about how to model this. Related to authentication and
            agreement of session key (maybe?)
-     (if revealSessState() = true then
+
         ((in(c, =y); event evKG_IYIAsym(U, V, G_XY, G_IY); event evKG_XYIReachAsym) |
          (in(c, =x); event evKG_RXIAsym(U, V, G_XY, G_RX); event evKG_XYIReachAsym))))
 *)
-  else
-    0.
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -609,8 +606,7 @@ Solution if one want Initiator identity hiding:
 
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
-  if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym))
+  in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym;
 (*
      KARL: y not known to initiator and x not to responder.
            G_IY and G_RX were proven not reachable.
@@ -620,8 +616,6 @@ Solution if one want Initiator identity hiding:
         ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReachAsym) |
          (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym))))
 *)
-  else
-    0.
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
@@ -659,8 +653,7 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   (* event endInitiatorS(U, V, PSK, xE_V); *)
   event evCompletedISym();
   event evCommitISym(U, V, ID_PSK, G_XY, C_I, xC_R, S_I);
-  if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYISym(U, V, G_XY); event evKG_XYIReachSym)).
+  in(c, =G_XY); event evKG_XYISym(U, V, G_XY); event evKG_XYIReachSym.
 
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
@@ -695,8 +688,7 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   event evCommitRSym(U, V, ID_PSK, G_XY, xC_I, C_R, xS_I);
   event evCompletedRSym();
   event endResponderS(U, V, PSK, xE_U);
-  if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYRSym(U, V, G_XY); event evKG_XYRReachSym)).
+  in(c, =G_XY); event evKG_XYRSym(U, V, G_XY); event evKG_XYRReachSym.
 
 
 (*
