@@ -200,30 +200,40 @@ event evRunningI(host, host, dhElt, dhElt, dhElt, method, method).
 event evCommitI(host, host, dhElt, dhElt, dhElt, method, method).
 event evRunningR(host, dhElt, dhElt, dhElt, method, method).
 event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
+
 event evLTKRevealAsym(host).
-event evAttackerKnowsSessKeyAsym(host, host, dhElt, dhElt, dhElt).
+event evLTKRevealSym(host).
 event reach.
-event evKG_XYIReach.
-event evKG_XYI(host, host, dhElt).
-event evKG_XYRReach.
-event evKG_XYR(host, host, dhElt).
+event evKG_XYIReachAsym.
+event evKG_XYIReachSym.
+event evKG_XYIAsym(host, host, dhElt).
+event evKG_XYISym(host, host, dhElt).
+event evKG_XYRReachAsym.
+event evKG_XYRReachSym.
+event evKG_XYRAsym(host, host, dhElt).
+event evKG_XYRSym(host, host, dhElt).
+
 (*
  KARL: Proven that they are not reachable in the current form, but need
        to see how their secrecy relates to key and entity authenticatinon.
-event evKG_IYIReach.
+event evKG_IYIReachAsym.
+event evKG_IYIReachSym.
 event evKG_IYI(host, host, dhElt, dhElt).
-event evKG_IYRReach.
+event evKG_IYRReachAsym.
+event evKG_IYRReachSym.
 event evKG_IYR(host, host, dhElt, dhElt).
-event evKG_RXIReach.
+event evKG_RXIReachAsym.
+event evKG_RXIReachSym.
 event evKG_RXI(host, host, dhElt, dhElt).
-event evKG_RXRReach.
+event evKG_RXRReachAsym.
+event evKG_RXRReachSym.
 event evKG_RXR(host, host, dhElt, dhElt).
 *)
 
 (* Session ID is (U, V, G_XY)  *)
-query event(evKG_XYIReach).
+query event(evKG_XYIReachAsym).
 query U: host, V: host, G_XY: dhElt;
-        event(evKG_XYI(U, V, G_XY)) ==>
+        event(evKG_XYIAsym(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 (* KARL: This redoes some of the work of the previous query.
@@ -231,48 +241,20 @@ query U: host, V: host, G_XY: dhElt;
  *       but that is not allowed by Proverif's grammar. Any good ideas
  *       for work arounds?
  *)
-query event(evKG_XYRReach).
+query event(evKG_XYRReachAsym).
 query U: host, V: host, G_XY: dhElt;
-        event(evKG_XYR(U, V, G_XY)) ==>
+        event(evKG_XYRAsym(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
 (*
-query event(evKG_IYIReach).
+query event(evKG_IYIReachAsym).
 query U: host, V: host, G_XY: dhElt, G_IY: dhElt;
-        event(evKG_IYI(U, V, G_XY, G_IY)) ==>
+        event(evKG_IYIAsym(U, V, G_XY, G_IY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 
-query event(evKG_RXIReach).
+query event(evKG_RXIReachAsym).
 query U: host, V: host, G_XY: dhElt, G_RX: dhElt;
-        event(evKG_RXI(U, V, G_XY, G_RX)) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-*)
-
-(*
-OLD queries -- No longer needed (?)
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitI(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_XY) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_IY) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
-      mI: method, mR:method;
-        event(evCommitR(U, V, G_XY, G_IY, G_RX, mI, mR)) && attacker(G_RX) ==>
+        event(evKG_RXIAsym(U, V, G_XY, G_RX)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 *)
 
@@ -282,19 +264,20 @@ query U: host, V: host, G_XY: dhElt, G_IY: dhElt, G_RX: dhElt,
  * KARL: Even here it seems we can't get agreement on the actual session key
  *       i.e., (K_3ae, TH_4) even for the symmetric case. Have to go for G_XY.
  *)
-event evLTKRevealSym(bitstring).
 event evRunningISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 
-(*
-query U: host, V: host, PSK_ID: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
-      S_I: bitstring;
-        event(evCommitISym(U, V, PSK_ID, G_XY, C_I, C_R, S_I))
-     && attacker(G_XY) ==>
-             event(evLTKRevealSym(PSK_ID)).
-*)
+query event(evKG_XYRReachSym).
+query U: host, V: host, G_XY: dhElt;
+        event(evKG_XYRSym(U, V, G_XY)) ==>
+             (event(evLTKRevealSym(U)) || event(evLTKRevealSym(V))).
+
+query event(evKG_XYIReachSym).
+query U: host, V: host, G_XY: dhElt;
+        event(evKG_XYISym(U, V, G_XY)) ==>
+             (event(evLTKRevealSym(U)) || event(evLTKRevealSym(V))).
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
@@ -493,22 +476,18 @@ if not (V = U) then
                              && G_RX <> dummyDhElt &&  G_IY <> dummyDhElt then
 *)
   if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYI(U, V, G_XY); event evKG_XYIReach))
+    ((in(c, =G_XY); event evKG_XYIAsym(U, V, G_XY); event evKG_XYIReachAsym))
 (*
      KARL: y not known to initiator and x not to responder.
            G_IY and G_RX were proven not reachable.
      TODO: think about how to model this. Related to authentication and
            agreement of session key (maybe?)
      (if revealSessState() = true then
-        ((in(c, =y); event evKG_IYI(U, V, G_XY, G_IY); event evKG_XYIReach) |
-         (in(c, =x); event evKG_RXI(U, V, G_XY, G_RX); event evKG_XYIReach))))
+        ((in(c, =y); event evKG_IYIAsym(U, V, G_XY, G_IY); event evKG_XYIReachAsym) |
+         (in(c, =x); event evKG_RXIAsym(U, V, G_XY, G_RX); event evKG_XYIReachAsym))))
 *)
   else
     0.
-(*
-    in(c, =(G_XY, G_IY, G_RX));
-    event evAttackerKnowsSessKeyAsym(U, V, G_XY, G_IY, G_RX).
-*)
 
 let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   new y[]: exponent;
@@ -631,15 +610,15 @@ Solution if one want Initiator identity hiding:
   event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
   if revealSessKey() = true then
-    ((in(c, =G_XY); event evKG_XYR(U, V, G_XY); event evKG_XYRReach))
+    ((in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym))
 (*
      KARL: y not known to initiator and x not to responder.
            G_IY and G_RX were proven not reachable.
      TODO: think about how to model this. Related to authentication and
            agreement of session key (maybe?)
      (if revealSessState() = true then
-        ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReach) |
-         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReach))))
+        ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReachAsym) |
+         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym))))
 *)
   else
     0.
@@ -679,7 +658,9 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   out(c, msg_3);
   (* event endInitiatorS(U, V, PSK, xE_V); *)
   event evCompletedISym();
-  event evCommitISym(U, V, ID_PSK, G_XY, C_I, xC_R, S_I).
+  event evCommitISym(U, V, ID_PSK, G_XY, C_I, xC_R, S_I);
+  if revealSessKey() = true then
+    ((in(c, =G_XY); event evKG_XYISym(U, V, G_XY); event evKG_XYIReachSym)).
 
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
@@ -713,7 +694,9 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
   event evCommitRSym(U, V, ID_PSK, G_XY, xC_I, C_R, xS_I);
   event evCompletedRSym();
-  event endResponderS(U, V, PSK, xE_U).
+  event endResponderS(U, V, PSK, xE_U);
+  if revealSessKey() = true then
+    ((in(c, =G_XY); event evKG_XYRSym(U, V, G_XY); event evKG_XYRReachSym)).
 
 
 (*
@@ -734,7 +717,7 @@ process
     new ID_PSK: bitstring;
     new PSK: key;
     out(s2, (U, V, PSK, ID_PSK));
-    (if maliciousPrincipals() then event evLTKRevealSym(ID_PSK); out(c, PSK))
+    (if maliciousPrincipals() then event evLTKRevealSym(U); event evLTKRevealSym(V); out(c, PSK))
   ) |
   (
    !in(s, (methodI:method, methodR:method));
@@ -753,27 +736,4 @@ process
     out(s, (METHOD_STAT, METHOD_SIG)) |
     out(s, (METHOD_STAT, METHOD_STAT))
   )
-
-(*
-process
-  (!new U: host;
-    new skU: exponent;
-    let pkU = exp(g, skU) in
-    !out(s, (U, skU, pkU)); out(s, (U, skU, pkU));
-    out(c, (pkU));
-    ((if maliciousPrincipals() then eventLTK_Reveal(U, skU); out(c, skU)) | phase 1; out(c, skU)) ) |
-  (!in(s, (U:host, skU:key, pkU:key));
-    in(s, (V:host, skV:key, pkV:key));
-    new random[]: bitstring;
-    let PSK = HKDF(g, random, empty, EDHOC_PRESHARED) in
-    out(s2, (U, V, PSK)); out(s2, (U, V, PSK))
-    ((if maliciousPrincipals() then event PSK_Reveal(PSK); out(c, PSK)) | phase 1; out(c, PSK)) ) |
-  (!in(s, (U:host, skU:key, pkU:key));
-    in(s, (V:host, skV:key, pkV:key));
-    (initiatorAsym(U, V, skU, pkU, pkV) |
-     responderAsym(V, U, skV, pkV, pkU)) ) |
-  (!in(s2, (U:host, V:host, PSK:key));
-    (initiatorSym(U, V, PSK) |
-     responderSym(V, U, PSK)) )
-*)
 
