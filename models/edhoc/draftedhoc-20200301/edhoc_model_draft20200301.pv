@@ -196,10 +196,10 @@ query U: host, V: host, K_3: key, PSK : key, aad_3 : bitstring;
 (*
  * ASYM case
  *)
-event evRunningI(host, host, dhElt, dhElt, dhElt, method, method).
-event evCommitI(host, host, dhElt, dhElt, dhElt, method, method).
-event evRunningR(host, dhElt, dhElt, dhElt, method, method).
-event evCommitR(host, host, dhElt, dhElt, dhElt, method, method).
+event evRunningIAsym(host, host, dhElt, dhElt, dhElt, method, method).
+event evCommitIAsym(host, host, dhElt, dhElt, dhElt, method, method).
+event evRunningRAsym(host, dhElt, dhElt, dhElt, method, method).
+event evCommitRAsym(host, host, dhElt, dhElt, dhElt, method, method).
 
 event evLTKRevealAsym(host).
 event evLTKRevealSym(host).
@@ -231,20 +231,24 @@ event evKG_RXR(host, host, dhElt, dhElt).
 *)
 
 (* Session ID is (U, V, G_XY)  *)
+(* secrecy
 query event(evKG_XYIReachAsym).
 query U: host, V: host, G_XY: dhElt;
         event(evKG_XYIAsym(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+*)
 
 (* KARL: This redoes some of the work of the previous query.
  *       I'd like to have an or of the two premises in a single query,
  *       but that is not allowed by Proverif's grammar. Any good ideas
  *       for work arounds?
  *)
+(* secrecy
 query event(evKG_XYRReachAsym).
 query U: host, V: host, G_XY: dhElt;
         event(evKG_XYRAsym(U, V, G_XY)) ==>
              (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+*)
 
 (*
 query event(evKG_IYIReachAsym).
@@ -269,6 +273,7 @@ event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
 
+(* secrecy
 query event(evKG_XYRReachSym).
 query U: host, V: host, G_XY: dhElt;
         event(evKG_XYRSym(U, V, G_XY)) ==>
@@ -278,19 +283,18 @@ query event(evKG_XYIReachSym).
 query U: host, V: host, G_XY: dhElt;
         event(evKG_XYISym(U, V, G_XY)) ==>
              (event(evLTKRevealSym(U)) || event(evLTKRevealSym(V))).
+*)
 
 (*
  * Agreement for all cases except when Initator uses STATic DH key
  * ASYM case
  *)
-(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
-      inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
-         inj-event(evRunningR(V, gxy, giy, grx, mI, mR)).
+      inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
+         inj-event(evRunningRAsym(V, gxy, giy, grx, mI, mR)).
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
-      inj-event(evCommitR(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
-         inj-event(evRunningI(U, V, gxy, giy, grx, mI, mR)).
-*)
+      inj-event(evCommitRAsym(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
+         inj-event(evRunningIAsym(U, V, gxy, giy, grx, mI, mR)).
 
 (*
  * Special (weaker) case: Initator uses static DH key
@@ -305,13 +309,11 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: meth
  *                 and roles etc.
  *)
 
-(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
       U': host, V': host, mI: method, mR: method;
-         inj-event(evCommitI(U, V, gxy, giy, grx, METHOD_STAT, mR))
-      && inj-event(evCommitR(U', V', gxy, giy, grx, mI, mR))
+         inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_STAT, mR))
+      && inj-event(evCommitRAsym(U', V', gxy, giy, grx, mI, mR))
       ==> U' = U.
-*)
 
 (* Note that the responder can still get full agreement, and this is because
  * he also gets key confirmation in becasue of the MAC in the AEAD in message 3.
@@ -420,10 +422,6 @@ if not (V = U) then
      whether it's using static DH or COSE_Sign *)
   if (methodR = METHOD_SIG && verifyAEADSign(assocData2, verifObj, K_2m, pkV)) ||
      (methodR = METHOD_STAT && verifyAEAD(assocData2, verifObj, K_2m)) then
-  (*
-  event agreeHashEnd2A(U, V, K_2, aad_2);
-  event midInitiatorA(U, V, xE_V);
-  *)
   let data_3: ctxID = C_R in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
@@ -457,10 +455,10 @@ if not (V = U) then
 
   (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
-  event evRunningI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evRunningIAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_3);
 
-  event evCommitI(U, V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evCommitIAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
   (* KARL: If attacker injects G_X (and possibly in G_Y, but how did he
    *       forge the signature in that case?), then he knows G_XY, so
@@ -585,7 +583,7 @@ Solution if one want Initiator identity hiding:
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
-  event evRunningR(V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evRunningRAsym(V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
@@ -604,7 +602,7 @@ Solution if one want Initiator identity hiding:
      (methodI = METHOD_STAT && verifyAEAD(assocData3, verifObj, K_3m)) then
   (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
 
-  event evCommitR(U, V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evCommitRAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
   in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym.
 (*
