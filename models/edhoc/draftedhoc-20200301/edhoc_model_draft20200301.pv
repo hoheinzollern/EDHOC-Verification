@@ -50,6 +50,12 @@
  *   - U and V      (Confidentiality, privacy(?))
  *)
 
+(* Opt settings *)
+set redundancyElim = simple.  (* use: best, default: simple *)
+(*set redundantHypElim = true.*)  (* true/false default: unknown *)
+(*set expandSimplifyIfCst = true.*) (* true/false default: unkown *)
+
+set verboseRules = false.
 set reconstructTrace = true.
 set attacker = active.
 
@@ -231,23 +237,17 @@ event evKG_RXR(host, host, dhElt, dhElt).
 *)
 
 (* Session ID is (U, V, G_XY)  *)
-(* secrecy
-query event(evKG_XYIReachAsym).
-query U: host, V: host, G_XY: dhElt;
-        event(evKG_XYIAsym(U, V, G_XY)) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
-*)
-
-(* KARL: This redoes some of the work of the previous query.
- *       I'd like to have an or of the two premises in a single query,
- *       but that is not allowed by Proverif's grammar. Any good ideas
- *       for work arounds?
- *)
-(* secrecy
-query event(evKG_XYRReachAsym).
-query U: host, V: host, G_XY: dhElt;
-        event(evKG_XYRAsym(U, V, G_XY)) ==>
-             (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
+(*query U: host, V: host, G_XY: dhElt; *)
+    (* Query *)
+(*    event(evKG_XYIReachAsym); *)
+    (* Another query using same clasues *)
+(*    event(evKG_XYIAsym(U, V, G_XY)) ==>
+        (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))); *)
+    (* Another query same clasues, but now other direction of proof *)
+(*    event(evKG_XYRReachAsym); *)
+    (* Final query in other direction *)
+(*    event(evKG_XYRAsym(U, V, G_XY)) ==>
+        (event(evLTKRevealAsym(U)) || event(evLTKRevealAsym(V))).
 *)
 
 (*
@@ -268,11 +268,6 @@ query U: host, V: host, G_XY: dhElt, G_RX: dhElt;
  * KARL: Even here it seems we can't get agreement on the actual session key
  *       i.e., (K_3ae, TH_4) even for the symmetric case. Have to go for G_XY.
  *)
-event evRunningISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
-event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
-event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
-event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
-
 (* secrecy
 query event(evKG_XYRReachSym).
 query U: host, V: host, G_XY: dhElt;
@@ -289,12 +284,14 @@ query U: host, V: host, G_XY: dhElt;
  * Agreement for all cases except when Initator uses STATic DH key
  * ASYM case
  *)
-query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
-      inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
-         inj-event(evRunningRAsym(V, gxy, giy, grx, mI, mR)).
+query U: host, V: host, gxy: dhElt, giy: dhElt, giy': dhElt, grx: dhElt;
+      inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_SIG, METHOD_STAT)) ==>
+         inj-event(evRunningRAsym(V, gxy, giy', grx, METHOD_SIG, METHOD_STAT)).
+(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
       inj-event(evCommitRAsym(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
          inj-event(evRunningIAsym(U, V, gxy, giy, grx, mI, mR)).
+*)
 
 (*
  * Special (weaker) case: Initator uses static DH key
@@ -308,13 +305,13 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: meth
  *                 to show implicit agreement on the other params, e.g., C_I
  *                 and roles etc.
  *)
-
+(*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
       U': host, V': host, mI: method, mR: method;
          inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_STAT, mR))
       && inj-event(evCommitRAsym(U', V', gxy, giy, grx, mI, mR))
       ==> U' = U.
-
+*) 
 (* Note that the responder can still get full agreement, and this is because
  * he also gets key confirmation in becasue of the MAC in the AEAD in message 3.
  *)
@@ -328,6 +325,11 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
 (*
  * SYM case
  *)
+event evRunningISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evRunningRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evCommitISym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+event evCommitRSym(host, host, bitstring, dhElt, ctxID, ctxID, bitstring).
+
 (*
 query U: host, V: host, ID_PSK: bitstring, G_XY: dhElt, C_I: ctxID, C_R: ctxID,
       S_I: bitstring;
@@ -359,8 +361,12 @@ query event(evResponderCompleted(METHOD_STAT, METHOD_STAT)).
 
 let initiatorAsym(U: host, V: host, skU: exponent,
      pkU: dhElt, pkV: dhElt, methodI: method, methodR: method) =
-  new x[]: exponent; let G_X = exp(g, x) in new S_I[]: bitstring;
-  new AD_1[]: bitstring; new C_I[]: ctxID;
+  new x[]: exponent; let G_X = exp(g, x) in
+  new S_I[]: bitstring;
+  new AD_1[]: bitstring;
+  new AD_3[]: bitstring;
+  new C_I[]: ctxID;
+
   (*
   event startInitiatorSigSig(U, V, G_X, skU, C_I);
    *)
@@ -426,7 +432,6 @@ if not (V = U) then
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3m: key = K_3m_KDF(PRK_4x3m, TH_3, aead0) in
-  new AD_3[]: bitstring;
   let protected3: host = U in  (* ID_CRED_I in protected header *)
   let extAad3: bitstring = (TH_3, pkU, AD_3) in (* external_aad *)
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
@@ -489,6 +494,7 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   let G_Y: dhElt = exp(g, y) in
   new S_R[]: bitstring;
   new C_R[]: bitstring;
+  new AD_2: bitstring;
   (*
   event startResponderA(U, V, E_V, skV, C_U);
    *)
@@ -522,7 +528,6 @@ if not (pkU = pkV) then
   let G_XY: dhElt = exp(G_X, y) in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
-  new AD_2: bitstring;
   let protected2: host = V in (* ID_CRED_R in protected header *)
 
 (* KARL:  Protocol weakness.
@@ -618,12 +623,12 @@ Solution if one want Initiator identity hiding:
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent;
-  let E_U: dhElt = exp(g, x) in
   new C_I: ctxID;
   new S_I: bitstring;
   new AD_1: bitstring;
   new AD_3: bitstring;
   new Mc: bitstring;
+  let E_U: dhElt = exp(g, x) in
   event startInitiatorS(U, V, PSK, E_U);
   let msg_1: bitstring = (Mc, S_I, E_U, C_I, ID_PSK, AD_1) in
   out(c, msg_1);
@@ -655,10 +660,10 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
 
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
   new y: exponent;
-  let E_V: dhElt = exp(g, y) in
   new C_R: ctxID;
   new AD_2: bitstring;
   new AD_2': bitstring;
+  let E_V: dhElt = exp(g, y) in
   event startResponderS(U, V, PSK, E_V);
   in(c, msg_1: bitstring);
   (* event evResponderStarted; *)
@@ -701,14 +706,14 @@ process
     (!out(s, (U, skU, pkU))) | out(c, (pkU)) |
     (if maliciousPrincipals() then event evLTKRevealAsym(U); out(c, skU))
   ) |
-  (
-   !in(s, (U:host, skU:exponent, pkU:dhElt));
-    in(s, (V:host, skV:exponent, pkV:dhElt));
-    new ID_PSK: bitstring;
+  (*(
+   !new ID_PSK: bitstring;
     new PSK: key;
+    in(s, (U:host, skU:exponent, pkU:dhElt));
+    in(s, (V:host, skV:exponent, pkV:dhElt));
     out(s2, (U, V, PSK, ID_PSK));
     (if maliciousPrincipals() then event evLTKRevealSym(U); event evLTKRevealSym(V); out(c, PSK))
-  ) |
+  ) | *)
   (
    !in(s, (methodI:method, methodR:method));
     in(s, (U:host, skU:exponent, pkU:dhElt));
@@ -716,14 +721,14 @@ process
     initiatorAsym(U, V, skU, pkU, pkV, methodI, methodR) |
     responderAsym(V, U, skV, pkV, pkU)
   ) |
-  (
+  (*(
    !in(s2, (U:host, V:host, PSK: key, ID_PSK: bitstring));
     initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)
-  ) |
+  ) | *)
  !(
-    out(s, (METHOD_SIG, METHOD_SIG))  |
-    out(s, (METHOD_SIG, METHOD_STAT)) |
-    out(s, (METHOD_STAT, METHOD_SIG)) |
-    out(s, (METHOD_STAT, METHOD_STAT))
+    (* out(s, (METHOD_SIG, METHOD_SIG))  | *)
+    out(s, (METHOD_SIG, METHOD_STAT))
+(*    out(s, (METHOD_STAT, METHOD_SIG)) |
+    out(s, (METHOD_STAT, METHOD_STAT)) *)
   )
 
