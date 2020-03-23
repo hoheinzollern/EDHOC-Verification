@@ -41,13 +41,15 @@
  * NOTE: capital and lowercase with underscore comes from the spec,
  *       camelCase are additions from the model
  *
- * PROPERTIES:
- * - data/key material to protect:
- *   - the final session key (PRK_4x3m, TH_4),  (inj-greement, Confidentiality)
- *   - the application data AD_1, AD_2, AD_3  (Confident/Integrity for AD_3 (and AD_2?), integrity for AD_1)
- *   - C_I and C_R  (inj-agreement)
- *   - S_I and S_R  (inj-agreement)  (take these last)
- *   - U and V      (Confidentiality, privacy(?))
+ * KARL: If attacker injects G_X (and possibly in G_Y, but how did he
+ *       forge the signature in that case?), then he knows G_XY, so
+ *       both parties must check that G_X and G_Y are not equal to g.
+ *       I put the inequality check here at the end rather than when
+ *       they receive messages to simplify model.
+ *       Proverif has not complained about this yet, but as a pre-caution.
+ *       FEEDBACK: don't think this is new in the protocol world, and it
+ *                 may already be covered by the spec.
+ *
  *)
 
 (* Opt settings *)
@@ -182,29 +184,12 @@ query U: host, V: host, K_3: key, PSK : key, aad_3 : bitstring;
 
 
 (* Session key secrecy and session key independence.
- * Idea: Only way for attacker to get hold of session k key
- *       is if he has access to the LTK.
- *       Expressing this as a correspondence property we write:
- *          if attacker knows the session key it must be because he knew
- *             the LTK.
- *       We don't accept that he got it any other way.
- *       Specifically, even if he knows other session keys but not the LTK,
- *       he should still not get the session key, i.e., sesssion key independence.
- *
- * KARL: Question: now we the attacker is only allowed to count attacks as wins
- *                 when one of the parites has accepted the run.
- *                 That is the only way I know how to be able to define
- *                 "the" session key. OTOH, one could consider also the original
- *                 key (Li and Schäge). If you have no concerns, I OK with
- *                 the current notion of "the" key. Otherwise I need suggestions
- *                 on how to enode the session key query.
- *)
 (*
  * ASYM case
  *)
 event evRunningIAsym(host, host, dhElt, dhElt, dhElt, method, method).
 event evCommitIAsym(host, host, dhElt, dhElt, dhElt, method, method).
-event evRunningRAsym(host, dhElt, dhElt, dhElt, method, method).
+event evRunningRAsym(host, dhElt, dhElt, method, method).
 event evCommitRAsym(host, host, dhElt, dhElt, dhElt, method, method).
 
 event evLTKRevealAsym(host).
@@ -220,8 +205,6 @@ event evKG_XYRAsym(host, host, dhElt).
 event evKG_XYRSym(host, host, dhElt).
 
 (*
- KARL: Proven that they are not reachable in the current form, but need
-       to see how their secrecy relates to key and entity authenticatinon.
 event evKG_IYIReachAsym.
 event evKG_IYIReachSym.
 event evKG_IYI(host, host, dhElt, dhElt).
@@ -264,9 +247,6 @@ query U: host, V: host, G_XY: dhElt, G_RX: dhElt;
 
 (*
  * SYM case
- *
- * KARL: Even here it seems we can't get agreement on the actual session key
- *       i.e., (K_3ae, TH_4) even for the symmetric case. Have to go for G_XY.
  *)
 (* secrecy
 query event(evKG_XYRReachSym).
@@ -286,7 +266,7 @@ query U: host, V: host, G_XY: dhElt;
  *)
 query U: host, V: host, gxy: dhElt, giy: dhElt, giy': dhElt, grx: dhElt;
       inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_SIG, METHOD_STAT)) ==>
-         inj-event(evRunningRAsym(V, gxy, giy', grx, METHOD_SIG, METHOD_STAT)).
+         inj-event(evRunningRAsym(V, gxy, grx, METHOD_SIG, METHOD_STAT)).
 (*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: method;
       inj-event(evCommitRAsym(U, V, gxy, giy, grx, METHOD_SIG, mR)) ==>
@@ -294,16 +274,7 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt, mI: method, mR: meth
 *)
 
 (*
- * Special (weaker) case: Initator uses static DH key
- *)
-(* Implicit authentication for Initiator when using STATic DH key
- * KARL: Def in Delpech de Saint Guilheim et. al. says:
- *   forall l. accept(l) ==> forall l'. sameKey(l, l') ==> l'.pid = l.id
- *   I here use an equivalent form which better fits with the queries.
- *
- * KARL: Question: I suppose this means that we will also only be able
- *                 to show implicit agreement on the other params, e.g., C_I
- *                 and roles etc.
+ * Special (weaker) case: Initator uses static DH key ==> implicit auth.
  *)
 (*
 query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
@@ -311,7 +282,7 @@ query U: host, V: host, gxy: dhElt, giy: dhElt, grx: dhElt,
          inj-event(evCommitIAsym(U, V, gxy, giy, grx, METHOD_STAT, mR))
       && inj-event(evCommitRAsym(U', V', gxy, giy, grx, mI, mR))
       ==> U' = U.
-*) 
+*)
 (* Note that the responder can still get full agreement, and this is because
  * he also gets key confirmation in becasue of the MAC in the AEAD in message 3.
  *)
@@ -392,13 +363,9 @@ let initiatorAsym(U: host, V: host, skU: exponent,
    (* The verifObj contains either a MAC_2 or a Signature_2 object *)
   let plainText2:bitstring = xorDecrypt(CIPHERTEXT_2, keyToBitstring(K_2e)) in
   let (=V, verifObj:bitstring, AD_2:bitstring) = plainText2 in
-(* KARL: not sure this is in the spec or not. Either way: the spec talks
- * about protection against reflection attacks in Section 8.6, so it should be
- * inlcuded: not allowed for initator to communicate with itself.
- *)
-(*
-if not (V = U) then
-*)
+  (* If we wish to check for reflection attacks
+  if not (V = U) then
+  *)
 
   let G_RX: dhElt = exp(pkV, x) in  (* NOTE: was dummyDHElt if methodR = METHOD_SIG *)
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
@@ -437,15 +404,6 @@ if not (V = U) then
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   let MAC_3: bitstring = aeadEncrypt(emptyHexString, K_3m, assocData3) in
   (* authI is the "inner COSE_Encrypt0" object *)
-  (* KARL: I tried Alessandro's idea to avoid the else branch in one place
-   *       but it only shaved off from 64 seconds to 60 seconds on my machine
-   *       while cluttering the model quite a bit.  So we stick with the
-   *       else-branch for now and only resort to the else-branch avoidance
-   *       if we really have to. So far the speed is acceptable. The idea is:
-   *       (if methodI = METHOD_STAT then initiatorAsymEnd(env, sign...)) |
-   *       (if methodI = METHOD_SIG then initiatorAsymEnd(env, MAC_3)).
-   *       KEEP THIS COMMENT so we/I don't forget the trick.
-   *)
   let authI: bitstring = if methodI = METHOD_SIG then
                             sign((assocData3, MAC_3), skU)
                          else if methodI = METHOD_STAT then
@@ -458,33 +416,14 @@ if not (V = U) then
   let CIPHERTEXT_3: bitstring = aeadEncrypt(plainText3, K_3ae, extAad3_outer) in
   let msg_3: bitstring = (data_3, CIPHERTEXT_3) in
 
-  (* We treat (PRK_4x3m, TH_4) as the session key to be agreed upon *)
   (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
   event evRunningIAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   out(c, msg_3);
 
   event evCommitIAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evInitiatorCompleted(methodI, methodR); (* Sanity *)
-  (* KARL: If attacker injects G_X (and possibly in G_Y, but how did he
-   *       forge the signature in that case?), then he knows G_XY, so
-   *       both parties must check that G_X and G_Y are not equal to g.
-   *       I put the inequality check here at the end rather than when
-   *       they receive messages to simplify model.
-   *       Proverif has not complained about this yet, but as a pre-caution.
-   *       FEEDBACK: don't think this is new in the protocol world, and it
-   *                 may already be covered by the spec.
-   *)
-(*
-  if revealSessKey() = true  &&  G_Y <> g  &&  G_X <> g
-                             && G_RX <> dummyDhElt &&  G_IY <> dummyDhElt then
-*)
    in(c, =G_XY); event evKG_XYIAsym(U, V, G_XY); event evKG_XYIReachAsym.
 (*
-     KARL: y not known to initiator and x not to responder.
-           G_IY and G_RX were proven not reachable.
-     TODO: think about how to model this. Related to authentication and
-           agreement of session key (maybe?)
-
         ((in(c, =y); event evKG_IYIAsym(U, V, G_XY, G_IY); event evKG_XYIReachAsym) |
          (in(c, =x); event evKG_RXIAsym(U, V, G_XY, G_RX); event evKG_XYIReachAsym))))
 *)
@@ -506,73 +445,12 @@ let responderAsym(V: host, U: host, skV: exponent, pkV: dhElt, pkU: dhElt) =
   if IandRSupportSameCiphersuite() = true then
   let data_2: bitstring = (C_I, G_Y, C_R) in
   let TH_2: bitstring = hash((msg_1, data_2)) in
-
-(* KARL: To avoid reflection attacks. Search for comment on reflection
- * attacks at the initiator for more info.
- *)
-(*
-if not (pkU = pkV) then
-*)
-
-(* KARL: When initiator uses static method, we get no identity hiding at all
- *       becase responder needs public key.
- * FEEDBACK: question: how did responder know which public key to use?
- *                     Message 1 does not contain any hints, does it?
- *)
-
-(* KARL: when responder uses static key, then the protocol does not seem
- *       able to guarnetee agreement on G_IY.
- *)
-  let G_IY: dhElt = exp(pkU, y) in (* NOTE: was dummyDHElt if methodI = METHOD_SIG *)
   let G_RX: dhElt = exp(G_X, skV) in (* NOTE: was dummyDHElt if methodR = METHOD_SIG *)
   let G_XY: dhElt = exp(G_X, y) in
   let PRK_3e2m: key = PRK_3e2m_asym(G_XY, G_RX, methodI, methodR) in
   let K_2m: key = K_2m_KDF(PRK_3e2m, TH_2, aead0) in
   let protected2: host = V in (* ID_CRED_R in protected header *)
 
-(* KARL:  Protocol weakness.
-
-Problem: does not provide explicit key authentication when
-Initiator I is using STAT credentials. Assume two initiators I and I'.
-One responder R.
-
-only including the necessary information elements the problem is the
-follwoing:
-
-I -> R: g^x
-I'-> R: g^x'
-R -> I: (g^I')^y    // This is G_IY where the attacker has switched the receivers
-                    // I and I'.
-
-Start/Running event at R may be based on (g^I')^y.
-End/Commit event at I is based on (g^I)^y.
-
-Initiator I will not detect this because he does not verify any computation
-based on (g^I')^y. That value just goes into session key derivations and into
-key derivations for message 3.
-The responder may detetct the mismatch when receiving message 3
-but at that point the Initiator has already completed the protocol assuming
-it went well. So the attacker made I accept without a matching partner.
-
-Solution(s) If one is willing to provide the responder with the public key
-of the initator:
- - It is probably possible to prove implicit key authentication, along the lines:
-   If I accepts run presumably with R and there is someone else who calculates
-   the same session key, then that someone else must be R.
- - Fix EDHOC by giving the Initiator something to verify in message 2 that
-   depends on its own public key. Several options. Here are some simple ones:
-    - Include G_IY in the transcript hash TH_2. (After AEAD was changed to
-      XOR encryption there is no longer a reason to not inlcude the information
-      in message 2 in TH_2.)
-    - Include G_IY in external_aad in message 2.
-   Both these options will make the keys to protect message 2 dependent on
-   I s public key. This means that when I veriies the MAC_2, the verification
-   will now fail if the responder/attacker had sent the Initiator a message
-   with (g^I')^y.
-
-Solution if one want Initiator identity hiding:
- - Show implicit authentication instead for explicit.
-*)
   let extAad2: bitstring = (TH_2, pkV, AD_2) in (* external_aad *)
   let assocData2: bitstring = (protected2, extAad2) in (* Associated data A *)
   (* TODO: assocData2 should map to arrays of COSE structs similar to spec *)
@@ -588,12 +466,13 @@ Solution if one want Initiator identity hiding:
   let CIPHERTEXT_2: bitstring = xorEncrypt(plainText2, keyToBitstring(K_2e)) in
   let msg_2: bitstring = (data_2, CIPHERTEXT_2) in
 (* event agreeHashStart2A(U, V, K_2, aad_2, skV); *)
-  event evRunningRAsym(V, G_XY, G_IY, G_RX, methodI, methodR);
+  event evRunningRAsym(V, G_XY, G_RX, methodI, methodR);
   out(c, msg_2);
   in(c, msg_3: bitstring);
   let (data_3: bitstring, CIPHERTEXT_3: bitstring) = msg_3 in
   let (=C_R) = data_3 in
   let TH_3: bitstring = hash((TH_2, CIPHERTEXT_2, data_3)) in
+  let G_IY: dhElt = exp(pkU, y) in (* NOTE: was dummyDHElt if methodI = METHOD_SIG *)
   let PRK_4x3m: key = PRK_4x3m_asym(G_XY, G_RX, G_IY, methodI, methodR) in
   let K_3ae: key = K_3ae_KDF(PRK_4x3m, TH_3, aead0) in
   let extAad3_outer: bitstring = TH_3 in
@@ -605,20 +484,16 @@ Solution if one want Initiator identity hiding:
   let assocData3: bitstring = (protected3, extAad3) in (* Associated data A *)
   if (methodI = METHOD_SIG && verifyAEADSign(assocData3, verifObj, K_3m, pkU)) ||
      (methodI = METHOD_STAT && verifyAEAD(assocData3, verifObj, K_3m)) then
-  (* let TH_4: bitstring = hash((TH_3, CIPHERTEXT_3)) in    -- unused *)
-
+  (* KARL: To avoid reflection attacks.
+  if not (pkU = pkV) then
+  *)
   event evCommitRAsym(U, V, G_XY, G_IY, G_RX, methodI, methodR);
   event evResponderCompleted(methodI, methodR); (* Sanity *)
   in(c, =G_XY); event evKG_XYRAsym(U, V, G_XY); event evKG_XYRReachAsym.
-(*
-     KARL: y not known to initiator and x not to responder.
-           G_IY and G_RX were proven not reachable.
-     TODO: think about how to model this. Related to authentication and
-           agreement of session key (maybe?)
-     (if revealSessState() = true then
-        ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReachAsym) |
-         (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym)))
-*)
+  (*
+  ((in(c, =y); event evKG_IYR(U, V, G_XY, G_IY); event evKG_XYRReachAsym) |
+  (in(c, =x); event evKG_RXR(U, V, G_XY, G_RX); event evKG_XYRReachAsym)))
+  *)
 
 
 let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
