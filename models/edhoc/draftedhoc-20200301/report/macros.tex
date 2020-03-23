@@ -1,0 +1,24 @@
+\usepackage[numbers, sort]{natbib}
+\usepackage[T1]{fontenc} % E.g., for small caps in section headings
+\usepackage{xspace}
+\usepackage[lambda,advantage,operators,adversary,landau,probability,notions,logic,
+ff,mm,primitives,events,complexity,asymptotics,sets,keys]{cryptocode}
+
+% http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
+\usepackage{todonotes}
+\newcommand{\knote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                         ]{\textsf{\textbf{Karl:} #1}}}
+%\newcommand{\knote}[1]{}
+
+% -- Fonts and styles for names
+\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+\newcommand{\mFunStyle}[1]{\text{\textup{\textsf{#1}}}}
+\newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
+\newcommand{\mVarStyle}[1]{\mathit{#1}}
+\newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
+\newcommand{\mRuleStyle}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\mDomainStyle}[1]{\ensuremath{\mathcal{#1}}}
+

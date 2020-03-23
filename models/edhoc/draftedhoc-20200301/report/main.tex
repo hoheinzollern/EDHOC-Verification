@@ -1,0 +1,385 @@
+\documentclass[a4paper,11pt]{article}
+% BEGIN IACR
+\topmargin=-5mm
+\evensidemargin=0cm
+\oddsidemargin=0cm
+\textwidth=16cm
+\textheight=22cm
+\addtolength{\headheight}{1.6pt}
+% END IACR
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{stmaryrd}       % Semantic brackets \llbracket and \rrbracket
+\usepackage{mathpartir}     % inference rules
+\usepackage[scaled=0.86]{helvet}    % Less huge \textsf{functionName}
+\usepackage{enumitem}       % compacts lists and stuff
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}%{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{plain}
+\newtheorem{definition}{Definition}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{environ}  % For tikz fig spanning two columns
+\usetikzlibrary{positioning}
+\usepackage{url}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}         % https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmic_package
+
+\usepackage{draftwatermark}
+\SetWatermarkText{DRAFT}
+\SetWatermarkScale{2}
+\SetWatermarkColor[gray]{.95}
+
+\input{macros}
+
+% Solution for letting a tikz figure to span two columns by Ulrike Fischer
+% https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
+\makeatletter
+\newsavebox{\measure@tikzpicture}
+\NewEnviron{scaletikzpicturetowidth}[1]{%
+  \def\tikz@width{#1}%
+  \def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
+  \BODY
+  \end{lrbox}%
+  \pgfmathparse{#1/\wd\measure@tikzpicture}%
+  \edef\tikzscale{\pgfmathresult}%
+  \BODY
+}
+\makeatother
+%
+\begin{document}
+\title{EDHOC - ProVerif}
+\author{{\color{red} DRAFT: \today}}
+%
+\maketitle
+%
+
+\begin{abstract}
+Status of Proverif model of EDHOC.
+\end{abstract}
+%
+
+%-------------------------------------------------------------------------- sec
+\section{Methods}
+EDHOC is a framework that can run five separate cryptographic cores, called
+\textbf{methods}.
+%
+One method is a Diffie-Hellman key exchange authenticated by symmetric key
+authentication and the other are based on asymmetric key authentication and
+various Diffie-Hellman based mechanisms.
+%
+The asymmetric key methods allow the initiator and responder to use
+regular signatures for authentication or static key/hash based signatures.
+%
+Any combination of these asymmetric methods are possible.
+%
+The symmetric method is not mixed with any of the other.
+%
+
+We have modeled all five methods.
+%
+
+%-------------------------------------------------------------------------- sec
+\section{Properties}
+%-------------------------------------------------------------------------- sub
+\subsection{Secrecy}
+%-------------------------------------------------------------------------- sub
+\subsubsection{Sessions}
+%
+We use $U, V, g^{xy}$ as \textbf{session identifier}.
+%
+Because $x$ and $y$ are large and drawn from a uniform distribution at every
+protocol run, this identifier is unique with high probability.
+%
+In our model, $x$ and $y$ are represented by new names and therefore guaranteed
+to be unique.
+%
+\knote{We may want to include $g^{Iy}$ and $g^{Rx}$ also when static keys are
+    involved, in case the adversary manages to make some party accept a correct
+    $g^{x,y}$ with a wrong $g^{Iy}$ or $g^{Rx}$, or vice versa.}
+%
+
+
+We are interested in \textbf{session key independence}, but
+the way we have defined session key secrecy, makes it unclear what that means.
+%
+See session key below.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsubsection{Session key material}
+%
+By \textbf{session key material}, or session keys for short,  we mean the
+keying material derived by an initiator or responder during a run of the
+protocol in presence of an active adversary.
+%
+
+As session key material for the PSK method we consider $g^{xy}$.
+%
+The reason is that to show key agreement using correspondence properties, we
+cannot include \mConstStyle{TH\_4}, which covers the hash of the third message.
+%
+So, when the initiator completes, there is not yet a corresponding event in
+the responder trace which includes \mConstStyle{TH\_4}.
+%
+Because binding in \mConstStyle{TH\_4} does not add any further secrecy, there
+is no harm in focusing on $g^{xy}$.
+%
+
+The same argument goes for the method where both parts authenticate via
+signatures, but not when one or both parties use static DH key authentication.
+%
+When the Initiator is using a static DH key, the session key material is
+$g^{xy}$, $g^{Iy}$ and $g^{Rx}$.
+%
+\knote{This is because EDHOC copied it from OPTLS. However, OPTLS was designed
+    for the CK-model and differentiates between compromise and session state
+    reveal queries. EDHOC is not as structurally designed and don't care about
+separating the two and it may be sufficient to use only $g^{xy}$ in that case.
+However: I suspect the authentication in OPTLS comes from the signatures
+Krawczyk designed for HMQV, and in that case the signatures \emph{are} the key.
+I need to investigate this.
+}
+%
+%-------------------------------------------------------------------------- sub
+\subsubsection{Property: secrecy}
+%
+In parallel with running the protocol, we leak the long-term keys for Initator
+and Responder.
+%
+This means there will be runs where their long-term keys are leaked and there
+will be corresponding runs that are exactly the same, but where the long-term
+keys are note leaked.
+%
+When Initiator and when Responder completes, we attempt to read the session
+key from the attacker.
+%
+We say that the EDHOC provides session key secrecy if:
+$$
+\forall U, V, k.
+    \mConstStyle{attacker}(k) \rightarrow
+        (\mConstStyle{LTKReveal}(U) \lor \mConstStyle{LTKReveal}(V))
+$$
+Note, this does not provide session key independence, like the secrecy
+definition leaking the session key at the end of the run does.
+%
+The reason for not using that definition is that we run in to termination
+problems with that.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsubsection{Property: session key independence}
+%
+If adversary knows a session key that should not help him attacking other
+session keys.
+%
+This can be shown using correspondence properties by leaking session keys and
+verifying that this does not help the adversary attack secrecy of other session
+keys.
+%
+As noted, we do not do this because of termination problems.
+%
+
+Because we do not verify secrecy of session keys when we \emph{know} the
+adversary has access to other session keys, we cannot claim any guarantees for
+session key independence.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsection{Authentication}
+%-------------------------------------------------------------------------- sub
+\subsubsection{Session key authentication}
+%
+When both parties use signatures, there is no $g^{Iy}$ or $g^{Rx}$, but instead
+the key and entity authentication is based on that each party explicitly signs
+the data they are supposed to agree on.
+%
+So in that case the session key material established consists of $g^{xy}$
+only.
+% 
+This means that the initiator will, when receiving message 2, get a signature
+covering $g^{xy}$ and $V$, and this is the main point: the Initiator can
+verify this signature.
+%
+So when the Initiator completes, it knows:
+%
+\begin{itemize}
+    \item that it communicated with party $V$,
+    \item that $V$ has access to the session key material $g^{xy}$.
+\end{itemize}
+%
+That is, the Initiator explicitly authenticated $V$ and the session key
+material.
+%
+The corresponding holds for the Responder when it completes after receiving
+message 3.
+%
+Therefore, when each party has completed their respective protocol
+runs, they know that they agree on each others' identities and on which session
+key material has been established.
+%
+ 
+When the Initiator is using a static DH key, the session key material is
+$g^{xy}$, $g^{Iy}$ and $g^{Rx}$.
+%
+When sending message 2, the Responder does not know who the Initiator is, so
+he cannot perform a computation that depends on the public key $g^{I}$ of the
+Initiator and include that in message 2.
+%
+Specifically, when sending message 2, the Responder does not know $g^{Iy}$, so
+he cannot inform the Initiator which value he will use for that part of the
+session key and he cannot commit to it.
+%
+When the Initiator sends message 3 he performs a computation based on $g^I$
+(i.e., resulting in $g^{Iy}$), sends this to the Responder and then completes.
+%
+So when the Initiator completes the protocol run, he has not received any
+confirmation from the Responder which session key material they should use,
+i.e., they have not agreed on it and hence the Responder has not authenticated
+the key material to the Initiator.
+%
+But: The Initiator knows that \emph{if} his message 3 reaches the Responder
+correctly, \emph{then} only if the Responder is $V$, will the Responder have
+access to the session key material $g^{xy}, g^{Iy}, g^{Rx}$.
+%
+Without confirmation from $V$ in the Responder role, the Initiator cannot know
+that they actually have agreed on the session key material when he completes
+the run.
+%
+ 
+This situation does not occur in the OPTLS paper, because Krawczyk is not
+taking client authentication into account.
+%
+Without client authentication in EDHOC, the corresponding session key material
+would be only $g^{xy}$, $g^{Rx}$ and both the client/Initiator and
+server/Responder have a access to that when processing message 2.
+%
+ 
+So, on the top of my head there are three options when the Initiator uses a
+static DH-key (unless I missed something above):
+\begin{enumerate}
+    \item Accept implicit authentication,
+    \item Sacrifice Initiator identity protection and include
+        \mConstStyle{ID\_CRED\_I} in message 1, and, e.g., include
+        \mConstStyle{ID\_CRED\_I} and/or \mConstStyle{CRED\_I}
+        in \mConstStyle{TH\_2} or in \mConstStyle{AAD\_2},
+    \item Include a fourth confirmation message from Responder to Initiator
+        proving to the Initiator that the Responder knows $g^{Iy}$ (a MAC using
+        the session key is enough).
+\end{enumerate}
+% 
+\knote{John find 1 acceptable and would also like to use only $g^{xy}$ and
+    session key for the STATIC methods. I would prefer not to use only $g^{xy}$,
+    because Krawzcyk's proof for OPTLS is based on $g^{Rx}$ and uses $g^{xy}$
+    only to get PFS. Note that responder can only compute $g^{Rx}$ if he has
+    access to his private key, so the link to $g^{Rx}$ is stronger. However,
+    indirectly it affects also the $g^{xy}$ via the \mConstStyle{MAC\_3}, so it
+    may be OK still. But, using $g^{xy}$ to protect against session state
+    reveal queries in addition to compromise queries revealing $g^{Rx}$ is
+    useful with TPMs (c.f., the signature operation using the private key is
+    done in the TPM for the SIG-SIG method).
+}
+There does not seem to be a similar issue with $g^{Rx}$.
+%
+When receiving message 2, the Initiator verifies \mConstStyle{MAC\_2}, which is
+based on a key derived from $g^{Rx}$.
+%
+The \mConstStyle{MAC\_2} also covers \mConstStyle{CRED\_R} and
+\mConstStyle{ID\_CRED\_R}, so the Initiator knows after verifying
+\mConstStyle{MAC\_2} that $g^{Rx}$ is known to and coming from $V$.
+%
+An attacker would have to compute the discrete log of $g^{x}$ from the first
+message to be able to forge that MAC.
+% 
+
+%-------------------------------------------------------------------------- sub
+\subsubsection{Property: Session key authentication}
+%
+TBD
+%
+
+For the cases where the Initiator uses a static DH key, we prove implicit
+authentication of Responder to initiator:
+$$
+\forall l. \mConstStyle{accept(l)} ==>
+    \forall l'. \mConstStyle{sameKey}(l, l') ==> l'.pid = l.id
+$$
+which is an adaption from Delpech de Saint Guilheim et al.
+%
+The term $l.id$ is the identity of $l$, and $l.pid$ is the identity of $l$'s
+peer.
+%
+The Initiator can still be explicitly authenticated to the Responder using
+normal running/commit technique.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsubsection{Authentication/Agreement of other parameters}
+%
+In the same fashion we prove agreement on the session key material we can show
+agreement of other parameters.
+%
+In particular we show that $U$ and $V$ agree on:
+\begin{itemize}
+    \item \mConstStyle{METHOD}
+    \item \mConstStyle{C\_I, C\_R}
+    \item cipher suite
+    \item $U$ and $V$ (entity authentication)
+    \item $\ldots$
+\end{itemize}
+
+Note that we only model one run of the protocol, so agreement on ciphersuite
+does not include re-negotiation by a new run of the protocol.
+%
+This means that we only show agreement when the Responder either accepts the
+proposal from Initiator, or terminates its execution.
+%
+
+
+
+
+
+
+%-------------------------------------------------------------------------- sub
+\subsection{Identity privacy}
+%
+Identity privacy does not apply to the PSK method.
+%
+For asymmetric methods, identity privacy means hiding \mConstStyle{ID\_CRED} and
+\mConstStyle{ID\_CRED\_X}.
+
+%-------------------------------------------------------------------------- sub
+\subsubsection{Property identity privacy}
+TBD
+
+\subsection{Reflection (attacks)}
+%-------------------------------------------------------------------------- sub
+Section 8.6 of the specification discusses a worry for reflection attacks.
+%
+We could have modeled and verified/falsified whether it is possible for
+$U$ to be "tricked" into communicating with $U$.
+%
+This caused termination issues though, so we do not do this at the moment.
+%
+
+It also questionable whether it is a feature or bug that $U$ can communicate
+with $U$.
+%
+The intention of the protocol in the specification has to be the final judge.
+%
+
+%\bibliographystyle{plain}
+%\bibliography{ref}
+
+%\printbibliography
+
+\end{document}
