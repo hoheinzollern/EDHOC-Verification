@@ -377,6 +377,31 @@ with $U$.
 The intention of the protocol in the specification has to be the final judge.
 %
 
+%-------------------------------------------------------------------------- sec
+\section{Primitives}
+%-------------------------------------------------------------------------- sub
+\section{Encryption}
+%
+We model authenticated encryption with additional data (AEAD) in the standard
+way.
+%
+We consider an AEAD transform as a single primitive providing both integrity
+protection and encryption.
+%
+
+Message 2 is however encrypted using an XOR-pad that is generated using the KDF.
+%
+Even though the protocol intends for message to to enjoy integrity protection by
+means of the signature, we cannot consider the signature in combination with
+XOR as a single primitive.
+%
+Nonetheless, we model this XOR in the same way as we model AEAD, which is not very truthful
+to the specification, since XOR does not provide integrity protection.
+%
+There are difficulties modeling XOR encryption in Proverif.
+%
+
+
 %\bibliographystyle{plain}
 %\bibliography{ref}
 
