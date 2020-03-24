@@ -13,19 +13,6 @@ type pkID.(*  id(pkU) & id(pkV)  *)
 type algorithmID.
 type ctxID.
 
-(* Message Types *)
-free T1: bitstring. free T4: bitstring.
-free T2: bitstring. free T5: bitstring.
-free T3: bitstring. free T6: bitstring.
-
-(* AlgorithmIDs *)
-free OSCORE: bitstring.
-free EDHOC_PSK_Chaining: algorithmID.
-free EDHOC: algorithmID.
-free EDHOC_PRESHARED: algorithmID.
-
-free empty: key.
-
 const emptyHexString: bitstring.
 
 (* Shared Key Encryption *)
@@ -42,6 +29,7 @@ reduc forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),x) = y;
       forall x:bitstring, y:bitstring; xorDecrypt(xorEncrypt(x,y),y) = x.
 
 (* Identifier function for the public keys *)
+(*
 fun idI(key): pkID[private].
 fun idR(key): pkID[private].
 
@@ -52,7 +40,7 @@ fun APP_3A(key, key, bitstring, key): bitstring [private].
 fun APP_2S(key, bitstring, key): bitstring [private].
 fun APP_2S'(key, bitstring, key): bitstring [private].
 fun APP_3S(key, bitstring, key): bitstring [private].
-
+*)
 
 (* Hash function *)
 fun hash(bitstring): bitstring.
