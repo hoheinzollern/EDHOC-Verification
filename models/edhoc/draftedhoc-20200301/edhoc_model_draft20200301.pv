@@ -53,10 +53,14 @@
  *)
 
 (* Opt settings *)
-set redundancyElim = simple.  (* use: best, default: simple *)
+set redundancyElim = best.  (* use: best, default: simple *)
 (*set redundantHypElim = true.*)  (* true/false default: unknown *)
 (*set expandSimplifyIfCst = true.*) (* true/false default: unkown *)
+set maxDepth = 10.
+set verboseRules = true.
+set abbreviateClauses = true.
 
+set selFun = Term.
 set verboseRules = false.
 set reconstructTrace = true.
 set attacker = active.
