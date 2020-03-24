@@ -26,20 +26,7 @@ free EDHOC_PRESHARED: algorithmID.
 
 free empty: key.
 
-type textString.
-type byteString.
-type hexString.
-const emptyTextString: bitstring.
 const emptyHexString: bitstring.
-const emptyByteString: bitstring. (* KARL: this is input to HKDF_extract, which
-                                          takes other input types as well, making
-                                          them all bitstring seems simplest.
-                                          Further, from a modelling perspective
-                                          I don't think we will test any properties
-                                          that depends on the encoding so I propse
-                                          we use only one emptyString of type
-                                          bitstring.
-                                  *)
 
 (* Shared Key Encryption *)
 fun aeadEncrypt(bitstring, key, bitstring): bitstring.
@@ -143,7 +130,7 @@ fun HKDF_extract(bitstring, dhElt): key.
 fun HKDF_expand(bitstring, key): key.
 
 (* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
-letfun PRK_2e_asym(G_XY: dhElt) = HKDF_extract(emptyByteString, G_XY).
+letfun PRK_2e_asym(G_XY: dhElt) = HKDF_extract(emptyHexString, G_XY).
 letfun PRK_2e_sym(PSK: key, G_XY: dhElt) = HKDF_extract(keyToBitstring(PSK), G_XY).
 
 letfun PRK_3e2m_sym(PSK: key, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
