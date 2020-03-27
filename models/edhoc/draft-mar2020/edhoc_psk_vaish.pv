@@ -1,3 +1,106 @@
+(* types *)
+free c: channel.
+free c2: channel.
+free s: channel[private].
+free s2: channel[private].
+type host. (* U, V *)
+type key. (* E_U, E_V *)
+type dhElt.
+type exponent. (* x & y *)
+type pkID.(*  id(pkU) & id(pkV)  *)
+type algorithmID.
+type ctxID.
+
+(* Message Types *)
+free T1: bitstring. free T4: bitstring.
+free T2: bitstring. free T5: bitstring.
+free T3: bitstring. free T6: bitstring.
+
+(* AlgorithmIDs *)
+free OSCORE: bitstring.
+free EDHOC_PSK_Chaining: algorithmID.
+free EDHOC: algorithmID.
+free EDHOC_PRESHARED: algorithmID.
+
+free empty: key.
+
+type textString.
+type byteString.
+type hexString.
+const emptyTextString: bitstring.
+const emptyHexString: bitstring.
+const emptyByteString: bitstring. 
+
+(* Creating public keys *)
+fun pk(key): key.
+
+(* Hash function *)
+fun hash(bitstring): bitstring.
+
+(* Diffie Hellman *)
+const g: dhElt.
+fun exp(dhElt, exponent): dhElt.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+fun dhEltToKey(dhElt): key[typeConverter].
+fun keyToDhElt(key): dhElt[typeConverter].
+fun keyToBitstring(key): bitstring[typeConverter].
+fun keyToExp(key): exponent[typeConverter].
+
+(* Shared Key Encryption *)
+fun aeadEncrypt(bitstring, key, bitstring): bitstring.
+reduc forall x: bitstring, y: key, aad: bitstring; aeadDecrypt(aeadEncrypt(x, y, aad), y, aad) = x.
+reduc forall x: bitstring, y: key, aad: bitstring; decrypt(aeadEncrypt(x, y, aad), y) = x.
+
+fun HKDF_extract(bitstring, dhElt): key.
+fun HKDF_expand(bitstring, key): key.
+
+(* Intermediate keys ("PRKs"), see Section 3.8 of EDHOC *)
+letfun PRK_2e_sym(PSK: key, G_XY: dhElt) = HKDF_extract(keyToBitstring(PSK), G_XY).
+
+letfun PRK_3e2m_sym(PSK: key, G_XY: dhElt) = PRK_2e_sym(PSK, G_XY).
+letfun PRK_4x3m_sym(PSK: key, G_XY: dhElt) = PRK_3e2m_sym(PSK, G_XY).
+
+(* Encryption/Integrity key and IV derivations (see Section 3.8) *)
+type label.
+const LABEL_K_2m: label.
+const LABEL_IV_2m: label.   (* for completeness only, not used in model *)
+const LABEL_K_2e: label.
+const LABEL_IV_2ae: label.  (* for completeness only, not used in model *)
+const LABEL_K_3m: label.
+const LABEL_IV_3m: label.   (* for completeness only, not used in model *)
+const LABEL_K_3ae: label.
+const LABEL_IV_3ae: label. 
+
+const aead0: bitstring.      (* There are only two AEADs defined *)
+const aead1: bitstring.
+
+letfun KDF(PRK: key, th: bitstring, l: label, aeadId: bitstring) =
+    HKDF_expand((aeadId, th, l), PRK).
+
+letfun K_2e_KDF(PRK_2e: key, TH_2: bitstring, aeadId: bitstring) =
+    KDF(PRK_2e, TH_2, LABEL_K_2e, aeadId).
+
+letfun K_2m_KDF(PRK_3e2m: key, TH_2: bitstring, aeadId: bitstring) =
+    KDF(PRK_3e2m, TH_2, LABEL_K_2m, aeadId).
+
+letfun K_3ae_KDF(PRK_3e2m: key, TH_3: bitstring, aeadId: bitstring) =
+    KDF(PRK_3e2m, TH_3, LABEL_K_3ae, aeadId).
+
+letfun K_3m_KDF(PRK_4x3m: key, TH_3: bitstring, aeadId: bitstring) =
+    KDF(PRK_4x3m, TH_3, LABEL_K_3m, aeadId).
+
+letfun EDHOC_exporter(PRK_4x3m: key, TH_4: bitstring, l: label, length: bitstring) =
+    KDF(PRK_4x3m, TH_4, l, length).
+
+set attacker = passive.
+
+(* Macro definitions *)
+letfun revealSessKeys() = false.
+letfun maliciousPrincipals() = true.
+letfun asymmToSymm() = false.
+letfun IandRSupportSameCiphersuite() = true.
+
+
 (* Sanity *)
 (* event evInitiatorCompleted.
 event evResponderCompleted.
@@ -7,16 +110,30 @@ event evResponderStarted. *)
 
 (*****************************)
 (* Authentication events Symmetric *)
-(* event startInitiatorS(host, host, key, dhElt).
+event startInitiatorS(host, host, key, dhElt).
 event startResponderS(host, host, key, dhElt).
 event midInitiatorS(host, host, key, dhElt).
 event endInitiatorS(host, host, key, dhElt).
-event endResponderS(host, host, key, dhElt). *)
+event endResponderS(host, host, key, dhElt).
+
+event evRunningI(host, host, key, bitstring).
+event evRunningR(host, host, key, dhElt).
+event evCommitI(host, host, key, dhElt).
+event evCommitR(host, host, key, dhElt).
 
 (* Injective agreement Symmetric *)
-query U: host, U': host, V: host, E_V: dhElt, PSK: key; inj-event (midInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
-query U: host, U': host, V: host, E_V: dhElt, PSK: key; inj-event (endInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
-query U: host, V: host, E_U: dhElt, PSK: key; inj-event (endResponderS(U, V, PSK, E_U)) ==> inj-event (startInitiatorS(U, V, PSK, E_U)).
+query U: host, U': host, V: host, E_V: dhElt, PSK: key; 
+    inj-event (midInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
+query U: host, U': host, V: host, E_V: dhElt, PSK: key; 
+    inj-event (endInitiatorS(U, V, PSK, E_V)) ==> inj-event (startResponderS(U', V, PSK, E_V)).
+query U: host, V: host, E_U: dhElt, PSK: key; 
+    inj-event (endResponderS(U, V, PSK, E_U)) ==> inj-event (startInitiatorS(U, V, PSK, E_U)).
+
+(* Session key agreement *)
+query U: host, V: host, prk: key, th4: bitstring;
+    event(evCommitR(U, V, prk, th4)) ==> event(evRunningI(U, V, prk, th4)).
+query U: host, V: host, PSK: key, gxy: dhElt;
+    event(evCommitI(U, V, PSK, gxy)) ==> event(evRunningR(U, V, PSK, gxy)).
 
 (* Vaishnavi: Need to modify the following queries to work in this model. *)
 (* Privacy *)
@@ -58,7 +175,7 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   new x: exponent; 
   let E_U: dhElt = exp(g, x) in 
   new C_I: ctxID;
-  new aead: bitstring;
+  (* new aead: bitstring; *)
   new S_U: bitstring;
   new AD_1: bitstring; 
   new AD_3: bitstring;
@@ -73,7 +190,7 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let TH_2: bitstring = hash((msg_1, data_2)) in
   let G_XY: dhElt = exp(xE_V, x) in
   let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
-  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
   let aad_2: bitstring = (emptyHexString, TH_2) in
   let AD_2: bitstring = aeadDecrypt(COSE_enc_2, K_2, aad_2) in
   (* event evReach; *)
@@ -82,20 +199,23 @@ let initiatorSym(U: host, V: host, PSK: key, ID_PSK: bitstring) =
   let TH_3: bitstring = hash((hash((msg_1, msg_2)), data_3)) in
   let aad_3: bitstring = (emptyHexString, TH_3) in
   let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
-  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
+  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead0) in
   let COSE_enc_3: bitstring = aeadEncrypt(AD_3, K_3, aad_3) in
   let msg_3: bitstring = (data_3, COSE_enc_3) in
-  out(c, msg_3);
   let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
+  let PRK_4x3m = PRK_4x3m_sym(PSK, G_XY) in
+	event evRunningI(U, V, PRK_4x3m, TH_4);	
+  out(c, msg_3);
+	event evCommitI(U, V, PSK, G_XY);
   event endInitiatorS(U, V, PSK, xE_V).
-	
+		
 let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) = 
   new y: exponent;
   let E_V: dhElt = exp(g, y) in
   new C_R: ctxID;
   new AD_2: bitstring;
   new AD_2': bitstring;
-  new aead: bitstring;
+  (* new aead: bitstring; *)
   event startResponderS(U, V, PSK, E_V);
   in(c, msg_1: bitstring);
   (* event evResponderStarted; *)
@@ -105,19 +225,22 @@ let responderSym(V: host, U: host, PSK: key, ID_PSK: bitstring) =
 	  let TH_2: bitstring = hash((msg_1, data_2)) in
 	  let G_XY: dhElt = exp(xE_U, y) in
 	  let PRK_2e: key = PRK_2e_sym(PSK, G_XY) in
-	  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead) in
+	  let K_2: key = K_2e_KDF(PRK_2e, TH_2, aead0) in
 	  let aad_2: bitstring = (emptyHexString, TH_2) in
 	  let COSE_enc_2: bitstring = aeadEncrypt(AD_2, K_2, aad_2) in
 	  let msg_2: bitstring = (data_2, COSE_enc_2) in
+		event evRunningR(U, V, PSK, G_XY);
 	  out(c, msg_2);
 	  in(c, msg_3: bitstring);
 	  let (=C_R, COSE_enc_3: bitstring) = msg_3 in
 	  let TH_3: bitstring = hash((hash((msg_1, msg_2)), C_R)) in
 	  let PRK_3e2m: key = PRK_3e2m_sym(PSK, G_XY) in
-	  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead) in
+	  let K_3: key = K_3ae_KDF(PRK_3e2m, TH_3, aead0) in
 	  let aad_3: bitstring = (emptyHexString, TH_3) in
 	  let AD_3: bitstring = aeadDecrypt(COSE_enc_3, K_3, aad_3) in
 	  let TH_4: bitstring = hash((TH_3, COSE_enc_3)) in
+	  let PRK_4x3m = PRK_4x3m_sym(PSK, G_XY) in
+		event evCommitR(U, V, PRK_4x3m, TH_4);
 	  event endResponderS(U, V, PSK, xE_U).
 	  
 		
@@ -130,3 +253,7 @@ process
   (!in(s, (U:host, skU:key, pkU:key)); in(s, (V:host, skV:key, pkV:key)); new PSK: key; out(s2, (U, V, PSK)); out(s2, (U, V, PSK)); phase 1; (out(c, PSK) |
 	initiatorSym(U, V, PSK, ID_PSK) | responderSym(V, U, PSK, ID_PSK)) )
 ) 
+
+(* The attacker doesn't learn the asymmetric identifier passively *)
+(* The initiator's identity is protected till the third message -- asym case, static DH? *)
+(* Read through section 8.1 for identity protection etc *)
