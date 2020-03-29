@@ -401,6 +401,9 @@ to the specification, since XOR does not provide integrity protection.
 There are difficulties modeling XOR encryption in Proverif.
 %
 
+\section{Comparison with existing frameworks}
+It can be seen that the first two messages in the Static-DH mode of EDHOC correspond perfectly to the first two messages of the XX pattern of the NOISE framework. However, in the third message, the XX pattern requires the initiator to send their static key, followed by an encrypted payload using a key derived by a combination of the static key and an ephemeral key. In EDHOC, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator. This perhaps diverges from the XX pattern of NOISE, and one can no longer directly claim that EDHOC enjoys the same properties as XX. 
+
 
 %\bibliographystyle{plain}
 %\bibliography{ref}
