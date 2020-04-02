@@ -400,7 +400,126 @@ to the specification, since XOR does not provide integrity protection.
 %
 There are difficulties modeling XOR encryption in Proverif.
 %
+%-------------------------------------------------------------------------- sub
+\section{Mixed issues}
+%
+%-------------------------------------------------------------------------- sub
+\subsection{Unclear/underspecified identity handling}
+%
+This is a follow-up to my whining about that is unclear what an identity is
+for the purpose of EDHOC, and what EDHOC is actually authenticating.
+%
+Casually, an AKE must guarantee that the session key is established with a
+certain identity.
+%
+That is, a party must authenticate to the other: its identity and that it is
+the one who shares the session key (explicitly or implicitly).
+%
+I think there is a "not-authenticated-whom-I-intended-attack".
+%
+It is there because:
+\begin{itemize}
+    \item It is not clear what the intention is with identities and
+            authentication.
+    \item The spec mixes up the concepts of roles (initiator/responder) and
+        identities (parties who acts in a role).
+\end{itemize}
+%
+The Initiator is assumed to know the identity V it is initiating the protocol
+run with.
+%
+One identity V may have more than one \mConstStyle{CRED\_R}.
+%
+That is, the spec only RECOMMENDs that a one-to-one mapping between
+\mConstStyle{CRED\_R}
+and identity exists (Section 4.1), so that means the protocol must be secure
+also when no one-to-one mapping exists.
+%
+Section 3.2 of EDHOC states:
+\begin{itemize}
+    \item Identity when PKI is used: name in certificate
+    \item Identity when no PKI: the public key (bound to subject name?)
+\end{itemize}
 
+I did not find any text describing that the Initiator verifies that
+\mConstStyle{ID\_CRED\_R} matches the intended identity in the responder role.
+%
+It only describes that the initiator should verify that the identity of the
+responder is within an allowed set.
+%
+The latter is what I asked for earlier, so thanks for that.
+%
+But it is not enough.
+%
+Attack:
+%
+\begin{itemize}
+    \item I configure my phone, printer and toaster as allowed set of parties
+        to communicate with in my home network.
+    \item Assume my phone sends message 1 to the intended responder printer.
+    \item My toaster is hacked and replies with a message 2 and its
+        own \mConstStyle{ID\_CRED\_R}.
+    \item My phone verifies that the \mConstStyle{ID\_CRED\_R} is in the allowed set and
+        continues.
+    \item EDHOC completes and my phone is securely connected to my toaster,
+        but that was not its intention.
+\end{itemize}
+%
+I did not find any text that the Initiator verifies that the identity carried
+in the \mConstStyle{ID\_CRED\_R} actually is the intended one.
+%
+It only describes that the initiator should verify that the identity of the
+responder is within an allowed set.
+%
+The latter is what I asked for earlier, so thanks for that.
+%
+But it is not enough.
+%
+Attack:
+%
+\begin{itemize}
+    \item I configure my phone, printer and toaster as allowed set of parties
+        to communicate with in my home network.
+    \item Assume my phone sends message 1 to the intended responder printer.
+    \item My toaster is hacked and replies with a message 2 and its
+        own \mConstStyle{ID\_CRED\_R}.
+    \item My phone verifies that the \mConstStyle{ID\_CRED\_R} is in the allowed set and
+        continues.
+    \item EDHOC completes and my phone is securely connected to my toaster,
+        but that was not its intention.
+\end{itemize}
+%
+One could argue that the application should have configured the allowed set to
+be only \mConstStyle{ID\_CRED\_R}s that matches the printer.
+%
+But this is not stated in the spec that I found.
+%
+
+For the responder role this does not matter, because the responder is reactive
+and does not have an intention to communicate with a specific party.
+%
+
+Depending on what the intended use cases are for EDHOC I see two options:
+\begin{itemize}
+    \item The spec says that the allowed set must only contain \mConstStyle{ID\_CRED\_R}s
+            that map to the same identity. Or
+    \item The spec says that the allowed set may contain \mConstStyle{ID\_CRED\_R}s that map
+            to different identities. This may be useful if, for example, I
+            have two printers and my phone is OK with connecting to any of
+            them. In the latter case, the spec need to state the Initiator
+            does not know which identity it is initiating the connection to,
+            but that it is connecting to one of the identities in the
+            allowed set. This is some kind of anycast.
+\end{itemize}
+%
+Even if the spec uses the strategy to not specify which is the case to
+"allow for all possibilities" it needs to explain what to do in each of the
+cases.
+%
+I don't believe leaving it undefined is a good idea.
+%
+
+%-------------------------------------------------------------------------- sec
 \section{Comparison with existing frameworks}
 It can be seen that the first two messages in the Static-DH mode of EDHOC correspond perfectly to the first two messages of the XX pattern of the NOISE framework. However, in the third message, the XX pattern requires the initiator to send their static key, followed by an encrypted payload using a key derived by a combination of the static key and an ephemeral key. In EDHOC, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator. This perhaps diverges from the XX pattern of NOISE, and one can no longer directly claim that EDHOC enjoys the same properties as XX. 
 
