@@ -3,7 +3,8 @@ TEST=libTest.pv
 LIB=edhoc_common.pvl
 
 ERR=echo "SANITY FAILURE"
-ORFAIL=grep "All well-formedness checks were successful" || (${ERR}; exit)
+ORFAILPARSE=grep "All well-formedness checks were successful" || (${ERR}; exit)
+ORFAILSANITY=grep "verified" || (${ERR}; exit)
 SRC=edhocM4.spthy
 TAMARIN=tamarin-prover --quit-on-warning --heuristic=O --oraclename=oracle.py
 TAMARIN_SANITY=${TAMARIN} --prove=sanity
@@ -29,19 +30,27 @@ genModels:
 	m4 ${MATTACKER} ${MSIGSIG} ${SRC} > ${ATT_A}${TSIGSIG}
 	m4 ${MATTACKER} ${MPSKPSK} ${SRC} > ${ATT_A}${TPSKPSK}
 
+# This target checks that all models parses correctly
 sense: genModels
-	${TAMARIN} ${TSTATSIG} |& ${ORFAIL}
-	${TAMARIN} ${TSIGSTAT} |& ${ORFAIL}
-	${TAMARIN} ${TSTATSTAT} |& ${ORFAIL}
-	${TAMARIN} ${TSIGSIG} |& ${ORFAIL}
-	${TAMARIN} ${TPSKPSK} |& ${ORFAIL}
+	${TAMARIN} ${TSTATSIG} |& ${ORFAILPARSE}
+	${TAMARIN} ${TSIGSTAT} |& ${ORFAILPARSE}
+	${TAMARIN} ${TSTATSTAT} |& ${ORFAILPARSE}
+	${TAMARIN} ${TSIGSIG} |& ${ORFAILPARSE}
+	${TAMARIN} ${TPSKPSK} |& ${ORFAILPARSE}
 
+# This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	${TAMARIN_SANITY} ${TSTATSIG} |& ${ORFAIL}
-	${TAMARIN_SANITY} ${TSIGSTAT} |& ${ORFAIL}
-	${TAMARIN_SANITY} ${TSTATSTAT} |& ${ORFAIL}
-	${TAMARIN_SANITY} ${TSIGSIG} |& ${ORFAIL}
-	${TAMARIN_SANITY} ${TPSKPSK} |& ${ORFAIL}
+	${TAMARIN_SANITY} ${TSTATSIG} |& ${ORFAILSANITY}
+	${TAMARIN_SANITY} ${TSIGSTAT} |& ${ORFAILSANITY}
+	${TAMARIN_SANITY} ${TSTATSTAT} |& ${ORFAILSANITY}
+	${TAMARIN_SANITY} ${TSIGSIG} |& ${ORFAILSANITY}
+	${TAMARIN_SANITY} ${TPSKPSK} |& ${ORFAILSANITY}
+
+interactive: genModels
+	tamarin-prover interactive ./ --quit-on-warning --heuristic=O --oraclename=oracle.py
+
+alotofsense-psk: genModels
+	${TAMARIN_SANITY} ${TPSKPSK}
 
 clean:
 	rm TMP_*
