@@ -158,7 +158,7 @@ ifelse(«STAT», m4METHODR,
 )
         K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
         protected2 = $V // ID_CRED_V
-        extAad2 = <TH_2, ~ltkV, ~AD_2>
+        extAad2 = <TH_2, CRED_V, ~AD_2>
         assocData2 = <protected2, extAad2>
         MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0)
         data_3 = ~C_R
