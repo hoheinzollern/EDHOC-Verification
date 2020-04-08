@@ -88,7 +88,6 @@ ifelse(«SIG», m4METHODR,
         «authV = sign(<assocData2, MAC_2>, CRED_V)»,
         «authV = MAC_2»
 )
-        plainText2 = <$V, authV, ~AD_2>
         /* We don't use proper XOR to beging with
         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
@@ -96,7 +95,8 @@ ifelse(«SIG», m4METHODR,
         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3>
          */
         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-        CIPHERTEXT_2 = xorEncrypt(K_2e, <$V, authV, ~AD_2>)
+        plainText2 = <$V, authV, ~AD_2>
+        CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2)
         m2 = <data_2, CIPHERTEXT_2>
 ifelse(m4METHODI, m4METHODR,
         «sk = gx^~yy»,
@@ -141,7 +141,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> */
         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-        CIPHERTEXT_2 = xorDecrypt(K_2e, <$V, authR, ~AD_2>)
+        plainText2 = <$V, authR, ~AD_2>
+        CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2) // Decryption by pattern matching
         m2 = <data_2, CIPHERTEXT_2>
 ifelse(«STAT», m4METHODR,
         «CRED_V = 'g'^~ltkV»,
