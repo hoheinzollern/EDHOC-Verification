@@ -58,8 +58,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 )
     in
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
-        [ !«LTK_»m4METHODR«»(<$U, $V>, ~ltk),
-        [ !«LTK_»m4METHODR«»($U, ~ltk)
+        [ !«LTK_»m4METHODI«»(<$U, $V>, ~ltk),
+        [ !«LTK_»m4METHODI«»($U, ~ltk)
 )
         , Fr(~xx)
         , Fr(~C_I)
@@ -87,9 +87,9 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         «m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I,         ~AD_1>
          TH_2 = h(<$cHash0, m1, data_2>)
          prk_2e = hkdfExtract($cEmptyStr, gx^~yy)
-         grx = gx^~ltk
          ifelse(«STAT», m4METHODR,
-                 «prk_3e2m = hkdfExtract(prk_2e, grx)»,
+                 «grx = gx^~ltk
+                  prk_3e2m = hkdfExtract(prk_2e, grx)»,
                  «prk_3e2m = prk_2e»
          )
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
@@ -105,7 +105,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
          */
          MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0)
          ifelse(«SIG», m4METHODR,
-            «authV = sign(<assocData2, MAC_2>, CRED_V)»,
+            «authV = sign(<assocData2, MAC_2>, ~ltk)»,
             «authV = MAC_2»
          )
          plainText2 = <$V, authV, ~AD_2>
@@ -160,8 +160,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
          prk_3e2m = prk_2e
          plainText2 = ~AD_2
          extAad2 = TH_2     // KARL: Why is not AD_2 covered in PSK case? Not necesssary, but it is included for the ASYM cases
-         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2e, extAad2, $cAEAD0) // MAC check by pattern matching
+         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
          m2 = <data_2, CIPHERTEXT_2>
         »,
          /* STAT and SIG methods */
@@ -211,8 +211,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
          extAad3 = <TH_3, CRED_U, ~AD_3>
          assocData3 = <protected3, extAad3>
          MAC_3 = aeadEncrypt($cEmptyStr, K_3m, assocData3, $cAEAD0)
-         ifelse(«STAT», m4METHODI,
-            «authU = sign(<assocData3, MAC_3>, CRED_U)»,
+         ifelse(«SIG», m4METHODI,
+            «authU = sign(<assocData3, MAC_3>, ~ltk)»,
             «authU = MAC_3»
          )
          plainText3 = <$U, authU, ~AD_3>
@@ -251,8 +251,12 @@ ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
 
     in
         [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1)
-        , !«PK_»m4METHODR«»($V, pkV)
-        , !«PK_»m4METHODR«»($U, pkU)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        «» /* NOTHING */
+        , /* All other methods */
+        «, !PK_»m4METHODR«»($V, pkV)
+        «, !PK_»m4METHODI«»($U, pkU)
+)
         , Fr(~AD_3)
         , In(m2)
         ]
@@ -279,7 +283,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
        »,
         /* STAT and SIG methods */
        «CRED_U = pkU
-        plainText3 = <$U, authI, AD_3>
+        extAad3 = TH_3
+        plainText3 = <$U, authI, ~AD_3>
         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
         ifelse(«STAT», m4METHODI,
            «giy = CRED_U^~yy
@@ -288,7 +293,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         )
         K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
         protected3 = $U // ID_CRED_U
-        extAad3 = <TH_3, CRED_U, AD_3>
+        extAad3 = <TH_3, CRED_U, ~AD_3>
         assocData3 = <protected3, extAad3>
         MAC_3 = aeadEncrypt($cEmptyStr, K_3m, assocData3, $cAEAD0)
        »
@@ -327,13 +332,11 @@ ifelse(«STAT», m4METHODR,
         «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»,
         «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»
 )
-        ,
-ifelse(«STAT», m4METHODI,
-          «!PK_STAT($U, pkU)»,
-          «ifelse(«SIG», m4METHODI,
-            «!PK_SIG($U, pkU)»,
-            «!PK_PSK(<$U, $V>, ~ltkU)»
-           )»
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        «» /* NOTHING */
+        , /* All other methods */
+        «, !PK_»m4METHODI«»($U, pkU)
+        «, !PK_»m4METHODR«»($V, pkV)
 )
         , In(m3)
         ]
