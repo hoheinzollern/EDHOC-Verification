@@ -404,14 +404,11 @@ rule revealSessionKeyR:
  * NOTE: this allows u = v. Is that what we want?
  */
 
-ifelse(m4ATTACKER, PASSIVE,
-lemma sanityCorrectnessPassiveAdversary:
+lemma sanityExecutableToTheEnd:
     exists-trace
     "Ex u v gxy #i #j. SessKeyCommitI(u, v, gxy)@i &
                        SessKeyCommitR(u, v, gxy)@j &
                        #i < #j"
-    ,
-)
 
 
 /*
