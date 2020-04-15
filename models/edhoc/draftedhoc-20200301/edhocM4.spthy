@@ -36,251 +36,314 @@ equations:
     decrypt(key, aeadEncrypt(key, pt, aad, algoID), algoId) = pt,
     xorDecrypt(k, xorEncrypt(k, pt)) = pt   // Too strong
 
-restriction Eq:
-    "All x y #i. Eq(x, y)@i ==> x = y"
+
+ifelse(«SIG», m4METHODI,
+    «restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"»,
+    «ifelse(«SIG», m4METHODR,
+        «restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"»,
+        «» /* NOTHING */
+    )»
+)
+
+
 restriction Neq:
     "All x y #i. Neq(x, y)@i ==> not(x = y)"
 
 rule «I1_»m4METHODI«_»m4METHODR:
     let gx = 'g'^~xx
-ifelse(«PSK_PSK», m4METHODI_m4METHODR,
-        «m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I, ~ID_PSK, ~AD_1>»,
-        «m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I,          ~AD_1>»
-)dnl
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        «ID_PSK = <$U, $V>
+         m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1>»,
+        «m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I,         ~AD_1>»
+)
     in
-        [ !«LTK_»m4METHODR«»(<$U>, ~ltkU)  // $U is ID_PSK in PSK case
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        [ !«LTK_»m4METHODR«»(<$U, $V>, ~ltk),
+        [ !«LTK_»m4METHODR«»($U, ~ltk)
+)
         , Fr(~xx)
         , Fr(~C_I)
         , Fr(~AD_1)
         ]
         --[
         ]->
-        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltkU, <$U>, $V, ~xx, ~C_I, m1)
+        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1)
         , Out(m1)
         ]
 
 rule «R2_»m4METHODI«_»m4METHODR:
-    let m1 = <$m4METHODI, $m4METHODR, $cSUITE0, gx, ~C_I, ~AD_1>
-        data_2 = <~C_I, 'g'^~yy, ~C_R>
-        TH_2 = h(<$cHash0, m1, data_2>)
-ifelse(«PSK_PSK», m4METHODI_m4METHODR,
-        «prk_2e = hkdfExtract(~ltkV, gx^~yy)»,
-        «prk_2e = hkdfExtract($cEmptyStr, gx^~yy)»
-)dnl
-ifelse(«STAT», m4METHODR,
-        «grx = gx^~ltkV
-         prk_3e2m = hkdfExtract(prk_2e, grx)»,
-        «prk_3e2m = prk_2e»
-)
-        K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
-        protected2 = $V // ID_CRED_V
-ifelse(«STAT», m4METHODR,
-        «CRED_V = 'g'^~ltkV»,
-        «ifelse(«SIG», m4METHODR,
-            «CRED_V = pk(~ltkV)»,
-            «CRED_V = ~ltkV»
-        )»
-)
-        extAad2 = <TH_2, CRED_V, ~AD_2>
-        assocData2 = <protected2, extAad2>
-        MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0)
-ifelse(«SIG», m4METHODR,
-        «authV = sign(<assocData2, MAC_2>, CRED_V)»,
-        «authV = MAC_2»
-)
-        /* We don't use proper XOR to beging with
-        K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-        K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-        K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-        CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3>
+    let
+         data_2 = <~C_I, 'g'^~yy, ~C_R>
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        «ID_PSK = <$U, $V>
+         m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1>
+         TH_2 = h(<$cHash0, m1, data_2>)
+         prk_2e = hkdfExtract(~ltk, gx^~yy)
+         prk_3e2m = prk_2e
+         extAad2 = TH_2
+         plainText2 = ~AD_2
+         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)»,
+        «m1 = <$«»m4METHODI«», $«»m4METHODR«», $cSUITE0, gx, ~C_I,         ~AD_1>
+         TH_2 = h(<$cHash0, m1, data_2>)
+         prk_2e = hkdfExtract($cEmptyStr, gx^~yy)
+         grx = gx^~ltk
+         ifelse(«STAT», m4METHODR,
+                 «prk_3e2m = hkdfExtract(prk_2e, grx)»,
+                 «prk_3e2m = prk_2e»
+         )
+         K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         protected2 = $V // ID_CRED_V
+         CRED_V = pkV
+         extAad2 = <TH_2, CRED_V, ~AD_2>
+         assocData2 = <protected2, extAad2>
+         /* We don't use proper XOR to beging with
+         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3>
          */
-        K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-        plainText2 = <$V, authV, ~AD_2>
-        CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2)
-        m2 = <data_2, CIPHERTEXT_2>
-ifelse(m4METHODI, m4METHODR,
-        «sk = gx^~yy»,
-        «ifelse(«STAT_SIG», m4METHODI«_»m4METHODR«»,
-            «sk = gx^~yy»,   // Responder does not know G_IY here
-            «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
-                «sk = <gx^~yy, grx>»,
-                «sk = <gx^~yy, grx>» // STAT_STAT; also here no G_IY known to R
-            )»
-        )»
+         MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0)
+         ifelse(«SIG», m4METHODR,
+            «authV = sign(<assocData2, MAC_2>, CRED_V)»,
+            «authV = MAC_2»
+         )
+         plainText2 = <$V, authV, ~AD_2>
+         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+         CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2)»
 )
+         m2 = <data_2, CIPHERTEXT_2>
+
+
+/* Def of session key exp_sk we can get explicit auth (agreement) on */
+ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
+    «exp_sk = <gx^~yy>»,  // Responder does not know G_IY when sending m2
+    «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
+        «exp_sk = <gx^~yy, grx>»,
+        «ifelse(«STAT_STAT», m4METHODI«_»m4METHODR,
+            «exp_sk = <gx^~yy, grx>», // Responder does not know G_IY when sending m2
+            «exp_sk = <gx^~yy>» // SIG_SIG or PSK_PSK
+        )»
+    )»
+)
+
     in
-        [ !«LTK_»m4METHODR«»($V, ~ltkV)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        [ «!LTK_»m4METHODR«(<$U, $V>, ~ltk)»,
+        [ «!LTK_»m4METHODR«($V, ~ltk)
+        ,  !PK_»m4METHODR«($V, pkV)»
+)
         , In(m1)
         , Fr(~yy)
         , Fr(~C_R)
         , Fr(~AD_2)
         ]
-        --[ RunningR($V, sk)    // For PSK_PSK case we could get $U as well
+        --[ RunningR($V, exp_sk)    // For PSK_PSK case we could get $U as well
           , Neq(gx, 'g')
           ]->
 ifelse(«STAT», m4METHODR,
-        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltkV, ~C_R, ~C_I,
-                             grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)»,
-        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltkV, ~C_R, ~C_I,
-                                  ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)»
+        [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)
+        ,
+        [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I,      ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)
 )
         , Out(m2)
         ]
 
+
 rule «I3_»m4METHODI«_»m4METHODR«»:
     let
-        data_2 = <~C_I, gy, ~C_R>
-        TH_2 = h(<$cHash0, m1, data_2>)
+         data_2 = <~C_I, gy, ~C_R>
+    /* Message 2 handling */
+         TH_2 = h(<$cHash0, m1, data_2>)
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
-        «prk_2e = hkdfExtract(~ltkV, gy^~xx)»,
-        «prk_2e = hkdfExtract($cEmptyStr, gy^~xx)»
-)dnl
-        /* We don't use proper XOR to beging with
-        K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-        K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-        K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-        CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> */
-        K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-        plainText2 = <$V, authR, ~AD_2>
-        CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2) // Decryption by pattern matching
-        m2 = <data_2, CIPHERTEXT_2>
-ifelse(«STAT», m4METHODR,
-        «CRED_V = 'g'^~ltkV»,
-        «ifelse(«SIG», m4METHODR,
-            «CRED_V = pk(~ltkV)»,
-            «CRED_V = ~ltkV»
+        «prk_2e = hkdfExtract(~ltk, gy^~xx)
+         prk_3e2m = prk_2e
+         plainText2 = ~AD_2
+         extAad2 = TH_2     // KARL: Why is not AD_2 covered in PSK case? Not necesssary, but it is included for the ASYM cases
+         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2e, extAad2, $cAEAD0) // MAC check by pattern matching
+         m2 = <data_2, CIPHERTEXT_2>
+        »,
+         /* STAT and SIG methods */
+        «prk_2e = hkdfExtract($cEmptyStr, gy^~xx)
+         plainText2 = <$V, authR, ~AD_2>
+         CRED_V = pkV
+         ifelse(«STAT», m4METHODR,
+            «grx = CRED_V^~xx
+             prk_3e2m = hkdfExtract(prk_2e, grx)»
+             ,
+            «prk_3e2m = prk_2e»
+         )
+         /* We don't use proper XOR to beging with
+         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> */
+         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+         CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2) // Decryption by pattern matching
+         m2 = <data_2, CIPHERTEXT_2>
+
+         K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         protected2 = $V // ID_CRED_V
+         extAad2 = <TH_2, CRED_V, ~AD_2>
+         assocData2 = <protected2, extAad2>
+         MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0) // MAC check by pattern matching
+        »
+)
+
+    /* Message 3 handling */
+         data_3 = ~C_R
+         TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+         K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+        «extAad3 = TH_3
+         plainText3 = ~AD_3
+         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)»,
+         /* STAT and SIG methods */
+        «ifelse(«STAT», m4METHODI,
+            «giy = gy^~ltk
+             prk_4x3m = hkdfExtract(prk_3e2m, giy)»,
+            «prk_4x3m = prk_3e2m»
+         )
+         K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+         protected3 = $U // ID_CRED_U
+         CRED_U = pkU
+         extAad3 = <TH_3, CRED_U, ~AD_3>
+         assocData3 = <protected3, extAad3>
+         MAC_3 = aeadEncrypt($cEmptyStr, K_3m, assocData3, $cAEAD0)
+         ifelse(«STAT», m4METHODI,
+            «authU = sign(<assocData3, MAC_3>, CRED_U)»,
+            «authU = MAC_3»
+         )
+         plainText3 = <$U, authU, ~AD_3>
+         extAad3Outer = TH_3
+         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+         »
+)
+         m3 = <data_3, CIPHERTEXT_3>
+
+/* Def of session key exp_sk we can get explicit auth (agreement) on */
+ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
+    «exp_sk = <gy^~xx>»,  // Responder does not know G_IY when sending m2
+    «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
+        «exp_sk = <gy^~xx, grx>»,
+        «ifelse(«STAT_STAT», m4METHODI«_»m4METHODR,
+            «exp_sk = <gy^~xx, grx>», // Responder does not know G_IY when sending m2
+            «exp_sk = <gy^~xx>» // SIG_SIG or PSK_PSK
         )»
+    )»
 )
-ifelse(«STAT», m4METHODR,
-        «grx = CRED_V^~xx
-         prk_3e2m = hkdfExtract(prk_2e, grx)»,
-        «prk_3e2m = prk_2e»
-)
-        K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
-        protected2 = $V // ID_CRED_V
-        extAad2 = <TH_2, CRED_V, ~AD_2>
-        assocData2 = <protected2, extAad2>
-        MAC_2 = aeadEncrypt($cEmptyStr, K_2m, assocData2, $cAEAD0)
-        data_3 = ~C_R
-        TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
-ifelse(«STAT», m4METHODI,
-        «giy = gy^~ltkU
-         prk_4x3m = hkdfExtract(prk_3e2m, giy)»,
-        «prk_4x3m = prk_3e2m»
-)
-        K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
-        protected3 = $U // ID_CRED_U
-ifelse(«STAT», m4METHODI,
-        «CRED_U = 'g'^~ltkU»,
-        «ifelse(«SIG», m4METHODI,
-            «CRED_U = pk(~ltkU)»,
-            «CRED_U = ~ltkU»
+
+/* Def of session key imp_sk we can get explicit auth (agreement) on I->R, but only
+ * implicitly on R->I because R does not know G_IY when sending message 2,
+ * so I cannot deduce that R is using the same value of GIY when I completes.
+ */
+ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
+    «imp_sk = <gy^~xx, giy>»,
+    «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
+        «imp_sk = <gy^~xx, grx>»,
+        «ifelse(«STAT_STAT», m4METHODI«_»m4METHODR,
+            «imp_sk = <gy^~xx, giy, grx>»,
+            «imp_sk = <gy^~xx>» // SIG_SIG or PSK_PSK
         )»
+    )»
 )
-        extAad3 = <TH_3, CRED_U, ~AD_3>
-        assocData3 = <protected3, extAad3>
-        MAC_3 = aeadEncrypt($cEmptyStr, K_3m, assocData3, $cAEAD0)
-ifelse(«STAT», m4METHODI,
-        «authU = sign(<assocData3, MAC_3>, CRED_U)»,
-        «authU = MAC_3»
-)
-        plainText3 = <$U, authU, ~AD_3>
-        K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_4x3m)   // uniq
-        extAad3Outer = <TH_3>
-        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
-        m3 = <data_3, CIPHERTEXT_3>
-ifelse(m4METHODI, m4METHODR,
-        «sk = gy^~xx»,
-        «ifelse(«STAT_SIG», m4METHODI«»_«»m4METHODR,
-            «sk = gy^~xx»,   // Responder does not know G_IY here
-            «ifelse(«SIG_STAT», m4METHODI«»_«»m4METHODR,
-                «sk = <gy^~xx, grx>»,
-                «sk = <gy^~xx, grx>» // STAT_STAT; also here no G_IY known to R
-            )»
-        )»
-)
+
     in
-        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltkU, <$U>, $V, ~xx, ~C_I, m1)
-        ,
-ifelse(«STAT», m4METHODR,
-          «!PK_STAT($V, 'g'^~ltkV)»,
-          «ifelse(«SIG», m4METHODR,
-            «!PK_SIG($V, pk(~ltkV))»,
-            «!PK_PSK(<$U, $V>, ~ltkV)»
-          )»
-)
+        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1)
+        , !«PK_»m4METHODR«»($V, pkV)
+        , !«PK_»m4METHODR«»($U, pkU)
         , Fr(~AD_3)
         , In(m2)
         ]
-        --[
+        --[ RunningI($U, $V, exp_sk)            // For agreement of all params
+          , CommitI($U, $V, exp_sk)         // For agreement of all params
+          , SessKeyCommitI($U, $V, exp_sk)  // For sk secrecy of explicitly agreed key
+          , SessKeyCommitIImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
 ifelse(«SIG», m4METHODR,
-        «Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)»,
-        «Eq(authR, MAC_2)»
+         «, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)»,
+         «»  /* nothing */
 )
-          , RunningI($U, $V, sk)        // For agreement of all params
-          , CommitI($U, $V, sk)         // For agreement of all params
-          , SessKeyCommitI($U, $V, sk)  // For sk secrecy
           ]->
         [ Out(m3) ]
 
 rule «R4_»m4METHODI«_»m4METHODR«»:
     let
+        data_3 = ~C_R
         TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
-        extAad3Outer = <TH_3>
-ifelse(«STAT», m4METHODI,
-        «prk_4x3m = hkdfExtract(prk_3e2m, giy)»,
-        «prk_4x3m = prk_3e2m»
-)
-        K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_4x3m)   // uniq
+        K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+       «extAad3 = TH_3
+        plainText3 = ~AD_3
+        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
+       »,
+        /* STAT and SIG methods */
+       «CRED_U = pkU
         plainText3 = <$U, authI, AD_3>
-        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
+        ifelse(«STAT», m4METHODI,
+           «giy = CRED_U^~yy
+            prk_4x3m = hkdfExtract(prk_3e2m, giy)»,
+           «prk_4x3m = prk_3e2m»
+        )
         K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
         protected3 = $U // ID_CRED_U
-ifelse(«STAT», m4METHODI,
-        «CRED_U = 'g'^~ltkU
-         giy = CRED_U^~yy»,
-        ifelse(«SIG», m4METHODI,
-            «CRED_U = pk(~ltkU)»,
-            «CRED_U = ~ltkU»
-))
         extAad3 = <TH_3, CRED_U, AD_3>
         assocData3 = <protected3, extAad3>
         MAC_3 = aeadEncrypt($cEmptyStr, K_3m, assocData3, $cAEAD0)
-        m3 = <data_3, CIPHERTEXT_3>
-ifelse(m4METHODI, m4METHODR,
-        «sk = gxy»,
-        «ifelse(«STAT_SIG», «»m4METHODI«»_«»m4METHODR«»,
-            «sk = gxy»,   // Responder does not know G_IY here
-            «ifelse(«SIG_STAT», «»m4METHODI«»_«»m4METHODR«»,
-                «sk = <gxy, grx>»,
-                «sk = <gxy, grx>» // STAT_STAT; also here no G_IY known to R
-            )»
-        )»
+       »
 )
+        m3 = <data_3, CIPHERTEXT_3>
+
+/* Def of session key exp_sk we can get explicit auth (agreement) on */
+ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
+    «exp_sk = <gxy>»,  // Responder does not know G_IY when sending m2
+    «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
+        «exp_sk = <gxy, grx>»,
+        «ifelse(«STAT_STAT», m4METHODI«_»m4METHODR,
+            «exp_sk = <gxy, grx>», // Responder does not know G_IY when sending m2
+            «exp_sk = <gxy>» // SIG_SIG or PSK_PSK
+        )»
+    )»
+)
+
+/* Def of session key imp_sk we can get explicit auth (agreement) on I->R, but only
+ * implicitly on R->I because R does not know G_IY when sending message 2,
+ * so I cannot deduce that R is using the same value of GIY when I completes.
+ */
+ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
+    «imp_sk = <gxy, giy>»,
+    «ifelse(«SIG_STAT», m4METHODI«_»m4METHODR,
+        «imp_sk = <gxy, grx>»,
+        «ifelse(«STAT_STAT», m4METHODI«_»m4METHODR,
+            «imp_sk = <gxy, giy, grx>»,
+            «imp_sk = <gxy>» // SIG_SIG or PSK_PSK
+        )»
+    )»
+)
+
     in
 ifelse(«STAT», m4METHODR,
-        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltkV, ~C_R, ~C_I,
-                             grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»,
-        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltkV, ~C_R, ~C_I,
-                                  ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»
+        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»,
+        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»
 )
         ,
 ifelse(«STAT», m4METHODI,
-          «!PK_STAT($U, 'g'^~ltkU)»,
+          «!PK_STAT($U, pkU)»,
           «ifelse(«SIG», m4METHODI,
-            «!PK_SIG($U, pk(~ltkU))»,
+            «!PK_SIG($U, pkU)»,
             «!PK_PSK(<$U, $V>, ~ltkU)»
            )»
 )
         , In(m3)
         ]
-        --[
-ifelse(«SIG», m4METHODR,
-            «Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)»,
-            «Eq(authI, MAC_3)»
+        --[ CommitR($U, $V, exp_sk)         // For agreement of all params
+          , SessKeyCommitR($U, $V, exp_sk)  // For explicit sk secrecy
+          , SessKeyCommitRImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
+ifelse(«SIG», m4METHODI,
+         «, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)»,
+         «»  /* nothing */
 )
-          , CommitR($U, $V, sk)         // For agreement of all params
-          , SessKeyCommitR($U, $V, sk)  // For sk secrecy
           ]->
         []
 
@@ -308,11 +371,11 @@ rule registerLTK_PSK:
  * NOTE: leaks before run complete. More is needed for PFS.
  */
 rule revealLTK_SIG:
-    [!LTK_SIG($A, ltk)] --[LTKRev($A)]-> [Out(ltk)]
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_STAT:
-    [!LTK_STAT($A, ltk)] --[LTKRev($A)]-> [Out(ltk)]
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_PSK:
-    [!LTK_PSK($A, ltk)] --[LTKRev($A)]-> [Out(ltk)]
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
 
 /* Reveal session key for all methods.
  * sk = <gxy> for PSK and SIG_SIG methods
@@ -338,12 +401,14 @@ rule revealSessionKeyR:
  * NOTE: this allows u = v. Is that what we want?
  */
 
-lemma sanityComplete:
+ifelse(m4ATTACKER, PASSIVE,
+lemma sanityCorrectnessPassiveAdversary:
     exists-trace
     "Ex u v gxy #i #j. SessKeyCommitI(u, v, gxy)@i &
                        SessKeyCommitR(u, v, gxy)@j &
-                       #i < #j &
-                       not (Ex #k. K(gxy)@k)"
+                       #i < #j"
+    ,
+)
 
 
 /*
