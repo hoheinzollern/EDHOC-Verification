@@ -44,9 +44,8 @@ def genPrios(goalLines, lemma):
         if "sanity" in lemma:
             if DEBUG:
                 print("MATCHING Sanity LEMMA: {}".format(lemma))
-            if re.match(".*!KU\( ~AD_1\.[2-9].*", line) or\
-                 re.match(".*!KU\( ~C_I\.[2-9].*", line):
-                    prioritize(goal, 20, line)
+            if re.match(".*aeadEncrypt.*", line):
+                    prioritize(goal, 80, line)
             else:
                 prioritize(goal, 50, line)
         elif "secrecy" in lemma:
