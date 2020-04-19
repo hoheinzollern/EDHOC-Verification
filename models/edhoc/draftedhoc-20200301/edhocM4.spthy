@@ -58,7 +58,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 )
     in
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
-        [ !«LTK_»m4METHODI«»(<$U, $V>, ~ltk),
+        [ !«LTK_»m4METHODI«»(<$U, $V, $idPSK>, ~ltk),
         [ !«LTK_»m4METHODI«»($U, ~ltk)
 )
         , Fr(~xx)
@@ -67,7 +67,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         ]
         --[
         ]->
-        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1, ~AD_1)
+        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1, ~AD_1, $idPSK)
         , Out(m1)
         ]
 
@@ -129,7 +129,7 @@ ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
 
     in
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
-        [ «!LTK_»m4METHODR«(<$U, $V>, ~ltk)»,
+        [ «!LTK_»m4METHODR«(<$U, $V, $idPSK>, ~ltk)»,
         [ «!LTK_»m4METHODR«($V, ~ltk)
         ,  !PK_»m4METHODR«($V, pkV)»
 )
@@ -147,7 +147,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 ifelse(«STAT», m4METHODR,
         [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)
         ,
-        [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I,      ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy)
+        [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I,      ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, $idPSK)
 )
         , Out(m2)
         ]
@@ -253,7 +253,7 @@ ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
 )
 
     in
-        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1, ~AD_1)
+        [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1, ~AD_1, $idPSK)
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         «» /* NOTHING */
         , /* All other methods */
@@ -266,9 +266,12 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         --[ RunningI($U, $V, exp_sk)        // For agreement of all params
           , CommitI($U, $V, exp_sk)         // For agreement of all params
           , SessKeyCommitIImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
-          , InvI(TH_2, TH_3)
 ifelse(«SIG», m4METHODR,
          «, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)»,
+         «»  /* nothing */
+)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+         «, PSKIDSK($idPSK, exp_sk)»,
          «»  /* nothing */
 )
           ]->
@@ -333,7 +336,7 @@ ifelse(«STAT_SIG», m4METHODI«_»m4METHODR,
     in
 ifelse(«STAT», m4METHODR,
         «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»,
-        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy)»
+        «[ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, $idPSK)»
 )
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         «» /* NOTHING */
@@ -345,9 +348,12 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         ]
         --[ CommitR($U, $V, exp_sk)         // For agreement of all params
           , SessKeyCommitRImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
-          , InvR(TH_2, TH_3)
 ifelse(«SIG», m4METHODI,
          «, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)»,
+         «»  /* nothing */
+)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+         «, PSKIDSK($idPSK, exp_sk)»,
          «»  /* nothing */
 )
           ]->
@@ -371,7 +377,7 @@ rule registerLTK_STAT:
 
 /* Register LTK for PSK key based authentication */
 rule registerLTK_PSK:
-    [Fr(~ltk)] --[]-> [!LTK_PSK(<$A, $B>, ~ltk), !PK_PSK(<$A, $B>, ~ltk)]
+    [Fr(~ltk)] --[]-> [!LTK_PSK(<$A, $B, $idPSK>, ~ltk)]
 
 /* Reveal LTK for all methods.
  * NOTE: leaks before run complete. More is needed for PFS.
@@ -381,7 +387,7 @@ rule revealLTK_SIG:
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+    [!LTK_PSK(<$A, $B, $idPSK>, ~ltk)] --[LTKRev($idPSK)]-> [Out(~ltk)]
 
 /* Reveal session key for all methods.
  * sk = <gxy> for PSK and SIG_SIG methods
@@ -400,9 +406,8 @@ rule revealSessionKeyR:
  */
 lemma helpInvLtkKDF [reuse]:
     all-traces
-    "All s1 s2 k #i. (KU(hkdfExpand(s1, hkdfExtract(s2, k)))@i
-                   & KU(s1)@i & KU(s2)@i)
-                         ==> Ex #j. KU(k)@j & (#j < #i)"
+    "All s1 s2 k #i. !KU(hkdfExpand(s1, hkdfExtract(s2, k)))@i
+                         ==> Ex #j. !KU(k)@j & (#j < #i)"
 
 /*
  * Sanity - Correct exectution trace exists
@@ -421,18 +426,19 @@ lemma sanityExecutableToTheEnd:
 /*
  * Session key secrecy
  * Verifies for all methods in ? minutes (ACTIVE) and 40 secs (PASSIVE)
+ * PSK: verifies in 11 minutes (ACTIVE)
  */
-
-/*
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma secrecyExpAuthSessionKey:
     all-traces
-    "(All u v sk #i #j. K(sk)@i & CommitI(u, v, sk)@j ==>
-        (Ex #k. LTKRev(<u, v>)@k) | (Ex #k. SKRev(sk)@k))
+    "(All u v idPSK sk #i #j #k.
+         K(sk)@i & CommitI(u, v, sk)@j & PSKIDSK(idPSK, sk)@k ==>
+            (Ex #l. LTKRev(idPSK)@l) | (Ex #l. SKRev(sk)@l))
     &   // Can't have OR before implication, so need two clauses
-     (All u v sk #i #j. K(sk)@i & CommitR(u, v, sk)@j ==>
-        (Ex #k. LTKRev(<u, v>)@k) | (Ex #k. SKRev(sk)@k))"
+     (All u v sk idPSK #i #j #k.
+         K(sk)@i & CommitR(u, v, sk)@j & PSKIDSK(idPSK, sk)@k ==>
+            (Ex #l. LTKRev(idPSK)@l) | (Ex #l. SKRev(sk)@l))"
 »,
 «
 lemma secrecyExpAuthSessionKey:
@@ -443,7 +449,6 @@ lemma secrecyExpAuthSessionKey:
      (All u v sk #i #j. K(sk)@i & CommitR(u, v, sk)@j ==>
         (Ex #k. LTKRev(u)@k) | (Ex #k. LTKRev(v)@k) | (Ex #k. SKRev(sk)@k))"
 »)
-*/
 
 /*
  * Agreement - at least on session key, u, v.
