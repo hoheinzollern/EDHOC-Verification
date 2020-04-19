@@ -266,6 +266,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         --[ RunningI($U, $V, exp_sk)        // For agreement of all params
           , CommitI($U, $V, exp_sk)         // For agreement of all params
           , SessKeyCommitIImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
+          , InvI(TH_2, TH_3)
 ifelse(«SIG», m4METHODR,
          «, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)»,
          «»  /* nothing */
@@ -344,6 +345,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         ]
         --[ CommitR($U, $V, exp_sk)         // For agreement of all params
           , SessKeyCommitRImp($U, $V, imp_sk)  // For sk secrecy of implicitly authed key
+          , InvR(TH_2, TH_3)
 ifelse(«SIG», m4METHODI,
          «, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)»,
          «»  /* nothing */
@@ -396,14 +398,11 @@ rule revealSessionKeyR:
 /*
  * Invariants - Helper lemmas
  */
-/*
-lemma helpTrivialK [reuse]:
+lemma helpInvLtkKDF [reuse]:
     all-traces
-    "All u v gxy #i. CommitR(u, v, gxy)@i  ==>
-                        (Ex #j. CommitI(u, v, gxy)@j & #i < #j)"
-*/
-
-
+    "All s1 s2 k #i. (KU(hkdfExpand(s1, hkdfExtract(s2, k)))@i
+                   & KU(s1)@i & KU(s2)@i)
+                         ==> Ex #j. KU(k)@j & (#j < #i)"
 
 /*
  * Sanity - Correct exectution trace exists
@@ -424,6 +423,18 @@ lemma sanityExecutableToTheEnd:
  * Verifies for all methods in ? minutes (ACTIVE) and 40 secs (PASSIVE)
  */
 
+/*
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+«
+lemma secrecyExpAuthSessionKey:
+    all-traces
+    "(All u v sk #i #j. K(sk)@i & CommitI(u, v, sk)@j ==>
+        (Ex #k. LTKRev(<u, v>)@k) | (Ex #k. SKRev(sk)@k))
+    &   // Can't have OR before implication, so need two clauses
+     (All u v sk #i #j. K(sk)@i & CommitR(u, v, sk)@j ==>
+        (Ex #k. LTKRev(<u, v>)@k) | (Ex #k. SKRev(sk)@k))"
+»,
+«
 lemma secrecyExpAuthSessionKey:
     all-traces
     "(All u v sk #i #j. K(sk)@i & CommitI(u, v, sk)@j ==>
@@ -431,10 +442,8 @@ lemma secrecyExpAuthSessionKey:
     &   // Can't have OR before implication, so need two clauses
      (All u v sk #i #j. K(sk)@i & CommitR(u, v, sk)@j ==>
         (Ex #k. LTKRev(u)@k) | (Ex #k. LTKRev(v)@k) | (Ex #k. SKRev(sk)@k))"
-
-
-
-
+»)
+*/
 
 /*
  * Agreement - at least on session key, u, v.
