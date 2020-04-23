@@ -434,6 +434,7 @@ rule revealSessionKeyR:
  *   PSKPSK: verifies in 36 seconds
  *   SIGSIG: verifies in 31 seconds
  */
+/*
 ifelse(m4METHODI, m4METHODR,
     «lemma helpInvLtkKDF [reuse]:
         all-traces
@@ -443,6 +444,7 @@ ifelse(m4METHODI, m4METHODR,
     ,
     «» /* NOTHING */
 )
+*/
 
 /*
 lemma helpInvKeyDep [reuse]:
@@ -521,14 +523,15 @@ lemma secrecyExpAuthSessionKey:
  * With matching sessions proof as well, we get "symbolic CK-security".
  *
  * Verifies for:
- * PSK_PSK in 1 minute 20 seconds
- * SIG_STAT in 3 minutes 20 seconds
- * SIG_SIG in 5 minutes 2 seconds
- * STAT_STAT in 3 minutes 58 seconds
+ * PSK_PSK in 59 seconds
+ * SIG_STAT in 1 minutes 46 seconds
+ * SIG_SIG in 1 minutes 38 seconds
+ * STAT_STAT in 3 minutes 18 seconds
  *
  * Note the implicit flavor: it only holds *if* *both* parties commit to the
  *  parameters then
  */
+/*
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma secrecyImpSessionKeyPFS:
@@ -542,16 +545,37 @@ lemma secrecyImpSessionKeyPFS:
     "All tidI tidR u v sk #i #j #k. (K(sk)@i & CommitI(tidI, u, v, sk)@j & CommitR(tidR,u, v, sk)@k) ==>
         ((Ex #l. LTKRev(u)@l & #l < #k) | (Ex #l. LTKRev(v)@l & #l < #k) | (Ex #l. SKRev(sk)@l))"
 »)
+*/
 
 /*
- * Agreement - at least on session key, u, v.
+ * Implicit agreement - at least on session key, u, v.
+ * FIXME: PSKPSK falsified in 34 minutes
  */
-/* lemma agreement: */
-/*     "All u v gxy #i. CommitAsymI(u, v, gxy)@i ==> */
-/*         ( (Ex #j. AuthRSent(v, gxy, authR)@j) */
-/*         | ((Ex #j. LTKRev(v)@j) | (Ex #j. LTKRev(u)@j) | (Ex #j. SKRev(gxy)@j)) */
-/*         )" */
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+«
+lemma impAgreement:
+    "All tidI u v sk idPSK #i. CommitI(tidI, u, v, sk, idPSK)@i ==>
+        (All tidR up vp skp idPSKp #j. CommitR(tidR, up, vp, skp, idPSKp)@j ==>
+            ( (u = up & v = vp & sk = skp & idPSK = idPSKp)
+            | (Ex #k. LTKRev(idPSK)@k)
+            | (Ex #k. LTKRev(idPSKp)@k)
+            )
+        )
+    "
+»,
+«
+    "All tidI u v sk #i. CommitI(tidI, u, v, sk)@i ==>
+        (All tidR up vp skp #j. CommitR(tidR, up, vp, skp)@j ==>
+            ( (u = up & v = vp & sk = skp)
+            | (Ex #k. LTKRev(u)@k)
+            | (Ex #k. LTKRev(v)@k)
+            | (Ex #k. LTKRev(up)@k)
+            | (Ex #k. LTKRev(vp)@k)
+            )
+        )
+    "
 
+»)
 end
 
 
