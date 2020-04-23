@@ -523,7 +523,8 @@ lemma secrecyExpAuthSessionKey:
  * Verifies for:
  * PSK_PSK in 1 minute 20 seconds
  * SIG_STAT in 3 minutes 20 seconds
- * STAT_STAT
+ * SIG_SIG in 5 minutes 2 seconds
+ * STAT_STAT in 3 minutes 58 seconds
  *
  * Note the implicit flavor: it only holds *if* *both* parties commit to the
  *  parameters then
