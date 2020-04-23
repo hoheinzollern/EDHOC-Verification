@@ -513,7 +513,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma secrecyImpSessionKeyPFS:
     all-traces
-    "All tidI tidR u v sk idPSK #i #j #t. (K(sk)@i & CommitI(tidI u, v, sk)@j & CommitR(tidR, u, v, sk)@k & PSKIDSK(idPSK, sk)@t) ==>
+    "All tidI tidR u v sk idPSK #i #j #t. (K(sk)@i & CommitI(tidI, u, v, sk)@j & CommitR(tidR, u, v, sk)@k & PSKIDSK(idPSK, sk)@t) ==>
         ((Ex #l. LTKRev(idPSK)@l & #l < #k) | (Ex #l. SKRev(sk)@l))"
 »,
 «
