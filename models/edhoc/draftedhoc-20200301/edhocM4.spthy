@@ -508,7 +508,8 @@ lemma secrecyExpAuthSessionKey:
  *
  * Verifies for:
  * PSK_PSK in 1 minute 20 seconds
- * 
+ * SIG_STAT in 3 minutes 20 seconds
+ *
  * STAT_STAT
  */
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
