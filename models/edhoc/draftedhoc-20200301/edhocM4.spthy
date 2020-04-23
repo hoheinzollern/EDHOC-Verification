@@ -440,12 +440,14 @@ ifelse(m4METHODI, m4METHODR,
     «» /* NOTHING */
 )
 
+/*
 lemma helpInvKeyDep [reuse]:
     all-traces
     "  (All tid u v sk ad1 ci prk2 prk3 #i #j #t0.
         (CommitI(tid, u, v, sk)@t0 &
          I3(tid, ad1, ci, prk2, prk3)@i & !KU(sk)@j) ==> (Ex #k. !KU(prk3)@k))
     "
+*/
 /*
 lemma helpInvKeyDep [reuse]:
     all-traces
@@ -469,13 +471,14 @@ lemma sanityExecutableToTheEnd:
 */
 
 /*
- * Session key secrecy and session key independence
+ * Old explicit-session key secrecy and session key independence
  * Verifies for all methods in ? minutes (ACTIVE) and 40 secs (PASSIVE)
  * PSKPSK: verifies in 11 minutes (ACTIVE)
  * SIGSTAT: verifies in 5 minutes (ACTIVE)
  * SIGSIG: verifies in 9 minutes 46 seconds (ACTIVE)
  * STATSTAT: falsifies in 14 minutes (ACTIVE)   -- Peculiar! modeling error?
  */
+/*
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma secrecyExpAuthSessionKey:
@@ -494,8 +497,30 @@ lemma secrecyExpAuthSessionKey:
     "(All tid u v sk #i #j. K(sk)@i & CommitI(tid, u, v, sk)@j ==>
         ((Ex #k. LTKRev(u)@k) | (Ex #k. LTKRev(v)@k) | (Ex #k. SKRev(sk)@k)))
     &   // Can't have OR before implication, so need two clauses
-     (All tid u v sk #i #j. K(sk)@i & CommitR(tid, u, v, sk)@j ==>
-        ((Ex #k. LTKRev(u)@k) | (Ex #k. LTKRev(v)@k) | (Ex #k. SKRev(sk)@k)))"
+     "(All tid u v sk #i #j. K(sk)@i & CommitR(tid, u, v, sk)@j ==>
+        ((Ex #k. LTKRev(u)@k & #k < #j) | (Ex #k. LTKRev(v)@k) | (Ex #k. SKRev(sk)@k)))"
+»)
+*/
+
+
+/* PFS (implying regular secrecy) of session key.
+ * With matching sessions proof as well, we get "symbolic CK-security".
+ *
+ * Verifies for:
+ * STAT_STAT
+ */
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+«
+lemma secrecyImpSessionKeyPFS:
+    all-traces
+    "All tidI tidR u v sk idPSK #i #j #t. (K(sk)@i & CommitI(tidI u, v, sk)@j & CommitR(tidR, u, v, sk)@k & PSKIDSK(idPSK, sk)@t) ==>
+        ((Ex #l. LTKRev(idPSK)@l & #l < #k) | (Ex #l. SKRev(sk)@l))"
+»,
+«
+lemma secrecyImpSessionKeyPFS:
+    all-traces
+    "All tidI tidR u v sk #i #j #k. (K(sk)@i & CommitI(tidI, u, v, sk)@j & CommitR(tidR,u, v, sk)@k) ==>
+        ((Ex #l. LTKRev(u)@l & #l < #k) | (Ex #l. LTKRev(v)@l & #l < #k) | (Ex #l. SKRev(sk)@l))"
 »)
 
 /*
