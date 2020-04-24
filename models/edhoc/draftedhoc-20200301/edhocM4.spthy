@@ -67,7 +67,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         , Fr(~tid)  /* Thread ID */
         ]
         --[
-            I1(~tid, ~AD_1, ~C_I)
+            I1(~tid, ~AD_1, ~C_I, 'g'^~xx)
         ]->
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         [ «StI1_»m4METHODI«_»m4METHODR«»($U, ~ltk, $V, ~xx, ~C_I, m1, ~AD_1, $idPSK, ~tid),
@@ -151,7 +151,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
           , InvKDFR2(~tid, ~ltk, ~yy, K_2e, K_2m)»
 )
           , Neq(gx, 'g')
-          , R2(~tid, ~AD_2, ~C_R, prk_2e, prk_3e2m)
+          , R2(~tid, ~AD_2, ~C_R, gx, 'g'^~yy, exp_sk)
           ]->
 ifelse(«STAT», m4METHODR,
         [ «StR2_»m4METHODI«_»m4METHODR«»($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~AD_2, ~tid)
@@ -276,7 +276,7 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
         , In(m2)
         ]
         --[ RunningI(~tid, $U, $V, imp_sk)        // For agreement of all params
-          , I3(~tid, ~AD_1, ~C_I, prk_2e, prk_3e2m)
+          , I3(~tid, ~AD_1, ~C_I, 'g'^~xx, gy, imp_sk)
 ifelse(«SIG», m4METHODR,
          «, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)»,
          «»  /* nothing */
@@ -426,7 +426,19 @@ rule revealSessionKeyR:
 /*
  * Invariants - Helper lemmas
  */
-
+/*
+ KARL: Why does this not reduce the number of invariants to check?
+lemma helpInvReduceInvs [reuse]:
+    all-traces
+    "All tidI tidR ad1 ad2 ad1p ci cr cip gx gy gxp gxb sk #i #j #k.
+         ( I1(tidI, ad1p, cip, gxp)@i
+         & R2(tidR, ad2, cr, gxb, gy, sk)@j
+         & I3(tidI, ad1, ci, gx, gy, sk)@k
+         )
+         ==>
+         (ad1 = ad1p & ci = cip & gx = gxp & gx = gxb & #i < #j & #j < #k)
+    "
+*/
 
 /*
  * helpInvLtkKDF
@@ -434,7 +446,6 @@ rule revealSessionKeyR:
  *   PSKPSK: verifies in 36 seconds
  *   SIGSIG: verifies in 31 seconds
  */
-/*
 ifelse(m4METHODI, m4METHODR,
     «lemma helpInvLtkKDF [reuse]:
         all-traces
@@ -444,23 +455,7 @@ ifelse(m4METHODI, m4METHODR,
     ,
     «» /* NOTHING */
 )
-*/
 
-/*
-lemma helpInvKeyDep [reuse]:
-    all-traces
-    "  (All tid u v sk ad1 ci prk2 prk3 #i #j #t0.
-        (CommitI(tid, u, v, sk)@t0 &
-         I3(tid, ad1, ci, prk2, prk3)@i & !KU(sk)@j) ==> (Ex #k. !KU(prk3)@k))
-    "
-*/
-/*
-lemma helpInvKeyDep [reuse]:
-    all-traces
-    "  (All tid ad1 ci prk2 prk3 #i #j.
-        (I3(tid, ad1, ci, prk2, prk3)@i & !KU(prk3)@j) ==> (Ex #k. !KU(prk2)@k))
-    "
-*/
 
 /*
  * Sanity - Correct exectution trace exists
@@ -531,7 +526,6 @@ lemma secrecyExpAuthSessionKey:
  * Note the implicit flavor: it only holds *if* *both* parties commit to the
  *  parameters then
  */
-/*
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma secrecyImpSessionKeyPFS:
@@ -545,20 +539,20 @@ lemma secrecyImpSessionKeyPFS:
     "All tidI tidR u v sk #i #j #k. (K(sk)@i & CommitI(tidI, u, v, sk)@j & CommitR(tidR,u, v, sk)@k) ==>
         ((Ex #l. LTKRev(u)@l & #l < #k) | (Ex #l. LTKRev(v)@l & #l < #k) | (Ex #l. SKRev(sk)@l))"
 »)
-*/
 
 /*
  * Implicit agreement - at least on session key, u, v.
  * FIXME: PSKPSK falsified in 34 minutes
  */
+/*
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 «
 lemma impAgreement:
     "All tidI u v sk idPSK #i. CommitI(tidI, u, v, sk, idPSK)@i ==>
         (All tidR up vp skp idPSKp #j. CommitR(tidR, up, vp, skp, idPSKp)@j ==>
             ( (u = up & v = vp & sk = skp & idPSK = idPSKp)
-            | (Ex #k. LTKRev(idPSK)@k)
-            | (Ex #k. LTKRev(idPSKp)@k)
+            | (Ex #k. LTKRev(idPSK)@k & #k < #i)
+            | (Ex #k. LTKRev(idPSKp)@k & #k < #j)
             )
         )
     "
@@ -567,15 +561,16 @@ lemma impAgreement:
     "All tidI u v sk #i. CommitI(tidI, u, v, sk)@i ==>
         (All tidR up vp skp #j. CommitR(tidR, up, vp, skp)@j ==>
             ( (u = up & v = vp & sk = skp)
-            | (Ex #k. LTKRev(u)@k)
-            | (Ex #k. LTKRev(v)@k)
-            | (Ex #k. LTKRev(up)@k)
-            | (Ex #k. LTKRev(vp)@k)
+            | (Ex #k. LTKRev(u)@k & #k < #i)
+            | (Ex #k. LTKRev(v)@k & #k < #i)
+            | (Ex #k. LTKRev(up)@k & #k < #j)
+            | (Ex #k. LTKRev(vp)@k & #k < #j)
             )
         )
     "
 
 »)
+*/
 end
 
 
