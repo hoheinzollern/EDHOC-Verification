@@ -2,8 +2,8 @@
 import sys, re
 from functools import reduce
 
-DEBUG = False
-#DEBUG = True
+#DEBUG = False
+DEBUG = True
 
 # Put prios between 0 and 100. Above 100 is for default strategy
 MAXNPRIO = 200    # max number of prios, 0 is lowest prio
@@ -41,37 +41,86 @@ def genPrios(goalLines, lemma):
 
     for line in goalLines:
         goal = line.split(':')[0]
-        if "sanity" in lemma:
+        if "inv" in lemma:
+            if DEBUG:
+                print("MATCHING Invariant LEMMA: {}".format(lemma))
+            if re.match(".*KU\( hkdfExtract.*", line) or\
+               re.match(".*KU\( hkdfExpand.*", line):
+                    prioritize(goal, 80, line)
+            elif re.match(".*StI.*", line) or\
+                 re.match(".*StR.*", line) or\
+                 re.match(".*aeadEncrypt.*", line) or\
+                 re.match(".*xorEncrypt.*", line):
+                    prioritize(goal, 70, line)
+            else:
+                prioritize(goal, 50, line)
+        elif "sanity" in lemma:
             if DEBUG:
                 print("MATCHING Sanity LEMMA: {}".format(lemma))
-            if re.match(".*aeadEncrypt.*", line) or\
+            if re.match(".*KU\( sign.*", line) or\
+               re.match(".*KU\( hkdfExtract.*", line) or\
+               re.match(".*KU\( hkdfExpand.*", line):
+                    prioritize(goal, 80, line)
+            elif re.match(".*StI.*", line) or\
+               re.match(".*StR.*", line) or\
+               re.match(".*aeadEncrypt.*", line) or\
                re.match(".*xorEncrypt.*", line):
                     prioritize(goal, 80, line)
             else:
                 prioritize(goal, 50, line)
-        elif "secrecy" in lemma or\
-             "helpInvLtkKDF" in lemma or\
-             "helpInvKeyDep" in lemma:
+        elif "auth" in lemma:
+            if DEBUG:
+                print("MATCHING Auth LEMMA: {}".format(lemma))
+            if re.match(".*KU\( ~ltk.*", line) or\
+               re.match(".*KU\( ~xx.*", line) or\
+               re.match(".*KU\( ~yy.*", line):
+                    prioritize(goal, 97, line)
+            elif re.match(".*KU\( 'g'\^~ltk.*\).*", line) or\
+                 re.match(".*KU\( 'g'\^\(~ltk.*\).*", line):
+                    prioritize(goal, 95, line)
+            elif re.match(".*KU\( 'g'\^\(~yy.*\*~ltk.*", line) or\
+                 re.match(".*KU\( 'g'\^\(~xx.*\*~ltk.*", line):
+                    prioritize(goal, 93, line)
+            elif re.match(".*KU\( 'g'\^\(~xx.*\*~yy.*", line) or\
+                 re.match(".*KU\( 'g'\^\(~xx.*\*~yy.*", line):
+                    prioritize(goal, 90, line)
+            elif re.match(".*KU\( hkdfExtract.*", line) or\
+                 re.match(".*KU\( hkdfExpand.*", line):
+                    prioritize(goal, 80, line)
+            elif re.match(".*LTKRev.*", line) or\
+                 re.match(".*sign.*", line) or\
+                 re.match(".*StI.*", line) or\
+                 re.match(".*StR.*", line) or\
+                 re.match(".*aeadEncrypt.*", line) or\
+                 re.match(".*xorEncrypt.*", line):
+                    prioritize(goal, 70, line)
+            elif re.match(".*KU\( h\(.*", line):
+                    prioritize(goal, 60, line)
+            else:
+                 prioritize(goal, 50, line)
+        elif "secrecy" in lemma:
             if DEBUG:
                 print("MATCHING Secrecy LEMMA: {}".format(lemma))
             if re.match(".*KU\( ~ltk.*", line) or\
-                 re.match(".*KU\( ~xx.*", line) or\
-                 re.match(".*KU\( ~yy.*", line) or\
-                 re.match(".*KU\( 'g'\^\(~xx\*~yy\).*", line) or\
-                 re.match(".*KU\( 'g'\^\(~ltk\*~(xx|yy)\).*", line):
+               re.match(".*KU\( 'g'\^\(~ltk\*.*\).*", line):
+                    prioritize(goal, 97, line)
+            elif re.match(".*KU\( ~xx.*", line) or\
+                 re.match(".*KU\( ~yy.*", line):
+                    prioritize(goal, 95, line)
+            elif re.match(".*KU\( 'g'\^\(~xx\*~yy\).*", line):
                     prioritize(goal, 90, line)
-            elif re.match(".*StI.*", line) or\
-               re.match(".*StR.*", line) or\
-               re.match(".*LTKRev.*", line) or\
-               re.match(".*aeadEncrypt.*", line) or\
-               re.match(".*xorEncrypt.*", line) or\
-               re.match(".*sign.*", line):
-                    prioritize(goal, 80, line)
             elif re.match(".*KU\( hkdfExtract.*", line) or\
                  re.match(".*KU\( hkdfExpand.*", line):
-                    prioritize(goal, 75, line)
-            elif re.match(".*KU\( h\(.*", line):
+                    prioritize(goal, 80, line)
+            elif re.match(".*LTKRev.*", line) or\
+                 re.match(".*sign.*", line) or\
+                 re.match(".*StI.*", line) or\
+                 re.match(".*StR.*", line) or\
+                 re.match(".*aeadEncrypt.*", line) or\
+                 re.match(".*xorEncrypt.*", line):
                     prioritize(goal, 70, line)
+            elif re.match(".*KU\( h\(.*", line):
+                    prioritize(goal, 60, line)
             else:
                  prioritize(goal, 50, line)
         elif "helpInvLtk" in lemma:
