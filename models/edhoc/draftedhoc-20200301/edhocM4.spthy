@@ -364,7 +364,8 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 )
         , In(m3)
         ]
-        --[ CommitR(~tid, $U, $V, imp_sk, ~C_I, ~C_R)
+        --[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I, ~C_R)
+          , CommitR(~tid, $U, $V, imp_sk, ~C_I, ~C_R)
           , R4(~tid, $U, $V, m1, m2, m3)
 ifelse(«SIG», m4METHODI,
          «, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)»,
@@ -548,11 +549,10 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
          )
     "
 
-/* PFS (implying regular secrecy) of session key.
- * With matching sessions proof as well, we get "symbolic CK-security".
+/* PFS (implying regular secrecy) of session key (excluding GIY).
  *
- * Note the implicit flavor: it only holds *if* a partiy commits to the
- *  parameters then
+ * Note the implicit flavor: it only holds *if* a party commits to the
+ *  parameters
  */
 ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
     «lemma secrecyImpSessionKeyPFS:
@@ -601,6 +601,118 @@ ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
 )»
 )»
 )
+
+/* PFS (implying regular secrecy) of session key (including GIY).
+ *
+ * NOTE: THIS DOES NOT HOLD WHEN RESPONDER USES STAT METHOD
+ *
+ * Note the implicit flavor: it only holds *if* a party commits to the
+ *  parameters
+ */
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+    «lemma secrecyGIYSessionKeyPFS:
+        all-traces
+        "(All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitI(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    »,
+«ifelse(«STAT», m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
+    «lemma secrecyGIYSessionKeyPFS:
+        all-traces
+        "(All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitI(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    »,
+«ifelse(«STAT», m4METHODI,  // STAT_SIG
+    «lemma secrecyGIYSessionKeyPFS:
+        all-traces
+        "(All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitI(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    »,
+    // else: SIG_SIG
+    «lemma secrecyGIYSessionKeyPFS:
+        all-traces
+        "(All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitI(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    »
+)»
+)»
+)
+
+/* PFS (implying regular secrecy) of session key (including GIY).
+ *
+ * With implicit authentication (assuming responder completes) this holds
+ * for all methods.
+ *
+ * NOTE: THIS DOES NOT HOLD WHEN RESPONDER USES STAT METHOD
+ *
+ * Note the implicit flavor: it only holds *if* a party commits to the
+ *  parameters
+ */
+lemma secrecyExpPFSImplicitAuthenticationRImpI:
+        all-traces
+         "All tidR u v sk ci cr #i. ExpCommitR(tidR, u, v, sk, ci, cr)@i ==>
+            ( (Ex tidI #j. ExpCommitI(tidI, u, v, sk, ci, cr)@j)
+            | (Ex #j. SKRev(sk)@j)
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+           «| (Ex #j. LTKRev(<u, v>)@j & #j < #i)»,
+           «| (Ex #j. LTKRev(u)@j & #j < #i)
+            | (Ex #j. LTKRev(v)@j & #j < #i)»
+)
+            )
+         "
+
+ifelse(«PSK_PSK», m4METHODI«_»m4METHODR,
+    «lemma secrecyExpSessionKeyPFS:
+        all-traces
+         "All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         "
+    »,
+«ifelse(«STAT», m4METHODR,  // STAT_STAT or SIG_STAT
+    «lemma secrecyExpSessionKeyPFS:
+        all-traces
+         "All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         "
+    »,
+«ifelse(«STAT», m4METHODI,  // STAT_SIG
+    «lemma secrecyExpSessionKeyPFS:
+        all-traces
+         "All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         "
+    »,
+    // else: SIG_SIG
+    «lemma secrecyExpSessionKeyPFS:
+        all-traces
+         "All tid u v sk ci cr #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk, ci, cr)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         "
+    »
+)»
+)»
+)
+
+
 
 end
 
