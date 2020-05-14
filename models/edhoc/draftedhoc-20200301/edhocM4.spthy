@@ -146,7 +146,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~AD_2)
         , Fr(~tid)
         ]
-        --[ ExpRunningR(~tid, $V, exp_sk, ~C_R, ~C_R)
+        --[ ExpRunningR(~tid, $V, exp_sk, ~C_I, ~C_R)
           , R2(~tid, $V, m1, m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
