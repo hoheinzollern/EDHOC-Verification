@@ -2,8 +2,8 @@
 import sys, re
 from functools import reduce
 
-#DEBUG = False
-DEBUG = True
+DEBUG = False
+#DEBUG = True
 
 # Put prios between 0 and 100. Above 100 is for default strategy
 MAXNPRIO = 200    # max number of prios, 0 is lowest prio
@@ -98,7 +98,7 @@ def genPrios(goalLines, lemma):
                     prioritize(goal, 60, line)
             else:
                  prioritize(goal, 50, line)
-        elif "secrecy" in lemma:
+        elif "secrecy" in lemma or "Secrecy" in lemma:
             if DEBUG:
                 print("MATCHING Secrecy LEMMA: {}".format(lemma))
             if re.match(".*KU\( ~ltk.*", line) or\
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # We want 0 to be lowest prio, so reverse all level-lists and the list itself
     prios = [(p[0], p[1][::-1]) for p in prios][::-1]
 
-    outputPrios(goalLines, lemma)
+    #outputPrios(goalLines, lemma)
     #dumpPrios(goalLines, lemma)
 
 

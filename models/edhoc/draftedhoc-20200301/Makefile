@@ -49,13 +49,27 @@ alotofsense: genModels
 interactive: genModels
 	tamarin-prover interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
-# This target is for commandline usage
-cl: genModels
-	#d=$$(date +%s); tamarin-prover --prove ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/PSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/PSKPSK.spthy
-	#d=$$(date +%s); tamarin-prover --prove ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/SIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/SIGSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/SIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/SIGSIG.spthy
-	#d=$$(date +%s); tamarin-prover --prove ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/STATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/STATSTAT.spthy
-	#d=$$(date +%s); tamarin-prover --prove ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/STATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/STATSIG.spthy
+auth: genModels
+	d=$$(date +%s); tamarin-prover --prove=auth ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authPSKPSK.spthy
+	d=$$(date +%s); tamarin-prover --prove=auth ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=auth ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSIG.spthy
+	d=$$(date +%s); tamarin-prover --prove=auth ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=auth ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
+
+pfs: genModels
+	d=$$(date +%s); tamarin-prover --prove=secrecyPFS ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpPSKPSK.spthy
+	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSIG.spthy
+	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSIG.spthy
+
+# Appears not needed
+#pfsexp: genModels
+	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpPSKPSK.spthy
+	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSIGSTAT.spthy
+	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSIGSIG.spthy
+	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSTATSTAT.spthy
+	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSTATSIG.spthy
 
 # This target is for commandline usage but only see if properties hold
 all: genModels
