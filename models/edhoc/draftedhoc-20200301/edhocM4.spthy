@@ -19,8 +19,8 @@ functions:
     aeadEncrypt/4,  // Input: Key, plain-text, aad, cAEADx (AEAD algo ID)
     aeadDecrypt/4,  // Input: Key, cipher-text, aad, cAEADx (AEAD algo ID)
     decrypt/3,      // Input: Key, cipher-text, cAEADx (AEAD algo ID);
-    xorEncrypt/2,   // Input: Key, plain-text
-    xorDecrypt/2,   // Input: Key, cipher-text
+    //xorEncrypt/2,   // Input: Key, plain-text
+    //xorDecrypt/2,   // Input: Key, cipher-text
     hkdfExtract/2,  // Input: Salt, random source
     hkdfExpand/2,   // Input: Salt, uniform random source
     cEmptyStr/0,
@@ -33,8 +33,8 @@ functions:
 
 equations:
     aeadDecrypt(key, aeadEncrypt(key, pt, aad, algoId), aad, algoId) = pt,
-    decrypt(key, aeadEncrypt(key, pt, aad, algoID), algoId) = pt,
-    xorDecrypt(k, xorEncrypt(k, pt)) = pt   // Too strong
+    decrypt(key, aeadEncrypt(key, pt, aad, algoID), algoId) = pt
+    //xorDecrypt(k, xorEncrypt(k, pt)) = pt   // Too strong
 
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
@@ -104,12 +104,6 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          CRED_V = pkV
          extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
-         /* We don't use proper XOR to beging with
-         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-         K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3>
-         */
          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
          ifelse(<!SIG!>, m4METHODR,
             <!authV = sign(<assocData2, MAC_2>, ~ltk)!>,
@@ -117,7 +111,12 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          )
          plainText2 = <$V, authV>
          K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-         CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2)
+         /* K_2e is split in two parts to allow attacker to attack them
+          * individually
+          */
+         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
         !>
 )
          m2 = <data_2, CIPHERTEXT_2>
@@ -190,13 +189,12 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
              ,
             <!prk_3e2m = prk_2e!>
          )
-         /* We don't use proper XOR to beging with
+         /* K_2e is split in two parts to allow attacker to attack them
+          * individually
+          */
          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-         K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> */
-         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-         CIPHERTEXT_2 = xorEncrypt(K_2e, plainText2) // Decryption by pattern matching
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2>
          m2 = <data_2, CIPHERTEXT_2>
 
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
@@ -213,7 +211,10 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!extAad3 = TH_3
-         plainText3 = 'emptyStr' //~AD_3
+ifdef(<!m4AD3!>,
+         <!plainText3 = ~AD_3!>,
+         <!plainText3 = 'emptyStr'!>
+)
          CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)!>,
          /* STAT and SIG methods */
         <!ifelse(<!STAT!>, m4METHODI,
@@ -224,14 +225,20 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
          protected3 = $U // ID_CRED_U
          CRED_U = pkU
-         extAad3 = <TH_3, CRED_U>
+ifdef(<!m4AD3!>,
+         <!extAad3 = <TH_3, CRED_U, ~AD_3>!>,
+         <!extAad3 = <TH_3, CRED_U>!>
+)
          assocData3 = <protected3, extAad3>
          MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
          ifelse(<!SIG!>, m4METHODI,
             <!authU = sign(<assocData3, MAC_3>, ~ltk)!>,
             <!authU = MAC_3!>
          )
-         plainText3 = <$U, authU>
+ifdef(<!m4AD3!>,
+         <!plainText3 = <$U, authU, ~AD_3>!>,
+         <!plainText3 = <$U, authU>!>
+)
          extAad3Outer = TH_3
          CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
          !>
@@ -279,6 +286,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
         , In(m2)
+ifdef(<!m4AD3!>,
+        <!, Fr(~AD_3)!>
+)
         ]
         --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
           , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
@@ -305,13 +315,19 @@ rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
         K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
        <!extAad3 = TH_3
-        plainText3 = 'emptyStr' //~AD_3
+ifdef(<!m4AD3!>,
+        <!plainText3 = ~AD_3!>,
+        <!plainText3 = 'emptyStr'!>
+)
         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
        !>,
         /* STAT and SIG methods */
        <!CRED_U = pkU
         extAad3 = TH_3
-        plainText3 = <$U, authI>
+ifdef(<!m4AD3!>,
+        <!plainText3 = <$U, authI, ~AD_3>!>,
+        <!plainText3 = <$U, authI>!>
+)
         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
         ifelse(<!STAT!>, m4METHODI,
            <!giy = CRED_U^~yy
@@ -320,7 +336,10 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         )
         K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
         protected3 = $U // ID_CRED_U
-        extAad3 = <TH_3, CRED_U>
+ifdef(<!m4AD3!>,
+        <!extAad3 = <TH_3, CRED_U, ~AD_3>!>,
+        <!extAad3 = <TH_3, CRED_U>!>
+)
         assocData3 = <protected3, extAad3>
         MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
        !>
@@ -566,64 +585,6 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )!>
 )!>
 )
-
-/* PFS (implying regular secrecy) of session key (**NOT including GIY**).
- *
- * With implicit authentication (assuming responder completes) this holds
- * for all methods.
- *
- * Note the implicit flavor: it only holds *if* a party commits to the
- *  parameters
- */
-
-/* KARL: seems we won't be needing this weakened version after all */
-
-/* lemma secrecyExpPFSImplicitAuthenticationRImpI: */
-/*         all-traces */
-/*          "All tidR u v sk #i. ExpCommitR(tidR, u, v, sk)@i ==> */
-/*             ( (Ex tidI #j. ExpCommitI(tidI, u, v, sk)@j) */
-/*             | (Ex #j. SKRev(sk)@j) */
-/* ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, */
-/*            <!| (Ex #j. LTKRev(<u, v>)@j & #j < #i)!>, */
-/*            <!| (Ex #j. LTKRev(u)@j & #j < #i) */
-/*             | (Ex #j. LTKRev(v)@j & #j < #i)!> */
-/* ) */
-/*             ) */
-/*          " */
-
-/* ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, */
-/*     <!lemma secrecyExpSessionKeyPFS: */
-/*         all-traces */
-/*          "All tid u v sk #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk)@j) ==> */
-/*             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) */
-/*          " */
-/*     !>, */
-/* <!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT */
-/*     <!lemma secrecyExpSessionKeyPFS: */
-/*         all-traces */
-/*          "All tid u v sk #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk)@j) ==> */
-/*             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) */
-/*          " */
-/*     !>, */
-/* <!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG */
-/*     <!lemma secrecyExpSessionKeyPFS: */
-/*         all-traces */
-/*          "All tid u v sk #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk)@j) ==> */
-/*             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) */
-/*          " */
-/*     !>, */
-/*     // else: SIG_SIG */
-/*     <!lemma secrecyExpSessionKeyPFS: */
-/*         all-traces */
-/*          "All tid u v sk #i #j. (K(sk)@i & ExpCommitR(tid, u, v, sk)@j) ==> */
-/*             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) */
-/*          " */
-/*     !> */
-/* )!> */
-/* )!> */
-/* ) */
-
-
 
 end
 

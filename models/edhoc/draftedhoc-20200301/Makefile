@@ -2,7 +2,6 @@ MODEL=edhoc_model_draft20200301.pv
 TEST=libTest.pv
 LIB=edhoc_common.pvl
 
-
 TSTPASS=grep --color=auto -E "verified|falsified|analysis incomplete"
 SRC=edhocM4.spthy
 TAMARIN=tamarin-prover --quit-on-warning --heuristic=O --oraclename=oracle.py
@@ -11,6 +10,13 @@ TAMARIN=tamarin-prover --quit-on-warning --heuristic=O --oraclename=oracle.py
 #MATTACKER=-Dm4ATTACKER=PASSIVE
 MATTACKER=-Dm4ATTACKER=ACTIVE
 
+# Set this switch to include AD_3 in the model
+#MAD3=-Dm4AD3
+
+# All flags that are required for all models
+MFLAGS=${MATTACKER} ${MAD3}
+
+# Flags and filenames used for each method-model
 MSIGSIG=-Dm4METHODI=SIG -Dm4METHODR=SIG
 TSIGSIG=TMP_edhoc_SIG_SIG.spthy
 MSIGSTAT=-Dm4METHODI=SIG -Dm4METHODR=STAT
@@ -23,11 +29,11 @@ MPSKPSK=-Dm4METHODI=PSK -Dm4METHODR=PSK
 TPSKPSK=TMP_edhoc_PSK_PSK.spthy
 
 genModels:
-	m4 ${MATTACKER} ${MSIGSTAT} ${SRC} > ${TSIGSTAT}
-	m4 ${MATTACKER} ${MSTATSIG} ${SRC} > ${TSTATSIG}
-	m4 ${MATTACKER} ${MSTATSTAT} ${SRC} > ${TSTATSTAT}
-	m4 ${MATTACKER} ${MSIGSIG} ${SRC} > ${TSIGSIG}
-	m4 ${MATTACKER} ${MPSKPSK} ${SRC} > ${TPSKPSK}
+	m4 ${MFLAGS} ${MSIGSTAT} ${SRC} > ${TSIGSTAT}
+	m4 ${MFLAGS} ${MSTATSIG} ${SRC} > ${TSTATSIG}
+	m4 ${MFLAGS} ${MSTATSTAT} ${SRC} > ${TSTATSTAT}
+	m4 ${MFLAGS} ${MSIGSIG} ${SRC} > ${TSIGSIG}
+	m4 ${MFLAGS} ${MPSKPSK} ${SRC} > ${TPSKPSK}
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -62,22 +68,6 @@ pfs: genModels
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSIG.spthy
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSTAT.spthy
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSIG.spthy
-
-# Appears not needed
-#pfsexp: genModels
-	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpPSKPSK.spthy
-	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSIGSTAT.spthy
-	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSIGSIG.spthy
-	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSTATSTAT.spthy
-	#d=$$(date +%s); tamarin-prover --prove=secrecyExp ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsExpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsExpSTATSIG.spthy
-
-# This target is for commandline usage but only see if properties hold
-all: genModels
-	tamarin-prover --prove ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& | ${TSTPASS}
-	tamarin-prover --prove ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& | ${TSTPASS}
-	tamarin-prover --prove ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& | ${TSTPASS}
-	tamarin-prover --prove ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& | ${TSTPASS}
-	tamarin-prover --prove ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& | ${TSTPASS}
 
 clean:
 	rm TMP_*
