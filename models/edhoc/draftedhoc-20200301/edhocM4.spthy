@@ -472,13 +472,15 @@ rule revealSessionKeyR:
  */
 lemma sanityExecutableToTheEnd:
     exists-trace
-    "(Ex tidI tidR u v m1 m2 m3 sk #i #j #k #l.
+    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
        I1(tidI, u, v, m1)@i
      & R2(tidR, v, m1, m2)@j & #i < #j
      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
      & CommitI(tidI, u, v, sk)@k
+     & ExpCommitI(tidI, u, v, sk2)@k
      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
      & CommitR(tidR, u, v, sk)@l
+     & ExpCommitR(tidR, u, v, sk2)@l
      )
     "
 
