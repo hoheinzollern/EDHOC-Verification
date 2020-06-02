@@ -444,7 +444,7 @@ rule revealLTK_PSK:
  * sk = <gxy, grx> for SIG_STAT method
  * sk = <gxy> for STAT_SIG method           -- GIY not known to R for msg2
  * sk = <gxy, grx> for STAT_STAT method     -- GIY not known to R for msg2
- * Implicit authentication possible for:
+ * Implicit authentication *possible* for:
  * sk = <gxy> for PSK and SIG_SIG methods
  * sk = <gxy, grx> for SIG_STAT method
  * sk = <gxy, giy> for STAT_SIG method
@@ -533,10 +533,51 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          )
     "
 
-/* PFS (implying regular secrecy) of session key (**including GIY**).
+ifelse(<!STAT!>, m4METHODI,
+<!
+/* If we include G_IY in the session key material, we will not get (injective)
+ * agreement on the session key material from the responder to the initator.
+ * We instead show implicit authentication of the key material.
+ * This is a weaker guarantee than injective agreement that essentially
+ * guarantees to a party U that has completed its protocol run and believes
+ * the protocol is run with party V, that *if* there is anybody out there who
+ * has computed this session key (at some point), then that party is V and
+ * V believes it ran the protocol with U.
  *
- * Note the implicit flavor: it only holds *if* a party commits to the
- *  parameters
+ * Note that we already proved injective agreement guarantee on the full
+ * session key material (including G_IY) from Initiator to Responder above, so
+ * we only have to fall back to implicit authentication "from" Responder to
+ * Initiator.
+ *
+ * Second note: This is only interesting when the Initiator is using STAT
+ * method.  In all other cases we have no G_IY and hence have injective
+ * agreement on the entire key material becasue expSK is equal to impSK.
+ *
+ * KARL: Intuitively inj-agree should imply this one. Should we prove that?
+ *       Then we can say all methods fulfill the implicit auth at least and
+ *       some of them fulfill the stronger inj-agree.
+ */
+lemma authGIYImplicitAuthGuaranteeForI:
+    all-traces
+    "All tidI u v impSk #i.
+         CommitI(tidI, u, v, impSk)@i ==>
+         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+                (u = u2  &  v = v2)
+             )
+           &
+             (not Ex #k. K(impSk)@k)
+           )
+         | (Ex #k. LTKRev(u)@k)
+         | (Ex #k. LTKRev(v)@k)
+         )
+    "
+!>
+,
+<!!>
+)
+
+
+/* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:

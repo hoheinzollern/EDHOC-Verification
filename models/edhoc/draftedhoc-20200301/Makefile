@@ -55,12 +55,16 @@ alotofsense: genModels
 interactive: genModels
 	tamarin-prover interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
-auth: genModels
-	d=$$(date +%s); tamarin-prover --prove=auth ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authPSKPSK.spthy
-	d=$$(date +%s); tamarin-prover --prove=auth ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=auth ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSIG.spthy
-	d=$$(date +%s); tamarin-prover --prove=auth ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=auth ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
+auth: genModels authimpilicit
+	d=$$(date +%s); tamarin-prover --prove=authInj ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authPSKPSK.spthy
+	d=$$(date +%s); tamarin-prover --prove=authInj ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=authInj ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSIG.spthy
+	d=$$(date +%s); tamarin-prover --prove=authInj ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=authInj ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
+
+authimplicit: genModels
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
 
 pfs: genModels
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFS ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpPSKPSK.spthy
@@ -68,6 +72,8 @@ pfs: genModels
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSIG.spthy
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSTAT.spthy
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSIG.spthy
+
+all: sense alotofsense auth authimplicit pfs
 
 clean:
 	rm TMP_*
