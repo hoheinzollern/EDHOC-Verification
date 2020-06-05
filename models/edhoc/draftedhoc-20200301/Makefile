@@ -63,8 +63,11 @@ auth: genModels authimpilicit
 	d=$$(date +%s); tamarin-prover --prove=authInj ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
 
 authimplicit: genModels
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitPSKPSK.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSIGSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSIGSIG.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSTATSTAT.spthy
+	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSTATSIG.spthy
 
 pfs: genModels
 	d=$$(date +%s); tamarin-prover --prove=secrecyPFS ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpPSKPSK.spthy

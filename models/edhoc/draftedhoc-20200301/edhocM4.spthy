@@ -535,8 +535,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          )
     "
 
-ifelse(<!STAT!>, m4METHODI,
-<!
+
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
  * We instead show implicit authentication of the key material.
@@ -571,12 +570,9 @@ lemma authGIYImplicitAuthGuaranteeForI:
            )
          | (Ex #k. LTKRev(u)@k)
          | (Ex #k. LTKRev(v)@k)
+         | (Ex #k. LTKRev(<u, v>)@k)
          )
     "
-!>
-,
-<!!>
-)
 
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
