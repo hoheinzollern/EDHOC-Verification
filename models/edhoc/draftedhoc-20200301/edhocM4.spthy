@@ -519,10 +519,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  * Second note: This is only interesting when the Initiator is using STAT
  * method.  In all other cases we have no G_IY and hence have injective
  * agreement on the entire key material becasue expSK is equal to impSK.
+ * Nontheless, we prove it for all methods. This gives a common security
+ * level that users can expect from all methods.
  *
- * KARL: Intuitively inj-agree should imply this one. Should we prove that?
- *       Then we can say all methods fulfill the implicit auth at least and
- *       some of them fulfill the stronger inj-agree.
  */
 lemma authGIYImplicitAuthGuaranteeForI:
     all-traces
@@ -533,6 +532,14 @@ lemma authGIYImplicitAuthGuaranteeForI:
              )
            &
              (not Ex #k. K(impSk)@k)
+           &
+             (not( Ex tidR u v #j tidR2 u2 v2 #j2.
+                      ( CommitR(tidR,  u,  v,  impSk)@j
+                      & CommitR(tidR2, u2, v2, impSk)@j2
+                      & not(#j = #j2)
+                      )
+                 )
+             )
            )
          | (Ex #k. LTKRev(u)@k)
          | (Ex #k. LTKRev(v)@k)
