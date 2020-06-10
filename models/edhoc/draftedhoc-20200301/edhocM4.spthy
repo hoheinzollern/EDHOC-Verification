@@ -39,18 +39,6 @@ equations:
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
-/* ifelse(<!SIG!>, m4METHODI, */
-/*     <!restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"!>, */
-/*     <!ifelse(<!SIG!>, m4METHODR, */
-/*         <!restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"!>, */
-/*         <!!> /1* NOTHING *1/ */
-/*     )!> */
-/* ) */
-
-
-//restriction Neq:
-    //"All x y #i. Neq(x, y)@i ==> not(x = y)"
-
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -261,17 +249,6 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
  * implicitly on R->I because R does not know G_IY when sending message 2,
  * so I cannot deduce that R is using the same value of GIY when I completes.
  */
-/* ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR, */
-/*     <!imp_sk = <gy^~xx, giy>!>, */
-/*     <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*         <!imp_sk = <gy^~xx, grx>!>, */
-/*         <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*             <!imp_sk = <gy^~xx, giy, grx>!>, */
-/*             <!imp_sk = <gy^~xx>!> // SIG_SIG or PSK_PSK */
-/*         )!> */
-/*     )!> */
-/* ) */
-
 ifelse(<!STAT!>, m4METHODI,
     <!imp_sk = <exp_sk, giy>!>,
     <!imp_sk =  exp_sk!>
@@ -362,17 +339,6 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
  * implicitly on R->I because R does not know G_IY when sending message 2,
  * so I cannot deduce that R is using the same value of GIY when I completes.
  */
-/* ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR, */
-/*     <!imp_sk = <gxy, giy>!>, */
-/*     <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*         <!imp_sk = <gxy, grx>!>, */
-/*         <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*             <!imp_sk = <gxy, giy, grx>!>, */
-/*             <!imp_sk = <gxy>!> // SIG_SIG or PSK_PSK */
-/*         )!> */
-/*     )!> */
-/* ) */
-
 ifelse(<!STAT!>, m4METHODI,
     <!imp_sk = <exp_sk, giy>!>,
     <!imp_sk =  exp_sk!>
