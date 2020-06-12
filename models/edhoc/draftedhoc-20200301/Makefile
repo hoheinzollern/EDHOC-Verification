@@ -4,7 +4,10 @@ LIB=edhoc_common.pvl
 
 TSTPASS=grep --color=auto -E "verified|falsified|analysis incomplete"
 SRC=edhocM4.spthy
-TAMARIN=tamarin-prover --quit-on-warning --heuristic=O --oraclename=oracle.py
+TAMARIN_CLEAN=tamarin-prover
+TAMARIN=${TAMARIN_CLEAN} --quit-on-warning --heuristic=O --oraclename=oracle.py
+PROOFS=proofs
+
 
 # Set this to PASSIVE for passive attacker; else the attacker is DY
 #MATTACKER=-Dm4ATTACKER=PASSIVE
@@ -17,69 +20,99 @@ MATTACKER=-Dm4ATTACKER=ACTIVE
 MFLAGS=${MATTACKER} ${MAD3}
 
 # Flags and filenames used for each method-model
+METHODPAIRS=PSK_PSK SIG_SIG SIG_STAT STAT_SIG STAT_STAT
+METHODSINGLES=PSK SIG STAT
+
 MSIGSIG=-Dm4METHODI=SIG -Dm4METHODR=SIG
-TSIGSIG=TMP_edhoc_SIG_SIG.spthy
+SIGSIG=edhoc_SIG_SIG.spthy
+TSIGSIG=TMP_${SIGSIG}
 MSIGSTAT=-Dm4METHODI=SIG -Dm4METHODR=STAT
-TSIGSTAT=TMP_edhoc_SIG_STAT.spthy
+SIGSTAT=edhoc_SIG_STAT.spthy
+TSIGSTAT=TMP_${SIGSTAT}
 MSTATSIG=-Dm4METHODI=STAT -Dm4METHODR=SIG
-TSTATSIG=TMP_edhoc_STAT_SIG.spthy
+STATSIG=edhoc_STAT_SIG.spthy
+TSTATSIG=TMP_${STATSIG}
 MSTATSTAT=-Dm4METHODI=STAT -Dm4METHODR=STAT
-TSTATSTAT=TMP_edhoc_STAT_STAT.spthy
+STATSTAT=edhoc_STAT_STAT.spthy
+TSTATSTAT=TMP_${STATSTAT}
 MPSKPSK=-Dm4METHODI=PSK -Dm4METHODR=PSK
-TPSKPSK=TMP_edhoc_PSK_PSK.spthy
+PSKPSK=edhoc_PSK_PSK.spthy
+TPSKPSK=TMP_${PSKPSK}
+
+# Using GNU time we can get more useful information about memory and time
+# consumption.
+# We log in this format: "[hours:]:minutes:seconds MB-of-memory"
+# Time is measured in real time, becasue we care about how long we actually
+# have to wait for verification runs
+TIMEFMT=%E
+TIME=/usr/bin/time -f ${TIMEFMT}
+
+
+# Don't change the METH string or the LEMMAPREFIX strings. They are used
+# as variables in substitutions below
+TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
+
+check:
+	grep --color=auto -E "verified|falsified|(user.*m.*s)" ${PROOFS}/*
 
 genModels:
+	mkdir -p proofs
 	m4 ${MFLAGS} ${MSIGSTAT} ${SRC} > ${TSIGSTAT}
 	m4 ${MFLAGS} ${MSTATSIG} ${SRC} > ${TSTATSIG}
 	m4 ${MFLAGS} ${MSTATSTAT} ${SRC} > ${TSTATSTAT}
 	m4 ${MFLAGS} ${MSIGSIG} ${SRC} > ${TSIGSIG}
 	m4 ${MFLAGS} ${MPSKPSK} ${SRC} > ${TPSKPSK}
 
+# This target is useful for viewing the GUI
+interactive: genModels
+	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+
 # This target checks that all models parses correctly
 sense: genModels
-	tamarin-prover --parse-only ${TSTATSIG} |& awk "/summary/,/======/"
-	tamarin-prover --parse-only ${TSIGSTAT} |& awk "/summary/,/======/"
-	tamarin-prover --parse-only ${TSTATSTAT} |& awk "/summary/,/======/"
-	tamarin-prover --parse-only ${TSIGSIG} |& awk "/summary/,/======/"
-	tamarin-prover --parse-only ${TPSKPSK} |& awk "/summary/,/======/"
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		${TAMARIN_CLEAN} --parse-only TMP_$(meth) 2>&1\
+			| grep --color=auto -E "analyzed|error|tamarin-prover:.*";\
+	 )
 
 # This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	${TAMARIN} --prove=sanity ${TSTATSIG} |& grep --color=always sanity | ${TSTPASS}
-	${TAMARIN} --prove=sanity ${TSIGSTAT} |& grep --color=always sanity | ${TSTPASS}
-	${TAMARIN} --prove=sanity ${TSTATSTAT} |& grep --color=always sanity | ${TSTPASS}
-	${TAMARIN} --prove=sanity ${TSIGSIG} |& grep --color=always sanity | ${TSTPASS}
-	${TAMARIN} --prove=sanity ${TPSKPSK} |& grep --color=always sanity | ${TSTPASS}
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,sanity,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 
-# This target is useful for viewing the GUI
-interactive: genModels
-	tamarin-prover interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
-
-auth: genModels authimpilicit
-	d=$$(date +%s); tamarin-prover --prove=authInj ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authPSKPSK.spthy
-	d=$$(date +%s); tamarin-prover --prove=authInj ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=authInj ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSIGSIG.spthy
-	d=$$(date +%s); tamarin-prover --prove=authInj ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=authInj ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authSTATSIG.spthy
+# Injective agreement on session key except when G_IY is included for I.
+# Inj-agreement for full session key for R.
+auth: genModels
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authInj,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 
 authimplicit: genModels
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitPSKPSK.spthy
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSIGSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSIGSIG.spthy
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSTATSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=authGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/authImplicitSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/authImplicitSTATSIG.spthy
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authGIYImplicit,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 
 pfs: genModels
-	d=$$(date +%s); tamarin-prover --prove=secrecyPFS ${TPSKPSK} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpPSKPSK.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpPSKPSK.spthy
-	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSIGSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSIGSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSIGSIG.spthy
-	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSTAT} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSTAT.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSTAT.spthy
-	d=$$(date +%s); tamarin-prover --prove=secrecyPFSGIY ${TSTATSIG} --quit-on-warning --heuristic=O --oraclename=oracle.py |& tee proofs/pfsImpSTATSIG.spthy; echo "Execution time: $$((($$(date +%s)-d)/60)) minutes" >> proofs/pfsImpSTATSIG.spthy
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,secrecyPFS,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 
 all: sense alotofsense auth authimplicit pfs
 
 clean:
-	rm TMP_*
+	rm ./TMP_*
 
 proverifAll:
 	proverif ${LOADLIB} ${MODEL}
