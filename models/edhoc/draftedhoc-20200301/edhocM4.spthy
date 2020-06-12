@@ -433,8 +433,6 @@ rule revealSessionKeyR:
 
 /*
  * Sanity - Correct exectution trace exists
- *
- * NOTE: this allows u = v. Is that what we want?
  */
 lemma sanityExecutableToTheEnd:
     exists-trace
@@ -598,6 +596,27 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )!>
 )
 
+/* Because G_IY only exists when Initator uses STAT method, we only verify
+ * the lemmas for those two cases.  All other cases are covered by the
+ * regular injective agreement lemma.
+ *
+ * We cannot model that the injective agreement guarantee fails for
+ * the initator, because that would require adding a Running event including
+ * G_IY in rule R2, which it does not have at that point.
+ *
+ * Because we use the pre-specified peer setting, we could cheat in the model
+ * and add such an event.  This would result in that R2 "guesses" the initiator's
+ * identity and emmits a Eunning event based on the guess.
+ * Since there wil be one run of R for each G_IY, R will try all identities for
+ * I, but at least one of them will fail.
+ * This seems a useless and contrived we to "prove" that there is no agreement
+ * on G_IY, so we won't do it.  Maybe something to describe in the paper.
+ *
+ * A more accurate model would be to use the post-specified peer setting,
+ * in which R learns the identity of I during the protocol run.
+ * Likely that setting would result in even more complex task for Tamarin
+ * to handle.
+ */
 end
 
 
