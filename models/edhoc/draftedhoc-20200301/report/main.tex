@@ -1,14 +1,5 @@
-%\documentclass[a4paper,11pt]{article}
-\documentclass[runningheads]{llncs2e/llncs}
-%% BEGIN IACR
-%\topmargin=-5mm
-%\evensidemargin=0cm
-%\oddsidemargin=0cm
-%\textwidth=16cm
-%\textheight=22cm
-%\addtolength{\headheight}{1.6pt}
-%% END IACR
-
+\pdfoutput=1
+\documentclass[runningheads]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
 %\usepackage{stmaryrd}       % Semantic brackets \llbracket and \rrbracket
 %\usepackage{mathpartir}     % inference rules
@@ -28,18 +19,32 @@
 % If you use the hyperref package, please uncomment the following line
 % to display URLs in blue roman font according to Springer's eBook style:
 \usepackage{hyperref}
-\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+% not the way to do it for arXiv though...
+\usepackage{url}
+\hypersetup{
+    final, % Uncomment to remove all links (useful for printing in black and white)
+    colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
+    urlcolor=blue, linkcolor=black, citecolor=green, % Link colors
+%   pdftitle={title of paper}, % PDF title
+%   pdfauthor={auth1, auth2}, % PDF Author
+%   pdfsubject={}, % PDF Subject
+    pdfkeywords={}, % PDF Keywords
+    pdfcreator={PdfLaTeX}, % PDF Creator
+%   pdfproducer={Pandoc, XeLaTeX with hyperref} % PDF producer
+}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-\usepackage{algorithm}
-\usepackage{algpseudocode}         % https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmic_package
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}         % https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmic_package
 
 \usepackage{draftwatermark}
 \SetWatermarkText{\textbf{DRAFT}}
 \SetWatermarkScale{2}
 \SetWatermarkColor[gray]{.92}
+
 
 \input{macros}
 
@@ -121,7 +126,7 @@ heterogeneous security properties, and discuss consequences of this.
     \item \textbf{25/6} Alessandro can start writing his parts
     \item \textbf{\hl{9/7}} \mArxiv version ready for upload (minus formatting issues)
     \item \textbf{13/7} \mArxiv formatted version sent out for review (at least to
-        Mads Dam and IETF team).
+        Mads Dam, IETF team and internal Eri review).
     \item \textbf{17/7} Possible comments from review fixed, and upload to
         \mArxiv. This DL is needed. Otherwise people at the IETF meeting will
         not be able to comment from the IETF meeting.
@@ -299,7 +304,6 @@ This section is only for the outline and will be removed in the final
                 consequences of the choices are,
                 see~\ref{sec:mail-notes-secrecy-sessions} and
                 \ref{sec:mail-notes-session-key-mtrl}.
-
         \end{itemize}
 \end{itemize}
 }
