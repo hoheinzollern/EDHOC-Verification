@@ -1,16 +1,24 @@
-\usepackage[numbers, sort]{natbib}
+%\usepackage[numbers, sort]{natbib}
 \usepackage[T1]{fontenc} % E.g., for small caps in section headings
 \usepackage{xspace}
-\usepackage[lambda,advantage,operators,adversary,landau,probability,notions,logic,
-ff,mm,primitives,events,complexity,asymptotics,sets,keys]{cryptocode}
 
 % http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
 \usepackage{todonotes}
 \newcommand{\knote}[1]{\todo[inline,
                              color=orange,
                              size=\footnotesize
-                         ]{\textsf{\textbf{Karl:} #1}}}
+                            ]{\textsf{\textbf{Karl:} #1}}}
+\newcommand{\anote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Alessandro:} #1}}}
+\newcommand{\vnote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
 %\newcommand{\knote}[1]{}
+%\newcommand{\vnote}[1]{}
+%\newcommand{\anote}[1]{}
 
 % -- Fonts and styles for names
 \newcommand{\mItemStyle}[1]{\ensuremath{#1}}
@@ -19,6 +27,31 @@ ff,mm,primitives,events,complexity,asymptotics,sets,keys]{cryptocode}
 \newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
 \newcommand{\mVarStyle}[1]{\mathit{#1}}
 \newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
-\newcommand{\mRuleStyle}[1]{\ensuremath{\mathbf{#1}}}
-\newcommand{\mDomainStyle}[1]{\ensuremath{\mathcal{#1}}}
+
+\newcommand{\mMethodStyle}[1]{\hbox{\mConstStyle{#1}}\xspace}
+\newcommand{\mProtocolStyle}[1]{\hbox{\textsc{#1}}\xspace}
+
+% -- Domain specific macros
+\newcommand{\mArxiv}{\texttt{arXiv}\xspace}
+\newcommand{\mTamarin}{\mProtocolStyle{tamarin}}
+\newcommand{\mEdhoc}{\mProtocolStyle{edhoc}}
+\newcommand{\mOscore}{\mProtocolStyle{oscore}}
+\newcommand{\mSigma}{\mProtocolStyle{sigma}}
+\newcommand{\mOptls}{\mProtocolStyle{optls}}
+\newcommand{\mNoise}{\mProtocolStyle{noise}}
+\newcommand{\mTls}{\mProtocolStyle{tls}}
+
+\newcommand{\mStat}{\mMethodStyle{STAT}}
+\newcommand{\mSig}{\mMethodStyle{SIG}}
+\newcommand{\mPsk}{\mMethodStyle{PSK}}
+\newcommand{\mStatStat}{\mMethodStyle{STAT-STAT}}
+\newcommand{\mStatSig}{\mMethodStyle{STAT-SIG}}
+\newcommand{\mSigStat}{\mMethodStyle{SIG-STAT}}
+\newcommand{\mSigSig}{\mMethodStyle{SIG-SIG}}
+\newcommand{\mPskPsk}{\mMethodStyle{PSK-PSK}}
+
+\newcommand{\mCi}{\mConstStyle{C\_I}\xspace}
+\newcommand{\mCr}{\mConstStyle{C\_R}\xspace}
+\newcommand{\mGiy}{\mConstStyle{G\_IY}\xspace}
+\newcommand{\mGrx}{\mConstStyle{G\_RX}\xspace}
 
