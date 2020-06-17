@@ -13,11 +13,23 @@ PROOFS=proofs
 #MATTACKER=-Dm4ATTACKER=PASSIVE
 MATTACKER=-Dm4ATTACKER=ACTIVE
 
+# Set this switch to include AD_1 in the model
+#MAD1=-Dm4AD1
+
+# Set this switch to include AD_2 in the model
+#MAD2=-Dm4AD2
+
 # Set this switch to include AD_3 in the model
 #MAD3=-Dm4AD3
 
+# Set this switch to include C_R in the model
+#MCR=-Dm4CR
+
+# Set this switch to include C_I in the model
+#MCI=-Dm4CI
+
 # All flags that are required for all models
-MFLAGS=${MATTACKER} ${MAD3}
+MFLAGS=${MATTACKER} ${MAD1} ${MAD2} ${MAD3} ${MCI} ${MCR}
 
 # Flags and filenames used for each method-model
 METHODPAIRS=PSK_PSK SIG_SIG SIG_STAT STAT_SIG STAT_STAT
