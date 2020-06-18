@@ -2,6 +2,7 @@
 \usepackage[T1]{fontenc} % E.g., for small caps in section headings
 \usepackage{xspace}
 
+% -- Editorial macros
 % http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
 \usepackage{todonotes}
 \newcommand{\knote}[1]{\todo[inline,
@@ -19,6 +20,10 @@
 %\newcommand{\knote}[1]{}
 %\newcommand{\vnote}[1]{}
 %\newcommand{\anote}[1]{}
+\newcommand{\mF}[1]{\textbf{Fact #1:}\xspace}
+\newcommand{\mC}[1]{\textbf{Conc #1:}\xspace}
+\newcommand{\mI}[1]{\ensuremath{\rightarrow}\xspace}
+
 
 % -- Fonts and styles for names
 \newcommand{\mItemStyle}[1]{\ensuremath{#1}}
@@ -40,6 +45,8 @@
 \newcommand{\mOptls}{\mProtocolStyle{optls}}
 \newcommand{\mNoise}{\mProtocolStyle{noise}}
 \newcommand{\mTls}{\mProtocolStyle{tls}}
+\newcommand{\mDandTls}{\mProtocolStyle{(d)tls}}
+\newcommand{\mCtls}{\mProtocolStyle{ctls}}
 
 \newcommand{\mStat}{\mMethodStyle{STAT}}
 \newcommand{\mSig}{\mMethodStyle{SIG}}

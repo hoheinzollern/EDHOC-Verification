@@ -75,13 +75,13 @@ Third Author\inst{3}\orcidID{2222--3333-4444-5555}
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
-\institute{Princeton University, Princeton NJ 08544, USA \and
-Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany
-\email{lncs@springer.com}\\
-\url{http://www.springer.com/gp/computer-science/lncs} \and
-ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
-\email{\{abc,lncs\}@uni-heidelberg.de}}
-%
+\institute{
+    KTH Royal Institute of Technology, SE-100 44, Stockholm, Sweden \and
+    Ericsson Security Research, SE-164 83, Stockholm, Sweden,
+    \email{karl.norrman@ericsson.com} \and
+    ITU Copenhagen $\ldots$ \and
+    Ericsson Intell. Autonomous sys$\ldots$
+}
 %
 \maketitle
 %
@@ -309,9 +309,53 @@ This section is only for the outline and will be removed in the final
 }
 
 %-------------------------------------------------------------------------- sec
-\section{This is a section heading}
-\mEdhoc is a framework that can run five separate cryptographic cores, called
-\textbf{methods}.
+\section{Introduction}
+\begin{itemize}
+    \item \mF{1} IoT security threats receiving most attention from media and
+        academia involve cars, web-cameras and other "large" devices.
+        %
+        These devices are computationally strong
+        with no severe bandwidth or energy consumption restrictions.
+    \item \mF{2} Constrained devices, OTOH, where such restrictions are common,
+        have received much less attention.
+    \item \mF{3} Constrained devices may be simple sensors with the only task
+        of relaying measurements of their physical environment to a server every
+        hour, and doing so autonomously for 10 years without maintenance.
+    \item \mC{1, from \mF{3}} Constrained devices therefore often have limitations
+        on energy consumption.
+    \item \mC{2, from \mC{1}} Radio links for constrained devices often highly
+        specialized with small frame heterogeneous frame-sizes to keep radio and
+        therefore energy consumption low.
+    \item \mC{3, from \mC{2}} This is one of the reasons IETF standardized the
+        \mOscore protocol to secure communications between constrained devices,
+        as a complement for when \mDandTls is too heavy weight~\cite{rfc8613}.
+    \item \mF{4} \mOscore requires a pre-established security context.
+    \item \mF{5} The IETF Lightweight Authenticated Key Exchange (LAKE) working
+        group currently develops requirements and a key exchange protocol
+        capable of establishing \mOscore security contexts.
+    \item \mF{6} The draft key establishment protocol
+        is named \mEdhoc~\cite{selander-lake-edhoc-01}.
+    \item \mC{4, from \mF{5} and \mC{3}} Naturally, \mEdhoc
+        must work under the same constraints as \mOscore itself.
+
+%------>>>> message: EDHOC evolves over time: necessary with new FM
+        %analysis!!!
+    \item \mF{7} \mEdhoc can be viewed as a framework making use of a number of
+        cryptographic cores. These are selected from various sources and
+        slightly modified to fit the constraints.
+    \item \mF{8} The first incarnation of \mEdhoc appeared already in March
+        2016. It contained two different cryptographic cores, one based on a
+        pre-shared key Diffie-Hellman and a second following a draft of the
+        then emerging \mTls 1.3 standard~\cite{ietf-tls-tls13-11}, using
+        challenge-response signatures .
+        The latter was then replaced by \mSigma. The latest version of \mEdhoc
+        adds the 
+
+
+
+        \knote{Will discuss \mCtls if there is space left}
+
+\end{itemize}
 %
 
 

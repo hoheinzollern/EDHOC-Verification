@@ -1342,6 +1342,53 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )!>
 )
 
+/* Because G_IY only exists when Initator uses STAT method, we only verify
+ * the lemmas for those two cases.  All other cases are covered by the
+ * regular injective agreement lemma.
+ *
+ * We cannot model that the injective agreement guarantee fails for
+ * the initator, because that would require adding a Running event including
+ * G_IY in rule R2, which it does not have at that point.
+ *
+ * Because we use the pre-specified peer setting, we could cheat in the model
+ * and add such an event.  This would result in that R2 "guesses" the initiator's
+ * identity and emmits a Eunning event based on the guess.
+ * Since there wil be one run of R for each G_IY, R will try all identities for
+ * I, but at least one of them will fail.
+ * This seems a useless and contrived we to "prove" that there is no agreement
+ * on G_IY, so we won't do it.  Maybe something to describe in the paper.
+ *
+ * A more accurate model would be to use the post-specified peer setting,
+ * in which R learns the identity of I during the protocol run.
+ * Likely that setting would result in even more complex task for Tamarin
+ * to handle.
+ */
+
+
+
+/* KCI
+ * Meaningless for PSK. Should hold when other peer uses SIG, but possibly
+ * not when one party uses STAT.
+ *
+ * For I: Even if I's LTK is revealed, I still has guarantees about R's identity
+ */
+lemma authKCIInjAgreeGuaranteeForI:
+    all-traces
+    "All tidI u v expSk #i.
+         ExpCommitI(tidI, u, v, expSk)@i ==>
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
+                & not(#i = #i2)
+                )
+           )
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+<!!>,
+<!
+         | (Ex #j. LTKRev(v)@j & #j < #i)
+!>
+)
+         )
+    "
 end
 
 
