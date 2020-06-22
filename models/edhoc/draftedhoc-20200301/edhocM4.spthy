@@ -831,7 +831,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  *
  * NOTE: this allows u = v. Is that what we want?
  */
-/*lemma sanityExecutableToTheEnd:
+lemma sanityExecutableToTheEnd:
     ifdef(<!m4CI!>,
     	<! 
     		ifdef(<!m4CR!>,
@@ -897,7 +897,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 				!>
 			)
 		!>
-	)*/
+	)
 
 
 /* Note that this only shows agreement on a reduced session key from R to I
