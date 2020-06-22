@@ -304,59 +304,140 @@ This section is only for the outline and will be removed in the final
                 consequences of the choices are,
                 see~\ref{sec:mail-notes-secrecy-sessions} and
                 \ref{sec:mail-notes-session-key-mtrl}.
+            \item Discuss non-repudiation that was not included until we pointed
+                it out.
         \end{itemize}
 \end{itemize}
 }
 
 %-------------------------------------------------------------------------- sec
 \section{Introduction}
-\begin{itemize}
-    \item \mF{1} IoT security threats receiving most attention from media and
-        academia involve cars, web-cameras and other "large" devices.
-        %
-        These devices are computationally strong
-        with no severe bandwidth or energy consumption restrictions.
-    \item \mF{2} Constrained devices, OTOH, where such restrictions are common,
-        have received much less attention.
-    \item \mF{3} Constrained devices may be simple sensors with the only task
-        of relaying measurements of their physical environment to a server every
-        hour, and doing so autonomously for 10 years without maintenance.
-    \item \mC{1, from \mF{3}} Constrained devices therefore often have limitations
-        on energy consumption.
-    \item \mC{2, from \mC{1}} Radio links for constrained devices often highly
-        specialized with small frame heterogeneous frame-sizes to keep radio and
-        therefore energy consumption low.
-    \item \mC{3, from \mC{2}} This is one of the reasons IETF standardized the
-        \mOscore protocol to secure communications between constrained devices,
-        as a complement for when \mDandTls is too heavy weight~\cite{rfc8613}.
-    \item \mF{4} \mOscore requires a pre-established security context.
-    \item \mF{5} The IETF Lightweight Authenticated Key Exchange (LAKE) working
-        group currently develops requirements and a key exchange protocol
-        capable of establishing \mOscore security contexts.
-    \item \mF{6} The draft key establishment protocol
-        is named \mEdhoc~\cite{selander-lake-edhoc-01}.
-    \item \mC{4, from \mF{5} and \mC{3}} Naturally, \mEdhoc
-        must work under the same constraints as \mOscore itself.
-
-%------>>>> message: EDHOC evolves over time: necessary with new FM
-        %analysis!!!
-    \item \mF{7} \mEdhoc can be viewed as a framework making use of a number of
-        cryptographic cores. These are selected from various sources and
-        slightly modified to fit the constraints.
-    \item \mF{8} The first incarnation of \mEdhoc appeared already in March
-        2016. It contained two different cryptographic cores, one based on a
-        pre-shared key Diffie-Hellman and a second following a draft of the
-        then emerging \mTls 1.3 standard~\cite{ietf-tls-tls13-11}, using
-        challenge-response signatures .
-        The latter was then replaced by \mSigma. The latest version of \mEdhoc
-        adds the 
-
-
-
-        \knote{Will discuss \mCtls if there is space left}
-
-\end{itemize}
+\label{sec:introduction}
+%-------------------------------------------------------------------------- sub
+\subsection{Motivation}
+\label{sec:motivation}
+IoT security threats involving cars, web-cameras and other resourceful devices
+receive most attention from media and academia.
 %
+These devices are computationally strong with no severe bandwidth or energy
+consumption restrictions.
+%
+Securing the communication between such devices can readily be done using
+\mDandTls.
+%
+Constrained devices, on the other hand, where such restrictions are common,
+have received much less attention.
+%
+These devices may be simple sensors with the only task of relaying
+measurements of their physical environment to a server every hour, and doing so
+autonomously for a decade without maintenance.
+%
+Constrained devices therefore often have limitations on energy consumption.
+%
+To keep energy consumption down, highly specialized radio links with small
+and heterogeneous frame-sizes are sometimes used.
+%
+In some cases, \mDandTls messages are too large to fit into the radio frames.
+%
+This is one of the reasons IETF standardized the \mOscore protocol to secure
+communications between constrained devices, as a complement for when \mDandTls
+is too heavy weight~\cite{rfc8613}.
+%
+
+The \mOscore protocol requires a pre-established security context.
+%
+The IETF Lightweight Authenticated Key Exchange (LAKE) working group
+currently develops requirements and a key exchange protocol capable of
+establishing \mOscore security contexts.
+%
+The key establishment protocol is named \mEdhoc~\cite{selander-lake-edhoc-01}.
+%
+Naturally, \mEdhoc must work under the same constrained requirements as
+\mOscore itself.
+%
+
+While neither the requirements nor the use-cases for \mEdhoc are firmly set,
+the overarching design goal of \mEdhoc is to establish an \mOscore security
+context with decent security while keeping the messages small.
+%
+The protocol has evolved significantly over time to cater for smaller messages
+and more use-cases.
+%
+The first incarnation of \mEdhoc appeared in March 2016.
+%
+It contained two different cryptographic cores, one based on a
+pre-shared key Diffie-Hellman and a second following a draft of the
+then emerging \mbox{\mTls v1.3} standard~\cite{ietf-tls-tls13-11}, using
+challenge-response signatures.
+%
+The latter was then replaced by \mSigma, and this version, from May 2018, was
+formally analyzed by Bruni et. al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+%
+The protocol has now further evolved and variants using challenge-response
+signatures have now been added again.
+%
+On top of this, mixed variants where one party uses a challenge-response
+signature and the other a regular signature have also been added.
+%
+Consequently, there are now five cryptographic cores in total, and it is prudent
+to formally analyze them all to ensure a higher level of security assurance for
+\mEdhoc.
+%
+This is especially important, since the standard itself lacks description of the
+intended security model and overall security goals.
+%
+Filling this gap and deriving circumstances under which \mEdhoc can be
+securely used to achieve certain goals is an important part of this paper.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsection{Contributions}
+\label{sec:contributions}
+Our main contributions are the following.
+\begin{itemize}
+    \item We provide formalization of \mEdhoc's all five cryptographic cores
+        using \mTamarin.
+    \item We give an explicit security model for the protocol and have verified
+        essential security properties, such as session key and entity
+        authentication, as well as Perfect Forward Secrecy (PFS), within that
+        model.
+    \item We provide consequence analysis of the verified properties to
+        establish which types of use-cases \mEdhoc may be suitable for and
+        to give recommendations for the future standards development.
+    \item Our discussions with IETF LAKE working group members have already
+        lead to improvements and clarifications of the standard based on
+        observations we made during the construction of our formal model.
+\end{itemize}
+
+%-------------------------------------------------------------------------- sub
+\subsection{Related work}
+\label{sec:relatedWork}
+The work closest to ours is Bruni et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
+which used \mProverif to analyze an earlier, two cryptographic core, version
+of \mEdhoc.
+%
+We consider our work to be a sort of follow-up to that, doing a similar kind of
+analysis of the most recent, and more elaborate, version of \mEdhoc using five
+cores.
+%
+We also verify slightly different properties.
+%
+For instance, we include session key independence in our properties.
+%
+The \mTamarin tool has been used to verify many other protocols, perhaps closest
+to our work is Cremers et.al's analysis of
+\mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
+%
+Some of the cryptographic cores themselves have been analyzed in the
+computational model, e.g., \mSigma by Canetti and
+Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls by Krawczyk and
+Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
+%
+
+%-------------------------------------------------------------------------- sub
+\subsection{Structure}
+\label{sec:structure}
+\knote{Only include this if we have space to spare.}
 
 
 %-------------------------------------------------------------------------- ack
