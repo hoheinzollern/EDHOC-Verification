@@ -53,41 +53,41 @@ restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
-    ifdef(<!m4CI!>,
-	   <!cI = ~C_I!>
-	)
-	ifdef(<!m4AD1!>,
-		<!plainText1 = ~AD_1!>
-	)
+ //    ifdef(<!m4CI!>,
+	//    <!cI = ~C_I!>
+	// )
+	// ifdef(<!m4AD1!>,
+	// 	<!plainText1 = ~AD_1!>
+	// )
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!
         	ID_PSK = <$U, $V>
         	ifdef(<!m4CI!>,	
         		<! 
                     ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, ID_PSK, plainText1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, ID_PSK> !>
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1> !>,
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK> !>
                     )
                 !>,
         		<! 
                     ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, plainText1> !>,
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, ~AD_1> !>,
                         <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK> !>
                     )
                 !>
         	)
         !>,
         <! 
-        	ifdef(<!m4CI!>,
+        	ifdef(<!m4~C_I!>,
         		<! 
                     ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, plainText1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI> !>
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ~AD_1> !>,
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I> !>
                     )
                 !>,
         		<! 
                     ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, plainText1> !>,
+                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~AD_1> !>,
                         <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx> !>
                     )
                 !>
@@ -115,13 +115,13 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 		<!
 		    ifdef(<!m4CI!>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, cI, m1, ~tid) !>,
+                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
                 <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
             )
         !>,
         <!
             ifdef(<!m4CI!>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, cI, m1, ~tid) !>,
+                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
                 <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
             )
         !>
@@ -131,22 +131,22 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
 		let
-    	ifdef(<!m4CR!>,
-    		<!cR = ~C_R!>
-    	)
-    	ifdef(<!m4CI!>,
-	   		<!cI = ~C_I!>
-		)
-         ifdef(<!m4AD1!>,
-		<!plainText1 = ~AD_1!>
-		)
+    	// ifdef(<!m4CR!>,
+    	// 	<!cR = ~C_R!>
+    	// )
+        // ifdef(<!m4CI!>,
+	    //   <!cI = ~C_I!>
+		// )
+        //ifdef(<!m4AD1!>,
+		//<!~AD_1 = ~AD_1!>
+		//)
     	ifdef(<!m4CI!>,
     		<!ifdef(<!m4CR!>,
-         		<!data_2 = <cI, 'g'^~yy, cR>!>,
-         		<!data_2 = <cI, 'g'^~yy>!>
+         		<!data_2 = <~C_I, 'g'^~yy, ~C_R>!>,
+         		<!data_2 = <~C_I, 'g'^~yy>!>
          	)!>,
          	<!ifdef(<!m4CR!>,
-         		<!data_2 = <'g'^~yy, cR>!>,
+         		<!data_2 = <'g'^~yy, ~C_R>!>,
          		<!data_2 = <'g'^~yy>!>
          	)!>
         )
@@ -155,13 +155,13 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ifdef(<!m4CI!>,
          	<! 
                 ifdef(<!m4AD1!>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, ID_PSK, plainText1> !>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, ID_PSK> !>
+                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1> !>,
+                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK> !>
                 )
             !>,
          	<! 
                 ifdef(<!m4AD1!>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, plainText1> !>,
+                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, ~AD_1> !>,
                     <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK> !>
                 )
             !>
@@ -181,8 +181,8 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ifdef(<!m4CI!>,
         	<! 
         		ifdef(<!m4AD1!>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI, ~AD_1> !>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, cI> !>
+        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ~AD_1> !>,
+        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I> !>
         		)
         	!>,
         	<!
@@ -259,13 +259,13 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ifdef(<!m4CI!>,
         <! 
         	ifdef(<!m4CR!>,
-        		<!--[ ExpRunningR(~tid, $V, exp_sk, cI, cR)!>,
-        		<!--[ ExpRunningR(~tid, $V, exp_sk, cR)!>
+        		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_I, ~C_R)!>,
+        		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>
         	)
         !>,
         <!
         	ifdef(<!m4CR!>,
-        		<!--[ ExpRunningR(~tid, $V, exp_sk, cR)!>,
+        		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>,
         		<!--[ ExpRunningR(~tid, $V, exp_sk)!>
         	)
         !>
@@ -281,13 +281,13 @@ ifelse(<!STAT!>, m4METHODR,
 		ifdef(<!m4CI!>,
         <! 
         	ifdef(<!m4CR!>,
-        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cI, cR, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
-        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cI, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
+        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
+        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
         	)
         !>,
         <!
         	ifdef(<!m4CR!>,
-        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
+        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
         		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
         	)
         !>
@@ -298,13 +298,13 @@ ifelse(<!STAT!>, m4METHODR,
             	ifdef(<!m4CI!>, 
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cR, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
             			)
             		!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cR, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
             			)
             		!>
@@ -314,13 +314,13 @@ ifelse(<!STAT!>, m4METHODR,
             	ifdef(<!m4CI!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
             			)
             		!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
             			)
             		!>
@@ -337,13 +337,13 @@ rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     	ifdef(<!m4CI!>,
         		<! 
         			ifdef(<!m4CR!>,
-        				<! data_2 = <cI, gy, cR> !>,
-        				<! data_2 = <cI, gy> !>
+        				<! data_2 = <~C_I, gy, ~C_R> !>,
+        				<! data_2 = <~C_I, gy> !>
         			)
         		!>,
         		<! 
         			ifdef(<!m4CR!>,
-        				<! data_2 = <gy, cR> !>,
+        				<! data_2 = <gy, ~C_R> !>,
         				<! data_2 = <gy> !>
         			)
         		!>
@@ -380,8 +380,17 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           */
          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2>
-         /* VAISHNAVI: CIPHERTEXT_2 is actually plainText2 XOR K_2e. How do I deal with this when plainText2 can also have AD_2? */
+         
+
+         ifdef(<!m4AD2!>,
+            <! 
+                K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
+                CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> 
+            !>,
+            <! CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> !>
+         )
+         /* VAISHNAVI: When we have the AD_2 flag set, the ciphertext is a 3-tuple. It's a 2-tuple otherwise. This is only a modelling artefact, and not "exploitable", but it might perhaps be nice to have some uniformity in this as well? */
+         
          m2 = <data_2, CIPHERTEXT_2>
 
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
@@ -397,7 +406,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
     /* Message 3 handling */
     	ifdef(<!m4CR!>,
-         	<! data_3 = cR !>,
+         	<! data_3 = ~C_R !>,
          	<! data_3 = 'emptyStr' !>
          ) 
          TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
@@ -474,14 +483,14 @@ ifelse(<!STAT!>, m4METHODI,
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <! 
         	ifdef(<!m4CI!>,
-        		<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, cI, m1, ~tid) !>,
+        		<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
         		<!  [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
         	)
         !>
         ,
         <! 
         	ifdef(<!m4CI!>,
-	        	<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, cI, m1, ~tid) !>,
+	        	<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
 	        	<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
 	        )
 	        <!, !PK_!>m4METHODR<!!>($V, pkV)
@@ -497,20 +506,20 @@ ifdef(<!m4AD3!>,
 	       	<! 
 	       		ifdef(<!m4CR!>,
 	       			<!
-	       				--[ ExpCommitI(~tid, $U, $V, exp_sk, cI, cR)  // standard running/commit
-	          			, CommitI(~tid, $U, $V, imp_sk, cI, cR)  // Requires R to complete
+	       				--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I, ~C_R)  // standard running/commit
+	          			, CommitI(~tid, $U, $V, imp_sk, ~C_I, ~C_R)  // Requires R to complete
 	          		!>,
 	          		<!
-	          			--[ ExpCommitI(~tid, $U, $V, exp_sk, cI)  // standard running/commit
-	          			, CommitI(~tid, $U, $V, imp_sk, cI)  // Requires R to complete
+	          			--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I)  // standard running/commit
+	          			, CommitI(~tid, $U, $V, imp_sk, ~C_I)  // Requires R to complete
 	          		!>
 	          	)
 	        !>,
 	        <! 
 	        	ifdef(<!m4CR!>,
 	        		<! 
-	        			--[ ExpCommitI(~tid, $U, $V, exp_sk, cR)  // standard running/commit
-	          			, CommitI(~tid, $U, $V, imp_sk, cR)  // Requires R to complete
+	        			--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_R)  // standard running/commit
+	          			, CommitI(~tid, $U, $V, imp_sk, ~C_R)  // Requires R to complete
 	          		!>,
 	          		<!
 	          			--[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
@@ -613,13 +622,13 @@ ifelse(<!STAT!>, m4METHODR,
 			ifdef(<!m4CI!>,
         		<! 
         			ifdef(<!m4CR!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, cI, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cI, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
         			)
         		!>,
         		<! 
         			ifdef(<!m4CR!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
         				<!  [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
         			)
         		!>
@@ -630,13 +639,13 @@ ifelse(<!STAT!>, m4METHODR,
             	ifdef(<!m4CI!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cR, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
             			)
             		!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, cR, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
             			)
             		!>
@@ -646,13 +655,13 @@ ifelse(<!STAT!>, m4METHODR,
             	ifdef(<!m4CI!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cI, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
             			) 
             		!>,
             		<! 
             			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, cR, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
             			)
             		!>
@@ -672,20 +681,20 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         	<! 
         		ifdef(<!m4CR!>,
         			<! 
-        				--[ ExpCommitR(~tid, $U, $V, exp_sk, cI, cR)
-          				, CommitR(~tid, $U, $V, imp_sk, cI, cR)
+        				--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I, ~C_R)
+          				, CommitR(~tid, $U, $V, imp_sk, ~C_I, ~C_R)
           			!>,
           			<! 
-        				--[ ExpCommitR(~tid, $U, $V, exp_sk, cI)
-          				, CommitR(~tid, $U, $V, imp_sk, cI)
+        				--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I)
+          				, CommitR(~tid, $U, $V, imp_sk, ~C_I)
           			!>
           		)
         	!>,
         	<!
         		ifdef(<!m4CR!>,
 					<! 
-						--[ ExpCommitR(~tid, $U, $V, exp_sk, cR)
-          				, CommitR(~tid, $U, $V, imp_sk, cR)
+						--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_R)
+          				, CommitR(~tid, $U, $V, imp_sk, ~C_R)
           			!>,
           			<! 
           				--[ ExpCommitR(~tid, $U, $V, exp_sk)
@@ -754,17 +763,17 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 		<! 
 			ifdef(<!m4CR!>,
 				<! rule revealSessionKeyPSK:
-    				[CommitI(tid, u, v, sk, cI, cR)] --[SKRev(sk)]-> [Out(sk)]
+    				[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
     			!>,
     			<! rule revealSessionKeyPSK:
-    				[CommitI(tid, u, v, sk, cI)] --[SKRev(sk)]-> [Out(sk)]
+    				[CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
     			!>
     		)
     	!>,
     	<! 
     		ifdef(<!m4CR!>,
 				<! rule revealSessionKeyPSK:
-    					[CommitI(tid, u, v, sk, cR)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
     			!>,
     			<! rule revealSessionKeyPSK:
     					[CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
@@ -779,15 +788,15 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 			ifdef(<!m4CR!>,
 				<!
 					rule revealSessionKeyI:
-    					[CommitI(tid, u, v, sk, cI, cR)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 					rule revealSessionKeyR:
-    					[CommitR(tid, u, v, sk, cI, cR)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitR(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 				!>,
 				<!
 					rule revealSessionKeyI:
-    					[CommitI(tid, u, v, sk, cI)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
 					rule revealSessionKeyR:
-    					[CommitR(tid, u, v, sk, cI)] --[SKRev(sk)]-> [Out(sk)]	
+    					[CommitR(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]	
 				!>
 			)
 		!>,
@@ -795,9 +804,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 			ifdef(<!m4CR!>,
 				<!
 					rule revealSessionKeyI:
-    					[CommitI(tid, u, v, sk, cR)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 					rule revealSessionKeyR:
-    					[CommitR(tid, u, v, sk, cR)] --[SKRev(sk)]-> [Out(sk)]
+    					[CommitR(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 				!>,
 				<!
 					rule revealSessionKeyI:
@@ -822,7 +831,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  *
  * NOTE: this allows u = v. Is that what we want?
  */
-lemma sanityExecutableToTheEnd:
+/*lemma sanityExecutableToTheEnd:
     ifdef(<!m4CI!>,
     	<! 
     		ifdef(<!m4CR!>,
@@ -888,7 +897,7 @@ lemma sanityExecutableToTheEnd:
 				!>
 			)
 		!>
-	)
+	)*/
 
 
 /* Note that this only shows agreement on a reduced session key from R to I
@@ -946,20 +955,20 @@ lemma authInjAgreeGuaranteeForI:
 			)
 		!>
 	)
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-<!
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-!>,
-<!
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-         | (Ex #j. LTKRev(v)@j & #j < #i)
-!>
-)
+    ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+    <!
+             | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+    !>,
+    <!
+             | (Ex #j. LTKRev(u)@j & #j < #i)
+             | (Ex #j. LTKRev(v)@j & #j < #i)
+    !>
+    )
          )
     "
 
 /* This shows agreement on the full session key and both u and v */
-lemma authInjAgreeGuaranteeForR:
+/*lemma authInjAgreeGuaranteeForR:
     ifdef(<!m4CI!>,
 		<!  
 			ifdef(<!m4CR!>,
@@ -1007,17 +1016,17 @@ lemma authInjAgreeGuaranteeForR:
 		!>
 	)
 
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-<!
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-!>,
-<!
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-         | (Ex #j. LTKRev(v)@j & #j < #i)
-!>
-)
-         )
-    "
+    ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+        <!
+            | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+        !>,
+        <!
+            | (Ex #j. LTKRev(u)@j & #j < #i)
+            | (Ex #j. LTKRev(v)@j & #j < #i)
+        !>
+    )
+    )
+    "*/
 
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
@@ -1042,7 +1051,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  *       some of them fulfill the stronger inj-agree.
  */
  
-lemma authGIYImplicitAuthGuaranteeForI:
+/*lemma authGIYImplicitAuthGuaranteeForI:
 	ifdef(<!m4CI!>,
 	<!  
 		ifdef(<!m4CR!>,
@@ -1155,12 +1164,12 @@ lemma authGIYImplicitAuthGuaranteeForI:
 			!>
 		)
 	!>
-	)
+	)*/
 
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+/*ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
         ifdef(<!m4CI!>,
 		    <!
@@ -1212,9 +1221,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 				)
 		    !>
 		)
-    !>,
+    !>,*/
     
-<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
+/*<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
     	ifdef(<!m4CI!>,
 		    <!
@@ -1266,8 +1275,8 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 				)
 		    !>
 		)
-    !>,
-<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
+    !>,*/
+/*<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
     <!
     	ifdef(<!m4CI!>,
     		<!
@@ -1341,7 +1350,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )!>
 )!>
 )
-
+*/
 end
 
 
