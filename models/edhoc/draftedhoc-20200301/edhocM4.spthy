@@ -202,7 +202,11 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
          protected2 = $V // ID_CRED_V
          CRED_V = pkV
-         extAad2 = <TH_2, CRED_V>
+         ifdef(<!m4AD2!>, 
+            <! extAad2 = <TH_2, CRED_V, ~AD_2> !>,
+            <! extAad2 = <TH_2, CRED_V> !>
+         )
+         //extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
          ifelse(<!SIG!>, m4METHODR,
@@ -219,8 +223,16 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           */
          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
-         /* VAISHNAVI: CIPHERTEXT_2 is actually plainText2 XOR K_2e. How do I deal with this when plainText2 can also have AD_2? */
+
+         ifdef(<!m4AD2!>,
+            <! 
+                K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
+                CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3> 
+            !>,
+            <! CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> !>
+         )
+         
+         //CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
         !>
 )
          m2 = <data_2, CIPHERTEXT_2>
@@ -257,18 +269,18 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)
         ]
         ifdef(<!m4CI!>,
-        <! 
-        	ifdef(<!m4CR!>,
+        // <! 
+        	// ifdef(<!m4CR!>,
         		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_I, ~C_R)!>,
-        		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>
-        	)
-        !>,
-        <!
-        	ifdef(<!m4CR!>,
-        		<!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>,
+        		// <!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>
+        	// )
+        // !>,
+        // <!
+        	// ifdef(<!m4CR!>,
+        		// <!--[ ExpRunningR(~tid, $V, exp_sk, ~C_R)!>,
         		<!--[ ExpRunningR(~tid, $V, exp_sk)!>
-        	)
-        !>
+        	// )
+        // !>
         )
           , R2(~tid, $V, m1, m2)
           , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
@@ -279,51 +291,51 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           ]->
 ifelse(<!STAT!>, m4METHODR,
 		ifdef(<!m4CI!>,
-        <! 
-        	ifdef(<!m4CR!>,
+        // <! 
+        	// ifdef(<!m4CR!>,
         		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
-        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
-        	)
-        !>,
-        <!
-        	ifdef(<!m4CR!>,
-        		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
+        		//<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
+        	// )
+        // !>,
+        // <!
+        	// ifdef(<!m4CR!>,
+        		// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
         		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
-        	)
-        !>
+        	// )
+        // !>
         )
         ,
         <! ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
             <! 
             	ifdef(<!m4CI!>, 
-            		<! 
-            			ifdef(<!m4CR!>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            			)
-            		!>,
-            		<! 
-            			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
+            			// )
+            		// !>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            			)
-            		!>
+            			// )
+            		// !>
             	)
             !>,
             <! 
             	ifdef(<!m4CI!>,
-            		<! 
-            			ifdef(<!m4CR!>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            			)
-            		!>,
-            		<! 
-            			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
+            			// )
+            		// !>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            			)
-            		!>
+            			// )
+            		// !>
             	)
             !>
         )!>
@@ -335,18 +347,18 @@ ifelse(<!STAT!>, m4METHODR,
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
     	ifdef(<!m4CI!>,
-        		<! 
-        			ifdef(<!m4CR!>,
+        		// <! 
+        			// ifdef(<!m4CR!>,
         				<! data_2 = <~C_I, gy, ~C_R> !>,
-        				<! data_2 = <~C_I, gy> !>
-        			)
-        		!>,
-        		<! 
-        			ifdef(<!m4CR!>,
-        				<! data_2 = <gy, ~C_R> !>,
+        				// <! data_2 = <~C_I, gy> !>
+        			// )
+        		// !>,
+        		// <! 
+        			// ifdef(<!m4CR!>,
+        				// <! data_2 = <gy, ~C_R> !>,
         				<! data_2 = <gy> !>
-        			)
-        		!>
+        			// )
+        		// !>
             )
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
@@ -405,7 +417,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
 
     /* Message 3 handling */
-    	ifdef(<!m4CR!>,
+    	ifdef(<!m4CI!>,
          	<! data_3 = ~C_R !>,
          	<! data_3 = 'emptyStr' !>
          ) 
@@ -503,30 +515,31 @@ ifdef(<!m4AD3!>,
 )
         ]
         ifdef(<!m4CI!>,
-	       	<! 
-	       		ifdef(<!m4CR!>,
-	       			<!
+	       	// <! 
+	       		// ifdef(<!m4CR!>,
+	       			// <!
 	       				--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I, ~C_R)  // standard running/commit
 	          			, CommitI(~tid, $U, $V, imp_sk, ~C_I, ~C_R)  // Requires R to complete
-	          		!>,
-	          		<!
-	          			--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I)  // standard running/commit
-	          			, CommitI(~tid, $U, $V, imp_sk, ~C_I)  // Requires R to complete
-	          		!>
-	          	)
-	        !>,
-	        <! 
-	        	ifdef(<!m4CR!>,
-	        		<! 
-	        			--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_R)  // standard running/commit
-	          			, CommitI(~tid, $U, $V, imp_sk, ~C_R)  // Requires R to complete
-	          		!>,
-	          		<!
+	          		// !>
+                    ,
+	          		// <!
+	          			// --[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I)  // standard running/commit
+	          			// , CommitI(~tid, $U, $V, imp_sk, ~C_I)  // Requires R to complete
+	          		// !>
+	          	// )
+	        // !>,
+	        // <! 
+	        	// ifdef(<!m4CR!>,
+	        		// <! 
+	        			// --[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_R)  // standard running/commit
+	          			// , CommitI(~tid, $U, $V, imp_sk, ~C_R)  // Requires R to complete
+	          		// !>,
+	          		// <!
 	          			--[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
 	          			, CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-	          		!>
-	          	)
-	        !> 
+	          		// !>
+	          	// )
+	        // !> 
 	    )
           , I3(~tid, $U, $V, m1, m2, m3)
           , DHInvI3(~tid, 'g'^~xx)
@@ -546,7 +559,7 @@ ifelse(<!SIG!>, m4METHODR,
 
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-    	ifdef(<!m4CR!>,
+    	ifdef(<!m4CI!>,
     		<! data_3 = ~C_R !>,
         	<! data_3 = 'emptyStr' !>
         )
@@ -620,51 +633,51 @@ ifelse(<!STAT!>, m4METHODI,
 ifelse(<!STAT!>, m4METHODR,
 		<!
 			ifdef(<!m4CI!>,
-        		<! 
-        			ifdef(<!m4CR!>,
+        		// <! 
+        			// ifdef(<!m4CR!>,
         				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-        			)
-        		!>,
-        		<! 
-        			ifdef(<!m4CR!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+        				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+        			// )
+        		// !>,
+        		// <! 
+        			// ifdef(<!m4CR!>,
+        				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
         				<!  [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-        			)
-        		!>
+        			// )
+        		// !>
         	)
         !>,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
             <!
             	ifdef(<!m4CI!>,
-            		<! 
-            			ifdef(<!m4CR!>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            			)
-            		!>,
-            		<! 
-            			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+            			// )
+            		// !>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            			)
-            		!>
+            			// )
+            		// !>
             	)
             !>,
             <!
             	ifdef(<!m4CI!>,
-            		<! 
-            			ifdef(<!m4CR!>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            			) 
-            		!>,
-            		<! 
-            			ifdef(<!m4CR!>,
-            				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
+            			// ) 
+            		// !>,
+            		// <! 
+            			// ifdef(<!m4CR!>,
+            				// <! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
             				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            			)
-            		!>
+            			// )
+            		// !>
             	)
             !>
         )!>
@@ -678,30 +691,31 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , In(m3)
         ]
         ifdef(<!m4CI!>,
-        	<! 
-        		ifdef(<!m4CR!>,
-        			<! 
+        	// <! 
+        		// ifdef(<!m4CR!>,
+        			// <! 
         				--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I, ~C_R)
           				, CommitR(~tid, $U, $V, imp_sk, ~C_I, ~C_R)
-          			!>,
-          			<! 
-        				--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I)
-          				, CommitR(~tid, $U, $V, imp_sk, ~C_I)
-          			!>
-          		)
-        	!>,
-        	<!
-        		ifdef(<!m4CR!>,
-					<! 
-						--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_R)
-          				, CommitR(~tid, $U, $V, imp_sk, ~C_R)
-          			!>,
-          			<! 
+          			// !>
+                    ,
+          			// <! 
+        				// --[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I)
+          				// , CommitR(~tid, $U, $V, imp_sk, ~C_I)
+          			// !>
+          		// )
+        	// !>,
+        	// <!
+        		// ifdef(<!m4CR!>,
+					// <! 
+						// --[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_R)
+          				// , CommitR(~tid, $U, $V, imp_sk, ~C_R)
+          			// !>,
+          			// <! 
           				--[ ExpCommitR(~tid, $U, $V, exp_sk)
           				, CommitR(~tid, $U, $V, imp_sk)
-          			!>
-          		)
-        	!>
+          			// !>
+          		// )
+        	// !>
         )
           , R4(~tid, $U, $V, m1, m2, m3)
 ifelse(<!SIG!>, m4METHODI,
@@ -760,62 +774,64 @@ rule revealLTK_PSK:
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, 
 <!
 	ifdef(<!m4CI!>,
-		<! 
-			ifdef(<!m4CR!>,
-				<! rule revealSessionKeyPSK:
+		// <! 
+			// ifdef(<!m4CR!>,
+				<! 
+                rule revealSessionKeyPSK:
     				[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
     			!>,
-    			<! rule revealSessionKeyPSK:
-    				[CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
-    			!>
-    		)
-    	!>,
-    	<! 
-    		ifdef(<!m4CR!>,
-				<! rule revealSessionKeyPSK:
-    					[CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-    			!>,
-    			<! rule revealSessionKeyPSK:
+    			// <! rule revealSessionKeyPSK:
+    				// [CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
+    			// !>
+    		// )
+    	// !>,
+    	// <! 
+    		// ifdef(<!m4CR!>,
+				// <! rule revealSessionKeyPSK:
+    					// [CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
+    			// !>,
+    			<! 
+                    rule revealSessionKeyPSK:
     					[CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-    			!>
-    		)
-    	!>
+    			 !>
+    		// )
+    	// !>
     )
 !>, 
 <!
 	ifdef(<!m4CI!>,
-		<!
-			ifdef(<!m4CR!>,
+		// <!
+			// ifdef(<!m4CR!>,
 				<!
 					rule revealSessionKeyI:
     					[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 					rule revealSessionKeyR:
     					[CommitR(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
 				!>,
-				<!
-					rule revealSessionKeyI:
-    					[CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
-					rule revealSessionKeyR:
-    					[CommitR(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]	
-				!>
-			)
-		!>,
-		<!
-			ifdef(<!m4CR!>,
-				<!
-					rule revealSessionKeyI:
-    					[CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-					rule revealSessionKeyR:
-    					[CommitR(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-				!>,
-				<!
+		// 		<!
+		// 			rule revealSessionKeyI:
+  //   					[CommitI(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]
+		// 			rule revealSessionKeyR:
+  //   					[CommitR(tid, u, v, sk, ~C_I)] --[SKRev(sk)]-> [Out(sk)]	
+		// 		!>
+		// 	)
+		// !>,
+		// <!
+		// 	ifdef(<!m4CR!>,
+		// 		<!
+		// 			rule revealSessionKeyI:
+  //   					[CommitI(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
+		// 			rule revealSessionKeyR:
+  //   					[CommitR(tid, u, v, sk, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
+		// 		!>,
+		 		<!
 					rule revealSessionKeyI:
     					[CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
 					rule revealSessionKeyR:
     					[CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]	
 				!>
-			)
-		!>
+			// )
+		// !>
 	)
 
 !>
@@ -833,9 +849,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  */
 lemma sanityExecutableToTheEnd:
     ifdef(<!m4CI!>,
-    	<! 
-    		ifdef(<!m4CR!>,
-				<!
+    	// <! 
+    		// ifdef(<!m4CR!>,
+				 <!
 				    exists-trace
 				    "(Ex tidI tidR u v m1 m2 m3 ci cr sk sk2 #i #j #k #l.
 				       I1(tidI, u, v, m1)@i
@@ -848,39 +864,39 @@ lemma sanityExecutableToTheEnd:
 				     & ExpCommitR(tidR, u, v, sk2, ci, cr)@l
 				     )
 				    "
-				!>,
-				<!
-					exists-trace
-				    "(Ex tidI tidR u v m1 m2 m3 ci sk sk2 #i #j #k #l.
-				       I1(tidI, u, v, m1)@i
-				     & R2(tidR, v, m1, m2)@j & #i < #j
-				     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
-				     & CommitI(tidI, u, v, sk, ci)@k
-				     & ExpCommitI(tidI, u, v, sk2, ci)@k
-				     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
-				     & CommitR(tidR, u, v, sk, ci)@l
-				     & ExpCommitR(tidR, u, v, sk2, ci)@l
-				     )
-				    "
-				!>
-			)
-		!>,
-		<!
-			ifdef(<!m4CR!>,
-				<!
-					exists-trace
-				    "(Ex tidI tidR u v m1 m2 m3 cr sk sk2 #i #j #k #l.
-				       I1(tidI, u, v, m1)@i
-				     & R2(tidR, v, m1, m2)@j & #i < #j
-				     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
-				     & CommitI(tidI, u, v, sk, cr)@k
-				     & ExpCommitI(tidI, u, v, sk2, cr)@k
-				     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
-				     & CommitR(tidR, u, v, sk, cr)@l
-				     & ExpCommitR(tidR, u, v, sk2, cr)@l
-				     )
-				    "
-				!>,
+				 !>,
+				// <!
+				// 	exists-trace
+				//     "(Ex tidI tidR u v m1 m2 m3 ci sk sk2 #i #j #k #l.
+				//        I1(tidI, u, v, m1)@i
+				//      & R2(tidR, v, m1, m2)@j & #i < #j
+				//      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
+				//      & CommitI(tidI, u, v, sk, ci)@k
+				//      & ExpCommitI(tidI, u, v, sk2, ci)@k
+				//      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
+				//      & CommitR(tidR, u, v, sk, ci)@l
+				//      & ExpCommitR(tidR, u, v, sk2, ci)@l
+				//      )
+				//     "
+				// !>
+			//)
+		//!>,
+		//<!
+			//ifdef(<!m4CR!>,
+				// <!
+				// 	exists-trace
+				//     "(Ex tidI tidR u v m1 m2 m3 cr sk sk2 #i #j #k #l.
+				//        I1(tidI, u, v, m1)@i
+				//      & R2(tidR, v, m1, m2)@j & #i < #j
+				//      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
+				//      & CommitI(tidI, u, v, sk, cr)@k
+				//      & ExpCommitI(tidI, u, v, sk2, cr)@k
+				//      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
+				//      & CommitR(tidR, u, v, sk, cr)@l
+				//      & ExpCommitR(tidR, u, v, sk2, cr)@l
+				//      )
+				//     "
+				// !>,
 				<!
 					exists-trace
 				    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
@@ -895,8 +911,8 @@ lemma sanityExecutableToTheEnd:
 				     )
 				    "
 				!>
-			)
-		!>
+			//)
+		//!>
 	)
 
 
@@ -909,8 +925,8 @@ lemma sanityExecutableToTheEnd:
  */
 lemma authInjAgreeGuaranteeForI:
 	ifdef(<!m4CI!>,
-		<!  
-			ifdef(<!m4CR!>,
+		// <!  
+			// ifdef(<!m4CR!>,
 				<!	all-traces
 				    "All tidI u v expSk ci cr #i.
 				         ExpCommitI(tidI, u, v, expSk, ci, cr)@i ==>
@@ -920,28 +936,28 @@ lemma authInjAgreeGuaranteeForI:
 				                )
 				           )
 				!>,
-				<!	all-traces
-				    "All tidI u v expSk ci #i.
-				         ExpCommitI(tidI, u, v, expSk, ci)@i ==>
-				         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, ci)@j & #j < #i)
-				           & not( Ex tidI2 u2 v2 ci2 #i2. ExpCommitI(tidI2, u2, v2, expSk, ci2)@i2
-				                & not(#i = #i2)
-				                )
-				           )
-				!>
-			)
-		!>,
-		<!	
-			ifdef(<!m4CR!>,
-				<!	all-traces
-				    "All tidI u v expSk cr #i.
-				         ExpCommitI(tidI, u, v, expSk, cr)@i ==>
-				         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, cr)@j & #j < #i)
-				           & not( Ex tidI2 u2 v2 cr2 #i2. ExpCommitI(tidI2, u2, v2, expSk, cr2)@i2
-				                & not(#i = #i2)
-				                )
-				           )
-				!>,
+			// 	<!	all-traces
+			// 	    "All tidI u v expSk ci #i.
+			// 	         ExpCommitI(tidI, u, v, expSk, ci)@i ==>
+			// 	         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, ci)@j & #j < #i)
+			// 	           & not( Ex tidI2 u2 v2 ci2 #i2. ExpCommitI(tidI2, u2, v2, expSk, ci2)@i2
+			// 	                & not(#i = #i2)
+			// 	                )
+			// 	           )
+			// 	!>
+			// )
+		//!>,
+		//<!	
+			// ifdef(<!m4CR!>,
+			// 	<!	all-traces
+			// 	    "All tidI u v expSk cr #i.
+			// 	         ExpCommitI(tidI, u, v, expSk, cr)@i ==>
+			// 	         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, cr)@j & #j < #i)
+			// 	           & not( Ex tidI2 u2 v2 cr2 #i2. ExpCommitI(tidI2, u2, v2, expSk, cr2)@i2
+			// 	                & not(#i = #i2)
+			// 	                )
+			// 	           )
+			// 	!>,
 				<!
 					all-traces
 				    "All tidI u v expSk #i.
@@ -952,8 +968,8 @@ lemma authInjAgreeGuaranteeForI:
 				                )
 				           )
 				!>
-			)
-		!>
+			//)
+		//!>
 	)
     ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!
@@ -970,8 +986,8 @@ lemma authInjAgreeGuaranteeForI:
 /* This shows agreement on the full session key and both u and v */
 /*lemma authInjAgreeGuaranteeForR:
     ifdef(<!m4CI!>,
-		<!  
-			ifdef(<!m4CR!>,
+		// <!  
+			// ifdef(<!m4CR!>,
 				<!	all-traces
 				    "All tidR u v sk ci cr #i.
 				         CommitR(tidR, u, v, sk, ci, cr)@i ==>
@@ -981,28 +997,28 @@ lemma authInjAgreeGuaranteeForI:
 				                )
 				           )
 				!>,
-				<!	all-traces
-				    "All tidR u v sk ci #i.
-				         CommitR(tidR, u, v, sk, ci)@i ==>
-				         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk, ci)@j & #j < #i)
-				           & not( Ex tidR2 u2 v2 ci2 #i2. CommitR(tidR2, u2, v2, sk, ci2)@i2
-				                & not(#i = #i2)
-				                )
-				           )
-				!>
-			)
-		!>,
-		<!  
-			ifdef(<!m4CR!>,
-				<!	all-traces
-				    "All tidR u v sk cr #i.
-				         CommitR(tidR, u, v, sk, cr)@i ==>
-				         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk, cr)@j & #j < #i)
-				           & not( Ex tidR2 u2 v2 cr2 #i2. CommitR(tidR2, u2, v2, sk, cr2)@i2
-				                & not(#i = #i2)
-				                )
-				           )
-				!>,
+		// 		<!	all-traces
+		// 		    "All tidR u v sk ci #i.
+		// 		         CommitR(tidR, u, v, sk, ci)@i ==>
+		// 		         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk, ci)@j & #j < #i)
+		// 		           & not( Ex tidR2 u2 v2 ci2 #i2. CommitR(tidR2, u2, v2, sk, ci2)@i2
+		// 		                & not(#i = #i2)
+		// 		                )
+		// 		           )
+		// 		!>
+		// 	)
+		// !>,
+		// <!  
+		// 	ifdef(<!m4CR!>,
+		// 		<!	all-traces
+		// 		    "All tidR u v sk cr #i.
+		// 		         CommitR(tidR, u, v, sk, cr)@i ==>
+		// 		         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk, cr)@j & #j < #i)
+		// 		           & not( Ex tidR2 u2 v2 cr2 #i2. CommitR(tidR2, u2, v2, sk, cr2)@i2
+		// 		                & not(#i = #i2)
+		// 		                )
+		// 		           )
+		// 		!>,
 				<!	all-traces
 				    "All tidR u v sk #i.
 				         CommitR(tidR, u, v, sk)@i ==>
@@ -1012,8 +1028,8 @@ lemma authInjAgreeGuaranteeForI:
 				                )
 				           )
 				!>
-			)
-		!>
+			//)
+		//!>
 	)
 
     ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -1053,8 +1069,8 @@ lemma authInjAgreeGuaranteeForI:
  
 /*lemma authGIYImplicitAuthGuaranteeForI:
 	ifdef(<!m4CI!>,
-	<!  
-		ifdef(<!m4CR!>,
+	// <!  
+	// 	ifdef(<!m4CR!>,
 			<!	all-traces
 			    "All tidI u v impSk ci cr #i.
 			         CommitI(tidI, u, v, impSk, ci, cr)@i ==>
@@ -1083,60 +1099,60 @@ lemma authInjAgreeGuaranteeForI:
 			         )
 			    "
 			!>,
-			<!	all-traces
-			    "All tidI u v impSk ci #i.
-			         CommitI(tidI, u, v, impSk, ci)@i ==>
-			         ( ( (All tidR u2 v2 ci2 #j. CommitR(tidR, u2, v2, impSk, ci2)@j ==>
-			                (u = u2  &  v = v2 & ci = ci2)
-			             )
-			           &
-			             (not Ex #k. K(impSk)@k)
-                         &
-                            (
-                                not( Ex tidR u v ci1 #j tidR2 u2 v2 ci2 #j2.
-                                     ( 
-                                        CommitR(tidR, u, v, impSk, ci1)@j
-                                        & CommitR(tidR2, u2, v2, impSk, ci2)@j2
-                                        & not(#j = #j2)
-                                     )
-                                    )
-                            )
-			           )
-			         | (Ex #k. LTKRev(u)@k)
-			         | (Ex #k. LTKRev(v)@k)
-                     | (Ex #k. LTKRev(<u, v>)@k)
-			         )
-			    "
-			!>
-		)
-	!>,
-	<!  
-		ifdef(<!m4CR!>,
-			<!	all-traces
-			    "All tidI u v impSk cr #i.
-			         CommitI(tidI, u, v, impSk, cr)@i ==>
-			         ( ( (All tidR u2 v2 cr2 #j. CommitR(tidR, u2, v2, impSk, cr2)@j ==>
-			                (u = u2  &  v = v2 & cr = cr2)
-			             )
-			           &
-			             (not Ex #k. K(impSk)@k)
-                        &
-                            (
-                                not( Ex tidR u v cr1 #j tidR2 u2 v2 cr2 #j2.
-                                     ( 
-                                        CommitR(tidR, u, v, impSk, cr1)@j
-                                        & CommitR(tidR2, u2, v2, impSk, cr2)@j2
-                                        & not(#j = #j2)
-                                     )
-                                    )
-                            )
-			           )
-			         | (Ex #k. LTKRev(u)@k)
-			         | (Ex #k. LTKRev(v)@k)
-                     | (Ex #k. LTKRev(<u, v>)@k)
-			         )
-			    "
-			!>,
+	// 		<!	all-traces
+	// 		    "All tidI u v impSk ci #i.
+	// 		         CommitI(tidI, u, v, impSk, ci)@i ==>
+	// 		         ( ( (All tidR u2 v2 ci2 #j. CommitR(tidR, u2, v2, impSk, ci2)@j ==>
+	// 		                (u = u2  &  v = v2 & ci = ci2)
+	// 		             )
+	// 		           &
+	// 		             (not Ex #k. K(impSk)@k)
+ //                         &
+ //                            (
+ //                                not( Ex tidR u v ci1 #j tidR2 u2 v2 ci2 #j2.
+ //                                     ( 
+ //                                        CommitR(tidR, u, v, impSk, ci1)@j
+ //                                        & CommitR(tidR2, u2, v2, impSk, ci2)@j2
+ //                                        & not(#j = #j2)
+ //                                     )
+ //                                    )
+ //                            )
+	// 		           )
+	// 		         | (Ex #k. LTKRev(u)@k)
+	// 		         | (Ex #k. LTKRev(v)@k)
+ //                     | (Ex #k. LTKRev(<u, v>)@k)
+	// 		         )
+	// 		    "
+	// 		!>
+	// 	)
+	// !>,
+	// <!  
+	// 	ifdef(<!m4CR!>,
+	// 		<!	all-traces
+	// 		    "All tidI u v impSk cr #i.
+	// 		         CommitI(tidI, u, v, impSk, cr)@i ==>
+	// 		         ( ( (All tidR u2 v2 cr2 #j. CommitR(tidR, u2, v2, impSk, cr2)@j ==>
+	// 		                (u = u2  &  v = v2 & cr = cr2)
+	// 		             )
+	// 		           &
+	// 		             (not Ex #k. K(impSk)@k)
+ //                        &
+ //                            (
+ //                                not( Ex tidR u v cr1 #j tidR2 u2 v2 cr2 #j2.
+ //                                     ( 
+ //                                        CommitR(tidR, u, v, impSk, cr1)@j
+ //                                        & CommitR(tidR2, u2, v2, impSk, cr2)@j2
+ //                                        & not(#j = #j2)
+ //                                     )
+ //                                    )
+ //                            )
+	// 		           )
+	// 		         | (Ex #k. LTKRev(u)@k)
+	// 		         | (Ex #k. LTKRev(v)@k)
+ //                     | (Ex #k. LTKRev(<u, v>)@k)
+	// 		         )
+	// 		    "
+	// 		!>,
 			<!	all-traces
 			    "All tidI u v impSk #i.
 			         CommitI(tidI, u, v, impSk)@i ==>
@@ -1162,8 +1178,8 @@ lemma authInjAgreeGuaranteeForI:
 			         )
 			    "
 			!>
-		)
-	!>
+		//)
+	//!>
 	)*/
 
 
@@ -1172,8 +1188,8 @@ lemma authInjAgreeGuaranteeForI:
 /*ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
         ifdef(<!m4CI!>,
-		    <!
-		    	ifdef(<!m4CR!>,
+		    // <!
+		    // 	ifdef(<!m4CR!>,
 				    <!    
 				    	all-traces
 				        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
@@ -1184,30 +1200,30 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>,
-				    <!    
-				    	all-traces
-				        "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>
-				)
-		    !>,
-		    <! 
-		    	ifdef(<!m4CR!>,
-				    <!    
-				    	all-traces
-				        "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>,
+				//     <!    
+				//     	all-traces
+				//         "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>
+				// )
+		  //   !>,
+		  //   <! 
+		  //   	ifdef(<!m4CR!>,
+				//     <!    
+				//     	all-traces
+				//         "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>,
 				    <!    
 				    	all-traces
 				        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
@@ -1218,16 +1234,16 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>
-				)
-		    !>
+				//)
+		    //!>
 		)
     !>,*/
     
 /*<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
     	ifdef(<!m4CI!>,
-		    <!
-		    	ifdef(<!m4CR!>,
+		    // <!
+		    // 	ifdef(<!m4CR!>,
 				    <!
 				        all-traces
 				        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
@@ -1238,30 +1254,30 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>,
-				    <!
-				        all-traces
-				        "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>
-				)
-		    !>,
-		    <!
-		        ifdef(<!m4CR!>,
-				    <!
-				        all-traces
-				        "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>,
+				//     <!
+				//         all-traces
+				//         "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>
+				// )
+		  //   !>,
+		  //   <!
+		  //       ifdef(<!m4CR!>,
+				//     <!
+				//         all-traces
+				//         "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>,
 				    <!
 				        all-traces
 				        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
@@ -1272,15 +1288,15 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>
-				)
-		    !>
+				//)
+		    //!>
 		)
     !>,*/
 /*<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
     <!
     	ifdef(<!m4CI!>,
-    		<!
-    			ifdef(<!m4CR!>,
+    		// <!
+    		// 	ifdef(<!m4CR!>,
 				    <!
 				    	lemma secrecyPFSGIYSessionKey:
 				        all-traces
@@ -1292,32 +1308,32 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>,
-				    <!
-				    	lemma secrecyPFSGIYSessionKey:
-				        all-traces
-				        "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>
-				)
-		    !>,
-		    <!
-		    	ifdef(<!m4CR!>,
-				    <!
-				    	lemma secrecyPFSGIYSessionKey:
-				        all-traces
-				        "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )
-				         &
-				         (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
-				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-				         )"
-				    !>,
+				//     <!
+				//     	lemma secrecyPFSGIYSessionKey:
+				//         all-traces
+				//         "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>
+				// )
+		  //   !>,
+		  //   <!
+		  //   	ifdef(<!m4CR!>,
+				//     <!
+				//     	lemma secrecyPFSGIYSessionKey:
+				//         all-traces
+				//         "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )
+				//          &
+				//          (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
+				//             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+				//          )"
+				//     !>,
 				    <!
 				    	lemma secrecyPFSGIYSessionKey:
 				        all-traces
@@ -1329,23 +1345,67 @@ lemma authInjAgreeGuaranteeForI:
 				            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
 				         )"
 				    !>
-				)
-		    !>
+				// )
+		  //   !>
 		)
 
     !>,
     // else: SIG_SIG
-    //////////////// HERE ////////////////
     <!
-    	lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-         )
-         &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-         )"
+        ifdef(<!m4CI!>,
+            //<!
+                //ifdef(<!m4CR!>,
+                //    <!
+                    	lemma secrecyPFSGIYSessionKey:
+                        all-traces
+                        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
+                            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                         )
+                         &
+                         (All tid u v sk ci cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci, cr)@j) ==>
+                            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                         )"
+                    !>,
+                //    <! 
+                //        lemma secrecyPFSGIYSessionKey:
+                //        all-traces
+                //        "(All tid u v sk ci #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci)@j) ==>
+                //            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                //         )
+                //         &
+                //         (All tid u v sk ci #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci)@j) ==>
+                //            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                //         )"
+                //    !>
+                //)
+            //!>,
+            //<!
+                //ifdef(<!m4CR!>,
+                //    <!
+                //        lemma secrecyPFSGIYSessionKey:
+                //        all-traces
+                //        "(All tid u v sk cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, cr)@j) ==>
+                //            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                //         )
+                //         &
+                //         (All tid u v sk cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, cr)@j) ==>
+                //            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                //         )"
+                //    !>,
+                    <! 
+                        lemma secrecyPFSGIYSessionKey:
+                        all-traces
+                        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+                            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                         )
+                         &
+                         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+                            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+                         )"
+                    !>
+                //)
+            //!>
+        )
     !>
 )!>
 )!>
