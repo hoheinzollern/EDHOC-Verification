@@ -396,7 +396,7 @@ securely used to achieve certain goals is an important part of this paper.
 Our main contributions are the following.
 \begin{itemize}
     \item We provide formalization of \mEdhoc's all five cryptographic cores
-        using \mTamarin.
+        using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
     \item We give an explicit security model for the protocol and have verified
         essential security properties, such as session key and entity
         authentication, as well as Perfect Forward Secrecy (PFS), within that
@@ -413,8 +413,8 @@ Our main contributions are the following.
 \subsection{Related work}
 \label{sec:relatedWork}
 The work closest to ours is Bruni et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
-which used \mProverif to analyze an earlier, two cryptographic core, version
-of \mEdhoc.
+which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
+two cryptographic core, version of \mEdhoc.
 %
 We consider our work to be a sort of follow-up to that, doing a similar kind of
 analysis of the most recent, and more elaborate, version of \mEdhoc using five
