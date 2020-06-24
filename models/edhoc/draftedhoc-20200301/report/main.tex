@@ -152,20 +152,20 @@ This section is only for the outline and will be removed in the final
 \begin{itemize}
     \item \textbf{Section: Situation and setting (\hl{Karl})}
         \begin{itemize}
-            \item Elaborate on the story line above
-            \item Explain the exploratory and iterative nature of industrial
+            \item OK: Elaborate on the story line above
+            \item OK: Explain the exploratory and iterative nature of industrial
                   standards and why this has resulted in the new \mStat methods.
-            \item Contrast with \mTls. Motivate why \mEdhoc is needed in
+            \item OK: Contrast with \mTls. Motivate why \mEdhoc is needed in
                 addition to \mTls. Little analysis of \mEdhoc so far.
                 Motivate that most security analysis and media attention is on
                 larger IoT devices. Give examples and cite use cases whit
                 constrained devices. Paint the (true) picture that this will
                 become a serious security risk in the future if not a secure
                 \mEdhoc is created.
-            \item Subsection: Contributions: model, verified properties,
+            \item OK: Subsection: Contributions: model, verified properties,
                 guidance on how various methods can be used (for std and
                 implementations)
-            \item Subsection: Related work: \mOptls, \mNoise,
+            \item OK: Subsection: Related work: \mOptls, \mNoise,
                 Bruni~\cite{DBLP:conf/secsr/BruniJPS18}, Cremers' et. al. \mTls
                 analysis with \mTamarin.
         \end{itemize}
@@ -272,19 +272,16 @@ This section is only for the outline and will be removed in the final
         \end{itemize}
     \item \textbf{Section: Discussion (\hl{Karl})}
         \begin{itemize}
-            \item Discuss that the security properties varies between methods
+            \item{\textbf{Design practices}}
+                \begin{itemize}
+                \item Discuss that the security properties varies between methods
                 and that this may confuse implementers and user of libraries.
-            \item Discuss the overlayed \mOptls construction and how an
-                additional \mOscore message $R \rightarrow I$ would give key
-                confirmation and hence explicit inj-agree also for $I$.
-            \item Discuss Identities and use-cases with the neighbours printer
-                (now included in draft, but only after we mentioned it),
-                See~\ref{sec:mail-notes-identity}.
-            \item Discuss Transcipt hashes that lag behind one message and that
-                it is supposed to "cover as much as possible", but sometimes
-                does not (check tamarin model also for inconsistencies between
-                methods). Unclear design except "as much as possible".
-            \item Discuss unclearity regarding security model (trusted execution
+                \item Discuss practice of listing claimed properties (likely copied
+                from some academic paper) without justification in IETF drafts.
+                \end{itemize}
+            \item{\textbf{\mGiy and technical protocol issues}}
+                \begin{itemize}
+                \item Discuss unclearity regarding security model (trusted execution
                 environment or not?). \mOptls has clear separation and therefore
                 use both $g^{xy}$ and $g^{iy}$ etc. \mEdhoc is not as cleanly
                 designed and according to IETF guys they don't care about
@@ -294,18 +291,30 @@ This section is only for the outline and will be removed in the final
                 then we can get inj-agree on the session key material, but then
                 extending \mEdhoc implementations with a trusted execution
                 environment for LTK operations is useless.
-            \item Discuss practice of listing claimed properties (likely copied
-                from some academic paper) without justification in IETF drafts.
-            \item Discuss algorithm negotiation.
-            \item Discuss session key authentication and the problem of \mGiy,
-                see~\ref{sec:mail-notes-session-key-auth}
-                and~\ref{sec:mail-notes-session-key-imp-auth}
-            \item Discuss what should be used as session key and what the
+                \item Discuss algorithm negotiation.
+                \item Discuss what should be used as session key and what the
                 consequences of the choices are,
                 see~\ref{sec:mail-notes-secrecy-sessions} and
                 \ref{sec:mail-notes-session-key-mtrl}.
-            \item Discuss non-repudiation that was not included until we pointed
+                \item Discuss session key authentication and the problem of \mGiy,
+                see~\ref{sec:mail-notes-session-key-auth}
+                and~\ref{sec:mail-notes-session-key-imp-auth}
+                \item Discuss non-repudiation that was not included until we pointed
                 it out.
+                \item Discuss the overlayed \mOptls construction and how an
+                additional \mOscore message $R \rightarrow I$ would give key
+                confirmation and hence explicit inj-agree also for $I$.
+                \item Discuss Transcipt hashes that lag behind one message and that
+                it is supposed to "cover as much as possible", but sometimes
+                does not (check tamarin model also for inconsistencies between
+                methods). Unclear design except "as much as possible".
+                \end{itemize}
+            \item{\textbf{Protocol user/implementor issues}}
+                \begin{itemize}
+                \item Discuss Identities and use-cases with the neighbours printer
+                (now included in draft, but only after we mentioned it),
+                See~\ref{sec:mail-notes-identity}.
+                \end{itemize}
         \end{itemize}
 \end{itemize}
 }
@@ -438,11 +447,115 @@ computational model, e.g., \mSigma by Canetti and
 Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls by Krawczyk and
 Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
+\knote{Add work on \mNoise here when Vaishnavi has added her section.}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Structure}
 \label{sec:structure}
 \knote{Only include this if we have space to spare.}
+
+
+%-------------------------------------------------------------------------- sec
+\section{Discussion}
+\label{sec:discussion}
+%-------------------------------------------------------------------------- sub
+\subsection{Design Practices}
+\label{sec:designPractices}
+\knote{Note to self: compress this a lot}
+We start with two observations on the design practices, which the \mEdhoc design
+process shares with many other standards.
+%
+The first observation is the lack of defined security model.
+%
+This is quite common in standardization, and a nuisance for the formal methods
+community~\cite{DBLP:conf/ccs/BasinDHRSS18}, who appear to expect industrial
+standards such as IETF and 3GPP to be built ground up from a theoretical
+framework.
+%
+Because industrial standards tend to be developed based on existing and possible
+use cases, more in a top down fashion, a strict security model (or even a set of
+strict security models) is difficult to define.
+%
+In many cases, a security model is intentionally not defined to leave more
+flexibility for implementations.
+%
+This risks that implementations make insecure choices, but also makes it more
+likely that the standard will be more widely applicable and avoids proprietary
+designs.
+%
+Proprietary designs, in turn, also risks making insecure choices.
+%
+Even so, the lack of security model in \mEdhoc is somewhat troubling, in that
+the standard makes a number of detailed, but imprecise, claims of properties
+the protocol provides.
+\knote{add example}
+%
+Other claims are simply incorrect, but shows the way of reasoning: assuming we
+re-use most of a cryptographic core from a well analyzed protocol the security
+properties shown for that protocol will carry over.
+%
+For example, Section 8.1. states, \emph{"EDHOC inherits its security properties
+from the theoretical SIGMA-I"}, but makes no connection between the security
+model in which \mSigma was analyzed and a possible security model of \mEdhoc.
+%
+Neither is there a mapping showing how the \mSigSig method maps to \mSigma, or
+caveats that this only applies to the \mSigSig method.
+%
+\textbf{Proposal:} We do not suggest that standard security protocols
+necessarily should be built bottom up based on a formal theoretical framework.
+%
+Doing so would be helpful for subsequent formal verification, but would
+likely grind standards to a halt.
+%
+However, it would be useful to add some justification for claims and the
+intended mapping of the cryptographic core to the academic protocol used and
+which differences there are.
+%
+This would greatly help academics to reverse engineer appropriate security
+models and verify whether the claims do hold in that model.
+%
+
+Our second observation is that the five different methods provide very different
+security guarantees.
+%
+They are tailored for specific situations, and naturally cannot be entirely
+equal.
+%
+However, when it comes to implementation and use of the protocol, this shifts the
+responsibility of selecting the appropriate version to the user.
+%
+Should \mEdhoc become the protocol of choice for all the IoT applications to
+come, it is easy to imagine developers downloading an \mEdhoc library, assuming
+all methods are equally secure and choosing based on smallest message size,
+type of credential etc, rather than on the one that provide the security
+properties needed for the use-case.
+%
+For example, consider a use-case where \mEdhoc is run over a near-field communication
+radio to derive a token from the derived session key.
+%
+The token is then to be used at a later point in time.
+%
+In this case it would be useful that both parties get confirmation that the
+other party computed the session key (key confirmation).
+%
+This property is not achieved by the \mEdhoc methods where the initator uses the
+\mStat method for authentication.
+%
+
+\textbf{Proposal:} There are some use-cases discussed in the LAKE working
+group.
+%
+It would, however, be useful to extend the security considerations section in the
+standard with example use-cases and showing the consequences of choosing
+different methods.
+%
+
+
+NON\_REPUDIATION:---
+For example, non-repudiation may be a very useful property for an access control
+solution for a nuclear power-plant, whereas it may undesirable for privacy
+purposes in coffee vending machine.
+%
 
 
 %-------------------------------------------------------------------------- ack
