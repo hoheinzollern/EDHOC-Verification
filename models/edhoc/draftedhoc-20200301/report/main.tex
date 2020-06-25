@@ -169,7 +169,7 @@ This section is only for the outline and will be removed in the final
                 Bruni~\cite{DBLP:conf/secsr/BruniJPS18}, Cremers' et. al. \mTls
                 analysis with \mTamarin.
         \end{itemize}
-    \item \textbf{Section: \mEdhoc description (\hl{Vaishnavi?})}
+    \item \textbf{Section: \mEdhoc description (\hl{Vaishnavi})}
         \begin{itemize}
             \item Describe evolved protocol from last \mEdhoc verification,
             \item Describe the overarching goal of \mEdhoc of security context
@@ -212,7 +212,7 @@ This section is only for the outline and will be removed in the final
              \item Describe transmission of aux data and expected security
                  properties.
         \end{itemize}
-    \item \textbf{Section: \mEdhoc security model and formalization (\hl{Alessandro?})}
+    \item \textbf{Section: \mEdhoc security model and formalization (\hl{Alessandro})}
         \begin{itemize}
             \item Subsection: threat model. We assume secure binding between
                 credentials and the identity. We assume adversary cannot
@@ -454,6 +454,17 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \label{sec:structure}
 \knote{Only include this if we have space to spare.}
 
+%-------------------------------------------------------------------------- sec
+\section{The \mEdhoc protocol}
+\label{sec:edhoc}
+\hl{Vaishnavi}
+\input{edhocProtocol}
+
+%-------------------------------------------------------------------------- sec
+\section{Formalization and results}
+\label{sec:formalization}
+\hl{Alessandro}
+\input{edhocFormalization}
 
 %-------------------------------------------------------------------------- sec
 \section{Discussion}
@@ -461,45 +472,54 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %-------------------------------------------------------------------------- sub
 \subsection{Design Practices}
 \label{sec:designPractices}
-\knote{Note to self: compress this a lot}
+\knote{Note to self: Long sentences. Not to the point. Revision needed.}
 We start with two observations on the design practices, which the \mEdhoc design
-process shares with many other standards.
+shares with many other standards.
 %
-The first observation is the lack of defined security model.
+\mPoint{Lack of clear security model}
+The first observation is the lack of clearly defined security model.
 %
 This is quite common in standardization, and a nuisance for the formal methods
 community~\cite{DBLP:conf/ccs/BasinDHRSS18}, who appear to expect industrial
-standards such as IETF and 3GPP to be built ground up from a theoretical
-framework.
+standards, from organizations such as IETF and 3GPP, to be built from a
+semi-theoretical framework to meet precise design goals.
+\knote{Need to polish this sentence to not offend anyone.}
 %
-Because industrial standards tend to be developed based on existing and possible
-use cases, more in a top down fashion, a strict security model (or even a set of
-strict security models) is difficult to define.
+Because industrial standards aim to meet the needs of
+existing, mixed with envisioned, use-cases, the work has a significant
+explorative element.
 %
-In many cases, a security model is intentionally not defined to leave more
-flexibility for implementations.
+Defining a strict security model from the start is difficult in this setting.
 %
-This risks that implementations make insecure choices, but also makes it more
-likely that the standard will be more widely applicable and avoids proprietary
-designs.
+In many cases, a security model evolves during the design and is defined
+by resistance to the attacks discussed in the process, not by a small set of
+precise assumptions and the consequences drawn from those.
 %
-Proprietary designs, in turn, also risks making insecure choices.
+Even so, the lack of security model in \mEdhoc is somewhat troubling in that
+the specification makes a number of detailed claims of properties
+the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
-Even so, the lack of security model in \mEdhoc is somewhat troubling, in that
-the standard makes a number of detailed, but imprecise, claims of properties
-the protocol provides.
-\knote{add example}
+The intention may be that, if the academic protocol \mSigma is re-used as a
+cryptographic core of \mEdhoc, then all the properties listed
+in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} can be copied
+into the specification.
 %
-Other claims are simply incorrect, but shows the way of reasoning: assuming we
-re-use most of a cryptographic core from a well analyzed protocol the security
-properties shown for that protocol will carry over.
+(Note: likely the intention is the same for the other reused academic protocols,
+but since the specification is still work in progress, it is not yet written
+down).
 %
-For example, Section 8.1. states, \emph{"EDHOC inherits its security properties
-from the theoretical SIGMA-I"}, but makes no connection between the security
-model in which \mSigma was analyzed and a possible security model of \mEdhoc.
+Section 8.1. states, \emph{"EDHOC inherits its security properties
+from the theoretical SIGMA-I"}.
 %
-Neither is there a mapping showing how the \mSigSig method maps to \mSigma, or
-caveats that this only applies to the \mSigSig method.
+Designing a standard specification by re-using existing well-studied academic
+components is good practice.
+%
+However, \mSigma and the other cryptographic cores used by \mEdhoc, are
+typically designed for a precise setting with many underlying assumptions.
+%
+Without spelling those out in the specification, and without showing how
+\mEdhoc's adaptations to the cryptographic cores map to the academic protocols
+used, such claims are not very informative and may even be misleading.
 %
 \textbf{Proposal:} We do not suggest that standard security protocols
 necessarily should be built bottom up based on a formal theoretical framework.
@@ -515,11 +535,12 @@ This would greatly help academics to reverse engineer appropriate security
 models and verify whether the claims do hold in that model.
 %
 
+\mPoint{Property diversity between methods}
 Our second observation is that the five different methods provide very different
 security guarantees.
 %
-They are tailored for specific situations, and naturally cannot be entirely
-equal.
+Each one is tailored for a specific situation, and the overarching goal of
+optimization of message sizes resulted in them providing different guarantees.
 %
 However, when it comes to implementation and use of the protocol, this shifts the
 responsibility of selecting the appropriate version to the user.
@@ -542,21 +563,34 @@ This property is not achieved by the \mEdhoc methods where the initator uses the
 \mStat method for authentication.
 %
 
-\textbf{Proposal:} There are some use-cases discussed in the LAKE working
-group.
+Another aspect showing that usefulness of considering \mEdhoc light-wight
+use-cases is that, until we pointed it out, the specification did not contain
+any discussion on the topic of (non)-repudiation.
 %
-It would, however, be useful to extend the security considerations section in the
-standard with example use-cases and showing the consequences of choosing
-different methods.
-%
-
-
-NON\_REPUDIATION:---
-For example, non-repudiation may be a very useful property for an access control
+Non-repudiation may be a very useful property for an access control
 solution for a nuclear power-plant, whereas it may undesirable for privacy
 purposes in coffee vending machine.
 %
+Such a simple thought experiment would have caught the missing topic.
+%
+\textbf{Proposal:} There are some use-cases discussed in the LAKE working
+group requirements draft\knote{citation}.
+%
+It would, however, be useful to extend the security considerations section in
+the specification with example use-cases and showing the consequences of
+choosing different methods.
+%
+It would also be helpful to capture and analyze more informal and light-weight
+use-cases in the requirements document, to better understand which properties
+are needed.
+\knote{Adjust the last sentence depending on what happens to the requirements
+draft.}
 
+%-------------------------------------------------------------------------- sub
+\subsection{Unclear identity management}
+\label{sec:usableSecurity}
+\mPoint{Protocol is easy to use incorrectly/insecurely; protocol is unclear
+about what an identity that is authenticated is}
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
