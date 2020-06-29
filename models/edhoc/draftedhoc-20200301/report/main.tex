@@ -397,7 +397,7 @@ Consequently, there are now five cryptographic cores in total, and it is prudent
 to formally analyze them all to ensure a higher level of security assurance for
 \mEdhoc.
 %
-This is especially important, since the standard itself lacks description of the
+This is especially important, since the \mSpec itself lacks description of the
 intended security model and overall security goals.
 %
 Filling this gap and deriving circumstances under which \mEdhoc can be
@@ -419,7 +419,7 @@ Our main contributions are the following.
         establish which types of use-cases \mEdhoc may be suitable for and
         to give recommendations for the future standards development.
     \item Our discussions with IETF LAKE working group members have already
-        lead to improvements and clarifications of the standard based on
+        lead to improvements and clarifications of the standard \mSpec based on
         observations we made during the construction of our formal model.
 \end{itemize}
 
@@ -474,7 +474,7 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \label{sec:designPractices}
 \knote{Note to self: Long sentences. Not to the point. Revision needed.}
 We start with two observations on the design practices, which the \mEdhoc design
-shares with many other standards.
+shares with many other standards specifications.
 %
 \mPoint{Lack of clear security model}
 The first observation is the lack of clearly defined security model.
@@ -507,16 +507,16 @@ built from these technical components.
 %
 Because of this, it is unclear which security properties \mEdhoc should have.
 %
-Nonetheless, the specification makes a number of detailed claims of properties
+Nonetheless, the \mSpec makes a number of detailed claims of properties
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
 The intention may be that, if the academic protocol \mSigma is re-used as a
 cryptographic core of \mEdhoc, then all the properties listed
 in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} are the
-necessary and sufficient ones and can be copied into the specification.
+necessary and sufficient ones and can be copied into the \mSpec.
 %
 (Note: likely the intention is the same for the other reused academic protocols,
-but since the specification is still work in progress, it is not yet written
+but since the \mSpec is still work in progress, it is not yet written
 down).
 %
 Section 8.1. states, \emph{"EDHOC inherits its security properties
@@ -535,7 +535,7 @@ message size.
 Second, \mSigma and the other cryptographic cores used by \mEdhoc, are
 typically designed for a precise setting with many underlying assumptions.
 %
-Without spelling those out in the specification, and without showing how
+Without spelling those out in the \mSpec, and without showing how
 \mEdhoc's adaptations to the cryptographic cores map to the academic protocols
 used, such claims are not very informative and may even be misleading.
 %
@@ -589,7 +589,7 @@ developer is aware of the discrepancy.
 %
 
 Another aspect showing the usefulness of considering \mEdhoc light-weight
-use-cases is that, until we pointed it out, the specification did not contain
+use-cases is that, until we pointed it out, the \mSpec did not contain
 any discussion on the topic of (non)-repudiation.
 %
 Non-repudiation may be a very useful property for an access control
@@ -602,7 +602,7 @@ Such a simple thought experiment would have caught the missing topic.
 group requirements draft~\cite{ietf-lake-reqs-04}.
 %
 It would, however, be useful to extend the security considerations section in
-the specification with example use-cases and showing the consequences of
+the \mSpec with example use-cases and showing the consequences of
 choosing different methods.
 %
 It would also be helpful to capture and analyze more informal and light-weight
