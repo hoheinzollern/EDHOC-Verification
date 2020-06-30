@@ -22,16 +22,41 @@ The 2018 work~\cite{DBLP:conf/secsr/BruniJPS18} by Bruni et al performed a forma
 
 %\subsection{Overarching goal of security context establishment}
 \subsection{Methods and features of \textsc{EDHOC}}
-\mEdhoc can established Diffie-Hellman key exchange in one of three different ways -- using digital signatures, static Diffie-Hellman keys, or pre-shared symmetric keys. We describe each of these methods in detail below.
+\mEdhoc can established Diffie-Hellman key exchange in one of three different ways -- using digital signatures, static Diffie-Hellman keys, or pre-shared symmetric keys. We describe each of these methods in detail below. The communicating parties must agree on the method as part of the first message.
 
-\subsubsection{Using digital signatures -- The \mSigSig method}
-The \mSigma (SIGn-and-MAc) family of protocols [\mcneed] has many variants. The \mSigSig method of \mEdhoc is built on \mSigmaI, a variant of the \mSigma protocol which provides identity protection for the initiator, and  implements the \mSigmaI variant as Mac-then-Sign. The current \mSigSig method corresponds (with a few minor changes) to the asymmetric key mode of \mEdhoc version 08. 
+\subsubsection{\mSigSig method}
+The \mSigma (SIGn-and-MAc) family of protocols [\mcneed] has many variants. The \mSigSig method of \mEdhoc is built on \mSigmaI, a variant of the \mSigma protocol which provides identity protection for the initiator, and  implements the \mSigmaI variant as Mac-then-Sign. The current \mSigSig method corresponds (with a few minor changes) to the asymmetric key mode of \mEdhoc v08. 
 
 The communicating parties exchange ephemeral public keys, compute the shared secret, and derive symmetric application keys from this secret.
 
+\subsubsection{\mPskPsk method}
+In this method, the initiator and responder are assumed to have a pre-shared key which is secret to them, and can be retrieved by the responder using a public part of the first message (\mIDPSK). This method corresponds to the symmetric key method of \mEdhoc v08. 
+
+In the first message, the initiator sends a message consisting of the method name, the initiator's ephemeral key (\mGx), their connection identifier (\mCi), the \mIDPSK identifier, and (optional) plaintext (\mADone). 
+
+The second message, sent by the responder, is composed of \mCi, the responder's ephemeral key \mGy, their connection identifier \mCr, and an AEAD encryption [\mcneed] of the transaction hash of the first message (\mTHtwo) along with an optional plaintext \mADtwo. The key used for this (\mKtwo) is derived using the EDHOC key derivation function with \mTHtwo and the pseudorandom string \mPRKtwo as input, while the associated data for the AEAD encryption is constructed by concatenating a constant string, the hash function, and \mTHtwo. 
+
+The initiator, upon receipt of this message, sends back \mCr, followed by an AEAD encryption of the transaction hash of the second message (\mTHthree) along with a plaintext \mADthree. As earlier, the key used is derived by supplying \mTHthree and \mPRKthree as input to the KDF, and the  associated data obtained by concatenating the constant string, hash function, and \mTHthree. An abstract description is shown in Figure~\ref{fig:edhocpsk}.
+
+\vnote{Figure numbers don't square up, check class file guidelines!}
+
+\begin{figure}\label{fig:edhocpsk}
+\centering
+\includegraphics[scale=0.3]{Images/psk.png}
+\caption{The PSK-PSK method of EDHOC}
+\end{figure}
+
+\subsubsection{\mStat-based methods}
+\mEdhoc allows for three \mStat-based methods -- two where only one participant has a static Diffie-Hellman key (while the other uses signatures), and one where both do. This set of methods is not covered in v08 of \mEdhoc, which only has a single \mSigma asymmetric key method (corresponding to the \mSigSig method shown above). This allows one party to use a \mSigma style of authentication, while the other can use something along the lines of \mOptls.
+
+\vnote{Need to talk about links to OPTLS and NOISE}
 
 
-\subsubsection{STAT based methods}
-\subsubsection{PSK-PSK method}
 
 \subsection{Expected security properties}
+
+
+%Discussion of KDF -- page 13 of EDHOC
+
+%certain security applications may be integrated into EDHOC by transporting auxiliary data together with the messages. One example is the transport of third-party authorization information protected outside of EDHOC [I-D.selander-ace-ake-authz]. Another example is the embedding of a certificate enrolment request or a newly issued certificate. EDHOC allows opaque auxiliary data (AD) to be sent in the EDHOC messages. Unprotected Auxiliary Data (AD_1, AD_2) may be sent in message_1 and message_2, respectively. Protected Auxiliary Data (AD_3) may be sent in message_3. Since data carried in AD1 and AD2 may not be protected, and the content of AD3 is available to both the Initiator and the Responder, special considerations need to be made such that the availability of the data a) does not violate security and privacy requirements of the service which uses this data, and b) does not violate the security properties of EDHOC. 
+
