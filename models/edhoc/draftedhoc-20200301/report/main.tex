@@ -397,7 +397,7 @@ Consequently, there are now five cryptographic cores in total, and it is prudent
 to formally analyze them all to ensure a higher level of security assurance for
 \mEdhoc.
 %
-This is especially important, since the standard itself lacks description of the
+This is especially important, since the \mSpec itself lacks description of the
 intended security model and overall security goals.
 %
 Filling this gap and deriving circumstances under which \mEdhoc can be
@@ -419,7 +419,7 @@ Our main contributions are the following.
         establish which types of use-cases \mEdhoc may be suitable for and
         to give recommendations for the future standards development.
     \item Our discussions with IETF LAKE working group members have already
-        lead to improvements and clarifications of the standard based on
+        lead to improvements and clarifications of the standard \mSpec based on
         observations we made during the construction of our formal model.
 \end{itemize}
 
@@ -474,12 +474,12 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \label{sec:designPractices}
 \knote{Note to self: Long sentences. Not to the point. Revision needed.}
 We start with two observations on the design practices, which the \mEdhoc design
-shares with many other standards.
+shares with many other standards specifications.
 %
 \mPoint{Lack of clear security model}
 The first observation is the lack of clearly defined security model.
 %
-This is quite common in standardization, and a nuisance for the formal methods
+This is common in standardization, and a nuisance for the formal methods
 community~\cite{DBLP:conf/ccs/BasinDHRSS18}, who appear to expect industrial
 standards, from organizations such as IETF and 3GPP, to be built from a
 semi-theoretical framework to meet precise design goals.
@@ -496,28 +496,46 @@ by resistance to the attacks discussed in the process, not by a small set of
 precise assumptions and the consequences drawn from those.
 %
 Even so, the lack of security model in \mEdhoc is somewhat troubling in that
-the specification makes a number of detailed claims of properties
+it it does not even discuss general use-cases in its requirements
+document~\cite{ietf-lake-reqs-04}.
+%
+The rationale is instead derived purely from technical aspects of the devices,
+communication links and accompanying protocols with which \mEdhoc is to be used.
+%
+No direct consideration is given to the intended uses-cases for the systems
+built from these technical components.
+%
+Because of this, it is unclear which security properties \mEdhoc should have.
+%
+Nonetheless, the \mSpec makes a number of detailed claims of properties
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
 The intention may be that, if the academic protocol \mSigma is re-used as a
 cryptographic core of \mEdhoc, then all the properties listed
-in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} can be copied
-into the specification.
+in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} are the
+necessary and sufficient ones and can be copied into the \mSpec.
 %
 (Note: likely the intention is the same for the other reused academic protocols,
-but since the specification is still work in progress, it is not yet written
+but since the \mSpec is still work in progress, it is not yet written
 down).
 %
 Section 8.1. states, \emph{"EDHOC inherits its security properties
 from the theoretical SIGMA-I"}.
 %
 Designing a standard specification by re-using existing well-studied academic
-components is good practice.
+components is good practice, but this approach has two problems.
 %
-However, \mSigma and the other cryptographic cores used by \mEdhoc, are
+First, it is unknown whether the properties provided by the cryptgraphic cores
+are suitable for the situations in which \mEdhoc is to be used, whether
+something is missing, or whether something is unnecessary.
+%
+The latter should be of concern because of the aim to optimize \mEdhoc for
+message size.
+%
+Second, \mSigma and the other cryptographic cores used by \mEdhoc, are
 typically designed for a precise setting with many underlying assumptions.
 %
-Without spelling those out in the specification, and without showing how
+Without spelling those out in the \mSpec, and without showing how
 \mEdhoc's adaptations to the cryptographic cores map to the academic protocols
 used, such claims are not very informative and may even be misleading.
 %
@@ -534,6 +552,9 @@ which differences there are.
 This would greatly help academics to reverse engineer appropriate security
 models and verify whether the claims do hold in that model.
 %
+It would also be useful to capture the intended uses of end-systems on a high
+level to learn which security properties are required.
+%
 
 \mPoint{Property diversity between methods}
 Our second observation is that the five different methods provide very different
@@ -546,13 +567,14 @@ However, when it comes to implementation and use of the protocol, this shifts th
 responsibility of selecting the appropriate version to the user.
 %
 Should \mEdhoc become the protocol of choice for all the IoT applications to
-come, it is easy to imagine developers downloading an \mEdhoc library, assuming
-all methods are equally secure and choosing based on smallest message size,
-type of credential etc, rather than on the one that provide the security
-properties needed for the use-case.
+come, it is easy to imagine developers downloading an \mEdhoc library and using
+it similarly to how \mTls is used today.
 %
-For example, consider a use-case where \mEdhoc is run over a near-field communication
-radio to derive a token from the derived session key.
+Many developers will assume that \mEdhoc provides sufficient security and may
+chose method based on performance rather than on security properties.
+%
+For example, consider a use-case where \mEdhoc is run over a near-field
+communication radio to derive a token from the derived session key.
 %
 The token is then to be used at a later point in time.
 %
@@ -562,9 +584,12 @@ other party computed the session key (key confirmation).
 This property is not achieved by the \mEdhoc methods where the initator uses the
 \mStat method for authentication.
 %
+Obviously, this can be solved on the application layer, but only if the
+developer is aware of the discrepancy.
+%
 
-Another aspect showing that usefulness of considering \mEdhoc light-wight
-use-cases is that, until we pointed it out, the specification did not contain
+Another aspect showing the usefulness of considering \mEdhoc light-weight
+use-cases is that, until we pointed it out, the \mSpec did not contain
 any discussion on the topic of (non)-repudiation.
 %
 Non-repudiation may be a very useful property for an access control
@@ -574,10 +599,10 @@ purposes in coffee vending machine.
 Such a simple thought experiment would have caught the missing topic.
 %
 \textbf{Proposal:} There are some use-cases discussed in the LAKE working
-group requirements draft\knote{citation}.
+group requirements draft~\cite{ietf-lake-reqs-04}.
 %
 It would, however, be useful to extend the security considerations section in
-the specification with example use-cases and showing the consequences of
+the \mSpec with example use-cases and showing the consequences of
 choosing different methods.
 %
 It would also be helpful to capture and analyze more informal and light-weight
@@ -587,10 +612,104 @@ are needed.
 draft.}
 
 %-------------------------------------------------------------------------- sub
-\subsection{Unclear identity management}
+\subsection{Unclear identity management and authentication}
 \label{sec:usableSecurity}
-\mPoint{Protocol is easy to use incorrectly/insecurely; protocol is unclear
-about what an identity that is authenticated is}
+\mPoint{Protocol is unclear about what it means by authentication; also, why is
+mutual auth required?}
+%
+The \mSpec is unclear about what kind of authentication it aims to achieve.
+%
+Most importantly, it is not stated whether implicit or explicit authentication
+is required, or whether confirmation of the peer's agreement on the \mSid or
+session key.
+%
+As our analysis shows, mutual injective agreement on the \mSid is achieved
+by all methods, except for when the initiator is using the \mStat methods.
+%
+This is because the \mSid is unique among sessions (in the symbolic model it
+is since the ephemeral keys are fresh and in the computational model they are
+fresh with overwhelming probability).
+%
+Injective agreement provides explicit authentication.
+%
+In case the initiator uses the \mStat method, only implicit authentication
+can be achieved.
+%
+Whether explicit authentication is an important feature for \mEdhoc or not, and
+whether it violates the requirement on mutual
+authentication~\cite{ietf-lake-reqs-04} is difficult to say.
+%
+Neither does the requirements document~\cite{ietf-lake-reqs-04} provide
+intended use cases hinting at what level of authentication is required, nor does
+it explain what the more technical term "mutual authentication"
+is intended to cover.
+%
+\textbf{Proposal:}
+It would be useful to clarify in the \mSpec that different methods provide
+different types of authentication and elaborate on in which situations and
+implementer should select which method.
+%
+The latter is important in an industrial standard because it can be expected
+that many implementers may otherwise end up with an insecure solution
+by select the most efficient method.
+%
+
+The requirements~\cite{ietf-lake-reqs-04} demand mutual authentication, but
+do not provide any rationale, more than that it is expected of IETF protocols
+(see Section 3).
+%
+We observe that if it is acceptable to sacrifice explicit authentication for
+some methods to obtain shorter messages, it may also be acceptable for some
+use-cases to only provide unilateral authentication and by that reducing the
+number of messages to one round-trip.
+%
+Similar to how \mTls is often used, initiator authentication could then be
+performed on the \mCoap level in the secure \mOscore channel.
+%
+Such a combination of authentications has worked well for many web
+use-cases and provides mutual authentication for the application on a system
+level.
+%
+Since few protocols, \mEdhoc included, are expected to work in isolation, this
+may be a possible approach.
+%
+\textbf{Proposal:} Without some use-cases or user-stories, it is difficult to
+determine whether mutual authentication is an appropriate requirement or whether
+a more optimized unilateral authentication solution with possible \mCoap level
+authentication would be better.
+%
+We propose considering light-weight use-case analysis to explore this option.
+%
+
+\mPoint{not verifying \mIdcredr is dangerous}
+Section 3.2 of the \mSpec, states that a policy is required restricting the set
+of peers an entity is allowed to run \mEdhoc with.
+%
+However, because the initator is not required to verify that the \mIdcredr
+received in message 2 is the same as the one it intended when sending message 1,
+this is insufficient for a general purpose AKE.
+%
+These small thought example shows why.
+%
+Assume someone has configured all devices in their home to be in the restricted
+set, but that one of the devices $A$ has been compromised.
+%
+If another device $B$, unaware of the compromise, initiates a connection to a
+third device $C$, the compromised device $A$ may interfere.
+%
+$A$ may respond in $C$ place, which may require blocking the response from $C$.
+%
+Since $A$ does not check that it is $C$'s identity in message 2, and device $A$
+is part of the restricted set, $A$ will complete and accept the \mEdhoc run with
+device $A$.
+%
+The obvious solution is for the initiator to match \mIdcredr to the intended
+identity.
+%
+This is yet another example of where a small use-case or user-story uncovers
+potential lacks in the \mSpec, and show that it would be a useful addition to
+the requirements document~\cite{ietf-lake-reqs-04}.
+%
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
