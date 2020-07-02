@@ -103,7 +103,7 @@ et.al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, IETF has significantly extended the protocol, which is now a
 framework with a number of cryptographic cores, called methods, where the
-initial version of \mEdhoc is now just one out of five possibilities.
+initial version of \mEdhoc contained only two out of five possibilities.
 %
 In this paper we formally analyze all methods of \mEdhoc in a symbolic model,
 using the Tamarin verification tool.
@@ -538,6 +538,24 @@ typically designed for a precise setting with many underlying assumptions.
 Without spelling those out in the \mSpec, and without showing how
 \mEdhoc's adaptations to the cryptographic cores map to the academic protocols
 used, such claims are not very informative and may even be misleading.
+%
+
+Another concrete example, we believe is important, is whether distributing
+\mEdhoc{} processing across a trusted execution environment (TEE) and a less
+trusted part, should be considered in the security model.
+%
+In our analysis we have chosen not to model such a distribution.
+%
+This is because we received indications that it was not necessary to consider
+reveal of the session state, in particular the ephemeral secret keys when
+\mSigma{} cannot protect against that.
+\knote{Personal correspondence. Should we include that?}
+%
+We do, however, believe it may be useful to consider TEEs nonetheless.
+%
+Given that many IoT devices will be deployed in hostile environments there may
+be use-cases where it may be acceptable that confidentiality is compromised, but
+where impersonation attacks would be dangerous.
 %
 \textbf{Proposal:} We do not suggest that standard security protocols
 necessarily should be built bottom up based on a formal theoretical framework.
