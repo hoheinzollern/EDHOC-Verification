@@ -109,3 +109,19 @@
 \newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}\xspace}
 
 
+
+% TIKZ messages and actions
+\newcommand{\msg}[4]{\draw[->] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
+\newcommand{\action}[3]{\node[draw,align=center,below={#1} of {#2}]{#3}}
+
+% Tamarin symbols
+\newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-3pt}[{#1}]\hspace{-3pt}\rightarrow}}
+\newcommand{\semarrow}[1][]{\ifthenelse{\equal{#1}{}}{\Rightarrow}{=\hspace{-3pt}[{#1}]\hspace{-3pt}\Rightarrow}}
+\newcommand{\mIn}{\mathsf{In}}
+\newcommand{\mOut}{\mathsf{Out}}
+\newcommand{\mKD}{\mathsf{KD}}
+\newcommand{\mKU}{\mathsf{KU}}
+\newcommand{\mRule}[1]{\mathit{#1}}
+\newcommand{\mAeadEncrypt}{\mathit{aeadEncrypt}}
+\newcommand{\mAeadDecrypt}{\mathit{aeadDecrypt}}
+\newcommand{\mDecrypt}{\mathit{decrypt}}
