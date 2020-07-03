@@ -551,14 +551,30 @@ In our analysis we have chosen not to model such a distribution.
 %
 This is because we received indications that it was not necessary to consider
 reveal of the session state, in particular the ephemeral secret keys when
-\mSigma{} cannot protect against that.
+\mSigma{} cannot protect against such an attack.
 \knote{Personal correspondence. Should we include that?}
 %
-We do, however, believe it may be useful to consider TEEs nonetheless.
+This is however only true if one restricts attention to key confidentiality.
+%
+
+We believe it would be useful to consider TEEs.
+%
+For example, TEE can provide protection against many other threats than
+confidentiality.
 %
 Given that many IoT devices will be deployed in hostile environments there may
 be use-cases where it may be acceptable that confidentiality is compromised, but
 where impersonation attacks would be dangerous.
+%
+Further, \mEdhoc re-uses cryptographic cores from academic protocols such as
+\mSigma and \mOptls, which were intentionally designed for a well-defined
+security model where compromise of ephemeral keys is less critical than
+compromise of long-term keys.
+%
+Not taking advantage of this seems wasteful.
+%
+With at least a roughly drawn security model, these considerations would have
+surfaced earlier in the standardization process.
 %
 \textbf{Proposal:} We do not suggest that standard security protocols
 necessarily should be built bottom up based on a formal theoretical framework.
@@ -731,6 +747,12 @@ This is yet another example of where a small use-case or user-story uncovers
 potential lacks in the \mSpec, and show that it would be a useful addition to
 the requirements document~\cite{ietf-lake-reqs-04}.
 %
+
+%-------------------------------------------------------------------------- sub
+\subsection{Unclear identity management and authentication}
+\label{sec:usableSecurity}
+
+
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
