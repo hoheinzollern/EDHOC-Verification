@@ -468,64 +468,6 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \hl{Alessandro}
 \input{edhocFormalization}
 
-Next we describe our approach at formalizing the \mEdhoc protocol. We use the symbolic (Dolev-Yao) model for verification, using \mTamarin for tool support. The next three subsections describe our threat model, briefly present the \mTamarin tool, and our modeling choices. Finally, we present the properties that we proved in this effort.
-
-\subsection{Threat model}
-We verify \mEdhoc in the symbolic Dolev-Yao model: as customary in this style of modeling, we assume all cryptographic primitives to be ``perfect'', and hence only allow the attacker to encrypt and decrypt messages when they know the key, and exclude hash collisions, for example; the attacker is also in control of the communication channel, and can interact with unbounded sessions of the protocol, dropping, injecting and modifying messages at their liking.
-
-One important point here is that we allow the attacker to impersonate malicious endpoints, by revealing their long-term and session key material at any given point. \mEdhoc should remain secure under these assumptions, as we detail below.
-
-\paragraph{Post-compromise security}
-Post-compromise security is a class of properties that relate to the ability of a protocol to maintain security of previous and future sessions under a compromise.
-Cohn-Gordon et al.~\cite{cohn2016post} present a formal characterization of this class of properties. In this paper we adopt their terminology, hence we refer to them for a detailed explanation.
-
-Briefly speaking,~\cite{cohn2016post} defines the \emph{classical adversary model} as the model that considers only sessions ran by honest parties; other parties may be dishonest and thus reveal their private information to the attacker, however the honest parties remain honest. Under the classical model security must be maintained for the parties considered.
-\emph{Perfect forward secrecy} (PFS) drops the assumption that the parties involved in the sessions considered shall remain honest: hence long-term key material may be leaked after the run of a session, but such session must remain secure.
-Further, \emph{key-compromise impersonation} (KCI) takes the perspective of one of the endpoints of the protocol, say Alice running a session with Bob. A protocol is secure under KCI if Alice can still establish a secure session with Bob, even though Alice's keys are compromised at any time, and Bob's key material is not leaked until the end of the session.
-Finally, \emph{weak} and \emph{strong post-compromise security} (PCS) consider only those sessions run by parties that are not under control of the attacker. These same parties can be under the attacker's control even before and after the session. A protocol with \emph{weak PCS} must guarantee security under a limited compromise, where the key material is not leaked, but the attacker has access to the compormised party to perform cryptographic operations (e.g. through interfacing with a trusted computing module).
-A protocol with \emph{strong PCS} gurantees security even if the attacker has complete access to the state of both parties involved, up until before the execution of the session under consideration and even after. This is usually achieved by maintaining some state and performing key rotations, hence the attacker must be able to observe the internal state of the device as the protocol runs.
-\emph{We do not check strong PCS} for \mEdhoc, as it is not secure under these assumptions.
-
-\paragraph{Session independence}
-Finally we model \emph{session independence} of \mEdhoc, that is, we allow leakage of session key material, and additionally check security only of those sessions for which the session key material has not been revealed. We check this in conjunction with PCS properties.
-
-\subsection{Tamarin}
-We chose \mTamarin to model and verify \mEdhoc in the Symbolic model. \mTamarin is an interactive verification tool based on multi-set rewriting rules with event annotations, which allows to check LTL temporal formulas on these models.
-Multi-set rewrite rules with events take the form:
-\[ l \ifarrow[e] r \]
-where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
-Facts are $n$ary predicates over a term algebra, which defines a set of function symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. Tamarin checks equality of thse terms under an equational theory $E$, hence one can write that
-\[ dec(enc(x,y),y) =_E x \]
-to denote that symmetric decryption reverses the encryption operation, and so forth. All operations on terms are defined under $E$, hence we omit the subscript from now on as the equational theory is fixed per model.
-
-\paragraph{Semantics and built-ins} On a first approximation, \mTamarin states $S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$ occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$ and $E = \sigma(e)$.
-
-There are a few more details, such as persistent facts that are denoted by a $!$ and are never removed from the state.
-The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh constants and public values known to the attacker respectively, and are both sub-sorts of a base sort.
-Finally, \mTamarin has some built-in predicates ($\mIn, \mOut$ to represent input and output of messages with the attacker, among others), rules and equations that represent the attacker's knowledge and standard equational theories in the symbolic model, plus syntactic sugar, all of which we introduce as we see necessary.
-
-For example in our model we have a symbol to denote authenticated encryption and hence \mTamarin produces the rule:
-\[ !\mKU( k ), !\mKU( m ), !\mKU( ad ), !\mKU( al )
-  \ifarrow !\mKU( \mAeadEncrypt(k, m, ad, al) ) \]
-to denote that if the attacker knows a key $k$, a message $m$, the authenticated data $ad$, and an algorithm $al$, then they can construct the encryption using these parameters, hence get to know the message $\mAeadEncrypt$. There are two built-in persistent facts to denote attacker knowledge, $!\mKU$ and $!\mKD$, but we ignore their distinction for now as it is only necessary for \mTamarin's termination properties.
-
-In our model we introduce a theory for authenticated encryption, plus the built-in theories of XOR and Diffie-Hellmann.
-Authenticated encryption, which is encryption with authentication data as detailed in~\cite{aead}, has the following two equations:
-\begin{align*}
-  \mAeadDecrypt(k, \mAeadEncrypt(k, m, ad, al), ad, al) = m\\
-  \mDecrypt(k, \mAeadEncrypt(k, m, ad, al), al) = m
-\end{align*}
-With the first rule we allow the protocol to decrypt the message $m$ if the encryption has matching key $k$, authenticated data $ad$, and uses the same algorithm $al$.
-The second rule allows the attacker to decrypt the message $m$ with the key $k$ and without the authenticated data $ad$, and hence skip the check.
-
-The built-in theories for XOR and Diffie-Hellman are a fair bit more complex than authenticated encryption, hence we refer to the original papers~\cite{xorTamarin,dhTamarin} for a full reference.
-Suffices to say that the XOR theory introduces the symbol $\oplus$, for expressing XOR operations $x \oplus y$, plus the necessary equational theory including associativity, commutativity, and inverse.
-The theory for Diffie-Hellman introduces exponentiation $x^y$ and product $x \cdot y$ as a built-in symbols in the language, plus the necessary equational theory of associativity, commutativity, distributivity of exponentiation with product, and inverse.
-
-\subsection{Modeling choices}
-
-\subsection{Properties}
-
 %-------------------------------------------------------------------------- sec
 \section{Discussion}
 \label{sec:discussion}
