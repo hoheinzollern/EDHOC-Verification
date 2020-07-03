@@ -277,9 +277,9 @@ This section is only for the outline and will be removed in the final
         \begin{itemize}
             \item{\textbf{Design practices}}
                 \begin{itemize}
-                \item Discuss that the security properties varies between methods
+                \item OK. Discuss that the security properties varies between methods
                 and that this may confuse implementers and user of libraries.
-                \item Discuss practice of listing claimed properties (likely copied
+                \item OK. Discuss practice of listing claimed properties (likely copied
                 from some academic paper) without justification in IETF drafts.
                 \end{itemize}
             \item{\textbf{\mGiy and technical protocol issues}}
@@ -295,16 +295,16 @@ This section is only for the outline and will be removed in the final
                 extending \mEdhoc implementations with a trusted execution
                 environment for LTK operations is useless.
                 \item Discuss algorithm negotiation.
-                \item Discuss what should be used as session key and what the
+                \item OK: Discuss what should be used as session key and what the
                 consequences of the choices are,
                 see~\ref{sec:mail-notes-secrecy-sessions} and
                 \ref{sec:mail-notes-session-key-mtrl}.
-                \item Discuss session key authentication and the problem of \mGiy,
+                \item OK: Discuss session key authentication and the problem of \mGiy,
                 see~\ref{sec:mail-notes-session-key-auth}
                 and~\ref{sec:mail-notes-session-key-imp-auth}
-                \item Discuss non-repudiation that was not included until we pointed
+                \item OK: Discuss non-repudiation that was not included until we pointed
                 it out.
-                \item Discuss the overlayed \mOptls construction and how an
+                \item OK: Discuss the overlayed \mOptls construction and how an
                 additional \mOscore message $R \rightarrow I$ would give key
                 confirmation and hence explicit inj-agree also for $I$.
                 \item Discuss Transcipt hashes that lag behind one message and that
@@ -314,7 +314,7 @@ This section is only for the outline and will be removed in the final
                 \end{itemize}
             \item{\textbf{Protocol user/implementor issues}}
                 \begin{itemize}
-                \item Discuss Identities and use-cases with the neighbours printer
+                \item OK: Discuss Identities and use-cases with the neighbours printer
                 (now included in draft, but only after we mentioned it),
                 See~\ref{sec:mail-notes-identity}.
                 \end{itemize}
@@ -749,8 +749,79 @@ the requirements document~\cite{ietf-lake-reqs-04}.
 %
 
 %-------------------------------------------------------------------------- sub
-\subsection{Unclear identity management and authentication}
-\label{sec:usableSecurity}
+\subsection{Session key material}
+\label{sec:sessionKeyMaterial}
+\mEdhoc{} establishes a session key state as output, from which session keys for
+\mOscore{} can be derived using \mHmac{}.
+%
+As discussed in section \hl{ref formalization section}, there are various
+possibilities for defining which parameters from the \mEdhoc{} run should
+provide the secret input to the session key state.
+
+While we show bidirectional injective agreement on \mGx{} and \mGy{}
+for all methods, initiators cannot obtain injective agreement on \mGiy{} when
+using the \mStat{} method themselves.
+%
+Therefore, \mGiy{} cannot be considered part of the key material if mutual
+injective agreement is considered an important property for \mEdhoc{}.
+%
+This would deviate from \mOptls{}, which is the cryptographic core used for
+these methods.
+%
+Specifically, the proof of session key confidentiality in the face of long-term
+key compromise for \mOptls{} cannot be adapted for \mEdhoc{}.
+%
+It is unclear whether other security properties of \mOptls{} would also fail if
+\mGiy{} were excluded.
+%
+
+Another option is to include a fourth message from responder to initiator
+carrying a message authentication code using a key derived from session key
+material including \mGiy{}.
+%
+This would give the initiator sufficient guarantee that the responder indeed
+uses the same \mGiy{} as the initiator.
+%
+The cost is an additional message, and our understanding is that this is
+unacceptable.
+%
+
+In some use-cases there will be a such as message as part of
+the subsequent \mOscore{} protocol run.
+%
+It would, however, create an additional dependence between the two protocols,
+increasing complexity and the risk for insecure implementations.
+%
+
+Yet another option is to include \mGi{}, a hash of it, or a hash of \mIdcredi{}
+if there is a one-to-one mapping between \mIdcredi{} and \mGi{}, in messages one
+and two.
+%
+This would however increase message sizes, a grave concern for \mEdhoc{}, and
+would prevent initiator identity protection.
+%
+While identity protection is important in general, the \mSpec{} nor the
+requirements document give any rationale why the initiator's identity would be
+more important to protect compared to the responder's.
+%
+The \mSpec{} states that the
+initiator's identity is protected against active attacks and the responder's
+against passive attacks, but that the roles should be assigned to the \mCoap{}
+peers to protect the most sensitive identity the most (see
+Section~8~\cite{selander-lake-edhoc-01}).
+%
+Roles could hence be swapped, so identity protection is not a strong argument
+against this option.
+%
+
+We have show implicit agreement on \mGx{}, \mGy{} for all methods, and also on
+\mGiy{} and \mGrx{} when these are used, see~\hl{ref formalization}.
+%
+If this weaker security guarantee is sufficient, both ephemeral and long-term
+keys can be part of the session key material.
+%
+Whether it is sufficient or not, depends on the intended uses of \mEdhoc{}.
+%
 
 
 
