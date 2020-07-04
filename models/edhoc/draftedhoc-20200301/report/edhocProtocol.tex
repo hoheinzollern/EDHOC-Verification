@@ -35,7 +35,6 @@ The 2018 work~\cite{DBLP:conf/secsr/BruniJPS18} by Bruni et al performed a forma
 
 \mEdhoc has undergone a lot of change since version 08, as will be described in the following sections, and the formal verification of the current version, therefore, is a worthwhile exercise.
 
-\subsection{Comparison with \mOptls and \mNoise}
 \subsubsection{\mOptls}
 
 \vnote{Write out this section!}
@@ -44,7 +43,6 @@ The 2018 work~\cite{DBLP:conf/secsr/BruniJPS18} by Bruni et al performed a forma
 For the \mStatStat method, since both parties are running a \mStat method, there is an obvious analogue in terms of the \mNoise framework [\mcneed]. \mNoise is a framework for a certain class of security protocols where all parties communicate using static DH keys whose structure also meets certain requirements. 
 
 The closest \mNoise ``pattern'' to the \mStatStat method of \mEdhoc is the XX pattern. It can be seen that the first two messages in this method of \mEdhoc correspond perfectly to the first two messages of the XX pattern of the \mNoise framework. However, in the third message, the XX pattern requires the initiator to send their static key, followed by an encrypted payload using a key derived by a combination of the static key and an ephemeral key. In \mEdhoc, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator. This perhaps diverges from the XX pattern of \mNoise, and one can no longer directly claim that \mEdhoc enjoys the same properties as XX. As a potential direction for future work, we relegate the further investigation of this pattern and the \mNoise framework to see if there is any direct correspondence with the \mStatStat method.
-
 
 \section{Methods and features of \mEdhoc}\label{sec:methods}
 
