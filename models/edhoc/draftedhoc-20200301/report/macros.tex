@@ -53,6 +53,8 @@
 \newcommand{\mCose}{\mProtocolStyle{cose}}
 \newcommand{\mCoseEncrypt}{\mProtocolStyle{cose\_encrypt0}}
 \newcommand{\mHkdf}{\mProtocolStyle{hkdf}}
+\newcommand{\mHkdfExtract}{\mProtocolStyle{hkdf-extract}}
+\newcommand{\mHkdfExpand}{\mProtocolStyle{hkdf-expand}}
 \newcommand{\mHmac}{\mProtocolStyle{hmac}}
 \newcommand{\mAead}{\mProtocolStyle{aead}}
 \newcommand{\mOptls}{\mProtocolStyle{optls}}
@@ -72,7 +74,10 @@
 \newcommand{\mPskPsk}{\mMethodStyle{PSK-PSK}}
 
 \newcommand{\mSid}{\mConstStyle{sid}\xspace}    % session id = (u, v, s-key)
+
 \newcommand{\mXor}{\mConstStyle{XOR}\xspace}
+\newcommand{\mSuites}{\mConstStyle{Suites\_I}\xspace}
+\newcommand{\mMethod}{\mConstStyle{Method}\xspace}
 \newcommand{\mCi}{\mConstStyle{C\_I}\xspace}
 \newcommand{\mCr}{\mConstStyle{C\_R}\xspace}
 \newcommand{\mGiy}{\mConstStyle{G\_IY}\xspace}
@@ -80,14 +85,21 @@
 \newcommand{\mGx}{\mConstStyle{G\_X}\xspace}
 \newcommand{\mGy}{\mConstStyle{G\_Y}\xspace}
 \newcommand{\mGxy}{\mConstStyle{G\_XY}\xspace}
-\newcommand{\mIDPSK}{\mConstStyle{ID\_PSK}\xspace}
+\newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}\xspace}
 \newcommand{\mTHtwo}{\mConstStyle{TH\_2}\xspace}
-\newcommand{\mKtwo}{\mConstStyle{K\_2}\xspace}
+\newcommand{\mKtwoe}{\mConstStyle{K\_2e}\xspace}
+\newcommand{\mKtwom}{\mConstStyle{K\_2m}\xspace}
+\newcommand{\mKtwoae}{\mConstStyle{K\_2ae}\xspace}
+\newcommand{\mSign}{\mConstStyle{sign}\xspace}
+
+\newcommand{\mKthreeae}{\mConstStyle{K\_3ae}\xspace}
+\newcommand{\mKthreem}{\mConstStyle{K\_3m}\xspace}
+
 \newcommand{\mTHthree}{\mConstStyle{TH\_3}\xspace}
-\newcommand{\mKthree}{\mConstStyle{K\_3}\xspace}
 \newcommand{\mhplain}{\mConstStyle{h''}\xspace}
 \newcommand{\mCredi}{\mConstStyle{CRED\_I}\xspace}
 \newcommand{\mCredr}{\mConstStyle{CRED\_R}\xspace}
+\newcommand{\mHash}{\mConstStyle{H}\xspace}
 
 \newcommand{\mMactwo}{\mConstStyle{MAC\_2}\xspace}
 \newcommand{\mMacthree}{\mConstStyle{MAC\_3}\xspace}
@@ -95,6 +107,11 @@
 \newcommand{\mSigtwo}{\mConstStyle{Sig\_2}\xspace}
 \newcommand{\mSigthree}{\mConstStyle{Sig\_3}\xspace}
 
+\newcommand{\mMsgone}{\mConstStyle{m1}\xspace}
+\newcommand{\mMsgtwo}{\mConstStyle{m2}\xspace}
+\newcommand{\mMsgthree}{\mConstStyle{m3}\xspace}
+
+\newcommand{\mCipher}{\mConstStyle{cipher\_2}\xspace}
 
 \newcommand{\mADone}{\mConstStyle{AD\_1}\xspace}
 \newcommand{\mADtwo}{\mConstStyle{AD\_2}\xspace}
@@ -107,12 +124,14 @@
 
 \newcommand{\mIdcredi}{\mConstStyle{ID\_CRED\_I}\xspace}
 \newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}\xspace}
+\newcommand{\mLtki}{\mConstStyle{ltk\_I}\xspace}
+\newcommand{\mLtkr}{\mConstStyle{ltk\_R}\xspace}
 
 
 
 % TIKZ messages and actions
-\newcommand{\msg}[4]{\draw[->] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
-\newcommand{\action}[3]{\node[draw,align=center,below={#1} of {#2}]{#3}}
+\newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
+\newcommand{\action}[3]{\node[draw,thick,align=center,below={#1} of {#2}]{#3}}
 
 % Tamarin symbols
 \newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-3pt}[{#1}]\hspace{-3pt}\rightarrow}}
