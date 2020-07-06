@@ -7,6 +7,8 @@
 \vnote{Macros don't work right in section headers!}
 
 \subsection{Overview}
+\knote{We don't need to repeat the setting about why \mEdhoc{} is needed from
+the introduction. This section should describe what \mEdhoc is.}
 Constrained IoT systems often deal with a lot of valuable personal and business information that ought to be kept secure. Such systems need to be assured of end-to-end protection with source authentication and perfect forward secrecy. It is often desirable to protect such devices at the application layer -- for example, in cases where transport layer security is not sufficient, or where multiple underlying protocols need to be accounted for. One method for providing application layer security is provided by \mCbor Object Signing and Encryption (\mCose)~\cite{rfc8152}.  
 
 In order to derive shared key material with which to proceed, communicating parties can run an Elliptic Curve Diffie-Hellman key exchange protocol with ephemeral keys. Ephemeral Diffie-Hellman Over \mCose (\mEdhoc) is a lightweight key exchange protocol for such situations, and is expected to provide perfect forward secrecy and identity protection. \mEdhoc supports authentication using pre-shared keys (\mPsk), raw public keys (RPK), and public key certificates. After successful completion of the \mEdhoc protocol, application keys and other application specific data can be derived using the \mEdhoc-Exporter interface. 
@@ -29,6 +31,9 @@ The \mSigma (SIGn-and-MAc) family of protocols~\cite{sigma} has many variants. T
 %\end{figure}
 
 \subsection{Background, comparison with~\cite{DBLP:conf/secsr/BruniJPS18}}
+\knote{This section is again repetition from the introduction. Related work on
+    analyzing \mEdhoc should be in the related work section.
+    This section should describe \emph{what} \mEdhoc is IMHO.}
 The first version of \mEdhoc was proposed in March 2016 to a working group investigating lightweight authenticated key exchange protocols [\mcneed]. There has been a focus on formally verifying that the protocol satisfies the properties expected of it right from the beginning. 
 
 The 2018 work~\cite{DBLP:conf/secsr/BruniJPS18} by Bruni et al performed a formal verification of version 08 (\url{https://tools.ietf.org/html/draft-selander-ace-cose-ecdhe-08} \mcfix) of \mEdhoc. The protocol and properties are modelled and verified in the \mProverif tool. This version of the protocol belongs to the \mSigmaI family of protocols, and has two modes -- one with asymmetric keys, and one with pre-shared symmetric keys. Bruni et al showed that this version satisfies the requisite properties of identity protection, (perfect forward) secrecy of data, and strong authentication, upon completion of the protocol.
@@ -39,16 +44,22 @@ The 2018 work~\cite{DBLP:conf/secsr/BruniJPS18} by Bruni et al performed a forma
 \mOptls~\cite{cryptoeprint:2015:978} is a key-exchange protocol developed upon which to base the design of the handshake protocol in \mTls 1.3. In its most basic form, \mOptls is composed of two messages between a client and a server, where the server has a secret static key $s$ and a DH key $g^{s}$. The client first sends to the server a message composed of a fresh nonce and some negotiated parameters, along with an ECDH key $g^{x}$. The server responds with a nonce of its own, some other negotiated parameters, an ECDH key $g^{y}$, and a MAC of all these values computed using a key derived from $g^{xs}$. At the end of the protocol, a session key is derived jointly from $g^{xs}$ and $g^{xy}$. The former ensures secrecy for as long as $s$ is secure, and the latter provides perfect forward secrecy in case $s$ is compromised.
 
 It can be seen that in \mEdhoc, an \mStat role is very similar to being either the client or the server in an \mOptls execution. The \mStatStat method can be thought of as interleaving two \mOptls sessions. 
+\knote{Do we need to draw some conclusions or just leave it with this
+observations?}
 
 \subsubsection{\mNoise}
 For the \mStatStat method, since both parties are running a \mStat method, there is an obvious analogue in terms of the \mNoise framework~\cite{perrin2016noise}. \mNoise is a framework for a certain class of security protocols where all parties communicate using static DH keys whose structure also meets certain requirements of encryption etc. 
 
 The closest \mNoise ``pattern'' to the \mStatStat method of \mEdhoc is the XX pattern. It can be seen that the first two messages in this method of \mEdhoc correspond perfectly to the first two messages of the XX pattern of the \mNoise framework. However, in the third message, the XX pattern requires the initiator to send their static key, followed by an encrypted payload using a key derived by a combination of the static key and an ephemeral key. In \mEdhoc, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator. This perhaps diverges from the XX pattern of \mNoise, and one can no longer directly claim that \mEdhoc enjoys the same properties as XX. As a potential direction for future work, we relegate the further investigation of this pattern of the \mNoise framework to see if there is any correspondence with the \mStatStat method.
+\knote{Do we need to draw some conclusions or just leave it with this
+observations?}
 
 \section{Methods and features of \mEdhoc}\label{sec:methods}
 
 \subsection{Fundamental components of \mEdhoc}
 \subsubsection{\mCose}
+\knote{It is not clear to me from this description alone how these components relate
+to \mEdhoc.}
 \mCbor is a data format designed for small code size and small message size. The \mCbor Object Signing and Encryption (\mCose) protocol is used to create and process signatures, MACs, and encryption using \mCbor. 
 
 A \mCose object contains bitstrings corresponding to (cryptographically) protected parameters, unprotected parameter, and the payload to be signed. This can be signed/encrypted/MACed, to obtain a resultant \mCose object containing the bitstring corresponding to the operation. The respective algorithms may also be fed some externally supplied data, which is carried along with the \mCose object, but is not part of it. \mEdhoc only uses the signature and encryption objects of \mCose. For encryptions, \mCose supports two different methods -- one where the recipient is not needed because the key is known implicitly, and one for all other cases. \mEdhoc only uses the former. 
@@ -61,6 +72,13 @@ Authenticated encryption with associated data, or \mAead, is an authenticated en
 The associated data is used to protect information that needs to be authenticated, but does not need to be kept confidential. It might be desirable to authenticate this information, although it must be left unencrypted to allow the system to function properly. Authentication is provided without copying the data into the plaintext.
 
 \subsubsection{Key derivation function (KDF)}
+\knote{This section (or another section) could describe the key hierarchy used
+    by \mEdhoc, i.e., with session key material at the top (derived from
+    $g^{xy}$ and possible static DH-keys, and from this, the PRKs are derived
+    and from those the AEAD keys for each message and so on. Such a description
+    and perhaps a figure, would make it easier to read the method sections
+    later.
+}
 Perhaps the most important building block for \mEdhoc is the key derivation function based on \mHkdf~\cite{rfc5869}, which is used to generate the pseudorandom strings and keys for the encryption operations in the communicated messages. The pseudorandom strings (\mPRKtwo and \mPRKthree) are derived using the \mHkdfExtract function, while the keys are generated using the \mHkdfExpand function. Both these functions are based on \mHmac~\cite{rfc2104}, which is a hashing system for message authentication.
 
 The \mHkdfExtract function is run with a salt and some input keying material (IKM) as input. It produces as output a pseudorandom string. For the \mPskPsk method alone, the salt is the key pre-shared between the initiator and the responder, while for the other methods, it is empty. The IKM for all \mEdhoc methods is the ECDH shared secret \mGxy. For the \mPskPsk method, \mPRKtwo is equal to \mPRKthree. For the asymmetric key methods, however, \mPRKthree is obtained by running \mHkdfExtract on \mPRKtwo and one other input. This other input is obtained by an exponentiation operation between a long term key and an ephemeral key -- the exact inputs to this operation depend on the role and the method being run, and will be described in detail later. 
@@ -300,6 +318,11 @@ In this method, both parties run the \mSig method, and therefore, both the secon
 
 \subsection{Expected security properties}
 In this section, we list all the claims made by the authors of~\cite{selander-lake-edhoc-01} regarding the security properties satisfied by \mEdhoc. We will revisit these claims when we discuss the formal modelling and verification of \mEdhoc in the next few sections of the paper. The following are the claims.
+\knote{We should link forward to the formalization section where we describe
+    exactly what we have verified and what not. We should also link forward to
+    the discussion section where we "analyze" these claims from a
+    standardization process view point.
+}
 
 \mEdhoc inherits some security properties from the \mSigmaI protocol. These are perfect forward secrecy, mutual authentication with aliveness, consistency, peer awareness (to the responder, but not to the initiator), identity protection, and Key Compromise Impersonation (KCI) resistance.
 
