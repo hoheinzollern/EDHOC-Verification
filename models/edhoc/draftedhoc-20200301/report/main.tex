@@ -99,15 +99,15 @@ restrictions on energy consumption.
 Additionally, they often use specialized wireless communication links with tough
 constraints on message sizes, which may vary from message to message.
 %
-\mEdhoc was first formally analyzed by Bruni
-et.al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+\mEdhoc{} was first formally analyzed by
+Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, IETF has significantly extended the protocol, which is now a
 framework with a number of cryptographic cores, called methods, where the
-initial version of \mEdhoc contained only two out of five possibilities.
+initial version of \mEdhoc{} contained only two out of five possibilities.
 %
-In this paper we formally analyze all methods of \mEdhoc in a symbolic model,
-using the Tamarin verification tool.
+In this paper we formally analyze all methods of \mEdhoc{} in a symbolic model,
+using the \mTamarin{} verification tool.
 %
 We show that the different methods provide sensible, but also rather
 heterogeneous security properties, and discuss consequences of this.
@@ -158,13 +158,13 @@ This section is only for the outline and will be removed in the final
             \item OK: Elaborate on the story line above
             \item OK: Explain the exploratory and iterative nature of industrial
                   standards and why this has resulted in the new \mStat methods.
-            \item OK: Contrast with \mTls. Motivate why \mEdhoc is needed in
-                addition to \mTls. Little analysis of \mEdhoc so far.
+            \item OK: Contrast with \mTls. Motivate why \mEdhoc{} is needed in
+                addition to \mTls. Little analysis of \mEdhoc{} so far.
                 Motivate that most security analysis and media attention is on
                 larger IoT devices. Give examples and cite use cases whit
                 constrained devices. Paint the (true) picture that this will
                 become a serious security risk in the future if not a secure
-                \mEdhoc is created.
+                \mEdhoc{} is created.
             \item OK: Subsection: Contributions: model, verified properties,
                 guidance on how various methods can be used (for std and
                 implementations)
@@ -172,21 +172,21 @@ This section is only for the outline and will be removed in the final
                 Bruni~\cite{DBLP:conf/secsr/BruniJPS18}, Cremers' et. al. \mTls
                 analysis with \mTamarin.
         \end{itemize}
-    \item \textbf{Section: \mEdhoc description (\hl{Vaishnavi})}
+    \item \textbf{Section: \mEdhoc{} description (\hl{Vaishnavi})}
         \begin{itemize}
-            \item Describe evolved protocol from last \mEdhoc verification,
-            \item Describe the overarching goal of \mEdhoc of security context
+            \item Describe evolved protocol from last \mEdhoc{} verification,
+            \item Describe the overarching goal of \mEdhoc{} of security context
                 establishment for \mEdhoc.
-            \item Describe that \mEdhoc is a framework based on three different
+            \item Describe that \mEdhoc{} is a framework based on three different
                 crypto-cores (\mPsk-based DH, \mSigma and \mOptls/\mNoise).
                 Some inital thoughts on \mNoise here~\ref{sec:mail-notes-noise}.
                 Describe how one party may use a \mSigma-like authentication
                 whereas the other party may use \mOptls. The session key is
                 the combination of the corresponding key material.
                 Describe that this essentially makes
-                \mEdhoc a framework where it is possible to run one out of 5
+                \mEdhoc{} a framework where it is possible to run one out of 5
                 different protocols.
-            \item Describe \mSigSig method and relate it to original \mEdhoc and
+            \item Describe \mSigSig method and relate it to original \mEdhoc{} and
                 \mSigma. This can be brief. Identify and focus on potential
                 differences.
             \item Describe \mPskPsk method.
@@ -207,7 +207,7 @@ This section is only for the outline and will be removed in the final
                   key derivations and other processing is sufficiently close,
                   then point to security proof for Noise and cite it. Otherwise
                   point out the differences.
-             \item Describe additional components of \mEdhoc we've modeled,
+             \item Describe additional components of \mEdhoc{} we've modeled,
                   e.g., \mCi and \mCr etc.
                   Explain relevance of \mCi and \mCr to \mOscore.
              \item Describe algorithm negotiation.
@@ -215,7 +215,7 @@ This section is only for the outline and will be removed in the final
              \item Describe transmission of aux data and expected security
                  properties.
         \end{itemize}
-    \item \textbf{Section: \mEdhoc security model and formalization (\hl{Alessandro})}
+    \item \textbf{Section: \mEdhoc{} security model and formalization (\hl{Alessandro})}
         \begin{itemize}
             \item Subsection: threat model. We assume secure binding between
                 credentials and the identity. We assume adversary cannot
@@ -286,13 +286,13 @@ This section is only for the outline and will be removed in the final
                 \begin{itemize}
                 \item Discuss unclearity regarding security model (trusted execution
                 environment or not?). \mOptls has clear separation and therefore
-                use both $g^{xy}$ and $g^{iy}$ etc. \mEdhoc is not as cleanly
+                use both $g^{xy}$ and $g^{iy}$ etc. \mEdhoc{} is not as cleanly
                 designed and according to IETF guys they don't care about
                 trusted execution environments (see mail in txt-file).
-                Would \mEdhoc be OK with skipping $g^{iy}$ from the session key
+                Would \mEdhoc{} be OK with skipping $g^{iy}$ from the session key
                 material and only use $g^{xy}$ in that model? Probably yes, and
                 then we can get inj-agree on the session key material, but then
-                extending \mEdhoc implementations with a trusted execution
+                extending \mEdhoc{} implementations with a trusted execution
                 environment for LTK operations is useless.
                 \item OK: Discuss algorithm negotiation.
                 \item OK: Discuss what should be used as session key and what the
@@ -326,7 +326,7 @@ This section is only for the outline and will be removed in the final
 \section{Introduction}
 \label{sec:introduction}
 %-------------------------------------------------------------------------- sub
-\subsection{Motivation}
+\subsection{Background and motivation}
 \label{sec:motivation}
 IoT security threats involving cars, web-cameras and other resourceful devices
 receive most attention from media and academia.
@@ -349,46 +349,46 @@ Constrained devices therefore often have limitations on energy consumption.
 To keep energy consumption down, highly specialized radio links with small
 and heterogeneous frame-sizes are sometimes used.
 %
-In some cases, \mDandTls messages are too large to fit into the radio frames.
+In some cases, \mDandTls{} messages are too large to fit into the radio frames.
 %
-This is one of the reasons IETF standardized the \mOscore protocol to secure
-communications between constrained devices, as a complement for when \mDandTls
-is too heavy weight~\cite{rfc8613}.
+This is one of the reasons IETF standardized the \mOscore{} protocol to secure
+communications between constrained devices, as a complement for when
+\mDandTls{} is too heavy weight~\cite{rfc8613}.
 %
 
-The \mOscore protocol requires a pre-established security context.
+The \mOscore{} protocol requires a pre-established security context.
 %
 The IETF Lightweight Authenticated Key Exchange (LAKE) working group
 currently develops requirements and a key exchange protocol capable of
-establishing \mOscore security contexts.
+establishing \mOscore{} security contexts.
 %
 The key establishment protocol is named \mEdhoc~\cite{selander-lake-edhoc-01}.
 %
-Naturally, \mEdhoc must work under the same constrained requirements as
-\mOscore itself.
+Naturally, \mEdhoc{} must work under the same constrained requirements as
+\mOscore{} itself.
 %
 
-While neither the requirements nor the use-cases for \mEdhoc are firmly set,
-the overarching design goal of \mEdhoc is to establish an \mOscore security
+While neither the requirements nor the use-cases for \mEdhoc{} are firmly set,
+the overarching design goal of \mEdhoc{} is to establish an \mOscore{} security
 context with decent security while keeping the messages small.
 %
 The LAKE working group is currently discussing whether a compressed version of
 \mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would solve the same use-cases as
-\mOscore and \mEdhoc combined.
+\mOscore{} and \mEdhoc{} combined.
 %
 
-The \mEdhoc protocol has evolved significantly over time to cater for smaller
+The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
 messages and more use-cases.
 %
-The first incarnation of \mEdhoc appeared in March 2016.
+The first incarnation of \mEdhoc{} appeared in March 2016.
 %
 It contained two different cryptographic cores, one based on a
 pre-shared key Diffie-Hellman and a second following a draft of the
-then emerging \mbox{\mTls v1.3} standard~\cite{ietf-tls-tls13-11}, using
+then emerging \mbox{\mTls{} v1.3} standard~\cite{ietf-tls-tls13-11}, using
 challenge-response signatures.
 %
 The latter was then replaced by \mSigma, and this version, from May 2018, was
-formally analyzed by Bruni et. al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+formally analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 The protocol has now further evolved and variants using challenge-response
 signatures have now been added again.
@@ -400,10 +400,10 @@ Consequently, there are now five cryptographic cores in total, and it is prudent
 to formally analyze them all to ensure a higher level of security assurance for
 \mEdhoc.
 %
-This is especially important, since the \mSpec itself lacks description of the
+This is especially important, since the \mSpec{} itself lacks description of the
 intended security model and overall security goals.
 %
-Filling this gap and deriving circumstances under which \mEdhoc can be
+Filling this gap and deriving circumstances under which \mEdhoc{} can be
 securely used to achieve certain goals is an important part of this paper.
 %
 
@@ -413,44 +413,44 @@ securely used to achieve certain goals is an important part of this paper.
 Our main contributions are the following.
 \begin{itemize}
     \item We provide formalization of \mEdhoc's all five cryptographic cores
-        using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
+        using\linebreak \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
     \item We give an explicit security model for the protocol and have verified
         essential security properties, such as session key and entity
         authentication, as well as Perfect Forward Secrecy (PFS), within that
         model.
     \item We provide consequence analysis of the verified properties to
-        establish which types of use-cases \mEdhoc may be suitable for and
+        establish which types of use-cases \mEdhoc{} may be suitable for and
         to give recommendations for the future standards development.
     \item Our discussions with IETF LAKE working group members have already
-        lead to improvements and clarifications of the standard \mSpec based on
-        observations we made during the construction of our formal model.
+        lead to improvements and clarifications of the standard \mSpec{} based
+        on observations we made during the construction of our formal model.
 \end{itemize}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Related work}
 \label{sec:relatedWork}
-The work closest to ours is Bruni et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
+The work closest to ours is Bruni~et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
 two cryptographic core, version of \mEdhoc.
 %
 We consider our work to be a sort of follow-up to that, doing a similar kind of
-analysis of the most recent, and more elaborate, version of \mEdhoc using five
+analysis of the most recent, and more elaborate, version of \mEdhoc{} using five
 cores.
 %
 We also verify slightly different properties.
 %
 For instance, we include session key independence in our properties.
 %
-The \mTamarin tool has been used to verify many other protocols, perhaps closest
-to our work is Cremers et.al's analysis of
+The \mTamarin{} tool has been used to verify many other protocols, perhaps closest
+to our work is Cremers~et.~al's analysis of
 \mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
 %
 Some of the cryptographic cores themselves have been analyzed in the
-computational model, e.g., \mSigma by Canetti and
-Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls by Krawczyk and
+computational model, e.g., \mSigma{} by Canetti and
+Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls{} by Krawczyk and
 Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
-\knote{Add work on \mNoise here when Vaishnavi has added her section.}
+\knote{Add work on \mNoise{} here when Vaishnavi has added her section.}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Structure}
@@ -458,7 +458,7 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \knote{Only include this if we have space to spare.}
 
 %-------------------------------------------------------------------------- sec
-\section{The \mEdhoc protocol}
+\section{The \mEdhoc{} protocol}
 \label{sec:edhoc}
 \hl{Vaishnavi}
 \input{edhocProtocol}
@@ -476,8 +476,8 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 \subsection{Design Practices}
 \label{sec:designPractices}
 \knote{Note to self: Long sentences. Not to the point. Revision needed.}
-We start with two observations on the design practices, which the \mEdhoc design
-shares with many other standards specifications.
+We start with two observations on the design practices, which the \mEdhoc{}
+design shares with many other standards specifications.
 %
 \mPoint{Lack of clear security model}
 The first observation is the lack of clearly defined security model.
@@ -498,44 +498,44 @@ In many cases, a security model evolves during the design and is defined
 by resistance to the attacks discussed in the process, not by a small set of
 precise assumptions and the consequences drawn from those.
 %
-Even so, the lack of security model in \mEdhoc is somewhat troubling in that
+Even so, the lack of security model in \mEdhoc{} is somewhat troubling in that
 it it does not even discuss general use-cases in its requirements
 document~\cite{ietf-lake-reqs-04}.
 %
 The rationale is instead derived purely from technical aspects of the devices,
-communication links and accompanying protocols with which \mEdhoc is to be used.
+communication links and accompanying protocols with which \mEdhoc{} is to be used.
 %
 No direct consideration is given to the intended uses-cases for the systems
 built from these technical components.
 %
-Because of this, it is unclear which security properties \mEdhoc should have.
+Because of this, it is unclear which security properties \mEdhoc{} should have.
 %
-Nonetheless, the \mSpec makes a number of detailed claims of properties
+Nonetheless, the \mSpec{} makes a number of detailed claims of properties
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
-The intention may be that, if the academic protocol \mSigma is re-used as a
+The intention may be that, if the academic protocol \mSigma{} is re-used as a
 cryptographic core of \mEdhoc, then all the properties listed
 in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} are the
 necessary and sufficient ones and can be copied into the \mSpec.
 %
 (Note: likely the intention is the same for the other reused academic protocols,
-but since the \mSpec is still work in progress, it is not yet written
+but since the \mSpec{} is still work in progress, it is not yet written
 down).
 %
-Section 8.1. states, \emph{"EDHOC inherits its security properties
+Section~8.1. states, \emph{"EDHOC inherits its security properties
 from the theoretical SIGMA-I"}.
 %
 Designing a standard specification by re-using existing well-studied academic
 components is good practice, but this approach has two problems.
 %
 First, it is unknown whether the properties provided by the cryptgraphic cores
-are suitable for the situations in which \mEdhoc is to be used, whether
+are suitable for the situations in which \mEdhoc{} is to be used, whether
 something is missing, or whether something is unnecessary.
 %
-The latter should be of concern because of the aim to optimize \mEdhoc for
+The latter should be of concern because of the aim to optimize \mEdhoc{} for
 message size.
 %
-Second, \mSigma and the other cryptographic cores used by \mEdhoc, are
+Second, \mSigma{} and the other cryptographic cores used by \mEdhoc, are
 typically designed for a precise setting with many underlying assumptions.
 %
 Without spelling those out in the \mSpec, and without showing how
@@ -566,8 +566,8 @@ Given that many IoT devices will be deployed in hostile environments there may
 be use-cases where it may be acceptable that confidentiality is compromised, but
 where impersonation attacks would be dangerous.
 %
-Further, \mEdhoc re-uses cryptographic cores from academic protocols such as
-\mSigma and \mOptls, which were intentionally designed for a well-defined
+Further, \mEdhoc{} re-uses cryptographic cores from academic protocols such as
+\mSigma{} and \mOptls, which were intentionally designed for a well-defined
 security model where compromise of ephemeral keys is less critical than
 compromise of long-term keys.
 %
@@ -603,14 +603,14 @@ optimization of message sizes resulted in them providing different guarantees.
 However, when it comes to implementation and use of the protocol, this shifts the
 responsibility of selecting the appropriate version to the user.
 %
-Should \mEdhoc become the protocol of choice for all the IoT applications to
-come, it is easy to imagine developers downloading an \mEdhoc library and using
-it similarly to how \mTls is used today.
+Should \mEdhoc{} become the protocol of choice for all the IoT applications to
+come, it is easy to imagine developers downloading an \mEdhoc{} library and using
+it similarly to how \mTls{} is used today.
 %
-Many developers will assume that \mEdhoc provides sufficient security and may
+Many developers will assume that \mEdhoc{} provides sufficient security and may
 chose method based on performance rather than on security properties.
 %
-For example, consider a use-case where \mEdhoc is run over a near-field
+For example, consider a use-case where \mEdhoc{} is run over a near-field
 communication radio to derive a token from the derived session key.
 %
 The token is then to be used at a later point in time.
@@ -618,15 +618,15 @@ The token is then to be used at a later point in time.
 In this case it would be useful that both parties get confirmation that the
 other party computed the session key (key confirmation).
 %
-This property is not achieved by the \mEdhoc methods where the initator uses the
-\mStat method for authentication.
+This property is not achieved by the \mEdhoc{} methods where the initator uses the
+\mStat{} method for authentication.
 %
 Obviously, this can be solved on the application layer, but only if the
 developer is aware of the discrepancy.
 %
 
-Another aspect showing the usefulness of considering \mEdhoc light-weight
-use-cases is that, until we pointed it out, the \mSpec did not contain
+Another aspect showing the usefulness of considering \mEdhoc{} light-weight
+use-cases is that, until we pointed it out, the \mSpec{} did not contain
 any discussion on the topic of (non)-repudiation.
 %
 Non-repudiation may be a very useful property for an access control
@@ -639,7 +639,7 @@ Such a simple thought experiment would have caught the missing topic.
 group requirements draft~\cite{ietf-lake-reqs-04}.
 %
 It would, however, be useful to extend the security considerations section in
-the \mSpec with example use-cases and showing the consequences of
+the \mSpec{} with example use-cases and showing the consequences of
 choosing different methods.
 %
 It would also be helpful to capture and analyze more informal and light-weight
@@ -654,25 +654,25 @@ draft.}
 \mPoint{Protocol is unclear about what it means by authentication; also, why is
 mutual auth required?}
 %
-The \mSpec is unclear about what kind of authentication it aims to achieve.
+The \mSpec{} is unclear about what kind of authentication it aims to achieve.
 %
 Most importantly, it is not stated whether implicit or explicit authentication
-is required, or whether confirmation of the peer's agreement on the \mSid or
+is required, or whether confirmation of the peer's agreement on the \mSid{} or
 session key.
 %
-As our analysis shows, mutual injective agreement on the \mSid is achieved
-by all methods, except for when the initiator is using the \mStat methods.
+As our analysis shows, mutual injective agreement on the \mSid{} is achieved
+by all methods, except for when the initiator is using the \mStat{} methods.
 %
-This is because the \mSid is unique among sessions (in the symbolic model it
+This is because the \mSid{} is unique among sessions (in the symbolic model it
 is since the ephemeral keys are fresh and in the computational model they are
 fresh with overwhelming probability).
 %
 Injective agreement provides explicit authentication.
 %
-In case the initiator uses the \mStat method, only implicit authentication
+In case the initiator uses the \mStat{} method, only implicit authentication
 can be achieved.
 %
-Whether explicit authentication is an important feature for \mEdhoc or not, and
+Whether explicit authentication is an important feature for \mEdhoc{} or not, and
 whether it violates the requirement on mutual
 authentication~\cite{ietf-lake-reqs-04} is difficult to say.
 %
@@ -682,7 +682,7 @@ it explain what the more technical term "mutual authentication"
 is intended to cover.
 %
 \textbf{Proposal:}
-It would be useful to clarify in the \mSpec that different methods provide
+It would be useful to clarify in the \mSpec{} that different methods provide
 different types of authentication and elaborate on in which situations and
 implementer should select which method.
 %
@@ -700,29 +700,29 @@ some methods to obtain shorter messages, it may also be acceptable for some
 use-cases to only provide unilateral authentication and by that reducing the
 number of messages to one round-trip.
 %
-Similar to how \mTls is often used, initiator authentication could then be
-performed on the \mCoap level in the secure \mOscore channel.
+Similar to how \mTls{} is often used, initiator authentication could then be
+performed on the \mCoap{} level in the secure \mOscore{} channel.
 %
 Such a combination of authentications has worked well for many web
 use-cases and provides mutual authentication for the application on a system
 level.
 %
-Since few protocols, \mEdhoc included, are expected to work in isolation, this
+Since few protocols, \mEdhoc{} included, are expected to work in isolation, this
 may be a possible approach.
 %
 \textbf{Proposal:} Without some use-cases or user-stories, it is difficult to
 determine whether mutual authentication is an appropriate requirement or whether
-a more optimized unilateral authentication solution with possible \mCoap level
+a more optimized unilateral authentication solution with possible \mCoap{} level
 authentication would be better.
 %
 We propose considering light-weight use-case analysis to explore this option.
 %
 
-\mPoint{not verifying \mIdcredr is dangerous}
+\mPoint{not verifying \mIdcredr{} is dangerous}
 Section 3.2 of the \mSpec, states that a policy is required restricting the set
-of peers an entity is allowed to run \mEdhoc with.
+of peers an entity is allowed to run \mEdhoc{} with.
 %
-However, because the initator is not required to verify that the \mIdcredr
+However, because the initator is not required to verify that the \mIdcredr{}
 received in message 2 is the same as the one it intended when sending message 1,
 this is insufficient for a general purpose AKE.
 %
@@ -737,10 +737,10 @@ third device $C$, the compromised device $A$ may interfere.
 $A$ may respond in $C$ place, which may require blocking the response from $C$.
 %
 Since $A$ does not check that it is $C$'s identity in message 2, and device $A$
-is part of the restricted set, $A$ will complete and accept the \mEdhoc run with
+is part of the restricted set, $A$ will complete and accept the \mEdhoc{} run with
 device $A$.
 %
-The obvious solution is for the initiator to match \mIdcredr to the intended
+The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity.
 %
 This is yet another example of where a small use-case or user-story uncovers
@@ -752,7 +752,7 @@ the requirements document~\cite{ietf-lake-reqs-04}.
 \subsection{Session key material}
 \label{sec:sessionKeyMaterial}
 \mEdhoc{} establishes a session key state as output, from which session keys for
-\mOscore{} can be derived using \mHmac{}.
+\mOscore{} can be derived using \mHkdf{}.
 %
 As discussed in section \hl{ref formalization section}, there are various
 possibilities for defining which parameters from the \mEdhoc{} run should
