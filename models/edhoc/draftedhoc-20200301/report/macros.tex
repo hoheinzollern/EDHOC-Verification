@@ -34,8 +34,8 @@
 \newcommand{\mVarStyle}[1]{\mathit{#1}}
 \newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
 
-\newcommand{\mMethodStyle}[1]{\hbox{\mConstStyle{#1}}\xspace}
-\newcommand{\mProtocolStyle}[1]{\hbox{\textsc{#1}}\xspace}
+\DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}\xspace}
+\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textsc{#1}}}
 
 % -- Macros for consistent wording
 \newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
