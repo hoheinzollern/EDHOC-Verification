@@ -175,6 +175,87 @@ according to the five different combinations of authentication methods:
 We use the M4 macro language to derive these different modes from a single
 description of the protocol, thus enforcing uniformity in the presentation.
 %
+Other parameters to the model include the optional data of the \mEdhoc
+specification, that is the connection identifiers \mCi and \mCr and
+the authenticated data \mADone, \mADtwo and \mADthree.
+%
+To keep the presentation brief, we detail only the setup of the model,
+the symmetric and one asymmetric variant (\mSigStat), however the code
+can be inspected at
+\url{https://github.com/hoheinzollern/EDHOC-Verification}.
+
+\begin{lstlisting}
+rule registerLTK_SIG:
+  [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
+    [!LTK_SIG($A, ~ltk), !PK_SIG($A, pk(~ltk)), Out(<!<$A, pk(~ltk)>!>)]
+rule registerLTK_STAT:
+  [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]->
+    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+rule registerLTK_PSK:
+  [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+\end{lstlisting}
+These three rules express the registering of the long term keys for the \mSig,
+\mStat and \mPsk modes respectively.
+%
+The \lstinline{registerLTK_PSK} registers a symmetric key for each pair of
+agents \lstinline{A} and \lstinline{B}, while the other two rules register a
+public key (for signing and encrypting, respectively) that are tied to the
+identities of one agent \lstinline{A}.
+%
+The event \lstinline{UniqLTK} marks that the long term key is unique for each
+agent or pair of agents, as enforced by the following restriction:
+\begin{lstlisting}
+restriction uniqLTKs:
+    "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
+\end{lstlisting}
+  
+% Subsection:
+
+% - Explain details of model, which properties we have modeled, how,
+% which trade-offs were made and why.
+% - Explain how we modeled inj-agree (a sentence or two).
+% - Explain why it fails when $I$ uses \mStat-method and the implicit
+% auth lemma we showed instead
+% (cite~\cite{DBLP:journals/iacr/GuilhemFW19} here where I got the
+% basic idea. It is then extended with the reveal queries in our
+% model; obviously: if you know about other sources for this please
+% cite them too). Include code/lemmas as you see fit.
 
 
 \subsection{Properties}
+
+% Subsection: Clear bullet-list of what we have shown, including
+% some statics of running time code size perhaps.
+% Scan draft-selander and check what props are claimed there; see
+% what we have covered and what we haven't.
+% Already shown:
+%  -  Mutual injective agreement on session key, method and identities for
+%     $R \rightarrow I$ and $I \rightarrow R$ for all methods
+%     except when $I$ uses STAT. When $I$ uses STAT, $R \rightarrow I$ holds,
+%     but not $I \rightarrow R$.
+%  -  Injective implicit agreement on session key.
+%     Only really needed for $I \rightarrow R$, because in all other cases we have
+%     the stronger injective agreement property. But show it now for all
+%     methods to having a common (and reasonable) level of security that
+%     holds no matter which method user chooses.
+%  -  PFS on session key for all methods.
+%  -  Key secrecy (follows from PFS).
+%  -  Session key independence (follows from how we modeled PFS).
+%  -  Entity authentication - we show this in the same lemmas as we show
+%       inj-agree on session key.  We don't have this property when $I$ uses
+%       STAT method because $I$ then gets no confirmation of
+%       Pre-specified peer model.
+%  -  Key confirmation (except for when $I$ uses \mStat
+%     method, then $I$ gets no key confirmation on \mGiy)
+
+% See~\ref{sec:mail-notes-encr} for how encryption is modeled.
+% \item Caveat: we have not modeled running all methods in parallel,
+% so we don't know if an adversary can somehow trick $I$ into
+% running one method and $R$ another, and by that causing some
+% attack.
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
