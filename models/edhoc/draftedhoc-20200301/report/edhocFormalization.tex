@@ -6,7 +6,7 @@ The next three subsections describe our threat model, briefly present the
 %
 Finally, we present the properties that we proved in this effort.
 
-\subsection{Threat model}
+\subsection{Threat model}\label{sec:threat-model}
 We verify \mEdhoc in the symbolic Dolev-Yao model: as customary in this style of
 modeling, we assume all cryptographic primitives to be ``perfect'', and hence
 only allow the attacker to encrypt and decrypt messages when they know the key,
@@ -168,22 +168,26 @@ product, and inverse.
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
 %
-We model the five different modes of \mEdhoc from a single specification
+We model the five different modes of \mEdhoc{} from a single specification
 according to the five different combinations of authentication methods:
 \mPskPsk, \mSigSig, \mSigStat, \mStatSig and \mStatStat.
 %
 We use the M4 macro language to derive these different modes from a single
 description of the protocol, thus enforcing uniformity in the presentation.
 %
-Other parameters to the model include the optional data of the \mEdhoc
+Other parameters to the model include the optional data of the \mEdhoc{}
 specification, that is the connection identifiers \mCi and \mCr and
 the authenticated data \mADone, \mADtwo and \mADthree.
 %
 To keep the presentation brief, we detail only the setup of the model,
-the symmetric and one asymmetric variant (\mSigStat), however the code
-can be inspected at
+the symmetric and one asymmetric variant (\mSigStat), however the full
+code can be inspected at
 \url{https://github.com/hoheinzollern/EDHOC-Verification}.
 
+% - Explain details of model, which properties we have modeled, how,
+% which trade-offs were made and why.
+
+\paragraph{General setup}
 \begin{lstlisting}
 rule registerLTK_SIG:
   [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
@@ -208,11 +212,320 @@ agent or pair of agents, as enforced by the following restriction:
 restriction uniqLTKs:
     "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
 \end{lstlisting}
-  
-% Subsection:
 
-% - Explain details of model, which properties we have modeled, how,
-% which trade-offs were made and why.
+Long term keys are revealed to the attacker through specific rules
+with the event \lstinline{LTKRev}.
+\begin{lstlisting}
+rule revealLTK_SIG:
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_STAT:
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_PSK:
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+\end{lstlisting}
+these rules are used to check the different lemmas for authetication
+and key secrecy, as we limit when the attacker is able to reveal the
+keys to prove forward secrecy, as discussed in
+Section~\ref{sec:threat-model}.
+%
+Each of the session keys is also revealed with similar rules,
+depending on the mode to check session independence.
+
+\paragraph{Implicit vs explicit authentication}
+As we will discuss in Section~\ref{sec:properties}, not all modes of
+\mEdhoc{} enjoy the same properties, and different guarantees are
+provided for each method.
+%
+In particular we make a distinction between \emph{implicit and
+  explicit authentication}, as defined
+in~\cite{DBLP:journals/iacr/GuilhemFW19}.
+%
+Simply put, \emph{explicit authentication} occurs when the initiator
+and responder parties agree on the session data (i.e. identities, key
+material and so on) \emph{at the end of the protocol}, whereas for
+\emph{implicit authentication} the two parties may only agree after
+the protocol has ended when the first message encrypted with the
+session key is being transmitted.
+%
+We will discuss this concept again, however we mention it here as
+certain aspects of the modeling directly follow from it.
+
+\anote{Implicit authentication: note that comparing implicit
+  authentication from the Guilhelm paper with injective agreement is a
+  bit misleading. Quoting Lowe: ``We say that a protocol guar- antees
+  to an initiator A agreement with a responder B on a set of data
+  items ds if, whenever A (acting as initiator) com- pletes a run of
+  the protocol, apparently with responder B, then B has previously
+  been running the protocol, apparently with A, and B was acting as
+  responder in his run, and the two agents agreed on the data values
+  corresponding to all the variables in ds, and each such run of A
+  corresponds to a unique run of B.''. Technically injective agreement
+  holds when you choose the proper ds, as you do. If you include more,
+  that only works in the implicit mode. That is, implicit vs explicit
+  refers to when a protocol is considered to be completed, i.e. after
+  the first encrypted message is being sent vs. at the end of the key
+  agreement, whereas injective agreement is parametric on all this
+  stuff, including when a protocol is completed and what data should
+  be agreed upon.}
+
+\paragraph{PSK-PSK} the following rules model the symmetric variant of
+the protocol and are derived from the M4 file, as presented in
+Section~\ref{protocol-presentation}\footnote{link}.
+
+\begin{lstlisting}
+rule I1_PSK_PSK:
+  let gx = 'g'^~xx
+      ID_PSK = <$U, $V>
+      m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK> 
+  in
+  [ !LTK_PSK(<$U, $V>, ~ltk), Fr(~xx), Fr(~tid) ]
+  --[ I1(~tid, $U, $V, m1)
+    , DHInvI1(~tid, 'g', ~xx, 'g'^inv(~xx), 'g'^~xx, 'g'^inv(~ltk))
+    , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
+    ]->
+  [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), Out(m1)]
+
+rule R2_PSK_PSK:
+  let
+    data_2 = <'g'^~yy>
+    ID_PSK = <$U, $V>
+    m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK>
+    TH_2 = h(<$cHash0, m1, data_2>)
+    prk_2e = hkdfExtract(~ltk, gx^~yy)
+    prk_3e2m = prk_2e
+    extAad2 = TH_2
+    plainText2 = 'emptyStr'
+    K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
+    m2 = <data_2, CIPHERTEXT_2>
+  in
+    [ !LTK_PSK(<$U, $V>, ~ltk), In(m1), Fr(~yy), Fr(~tid) ]
+    --[ ExpRunningR(~tid, $V, exp_sk)
+      , R2(~tid, $V, m1, m2)
+      , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
+      ]->
+    [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2), Out(m2) ]
+
+
+rule I3_PSK_PSK:
+  let
+    data_2 = <gy> 
+    TH_2 = h(<$cHash0, m1, data_2>)
+    prk_2e = hkdfExtract(~ltk, gy^~xx)
+    prk_3e2m = prk_2e
+    plainText2 = 'emptyStr' 
+    extAad2 = TH_2
+    K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
+    m2 = <data_2, CIPHERTEXT_2>
+    data_3 = 'emptyStr' 
+    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+    extAad3 = TH_3
+    plainText3 = 'emptyStr'
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
+    m3 = <data_3, CIPHERTEXT_3>
+    exp_sk = <gy^~xx> // SIG_SIG or PSK_PSK
+    imp_sk =  exp_sk
+  in
+  [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), In(m2) ]
+  --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
+    , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
+    , I3(~tid, $U, $V, m1, m2, m3)
+    , DHInvI3(~tid, 'g'^~xx)
+    , Eq('1', '1')  /* nothing; to avoid tamrarin complainging for PSK */
+   ]->
+   [ Out(m3) ]
+
+rule R4_PSK_PSK:
+  let
+    data_3 = 'emptyStr' 
+    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+    extAad3 = TH_3
+    plainText3 = 'emptyStr'
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
+    m3 = <data_3, CIPHERTEXT_3>
+    exp_sk = <gxy> // SIG_SIG or PSK_PSK
+    imp_sk =  exp_sk
+  in
+  [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2), In(m3) ]
+  --[ ExpCommitR(~tid, $U, $V, exp_sk)
+    , CommitR(~tid, $U, $V, imp_sk)
+    , R4(~tid, $U, $V, m1, m2, m3)
+    ]->
+    []
+\end{lstlisting}
+
+Here we won't dive into all the details to avoid repetition, however a
+few things are worth mentioning.  First is the introduction of the
+syntactic sugar \lstinline{let ... in}, which presents a series of
+definitions of patterns which are substituted in the rest of the
+rule. Each rule corresponds to one action of the protocol, hence rule
+\lstinline{I1_PSK_PSK} represents the Initiator sending the first
+message, whereas \lstinline{R2_PSK_PSK} represents the responder
+receiving the first message and responding with the second, and so on.
+
+Two other important details are the events which are used for checking
+authentication, and the facts which store the local state of the
+endpoints. \anote{we also have some events which are not checked in
+  any lemma, like InvR2. In my understanding they don't serve any
+  purpose, should they be in there? certainly not in the
+  presentation.}
+%
+The event \lstinline{ExpRunningR} denotes the start of the Responder's
+protocol, whereas \lstinline{ExpCommitI} and \lstinline{CommitI}
+denote both that the Initiator is running the protocol with the
+Responder and that she agreed on (i.e. committed to) the session key.
+%
+The \lstinline{Exp} prefix refers to explicit authentication, wheras
+the events lacking this prefix contain only those parameters which are
+agreed upon by the modes that only allow implicit authentication, as
+we discuss in Section~\ref{sec:properties}.
+%
+The facts \lstinline{StI1_PSK_PSK} and \lstinline{StR2_PSK_PSK} are
+used to represent the local knowledge of the initiator and the
+responder, when they are waiting for the second and third message to
+arrive, respectively.
+
+\paragraph{SIG-STAT}
+Next we present the mixed asymmetric mode SIG-STAT.
+
+\begin{lstlisting}
+rule I1_SIG_STAT:
+  let gx = 'g'^~xx
+      m1 = <'SIG', 'STAT', $cSUITE0, gx> 
+  in
+  [ !LTK_SIG($U, ~ltk)
+  , Fr(~xx)
+  , Fr(~tid)  /* Thread ID */
+  ]
+  --[ I1(~tid, $U, $V, m1)
+    , DHInvI1(~tid, 'g', ~xx, 'g'^inv(~xx), 'g'^~xx, 'g'^inv(~ltk))
+    , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
+    ]->
+  [ StI1_SIG_STAT($U, ~ltk, $V, ~xx, m1, ~tid) 
+  , Out(m1) ]
+
+rule R2_SIG_STAT:
+  let
+    data_2 = <'g'^~yy>
+    m1 = <'SIG', 'STAT', $cSUITE0, gx> 
+    TH_2 = h(<$cHash0, m1, data_2>)
+    prk_2e = hkdfExtract('emptyStr', gx^~yy)
+    grx = gx^~ltk
+    prk_3e2m = hkdfExtract(prk_2e, grx)
+    K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+    protected2 = $V // ID_CRED_V
+    CRED_V = pkV
+    extAad2 = <TH_2, CRED_V> 
+    assocData2 = <protected2, extAad2>
+    MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+    authV = MAC_2     
+    plainText2 = <$V, authV>
+    K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+    K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+    K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+    CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> 
+    m2 = <data_2, CIPHERTEXT_2>
+    exp_sk = <gx^~yy, grx>
+  in
+  [ !LTK_STAT($V, ~ltk)
+  ,  !PK_STAT($V, pkV)
+  , In(m1)
+  , Fr(~yy)
+  , Fr(~tid)
+  ]
+  --[ ExpRunningR(~tid, $V, exp_sk) 
+    , R2(~tid, $V, m1, m2)
+    , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
+    ]->
+  [ StR2_SIG_STAT($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+  , Out(m2)
+  ]
+
+rule I3_SIG_STAT:
+  let
+    data_2 = <gy> 
+    TH_2 = h(<$cHash0, m1, data_2>)
+    prk_2e = hkdfExtract('emptyStr', gy^~xx)
+    plainText2 = <$V, authR> 
+    CRED_V = pkV
+    grx = CRED_V^~xx
+    prk_3e2m = hkdfExtract(prk_2e, grx)
+    K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+    K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+    CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> 
+    m2 = <data_2, CIPHERTEXT_2>
+    K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+    protected2 = $V // ID_CRED_V
+    extAad2 = <TH_2, CRED_V> 
+    assocData2 = <protected2, extAad2>
+    MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+    data_3 = 'emptyStr' 
+    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+    prk_4x3m = prk_3e2m
+    K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+    protected3 = $U // ID_CRED_U
+    CRED_U = pkU
+    extAad3 = <TH_3, CRED_U>
+    assocData3 = <protected3, extAad3>
+    MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+    authU = sign(<assocData3, MAC_3>, ~ltk)
+    plainText3 = <$U, authU>
+    extAad3Outer = TH_3
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+    m3 = <data_3, CIPHERTEXT_3>
+    exp_sk = <gy^~xx, grx>
+    imp_sk =  exp_sk
+  in
+  [ StI1_SIG_STAT($U, ~ltk, $V, ~xx, m1, ~tid) 
+  , !PK_STAT($V, pkV)
+  , !PK_SIG($U, pkU)
+  , In(m2)
+  ]      
+  --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
+    , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
+    , I3(~tid, $U, $V, m1, m2, m3)
+    , DHInvI3(~tid, 'g'^~xx)
+    , Eq(authR, MAC_2)
+    ]->
+  [ Out(m3) ]
+
+rule R4_SIG_STAT:
+  let
+    data_3 = 'emptyStr' 
+    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+    CRED_U = pkU
+    extAad3 = TH_3
+    plainText3 = <$U, authI>
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
+    prk_4x3m = prk_3e2m
+    K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+    protected3 = $U // ID_CRED_U
+    extAad3 = <TH_3, CRED_U>
+    assocData3 = <protected3, extAad3>
+    MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+    m3 = <data_3, CIPHERTEXT_3>
+    exp_sk = <gxy, grx>
+    imp_sk =  exp_sk
+  in
+  [ StR2_SIG_STAT($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
+  , !PK_SIG($U, pkU)
+  , !PK_STAT($V, pkV)
+  , In(m3)
+  ]
+  --[ ExpCommitR(~tid, $U, $V, exp_sk)
+    , CommitR(~tid, $U, $V, imp_sk)
+    , R4(~tid, $U, $V, m1, m2, m3)
+    , Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)
+    ]->
+    []
+\end{lstlisting}
+
+
 % - Explain how we modeled inj-agree (a sentence or two).
 % - Explain why it fails when $I$ uses \mStat-method and the implicit
 % auth lemma we showed instead
@@ -223,6 +536,7 @@ restriction uniqLTKs:
 
 
 \subsection{Properties}
+\label{sec:properties}
 
 % Subsection: Clear bullet-list of what we have shown, including
 % some statics of running time code size perhaps.
