@@ -542,6 +542,21 @@ differs from explicit authentication for the Initiator running the
 static mode: on \lstinline{imp_sk} the semi-static key
 $g^{iy}$ is present, whereas \lstinline{exp_sk} does not include it
 for injective agreement.
+%
+The reason for this is that, when sending message 2, the responder
+does not yet know the identity of the initiator, hence an active
+attacker can interfere with the protocol in such a way that the two
+parties do not agree on the semi-static key
+$g^{iy}$ until after the end of the protocol, when the responder
+starts using the derived key material with the initiator.
+%
+This is outside the scope of the \mEdhoc protocol, hence we have left
+this part out of the modeling and only focus on the key material that
+both parties agree on.
+%
+In future work, it will be interesting to see the interaction of
+\mEdhoc with OSCORE, which is a transport standard that can use
+EDHOC's keys.
 
 Looking at \lstinline{authV} in rule \lstinline{R2_STAT_SIG} we can
 see how the signature mode is constructed: it is a signature of the
@@ -582,6 +597,9 @@ rather a tuple where each field is XORed with a half-key expansion
 
 \subsection{Properties}
 \label{sec:properties}
+
+In this section we present the properties that we have shown for
+\mEdhoc, and show the lemmas that verify them.
 
 % Subsection: Clear bullet-list of what we have shown, including
 % some statics of running time code size perhaps.
