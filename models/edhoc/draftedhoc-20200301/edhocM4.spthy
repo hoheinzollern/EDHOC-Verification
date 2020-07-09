@@ -159,7 +159,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          	<!plainText2 = ~AD_2!>,
          	<!plainText2 = 'emptyStr'!>
          )
-         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e) // Ale: here $cAEAD0 may not do what you want. I think the intention is to have a constant or something restricted to a specific range, but it's actually a free variable known to the attacker. You are not using the nullary function defined in the preamble.
          CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
         !>,
         <!
@@ -469,7 +469,8 @@ ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
          <!ifelse(<!STAT!>, m4METHODR,
              <!, Eq(authR, MAC_2)!>,
-             <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK */
+             <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK. 
+                                    Ale: this shouldn't be necessary */
          )!>
 )
           ]->

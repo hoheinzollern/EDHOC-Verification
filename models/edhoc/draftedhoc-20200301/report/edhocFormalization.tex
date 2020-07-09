@@ -115,10 +115,12 @@ constants and public values known to the attacker respectively, and are both
 sub-sorts of a base sort.
 %
 Finally, \mTamarin has some built-in predicates ($\mIn,
-\mOut$ to represent input and output of messages with the attacker, among
-others), rules and equations that represent the attacker's knowledge and
-standard equational theories in the symbolic model, plus syntactic sugar, all of
-which we introduce as we see necessary.
+\mOut$ to represent input and output of messages with the attacker,
+and
+$\mFr$ to denote a fresh constant created in the current rule, among
+others), rules and equations that represent the attacker's knowledge
+and standard equational theories in the symbolic model, plus syntactic
+sugar, all of which we introduce as we see necessary.
 
 For example in our model we have a symbol to denote authenticated encryption and
 hence \mTamarin produces the rule:
@@ -333,7 +335,6 @@ rule I3_PSK_PSK:
     , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
     , I3(~tid, $U, $V, m1, m2, m3)
     , DHInvI3(~tid, 'g'^~xx)
-    , Eq('1', '1')  /* nothing; to avoid tamrarin complainging for PSK */
    ]->
    [ Out(m3) ]
 
@@ -395,71 +396,67 @@ used to represent the local knowledge of the initiator and the
 responder, when they are waiting for the second and third message to
 arrive, respectively.
 
-\paragraph{SIG-STAT}
-Next we present the mixed asymmetric mode SIG-STAT.
+\paragraph{STAT-SIG}
+Next we present the mixed asymmetric mode STAT-SIG. We chose STAT-SIG
+for this presentation of the asymmetric modes as it's the
+configuration that shows all interesting features at once: mixed
+authentication methods, and implicit authentication on the responder.
 
 \begin{lstlisting}
-rule I1_SIG_STAT:
+rule I1_STAT_SIG:
   let gx = 'g'^~xx
-      m1 = <'SIG', 'STAT', $cSUITE0, gx> 
+      m1 = <'STAT', 'SIG', $cSUITE0, gx> 
   in
-  [ !LTK_SIG($U, ~ltk)
+  [ !LTK_STAT($U, ~ltk)
   , Fr(~xx)
   , Fr(~tid)  /* Thread ID */
   ]
-  --[ I1(~tid, $U, $V, m1)
-    , DHInvI1(~tid, 'g', ~xx, 'g'^inv(~xx), 'g'^~xx, 'g'^inv(~ltk))
-    , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
-    ]->
-  [ StI1_SIG_STAT($U, ~ltk, $V, ~xx, m1, ~tid) 
-  , Out(m1) ]
+  --[ I1(~tid, $U, $V, m1) ]->
+  [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
+  , Out(m1)
+  ]
 
-rule R2_SIG_STAT:
+rule R2_STAT_SIG:
   let
     data_2 = <'g'^~yy>
-    m1 = <'SIG', 'STAT', $cSUITE0, gx> 
+    m1 = <'STAT', 'SIG', $cSUITE0, gx> 
     TH_2 = h(<$cHash0, m1, data_2>)
     prk_2e = hkdfExtract('emptyStr', gx^~yy)
-    grx = gx^~ltk
-    prk_3e2m = hkdfExtract(prk_2e, grx)
+    prk_3e2m = prk_2e
     K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
     protected2 = $V // ID_CRED_V
     CRED_V = pkV
     extAad2 = <TH_2, CRED_V> 
     assocData2 = <protected2, extAad2>
     MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
-    authV = MAC_2     
+    authV = sign(<assocData2, MAC_2>, ~ltk)
     plainText2 = <$V, authV>
     K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
     K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
     K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
     CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> 
     m2 = <data_2, CIPHERTEXT_2>
-    exp_sk = <gx^~yy, grx>
+    exp_sk = <gx^~yy>
   in
-  [ !LTK_STAT($V, ~ltk)
-  ,  !PK_STAT($V, pkV)
+  [ !LTK_SIG($V, ~ltk)
+  , !PK_SIG($V, pkV)
   , In(m1)
   , Fr(~yy)
   , Fr(~tid)
   ]
-  --[ ExpRunningR(~tid, $V, exp_sk) 
-    , R2(~tid, $V, m1, m2)
-    , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
-    ]->
-  [ StR2_SIG_STAT($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+  --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
+  [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
   , Out(m2)
   ]
 
-rule I3_SIG_STAT:
+rule I3_STAT_SIG:
   let
     data_2 = <gy> 
     TH_2 = h(<$cHash0, m1, data_2>)
     prk_2e = hkdfExtract('emptyStr', gy^~xx)
     plainText2 = <$V, authR> 
     CRED_V = pkV
-    grx = CRED_V^~xx
-    prk_3e2m = hkdfExtract(prk_2e, grx)
+    prk_3e2m = prk_2e
     K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
     K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
     CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> 
@@ -472,66 +469,107 @@ rule I3_SIG_STAT:
     data_3 = 'emptyStr' 
     TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
-    prk_4x3m = prk_3e2m
+    giy = gy^~ltk
+    prk_4x3m = hkdfExtract(prk_3e2m, giy)
     K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
     protected3 = $U // ID_CRED_U
     CRED_U = pkU
     extAad3 = <TH_3, CRED_U>
     assocData3 = <protected3, extAad3>
     MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
-    authU = sign(<assocData3, MAC_3>, ~ltk)
+    authU = MAC_3
     plainText3 = <$U, authU>
     extAad3Outer = TH_3
     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
     m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gy^~xx, grx>
-    imp_sk =  exp_sk
+    exp_sk = <gy^~xx>
+    imp_sk = <exp_sk, giy>
   in
-  [ StI1_SIG_STAT($U, ~ltk, $V, ~xx, m1, ~tid) 
-  , !PK_STAT($V, pkV)
-  , !PK_SIG($U, pkU)
-  , In(m2)
-  ]      
-  --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
-    , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-    , I3(~tid, $U, $V, m1, m2, m3)
-    , DHInvI3(~tid, 'g'^~xx)
-    , Eq(authR, MAC_2)
-    ]->
+  [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
+  , !PK_SIG($V, pkV)
+  , !PK_STAT($U, pkU)
+  , In(m2) ]
+  --[ ExpCommitI(~tid, $U, $V, exp_sk), CommitI(~tid, $U, $V, imp_sk)
+  , I3(~tid, $U, $V, m1, m2, m3)
+  , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)
+  ]->
   [ Out(m3) ]
 
-rule R4_SIG_STAT:
+rule R4_STAT_SIG:
   let
-    data_3 = 'emptyStr' 
+    data_3 = 'emptyStr'
     TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
     CRED_U = pkU
     extAad3 = TH_3
     plainText3 = <$U, authI>
     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
-    prk_4x3m = prk_3e2m
+    giy = CRED_U^~yy
+    prk_4x3m = hkdfExtract(prk_3e2m, giy)
     K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
     protected3 = $U // ID_CRED_U
     extAad3 = <TH_3, CRED_U>
     assocData3 = <protected3, extAad3>
     MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
     m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gxy, grx>
-    imp_sk =  exp_sk
+    exp_sk = <gxy>
+    imp_sk = <exp_sk, giy>
   in
-  [ StR2_SIG_STAT($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
-  , !PK_SIG($U, pkU)
-  , !PK_STAT($V, pkV)
+  [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
+  , !PK_STAT($U, pkU)
+  , !PK_SIG($V, pkV)
   , In(m3)
   ]
   --[ ExpCommitR(~tid, $U, $V, exp_sk)
-    , CommitR(~tid, $U, $V, imp_sk)
-    , R4(~tid, $U, $V, m1, m2, m3)
-    , Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)
-    ]->
-    []
+  , CommitR(~tid, $U, $V, imp_sk)
+  , R4(~tid, $U, $V, m1, m2, m3)
+  , Eq(authI, MAC_3)
+  ]->
+  []
 \end{lstlisting}
 
+Let us focus on the interesting details of this model. First and
+foremost, it shows how to construct signatures in the static mode and
+the signing mode.
+%
+Looking at \lstinline{authU} how it is constructed in rule
+\lstinline{I3_STAT_SIG}, we can see that it uses \lstinline{K_3m},
+which is an expansion of \lstinline{prk_4x3m} that in turn uses the
+semi-static Diffie-Hellman key $g^{iy}$.
+%
+On the same rule we can also see how \emph{implicit authentication}
+differs from explicit authentication for the Initiator running the
+static mode: on \lstinline{imp_sk} the semi-static key
+$g^{iy}$ is present, whereas \lstinline{exp_sk} does not include it
+for injective agreement.
+
+Looking at \lstinline{authV} in rule \lstinline{R2_STAT_SIG} we can
+see how the signature mode is constructed: it is a signature of the
+transcript including message 2, using the Responder's long term public
+key.
+%
+Here lies the main difference between the static and signature modes
+in the model, the other being the corresponding authentication check:
+a simple matching of the MAC tag on the initiator side
+%
+(\lstinline{Eq(authI, MAC_3)}), instead of verifying the public key
+signature on the responder side
+%
+(\lstinline{Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)}).
+
+Finally, it's worth mentioning the construction of
+\lstinline{CIPHERTEXT_2}.
+%
+Here is a place where the model and the original specification differ
+slightly, the reason being that we must allow some behaviour that is
+otherwise not covered by symbolic handling of XOR encryption: it must
+be possible for the attacker to break apart the fields of
+\lstinline{CIPHERTEXT_2}, and obtain part of the key \lstinline{K_2e}
+if they know part of the plaintext, or viceversa.
+%
+Hence \lstinline{CIPHERTEXT_2} is not a direct XOR ``encryption'', but
+rather a tuple where each field is XORed with a half-key expansion
+(\lstinline{K_2e_1} and \lstinline{K_2e_2}).
 
 % - Explain how we modeled inj-agree (a sentence or two).
 % - Explain why it fails when $I$ uses \mStat-method and the implicit
