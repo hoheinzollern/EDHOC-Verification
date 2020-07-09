@@ -1,15 +1,15 @@
 % !TEX root =  main.tex
 
-Next we describe our approach at formalizing the \mEdhoc protocol. We use the
-symbolic (Dolev-Yao) model for verification, using \mTamarin for tool support.
+Next we describe our approach at formalizing the \mEdhoc{} protocol. We use the
+symbolic (Dolev-Yao) model for verification, using \mTamarin{} for tool support.
 %
 The next three subsections describe our threat model, briefly present the
-\mTamarin tool, and our modeling choices.
+\mTamarin{} tool, and our modeling choices.
 %
 Finally, we present the properties that we proved in this effort.
 
 \subsection{Threat model}\label{sec:threat-model}
-We verify \mEdhoc in the symbolic Dolev-Yao model: as customary in this style of
+We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
 modeling, we assume all cryptographic primitives to be ``perfect'', and hence
 only allow the attacker to encrypt and decrypt messages when they know the key,
 and exclude hash collisions, for example; the attacker is also in control of the
@@ -20,7 +20,7 @@ One important point here is that we allow the attacker to impersonate malicious
 endpoints, by revealing their long-term and session key material at any given
 point.
 %
-\mEdhoc should remain secure under these assumptions, as we detail below. \vnote{What does it mean for \mEdhoc to remain secure? Security of what?}
+\mEdhoc{} should remain secure under these assumptions, as we detail below. \vnote{What does it mean for \mEdhoc{} to remain secure? Security of what?}
 
 \paragraph{Post-compromise security}
 Post-compromise security is a class of properties that relate to the ability of
@@ -86,9 +86,9 @@ in conjunction with PCS properties.
 \vnote{This feels like an oddball selection of the properties that are actually verified. Why not mention all of them, and maybe go into detail about PCS after the simpler ones have been tackled, in the Properties section later? The threat model there is more advanced, and can be dealt with later. In fact, a note about the basic Dolev-Yao attacker can be very well combined with the Tamarin section, in my opinion.}
 
 \subsection{Tamarin}
-We chose \mTamarin to model and verify \mEdhoc in the Symbolic model.
+We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
 %
-\mTamarin is an interactive verification tool based on multi-set rewriting rules
+\mTamarin{} is an interactive verification tool based on multi-set rewriting rules
 with event annotations, which allows to check LTL temporal formulas on these
 models.
 %
@@ -99,7 +99,7 @@ Multi-set rewrite rules with events take the form:
 where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
 %
 Facts are $n$ary predicates over a term algebra, which defines a set of function
-symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. Tamarin
+symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. \mTamarin{}
 checks equality of thse terms under an equational theory $E$, hence one can
 write that
 %
@@ -109,7 +109,7 @@ to denote that symmetric decryption reverses the encryption operation, and so
 forth. All operations on terms are defined under $E$, hence we omit the
 subscript from now on as the equational theory is fixed per model.
 
-\paragraph{Semantics and built-ins} On a first approximation, \mTamarin states
+\paragraph{Semantics and built-ins} On a first approximation, \mTamarin{} states
 $S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$
 occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
 that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
@@ -122,7 +122,7 @@ The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
 constants and public values known to the attacker respectively, and are both
 sub-sorts of a base sort.
 %
-Finally, \mTamarin has some built-in predicates ($\mIn,
+Finally, \mTamarin{} has some built-in predicates ($\mIn,
 \mOut$ to represent input and output of messages with the attacker,
 and
 $\mFr$ to denote a fresh constant created in the current rule, among
@@ -131,7 +131,7 @@ and standard equational theories in the symbolic model, plus syntactic
 sugar, all of which we introduce as we see necessary.
 
 For example in our model we have a symbol to denote authenticated encryption and
-hence \mTamarin produces the rule:
+hence \mTamarin{} produces the rule:
 %
 \[ !\mKU( k ), !\mKU( m ), !\mKU( ad ), !\mKU( al ) \ifarrow !\mKU( \mAeadEncrypt(k, m, ad, al) ) \]
 %
@@ -144,7 +144,7 @@ There are two built-in persistent facts to denote attacker knowledge,
 $!\mKU$ and
 $!\mKD$, but we ignore their distinction for now as it is only necessary for
 \mTamarin's termination properties.
-\vnote{I don't think the above paragraph is necessary -- it feels like a distraction. A reference for \mTamarin and a note saying readers can refer to it for further details should be quite enough.}
+\vnote{I don't think the above paragraph is necessary -- it feels like a distraction. A reference for \mTamarin{} and a note saying readers can refer to it for further details should be quite enough.}
 
 In our model we introduce a theory for authenticated encryption, plus the
 built-in theories of XOR and Diffie-Hellmann.
@@ -175,7 +175,7 @@ $x \cdot y$ as a built-in symbols in the language, plus the necessary equational
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
-\subsection{Modeling \mEdhoc}
+\subsection{Modeling \mEdhoc{}}
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
 %
@@ -189,8 +189,8 @@ We use the M4 macro language to derive these different modes from a single
 description of the protocol, thus enforcing uniformity in the presentation.
 %
 Other parameters to the model include the optional data of the \mEdhoc{}
-specification, that is the connection identifiers \mCi and \mCr and
-the authenticated data \mADone, \mADtwo and \mADthree.
+specification, that is the connection identifiers \mCi{} and \mCr{} and
+the authenticated data \mADone, \mADtwo{} and \mADthree.
 %
 To keep the presentation brief, we detail only the setup of the model,
 the symmetric and one asymmetric variant (\mSigStat), however the full
@@ -219,7 +219,7 @@ rule registerLTK_PSK:
 names}
     
 These three rules express the registering of the long term keys for the \mSig,
-\mStat and \mPsk modes respectively.
+\mStat{} and \mPsk{} modes respectively.
 %
 The \lstinline{registerLTK_PSK} registers a symmetric key for each pair of
 agents \lstinline{A} and \lstinline{B}, while the other two rules register a
@@ -252,6 +252,9 @@ Each of the session keys is also revealed with similar rules,
 depending on the mode to check session independence.
 
 \paragraph{Implicit vs explicit authentication}
+\knote{Need to agree on how we denote section headings. Now we are mixing
+    paragraph and subsection for the same level it seems.
+}
 As we will discuss in Section~\ref{sec:properties}, not all modes of
 \mEdhoc{} enjoy the same properties, and different guarantees are
 provided for each method.
@@ -289,7 +292,7 @@ certain aspects of the modeling directly follow from it.
   stuff, including when a protocol is completed and what data should
   be agreed upon.}
 
-\paragraph{PSK-PSK} the following rules model the symmetric variant of
+  \paragraph{\mPskPsk{}} the following rules model the symmetric variant of
 the protocol and are derived from the M4 file, as presented in
 Section~\ref{protocol-presentation}\footnote{link}.
 
@@ -392,13 +395,7 @@ endpoints. \anote{we also have some events which are not checked in
   any lemma, like InvR2. In my understanding they don't serve any
   purpose, should they be in there? certainly not in the
   presentation.}
-\knote{Now I see what you mean. You wrote I1 and R2 etc. in the mail and I
-    believe those need to be kept for the sanity lemma. But you are right about
-    the InvR2 and many others. Those are leftovers from when I tried to speed
-    things up with various helper lemmas. They should be removed now. I can
-    remove them on Thursday 9/7, since it is quicker for me to recall which
-    ones never made it into anything useful.
-}
+\knote{I have clean that up now, so these two notes can be deleted.}
 %
 The event \lstinline{ExpRunningR} denotes the start of the Responder's
 protocol, whereas \lstinline{ExpCommitI} and \lstinline{CommitI}
@@ -417,9 +414,11 @@ arrive, respectively.
 
 \vnote{If you are going with \mPskPsk for the first example, it would make sense to explain it in some detail. At least a connection to the earlier section describing the variables in the code is necessary, because so far there is no mention of $U$, $V$ etc. If you directly jump to the events, a casual reader has no idea what the variables even correspond to. Once these things are explained here, they need not be repeated for the next method.}
 
-\paragraph{STAT-SIG}
-Next we present the mixed asymmetric mode STAT-SIG. We chose STAT-SIG
+\paragraph{\mStatSig{}}
+Next we present the mixed asymmetric mode \mStatSig. We chose \mStatSig{}
 for this presentation of the asymmetric modes as it's the
+\knote{Question on academic language: you use contractionns here "it's". Is that
+acceptable?  It sounds quite informal to me}
 configuration that shows all interesting features at once: mixed
 authentication methods, and implicit authentication on the responder.
 
@@ -556,28 +555,33 @@ the signing mode.
 Looking at \lstinline{authU} how it is constructed in rule
 \lstinline{I3_STAT_SIG}, we can see that it uses \lstinline{K_3m},
 which is an expansion of \lstinline{prk_4x3m} that in turn uses the
-semi-static Diffie-Hellman key $g^{iy}$.
+semi-static Diffie-Hellman key \mGiy.
+\knote{Terminology: we need to harmonize terminology in the end. Here it is called semi
+    statc DH key. Sometimes this is referred to as a "DH key share" and sometimes
+    as a "DH half key". I don't care so much which we chose as long as it is
+    consitent.
+}
 %
 On the same rule we can also see how \emph{implicit authentication}
 differs from explicit authentication for the Initiator running the
 static mode: on \lstinline{imp_sk} the semi-static key
-$g^{iy}$ is present, whereas \lstinline{exp_sk} does not include it
+\mGiy{} is present, whereas \lstinline{exp_sk} does not include it
 for injective agreement.
 %
 The reason for this is that, when sending message 2, the responder
 does not yet know the identity of the initiator, hence an active
 attacker can interfere with the protocol in such a way that the two
 parties do not agree on the semi-static key
-$g^{iy}$ until after the end of the protocol, when the responder
+\mGiy{} until after the end of the protocol, when the responder
 starts using the derived key material with the initiator.
 %
-This is outside the scope of the \mEdhoc protocol, hence we have left
+This is outside the scope of the \mEdhoc{} protocol, hence we have left
 this part out of the modeling and only focus on the key material that
 both parties agree on.
 %
 In future work, it will be interesting to see the interaction of
-\mEdhoc with OSCORE, which is a transport standard that can use
-EDHOC's keys.
+\mEdhoc{} with \mOscore, which is a transport standard that can use
+\mEdhoc's keys.
 
 Looking at \lstinline{authV} in rule \lstinline{R2_STAT_SIG} we can
 see how the signature mode is constructed: it is a signature of the
@@ -595,6 +599,18 @@ signature on the responder side
 
 Finally, it's worth mentioning the construction of
 \lstinline{CIPHERTEXT_2}.
+\knote{We earlier agreed to use the macros for the constants in the model to get
+    a consistent formatting and save time in the end, not having to go through
+    everything and align formatting.
+    Here a different format is used: lstinline.  Up until here in this section
+    I have changed all the places where we have macros for the terms. But
+    since I now noticed that you started usnig a different formatting, I ask you
+    to please select the formatting you prefer, encode that into the macros and
+    use them. Alternateively, please go through the rest of the paper and change
+    the formatting to the new listinline format. I prefer to stick to the
+    agreement we made and have followed in the rest of the sections, i.e.,
+    the former.
+}
 %
 Here is a place where the model and the original specification differ
 slightly, the reason being that we must allow some behaviour that is
@@ -662,7 +678,7 @@ lemma authInjAgreeGuaranteeForI:
 \anote{as this is a disjunction and the symmetric LTKRev happens only
   in the symmetric model and viceversa, this property is equivalent to
   the two properties for the sym and asym cases, so I put this for brevity}
-\knote{That is logically true, but \mTamarin does not accept it. Try it out to see what
+\knote{That is logically true, but \mTamarin{} does not accept it. Try it out to see what
 goes wrong. If you have proposals for better ways of modeling it, I'd love to
 know.}
 
