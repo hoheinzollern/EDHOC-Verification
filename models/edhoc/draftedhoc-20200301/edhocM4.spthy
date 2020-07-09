@@ -55,8 +55,6 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
-          , DHInvI1(~tid, 'g', ~xx, 'g'^inv(~xx), 'g'^~xx, 'g'^inv(~ltk))
-          , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
           ]->
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
@@ -135,7 +133,6 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ]
         --[ ExpRunningR(~tid, $V, exp_sk)
           , R2(~tid, $V, m1, m2)
-          , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
           <!!> //<!, R2Mac(~tid, MAC_2, gx, 'g'^~yy, gx^~yy, K_2m)!>
@@ -270,7 +267,6 @@ ifdef(<!m4AD3!>,
         --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
           , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
           , I3(~tid, $U, $V, m1, m2, m3)
-          , DHInvI3(~tid, 'g'^~xx)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
           <!!> //<!, I3Mac(~tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
