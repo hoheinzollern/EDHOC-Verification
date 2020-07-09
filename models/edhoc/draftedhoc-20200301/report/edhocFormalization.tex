@@ -700,8 +700,50 @@ the latter proves injective agreement on the reduced set of keys
 \lstinline{impSk}, which only differs from the explicit set when the
 initiator runs in static mode.
 
-\subsubsection{Secrecy, Forward Secrecy and Key Independence}
-%     holds no matter which method user chooses.
+\subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
+
+Finally, we prove secrecy of session keys, perfect forward secrecy
+(PFS) and session key independence.
+%
+All these properties are validated by a unique lemma for each method,
+as secrecy is a strictly weaker property than PFS (hence it follows
+directly), and session key independence can be proven along PFS.
+%
+This is done by allowing the revelation of long term keys after either
+the initiator or the responder have completed the protocol, and by
+allowing to reveal the session keys.
+%
+It still holds that the session keys are secret for all the other runs
+of the protocol.
+
+First we show the lemma for the symmetric mode:
+\begin{lstlisting}
+lemma secrecyPFSGIYSessionKey:
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) ) &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
+\end{lstlisting}
+
+Next we present the lemma for the asymmetric modes:
+\begin{lstlisting}
+lemma secrecyPFSGIYSessionKey:
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) ) &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
+\end{lstlisting}
+
+Note that in case the responder is using the static mode, the lemma
+fails.  \anote{this is actually from the comments in the code, is that
+  correct? then we should find a formulation that succeeds. Also, if
+  one of the two sides holds and the other does not, it is equivalent
+  to splitting this lemma in two and proving each part separately. You
+  can prove a stronger lemma for the static responder mode.}
+
+% holds no matter which method user chooses.
 %  -  PFS on session key for all methods.
 %  -  Key secrecy (follows from PFS).
 %  -  Session key independence (follows from how we modeled PFS).
