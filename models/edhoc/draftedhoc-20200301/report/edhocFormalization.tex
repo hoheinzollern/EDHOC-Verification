@@ -1,3 +1,5 @@
+% !TEX root =  main.tex
+
 Next we describe our approach at formalizing the \mEdhoc protocol. We use the
 symbolic (Dolev-Yao) model for verification, using \mTamarin for tool support.
 %
@@ -18,7 +20,7 @@ One important point here is that we allow the attacker to impersonate malicious
 endpoints, by revealing their long-term and session key material at any given
 point.
 %
-\mEdhoc should remain secure under these assumptions, as we detail below.
+\mEdhoc should remain secure under these assumptions, as we detail below. \vnote{What does it mean for \mEdhoc to remain secure? Security of what?}
 
 \paragraph{Post-compromise security}
 Post-compromise security is a class of properties that relate to the ability of
@@ -71,11 +73,17 @@ the protocol runs.
 \emph{We do not check strong PCS} for \mEdhoc, as it is not secure under these
 assumptions.
 
+\vnote{What does it even mean to check strong PCS for \mEdhoc? Possible reviewer comment: How do you know it is not secure if you haven't checked it?}
+
+\vnote{When I think about modelling and verifying a protocol, I start with properties like (normal) secrecy of some value of interest, authentication, maybe session independence at most. It feels a little precipitous to immediately jump to PCS without any introduction at all to what values are of interest in \mEdhoc, and what obvious properties one might check for before moving to this rather advanced class of properties.}
+
 \paragraph{Session independence}
 Finally we model \emph{session independence} of \mEdhoc, that is, we allow
 leakage of session key material, and additionally check security only of those
 sessions for which the session key material has not been revealed. We check this
 in conjunction with PCS properties.
+
+\vnote{This feels like an oddball selection of the properties that are actually verified. Why not mention all of them, and maybe go into detail about PCS after the simpler ones have been tackled, in the Properties section later? The threat model there is more advanced, and can be dealt with later. In fact, a note about the basic Dolev-Yao attacker can be very well combined with the Tamarin section, in my opinion.}
 
 \subsection{Tamarin}
 We chose \mTamarin to model and verify \mEdhoc in the Symbolic model.
@@ -136,6 +144,7 @@ There are two built-in persistent facts to denote attacker knowledge,
 $!\mKU$ and
 $!\mKD$, but we ignore their distinction for now as it is only necessary for
 \mTamarin's termination properties.
+\vnote{I don't think the above paragraph is necessary -- it feels like a distraction. A reference for \mTamarin and a note saying readers can refer to it for further details should be quite enough.}
 
 In our model we introduce a theory for authenticated encryption, plus the
 built-in theories of XOR and Diffie-Hellmann.
@@ -170,6 +179,8 @@ product, and inverse.
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
 %
+\vnote{Karl and I have been referring to them as ``methods'', not ``modes''. Please follow the same terminology.}
+
 We model the five different modes of \mEdhoc{} from a single specification
 according to the five different combinations of authentication methods:
 \mPskPsk, \mSigSig, \mSigStat, \mStatSig and \mStatStat.
@@ -185,6 +196,8 @@ To keep the presentation brief, we detail only the setup of the model,
 the symmetric and one asymmetric variant (\mSigStat), however the full
 code can be inspected at
 \url{https://github.com/hoheinzollern/EDHOC-Verification}.
+
+\vnote{Fix the link to link to the exact folder for the current version -- this page contains the old code too.}
 
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
@@ -248,6 +261,7 @@ material and so on) \emph{at the end of the protocol}, whereas for
 \emph{implicit authentication} the two parties may only agree after
 the protocol has ended when the first message encrypted with the
 session key is being transmitted.
+\vnote{This last sentence is confusing, restructure?}
 %
 We will discuss this concept again, however we mention it here as
 certain aspects of the modeling directly follow from it.
@@ -365,7 +379,7 @@ definitions of patterns which are substituted in the rest of the
 rule. Each rule corresponds to one action of the protocol, hence rule
 \lstinline{I1_PSK_PSK} represents the Initiator sending the first
 message, whereas \lstinline{R2_PSK_PSK} represents the responder
-receiving the first message and responding with the second, and so on.
+receiving the first message and responding with the second, and so on. \vnote{I feel like these two are features of \mTamarin, and not the modelling of \mEdhoc, so should go in the previous section.}
 
 Two other important details are the events which are used for checking
 authentication, and the facts which store the local state of the
@@ -395,6 +409,8 @@ The facts \lstinline{StI1_PSK_PSK} and \lstinline{StR2_PSK_PSK} are
 used to represent the local knowledge of the initiator and the
 responder, when they are waiting for the second and third message to
 arrive, respectively.
+
+\vnote{If you are going with \mPskPsk for the first example, it would make sense to explain it in some detail. At least a connection to the earlier section describing the variables in the code is necessary, because so far there is no mention of $U$, $V$ etc. If you directly jump to the events, a casual reader has no idea what the variables even correspond to. Once these things are explained here, they need not be repeated for the next method.}
 
 \paragraph{STAT-SIG}
 Next we present the mixed asymmetric mode STAT-SIG. We chose STAT-SIG
@@ -615,7 +631,7 @@ methods).
 %
 This is a standard adaptation of the injective agreement property as
 proposed by Lowe~\cite{lowes-paper}, which is widely used in symbolic
-models.
+models. \vnote{I believe a one-line description of injective agreement here, at least for the sake of completeness, would be good to have.}
 
 Additionally, we require that injective agreement must hold only when
 no long term key material for the two parties has been revealed before
@@ -703,7 +719,7 @@ initiator runs in static mode.
 \subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
 
 Finally, we prove secrecy of session keys, perfect forward secrecy
-(PFS) and session key independence.
+(PFS) and session key independence. \vnote{Here is the perfect place to add the section about PCS, session independence etc.}
 %
 All these properties are validated by a unique lemma for each method,
 as secrecy is a strictly weaker property than PFS (hence it follows
