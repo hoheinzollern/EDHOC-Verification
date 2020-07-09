@@ -39,60 +39,12 @@ equations:
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
-/* ifelse(<!SIG!>, m4METHODI, */
-/*     <!restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"!>, */
-/*     <!ifelse(<!SIG!>, m4METHODR, */
-/*         <!restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"!>, */
-/*         <!!> /1* NOTHING *1/ */
-/*     )!> */
-/* ) */
-
-
-//restriction Neq:
-    //"All x y #i. Neq(x, y)@i ==> not(x = y)"
-
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
- //    ifdef(<!m4CI!>,
-	//    <!cI = ~C_I!>
-	// )
-	// ifdef(<!m4AD1!>,
-	// 	<!plainText1 = ~AD_1!>
-	// )
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        <!
-        	ID_PSK = <$U, $V>
-        	ifdef(<!m4CI!>,	
-        		<! 
-                    ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK> !>
-                    )
-                !>,
-        		<! 
-                    ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, ~AD_1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK> !>
-                    )
-                !>
-        	)
-        !>,
-        <! 
-        	ifdef(<!m4CI!>,
-        		<! 
-                    ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ~AD_1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I> !>
-                    )
-                !>,
-        		<! 
-                    ifdef(<!m4AD1!>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~AD_1> !>,
-                        <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx> !>
-                    )
-                !>
-        	)
-        !>
+        <!ID_PSK = <$U, $V>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>!>,
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx>!>
 )
     in
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -100,12 +52,6 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
 )
         , Fr(~xx)
-        ifdef(<!m4CI!>,
-        	<! , Fr(~C_I) !>
-        )
-        ifdef(<!m4AD1!>,
-        	<! , Fr(~AD_1) !>
-        )
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
@@ -113,70 +59,27 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
           ]->
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-		<!
-		    ifdef(<!m4CI!>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
-            )
-        !>,
-        <!
-            ifdef(<!m4CI!>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
-                <! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
-            )
-        !>
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
 )
         , Out(m1)
         ]
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
-		let
-    	ifdef(<!m4CI!>,
-     		<!data_2 = <~C_I, 'g'^~yy, ~C_R>!>,
-     		<!data_2 = <'g'^~yy>!>
-        )
+    let
+         data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
-        ifdef(<!m4CI!>,
-         	<! 
-                ifdef(<!m4AD1!>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK, ~AD_1> !>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ID_PSK> !>
-                )
-            !>,
-         	<! 
-                ifdef(<!m4AD1!>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK, ~AD_1> !>,
-                    <! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK> !>
-                )
-            !>
-         )
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>
          TH_2 = h(<$cHash0, m1, data_2>)
          prk_2e = hkdfExtract(~ltk, gx^~yy)
          prk_3e2m = prk_2e
          extAad2 = TH_2
-         ifdef(<!m4AD2!>,
-         	<!plainText2 = ~AD_2!>,
-         	<!plainText2 = 'emptyStr'!>
-         )
-         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e) // Ale: here $cAEAD0 may not do what you want. I think the intention is to have a constant or something restricted to a specific range, but it's actually a free variable known to the attacker. You are not using the nullary function defined in the preamble.
+         plainText2 = 'emptyStr' //~AD_2
+         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
          CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
         !>,
-        <!
-        ifdef(<!m4CI!>,
-        	<! 
-        		ifdef(<!m4AD1!>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I, ~AD_1> !>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~C_I> !>
-        		)
-        	!>,
-        	<!
-        		ifdef(<!m4AD1!>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ~AD_1> !>,
-        			<! m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx> !>
-        		)
-        	!>
-        )
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx>
          TH_2 = h(<$cHash0, m1, data_2>)
          prk_2e = hkdfExtract('emptyStr', gx^~yy)
          ifelse(<!STAT!>, m4METHODR,
@@ -187,41 +90,24 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
          protected2 = $V // ID_CRED_V
          CRED_V = pkV
-         ifdef(<!m4AD2!>, 
-            <! extAad2 = <TH_2, CRED_V, ~AD_2> !>,
-            <! extAad2 = <TH_2, CRED_V> !>
-         )
-         //extAad2 = <TH_2, CRED_V>
+         extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
          ifelse(<!SIG!>, m4METHODR,
             <!authV = sign(<assocData2, MAC_2>, ~ltk)!>,
             <!authV = MAC_2!>
          )
-         ifdef(<!m4AD2!>,
-         	<!plainText2 = <$V, authV, ~AD_2>!>,
-         	<!plainText2 = <$V, authV>!>
-         )
+         plainText2 = <$V, authV>
          K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
          /* K_2e is split in two parts to allow attacker to attack them
           * individually
           */
          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-
-         ifdef(<!m4AD2!>,
-            <! 
-                K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-                CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2, ~AD_2 XOR K_2e_3> 
-            !>,
-            <! CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> !>
-         )
-         
-         //CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
         !>
 )
          m2 = <data_2, CIPHERTEXT_2>
-
 
 
 /* Def of session key exp_sk we can get explicit auth (agreement) on */
@@ -245,18 +131,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m1)
         , Fr(~yy)
-        ifdef(<!m4CI!>,
-        	<! , Fr(~C_R) !>
-        )
-        ifdef(<!m4AD2!>,
-        	<! , Fr(~AD_2) !>
-        )
         , Fr(~tid)
         ]
-        ifdef(<!m4CI!>,
-    		<! --[ ExpRunningR(~tid, $V, exp_sk, ~C_I, ~C_R) !>,
-    		<! --[ ExpRunningR(~tid, $V, exp_sk) !>
-        )
+        --[ ExpRunningR(~tid, $V, exp_sk)
           , R2(~tid, $V, m1, m2)
           , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -265,24 +142,11 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
           ]->
 ifelse(<!STAT!>, m4METHODR,
-		ifdef(<!m4CI!>,
-    		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_I, ~C_R, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>,
-    		<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)!>
-        )
+        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         ,
-        <! ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            <! 
-            	ifdef(<!m4CI!>, 
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            	)
-            !>,
-            <! 
-            	ifdef(<!m4CI!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) !>
-            	)
-            !>
+        <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         )!>
 )
         , Out(m2)
@@ -291,19 +155,13 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-    	ifdef(<!m4CI!>,
-    				<! data_2 = <~C_I, gy, ~C_R> !>,
-    				<! data_2 = <gy> !>
-            )
+         data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!prk_2e = hkdfExtract(~ltk, gy^~xx)
          prk_3e2m = prk_2e
-         ifdef(<!m4AD2!>, 
-         	<! plainText2 = ~AD_2 !>,
-         	<! plainText2 = 'emptyStr' !>
-         )
+         plainText2 = 'emptyStr' //~AD_2
          extAad2 = TH_2     // KARL: Why is not AD_2 covered in PSK case? Not necesssary, but it is included for the ASYM cases
          K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
          CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
@@ -311,10 +169,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         !>,
          /* STAT and SIG methods */
         <!prk_2e = hkdfExtract('emptyStr', gy^~xx)
-        ifdef(<!m4AD2!>,
-         	<! plainText2 = <$V, authR, ~AD_2> !>,
-         	<! plainText2 = <$V, authR> !>
-         )
+         plainText2 = <$V, authR>
          CRED_V = pkV
          ifelse(<!STAT!>, m4METHODR,
             <!grx = CRED_V^~xx
@@ -327,34 +182,19 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           */
          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-         
-
-         ifdef(<!m4AD2!>,
-            <! 
-                K_2e_3 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '3'>, prk_2e)
-                CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2, ~AD_2 XOR K_2e_3> 
-            !>,
-            <! CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> !>
-         )
-         
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2>
          m2 = <data_2, CIPHERTEXT_2>
 
          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
          protected2 = $V // ID_CRED_V
-         ifdef(<!m4AD2!>, 
-         	<! extAad2 = <TH_2, CRED_V, ~AD_2> !>,
-         	<! extAad2 = <TH_2, CRED_V> !>
-         )
+         extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
         !>
 )
 
     /* Message 3 handling */
-    	ifdef(<!m4CI!>,
-         	<! data_3 = ~C_R !>,
-         	<! data_3 = 'emptyStr' !>
-         ) 
+         data_3 = 'emptyStr' //~C_R
          TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
          K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -409,17 +249,6 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
  * implicitly on R->I because R does not know G_IY when sending message 2,
  * so I cannot deduce that R is using the same value of GIY when I completes.
  */
-/* ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR, */
-/*     <!imp_sk = <gy^~xx, giy>!>, */
-/*     <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*         <!imp_sk = <gy^~xx, grx>!>, */
-/*         <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*             <!imp_sk = <gy^~xx, giy, grx>!>, */
-/*             <!imp_sk = <gy^~xx>!> // SIG_SIG or PSK_PSK */
-/*         )!> */
-/*     )!> */
-/* ) */
-
 ifelse(<!STAT!>, m4METHODI,
     <!imp_sk = <exp_sk, giy>!>,
     <!imp_sk =  exp_sk!>
@@ -427,38 +256,19 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        <! 
-        	ifdef(<!m4CI!>,
-        		<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
-        		<!  [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
-        	)
-        !>
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         ,
-        <! 
-        	ifdef(<!m4CI!>,
-	        	<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, ~C_I, m1, ~tid) !>,
-	        	<! [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid) !>
-	        )
-	        <!, !PK_!>m4METHODR<!!>($V, pkV)
-	        <!, !PK_!>m4METHODI<!!>($U, pkU)
-        !>
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        <!, !PK_!>m4METHODR<!!>($V, pkV)
+        <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
         , In(m2)
 ifdef(<!m4AD3!>,
         <!, Fr(~AD_3)!>
 )
         ]
-        ifdef(<!m4CI!>,
-       			<!
-       				--[ ExpCommitI(~tid, $U, $V, exp_sk, ~C_I, ~C_R)  // standard running/commit
-          			, CommitI(~tid, $U, $V, imp_sk, ~C_I, ~C_R)  // Requires R to complete
-          		!>,
-          		<!
-          			--[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
-          			, CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-          		!>
-	       )
-	       
+        --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
+          , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
           , I3(~tid, $U, $V, m1, m2, m3)
           , DHInvI3(~tid, 'g'^~xx)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -469,8 +279,7 @@ ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
          <!ifelse(<!STAT!>, m4METHODR,
              <!, Eq(authR, MAC_2)!>,
-             <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK. 
-                                    Ale: this shouldn't be necessary */
+             <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK */
          )!>
 )
           ]->
@@ -478,10 +287,7 @@ ifelse(<!SIG!>, m4METHODR,
 
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-    	ifdef(<!m4CI!>,
-    		<! data_3 = ~C_R !>,
-        	<! data_3 = 'emptyStr' !>
-        )
+        data_3 = 'emptyStr' //~C_R
         TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -533,42 +339,17 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
  * implicitly on R->I because R does not know G_IY when sending message 2,
  * so I cannot deduce that R is using the same value of GIY when I completes.
  */
-/* ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR, */
-/*     <!imp_sk = <gxy, giy>!>, */
-/*     <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*         <!imp_sk = <gxy, grx>!>, */
-/*         <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR, */
-/*             <!imp_sk = <gxy, giy, grx>!>, */
-/*             <!imp_sk = <gxy>!> // SIG_SIG or PSK_PSK */
-/*         )!> */
-/*     )!> */
-/* ) */
-
 ifelse(<!STAT!>, m4METHODI,
     <!imp_sk = <exp_sk, giy>!>,
     <!imp_sk =  exp_sk!>
 )
+
     in
 ifelse(<!STAT!>, m4METHODR,
-		<!
-			ifdef(<!m4CI!>,
-    				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-    				<!  [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-        	)
-        !>,
+        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            <!
-            	ifdef(<!m4CI!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            	)
-            !>,
-            <!
-            	ifdef(<!m4CI!>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~C_R, ~C_I, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>,
-        				<! [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) !>
-            	)
-            !>
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
         )!>
 )
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -579,16 +360,8 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m3)
         ]
-        ifdef(<!m4CI!>,
-    			<! 
-    				--[ ExpCommitR(~tid, $U, $V, exp_sk, ~C_I, ~C_R)
-      				, CommitR(~tid, $U, $V, imp_sk, ~C_I, ~C_R)
-      			!>,
-          		<! 
-          				--[ ExpCommitR(~tid, $U, $V, exp_sk)
-          				, CommitR(~tid, $U, $V, imp_sk)
-          	    !>
-        )
+        --[ ExpCommitR(~tid, $U, $V, exp_sk)
+          , CommitR(~tid, $U, $V, imp_sk)
           , R4(~tid, $U, $V, m1, m2, m3)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
@@ -643,37 +416,15 @@ rule revealLTK_PSK:
  * sk = <gxy, giy> for STAT_SIG method
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, 
-<!
-	ifdef(<!m4CI!>,
-			<! 
-            rule revealSessionKeyPSK:
-				[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-			!>,
-			<! 
-                rule revealSessionKeyPSK:
-					[CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-			 !>
-    )
-!>, 
-<!
-	ifdef(<!m4CI!>,
-			<!
-				rule revealSessionKeyI:
-					[CommitI(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-				rule revealSessionKeyR:
-					[CommitR(tid, u, v, sk, ~C_I, ~C_R)] --[SKRev(sk)]-> [Out(sk)]
-			!>,
-	 		<!
-				rule revealSessionKeyI:
-					[CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-				rule revealSessionKeyR:
-					[CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]	
-			!>
-	)
-
-!>
-)
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <!
+rule revealSessionKeyPSK:
+    [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+!>, <!
+rule revealSessionKeyI:
+    [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+rule revealSessionKeyR:
+    [CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+!>)
 
 
 /*
@@ -682,40 +433,20 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 /*
  * Sanity - Correct exectution trace exists
- *
- * NOTE: this allows u = v. Is that what we want?
  */
 lemma sanityExecutableToTheEnd:
-    ifdef(<!m4CI!>,
-			 <!
-			    exists-trace
-			    "(Ex tidI tidR u v m1 m2 m3 ci cr sk sk2 #i #j #k #l.
-			       I1(tidI, u, v, m1)@i
-			     & R2(tidR, v, m1, m2)@j & #i < #j
-			     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
-			     & CommitI(tidI, u, v, sk, ci, cr)@k
-			     & ExpCommitI(tidI, u, v, sk2, ci, cr)@k
-			     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
-			     & CommitR(tidR, u, v, sk, ci, cr)@l
-			     & ExpCommitR(tidR, u, v, sk2, ci, cr)@l
-			     )
-			    "
-			 !>,
-			<!
-				exists-trace
-			    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
-			       I1(tidI, u, v, m1)@i
-			     & R2(tidR, v, m1, m2)@j & #i < #j
-			     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
-			     & CommitI(tidI, u, v, sk)@k
-			     & ExpCommitI(tidI, u, v, sk2)@k
-			     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
-			     & CommitR(tidR, u, v, sk)@l
-			     & ExpCommitR(tidR, u, v, sk2)@l
-			     )
-			    "
-			!>
-	)
+    exists-trace
+    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
+       I1(tidI, u, v, m1)@i
+     & R2(tidR, v, m1, m2)@j & #i < #j
+     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
+     & CommitI(tidI, u, v, sk)@k
+     & ExpCommitI(tidI, u, v, sk2)@k
+     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
+     & CommitR(tidR, u, v, sk)@l
+     & ExpCommitR(tidR, u, v, sk2)@l
+     )
+    "
 
 
 /* Note that this only shows agreement on a reduced session key from R to I
@@ -726,73 +457,48 @@ lemma sanityExecutableToTheEnd:
  * not be possible due to identity protection).
  */
 lemma authInjAgreeGuaranteeForI:
-	ifdef(<!m4CI!>,
-			<!	all-traces
-			    "All tidI u v expSk ci cr #i.
-			         ExpCommitI(tidI, u, v, expSk, ci, cr)@i ==>
-			         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, ci, cr)@j & #j < #i)
-			           & not( Ex tidI2 u2 v2 ci2 cr2 #i2. ExpCommitI(tidI2, u2, v2, expSk, ci2, cr2)@i2
-			                & not(#i = #i2)
-			                )
-			           )
-			!>,
-			<!
-				all-traces
-			    "All tidI u v expSk #i.
-			         ExpCommitI(tidI, u, v, expSk)@i ==>
-			         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-			           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
-			                & not(#i = #i2)
-			                )
-			           )
-			!>
-	)
-    ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-    <!
-             | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-    !>,
-    <!
-             | (Ex #j. LTKRev(u)@j & #j < #i)
-             | (Ex #j. LTKRev(v)@j & #j < #i)
-    !>
-    )
+    all-traces
+    "All tidI u v expSk #i.
+         ExpCommitI(tidI, u, v, expSk)@i ==>
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
+                & not(#i = #i2)
+                )
+           )
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+<!
+         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+!>,
+<!
+         | (Ex #j. LTKRev(u)@j & #j < #i)
+         | (Ex #j. LTKRev(v)@j & #j < #i)
+!>
+)
          )
     "
 
 /* This shows agreement on the full session key and both u and v */
-/*lemma authInjAgreeGuaranteeForR:
-    ifdef(<!m4CI!>,
-			<!	all-traces
-			    "All tidR u v sk ci cr #i.
-			         CommitR(tidR, u, v, sk, ci, cr)@i ==>
-			         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk, ci, cr)@j & #j < #i)
-			           & not( Ex tidR2 u2 v2 ci2 cr2 #i2. CommitR(tidR2, u2, v2, sk, ci2, cr2)@i2
-			                & not(#i = #i2)
-			                )
-			           )
-			!>,
-			<!	all-traces
-			    "All tidR u v sk #i.
-			         CommitR(tidR, u, v, sk)@i ==>
-			         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk)@j & #j < #i)
-			           & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
-			                & not(#i = #i2)
-			                )
-			           )
-			!>
-	)
+lemma authInjAgreeGuaranteeForR:
+    all-traces
+    "All tidR u v sk #i.
+         CommitR(tidR, u, v, sk)@i ==>
+         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk)@j & #j < #i)
+           & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
+                & not(#i = #i2)
+                )
+           )
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+<!
+         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+!>,
+<!
+         | (Ex #j. LTKRev(u)@j & #j < #i)
+         | (Ex #j. LTKRev(v)@j & #j < #i)
+!>
+)
+         )
+    "
 
-    ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        <!
-            | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-        !>,
-        <!
-            | (Ex #j. LTKRev(u)@j & #j < #i)
-            | (Ex #j. LTKRev(v)@j & #j < #i)
-        !>
-    )
-    )
-    "*/
 
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
@@ -811,178 +517,80 @@ lemma authInjAgreeGuaranteeForI:
  * Second note: This is only interesting when the Initiator is using STAT
  * method.  In all other cases we have no G_IY and hence have injective
  * agreement on the entire key material becasue expSK is equal to impSK.
+ * Nontheless, we prove it for all methods. This gives a common security
+ * level that users can expect from all methods.
  *
- * KARL: Intuitively inj-agree should imply this one. Should we prove that?
- *       Then we can say all methods fulfill the implicit auth at least and
- *       some of them fulfill the stronger inj-agree.
  */
- 
-/*lemma authGIYImplicitAuthGuaranteeForI:
-	ifdef(<!m4CI!>,
-		<!	all-traces
-		    "All tidI u v impSk ci cr #i.
-		         CommitI(tidI, u, v, impSk, ci, cr)@i ==>
-		         ( 
-                    ( 
-                        (
-                            All tidR u2 v2 ci2 cr2 #j. CommitR(tidR, u2, v2, impSk, ci2, cr2)@j ==>
-		                     (u = u2  &  v = v2 & ci = ci2 & cr = cr2)
-		                )
-			            &
-			            (not Ex #k. K(impSk)@k)
-                        &
-                        (
-                            not( Ex tidR u v ci1 cr1 #j tidR2 u2 v2 ci2 cr2 #j2.
-                                 ( 
-                                    CommitR(tidR, u, v, impSk, ci1, cr1)@j
-                                    & CommitR(tidR2, u2, v2, impSk, ci2, cr2)@j2
-                                    & not(#j = #j2)
-                                 )
-                                )
-                        )
-		           )
-		         | (Ex #k. LTKRev(u)@k)
-		         | (Ex #k. LTKRev(v)@k)
-                 | (Ex #k. LTKRev(<u, v>)@k)
-		         )
-		    "
-		!>,
-		<!	all-traces
-		    "All tidI u v impSk #i.
-		         CommitI(tidI, u, v, impSk)@i ==>
-		         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
-		                (u = u2  &  v = v2)
-		             )
-		           &
-		             (not Ex #k. K(impSk)@k)
-                    &
-                        (
-                            not( Ex tidR u v #j tidR2 u2 v2 #j2.
-                                 ( 
-                                    CommitR(tidR, u, v, impSk)@j
-                                    & CommitR(tidR2, u2, v2, impSk)@j2
-                                    & not(#j = #j2)
-                                 )
-                                )
-                        )
-		           )
-		         | (Ex #k. LTKRev(u)@k)
-		         | (Ex #k. LTKRev(v)@k)
-                 | (Ex #k. LTKRev(<u, v>)@k)
-		         )
-		    "
-		!>
-)*/
+lemma authGIYImplicitAuthGuaranteeForI:
+    all-traces
+    "All tidI u v impSk #i.
+         CommitI(tidI, u, v, impSk)@i ==>
+         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+                (u = u2  &  v = v2)
+             )
+           &
+             (not Ex #k. K(impSk)@k)
+           &
+             (not( Ex tidR u v #j tidR2 u2 v2 #j2.
+                      ( CommitR(tidR,  u,  v,  impSk)@j
+                      & CommitR(tidR2, u2, v2, impSk)@j2
+                      & not(#j = #j2)
+                      )
+                 )
+             )
+           )
+         | (Ex #k. LTKRev(u)@k)
+         | (Ex #k. LTKRev(v)@k)
+         | (Ex #k. LTKRev(<u, v>)@k)
+         )
+    "
 
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
-/*ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
-        ifdef(<!m4CI!>,
-			    <!    
-			    	all-traces
-			        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk ci cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>,
-			    <!    
-			    	all-traces
-			        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>
-		)
-    !>,*/
-    
-/*<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    !>,
+<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
-    	ifdef(<!m4CI!>,
-			    <!
-			        all-traces
-			        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk ci cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>,
-			    <!
-			        all-traces
-			        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>
-		)
-    !>,*/
-/*<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
-    <!
-    	ifdef(<!m4CI!>,
-			    <!
-			    	lemma secrecyPFSGIYSessionKey:
-			        all-traces
-			        "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk ci cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci, cr)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>,
-			    <!
-			    	lemma secrecyPFSGIYSessionKey:
-			        all-traces
-			        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )
-			         &
-			         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-			            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-			         )"
-			    !>
-		)
-
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
+    !>,
+<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
+    <!lemma secrecyPFSGIYSessionKey:
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
     !>,
     // else: SIG_SIG
-    <!
-        ifdef(<!m4CI!>,
-               <!
-                	lemma secrecyPFSGIYSessionKey:
-                    all-traces
-                    "(All tid u v sk ci cr #i #j. (K(sk)@i & CommitI(tid, u, v, sk, ci, cr)@j) ==>
-                        ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-                     )
-                     &
-                     (All tid u v sk ci cr #i #j. (K(sk)@i & CommitR(tid, u, v, sk, ci, cr)@j) ==>
-                        ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-                     )"
-                !>,
-                
-                <! 
-                    lemma secrecyPFSGIYSessionKey:
-                    all-traces
-                    "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-                        ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-                     )
-                     &
-                     (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-                        ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
-                     )"
-                !>
-        )
+    <!lemma secrecyPFSGIYSessionKey:
+        all-traces
+        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )
+         &
+         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+         )"
     !>
 )!>
 )!>
@@ -1009,33 +617,6 @@ lemma authInjAgreeGuaranteeForI:
  * Likely that setting would result in even more complex task for Tamarin
  * to handle.
  */
-
-
-
-/* KCI
- * Meaningless for PSK. Should hold when other peer uses SIG, but possibly
- * not when one party uses STAT.
- *
- * For I: Even if I's LTK is revealed, I still has guarantees about R's identity
- */
-lemma authKCIInjAgreeGuaranteeForI:
-    all-traces
-    "All tidI u v expSk #i.
-         ExpCommitI(tidI, u, v, expSk)@i ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
-                & not(#i = #i2)
-                )
-           )
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-<!!>,
-<!
-         | (Ex #j. LTKRev(v)@j & #j < #i)
-!>
-)
-         )
-    "
-*/
 end
 
 
