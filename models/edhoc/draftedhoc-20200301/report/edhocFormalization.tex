@@ -213,6 +213,11 @@ rule registerLTK_STAT:
 rule registerLTK_PSK:
   [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 \end{lstlisting}
+\knote{We agreed to add a clarification that we use the variable names xx and yy
+    because \mTamarin's output includes x's for variable names and it was not
+    eaiser to distinguish the xx variables from \mTamarin's internal variable
+names}
+    
 These three rules express the registering of the long term keys for the \mSig,
 \mStat and \mPsk modes respectively.
 %
