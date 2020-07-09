@@ -518,6 +518,7 @@ community~\cite{DBLP:conf/ccs/BasinDHRSS18}, who appear to expect industrial
 standards, from organizations such as IETF and 3GPP, to be built from a
 semi-theoretical framework to meet precise design goals.
 \knote{Need to polish this sentence to not offend anyone.}
+\vnote{I'm probably not sure whether this paragraph serves any purpose at all. Can be included into the next paragraph, without explicitly saying that the lack of a model is common in standardization or berated by the formal methods community.}
 %
 Because industrial standards aim to meet the needs of
 existing, mixed with envisioned, use-cases, the work has a significant
@@ -527,10 +528,9 @@ Defining a strict security model from the start is difficult in this setting.
 %
 In many cases, a security model evolves during the design and is defined
 by resistance to the attacks discussed in the process, not by a small set of
-precise assumptions and the consequences drawn from those.
+precise assumptions and the consequences drawn from those. \vnote{Why not? Should perhaps also make a note of designers being unused to thinking of protocols and models in the formal methods sense.}
 %
-Even so, the lack of security model in \mEdhoc{} is somewhat troubling in that
-it it does not even discuss general use-cases in its requirements
+Even so, the lack of security model in \mEdhoc{} is somewhat troubling in that it does not even discuss general use-cases in its requirements
 document~\cite{ietf-lake-reqs-04}.
 %
 The rationale is instead derived purely from technical aspects of the devices,
@@ -564,7 +564,7 @@ are suitable for the situations in which \mEdhoc{} is to be used, whether
 something is missing, or whether something is unnecessary.
 %
 The latter should be of concern because of the aim to optimize \mEdhoc{} for
-message size.
+message size. \vnote{Second or third? What is the ``latter'' in a list of three?}
 %
 Second, \mSigma{} and the other cryptographic cores used by \mEdhoc, are
 typically designed for a precise setting with many underlying assumptions.
@@ -574,7 +574,7 @@ Without spelling those out in the \mSpec, and without showing how
 used, such claims are not very informative and may even be misleading.
 %
 
-Another concrete example, we believe is important, is whether distributing
+Another concrete example, which we believe is important, is whether distributing
 \mEdhoc{} processing across a trusted execution environment (TEE) and a less
 trusted part, should be considered in the security model.
 %
@@ -584,11 +584,12 @@ This is because we received indications that it was not necessary to consider
 reveal of the session state, in particular the ephemeral secret keys when
 \mSigma{} cannot protect against such an attack.
 \knote{Personal correspondence. Should we include that?}
+\vnote{Yes we should, definitely needs a citation of some sort.}
 %
 This is however only true if one restricts attention to key confidentiality.
 %
 
-We believe it would be useful to consider TEEs.
+We believe it would be useful to consider TEEs. \vnote{Unnecessary sentence, follows smoothly from the previous paragraph.}
 %
 For example, TEE can provide protection against many other threats than
 confidentiality.
@@ -689,14 +690,14 @@ The \mSpec{} is unclear about what kind of authentication it aims to achieve.
 %
 Most importantly, it is not stated whether implicit or explicit authentication
 is required, or whether confirmation of the peer's agreement on the \mSid{} or
-session key.
+session key. \vnote{Incomplete sentence?}
 %
 As our analysis shows, mutual injective agreement on the \mSid{} is achieved
 by all methods, except for when the initiator is using the \mStat{} methods.
 %
 This is because the \mSid{} is unique among sessions (in the symbolic model it
 is since the ephemeral keys are fresh and in the computational model they are
-fresh with overwhelming probability).
+fresh with overwhelming probability). \vnote{This note seems unnecessary}
 %
 Injective agreement provides explicit authentication.
 %
@@ -719,7 +720,7 @@ implementer should select which method.
 %
 The latter is important in an industrial standard because it can be expected
 that many implementers may otherwise end up with an insecure solution
-by select the most efficient method.
+by select the most efficient method. \vnote{This ties into the previous subsection as well. Perhaps merge the two?}
 %
 
 The requirements~\cite{ietf-lake-reqs-04} demand mutual authentication, but
@@ -770,6 +771,8 @@ $A$ may respond in $C$ place, which may require blocking the response from $C$.
 Since $A$ does not check that it is $C$'s identity in message 2, and device $A$
 is part of the restricted set, $A$ will complete and accept the \mEdhoc{} run with
 device $A$.
+
+\vnote{Naming issues in this example here, check. Some confusion of $A$ and $B$.}
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity.
@@ -777,6 +780,9 @@ identity.
 This is yet another example of where a small use-case or user-story uncovers
 potential lacks in the \mSpec, and show that it would be a useful addition to
 the requirements document~\cite{ietf-lake-reqs-04}.
+
+\vnote{I feel like sections 4.1 and 4.2 together serve to give a rather long-winded rationale for the fact that there the specification a) ill-specifies some security properties, and b) does not root its desirable properties in any use-cases, especially considering that the various methods fulfil different properties. It might be worthwhile to consider editing this part to merge all these sections, with short descriptions of these possible pitfalls discussed here to make the same point without so much belabouring.}
+
 %
 
 %-------------------------------------------------------------------------- sub
@@ -801,6 +807,7 @@ these methods.
 %
 Specifically, the proof of session key confidentiality in the face of long-term
 key compromise for \mOptls{} cannot be adapted for \mEdhoc{}.
+\vnote{Perhaps this needs a citation, or more explanation?}
 %
 It is unclear whether other security properties of \mOptls{} would also fail if
 \mGiy{} were excluded.
@@ -814,7 +821,7 @@ This would give the initiator sufficient guarantee that the responder indeed
 uses the same \mGiy{} as the initiator.
 %
 The cost is an additional message, and our understanding is that this is
-unacceptable.
+unacceptable. \vnote{Again, personal correspondence?}
 %
 
 In some use-cases there will be a such as message as part of
@@ -869,6 +876,7 @@ Our model does not cover this.
 \knote{It would be nice to be able to say something more than that "it is
     obivious" that at least the reject is authentic because we have agreement
 on the keys for message 2 and it would be covered by the MAC. Ideas?}
+\vnote{I don't quite know what you mean here. In fact, I do not cover the cipher suite negotiation at all in the protocol section. We should perhaps discuss this.}
 
 We note that keeping state between protocol runs implicitly creates a long-lived
 meta-session covering multiple \mEdhoc{} sessions.
