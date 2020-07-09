@@ -266,6 +266,8 @@ ifdef(<!m4AD3!>,
         ]
         --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
           , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
+          , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
+          , RunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
@@ -438,6 +440,8 @@ lemma sanityExecutableToTheEnd:
      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
      & CommitI(tidI, u, v, sk)@k
      & ExpCommitI(tidI, u, v, sk2)@k
+     & RunningI(tidI, u, v, sk)@k
+     & ExpRunningI(tidI, u, v, sk2)@k
      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
      & CommitR(tidR, u, v, sk)@l
      & ExpCommitR(tidR, u, v, sk2)@l
@@ -473,12 +477,18 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
          )
     "
 
-/* This shows agreement on the full session key and both u and v */
+/* This shows agreement on the full session key and both u and v.
+ * Note that this holds both for the key material we call explicitly
+ * authenticated (excluding G_IY) and for the key material we call
+ * implicitly authenticated (which includes G_IY).
+ * The name "implicit" comes from that I can only get impilicit agreement on
+ * it even though R can get explicit dito.
+ */
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
          CommitR(tidR, u, v, sk)@i ==>
-         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk)@j & #j < #i)
+         ( ( (Ex tidI #j. RunningI(tidI, u, v, sk)@j & #j < #i)
            & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
                 & not(#i = #i2)
                 )
