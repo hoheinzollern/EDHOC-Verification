@@ -14,7 +14,21 @@ the introduction. This section should describe what \mEdhoc is.}
 
 Since \mEdhoc is a key exchange protocol, it is expected to provide perfect forward secrecy and identity protection. For providing application layer security, \mEdhoc makes use of \mCbor Object Signing and Encryption (\mCose)~\cite{rfc8152}. This works well in cases where transport layer security is not sufficient, or where multiple underlying protocols need to be accounted for. 
 
-Agents participating in the \mEdhoc protocol can establish Diffie-Hellman key exchange by running one of three different methods -- using digital signatures (the \mSig based methods), static Diffie-Hellman (DH) keys (the \mStat based methods), or pre-shared symmetric keys (\mPsk). Four combinations of the \mSig and \mStat methods are possible, while the \mPsk method can only be run by an agent with another agent also running \mPsk. We describe each of these methods in detail later in this section. 
+Agents participating in the \mEdhoc{} protocol can authenticate themselves to
+peers using one out of three authentication methods -- digital signatures
+(\mSig), challenge-response signatures based on static Diffie-Hellman keys
+(\mStat) or pre-shared symmetric keys (\mPsk).
+We will refer to these authentication methods simply as methods below.
+
+Four combinations of the \mSig{} and \mStat{} authentication methods are possible,
+while the \mPsk{} authentication method can only be run by an agent with another
+agent also authenticating with a \mPsk.
+We refer to these combinations also as methods, denoted \mSigSig, \mSigStat,
+\mStatStat, \mStatSig{} and \mPskPsk.
+Although the terminology is overloaded, it should be clear from the context
+whether a single agent authentication method or a combined method is intended.
+
+We describe each of these methods in detail later in this section.
 
 %The communicating parties must agree on the method and cipher suite used for encryption as part of the first message. The parties exchange ephemeral public keys, compute the shared secret, and derive symmetric application keys from this secret.
 
