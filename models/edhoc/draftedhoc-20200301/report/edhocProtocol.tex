@@ -148,21 +148,68 @@ structure and the details of the} methods.
     scanned the method descriptions, but got the impression they go straight into
 details on the particular method. I should have it done by Monday.}
 
-\subsection{Fundamental components of \mEdhoc}
-\subsubsection{\mCose}
-\knote{It is not clear to me from this description alone how these components relate
-to \mEdhoc.}
-\vnote{I hope the above paragraph before the section addresses that.}
-\mCbor is a data format designed for small code size and small message size. The \mCbor Object Signing and Encryption (\mCose) protocol is used to create and process signatures, MACs, and encryption using \mCbor. 
+\subsection{Fundamental components of \mEdhoc{}}
+\subsubsection{\mCose{}}
+\kedit{}{To achieve small message sizes and reuse implementations often
+    supported by constrained IoT devices (\mcneed), \mEdhoc{} uses Concise
+    Binary Object Representation (\mCbor) for data encoding and \mCbor{} Object
+    Signing and Encryption (\mCose) for cryptographic operations.
+}
+\mCbor{} is a data format designed for small code size and small message size.
+\kedit{The \mCbor Object Signing and Encryption (\mCose) protocol}\mCose{} is
+used to create and process signatures, MACs, and encryption using \mCbor{} to
+encode and decode input and output objects.
 
-A \mCose object contains bitstrings corresponding to (cryptographically) protected parameters, unprotected parameter, and the payload to be signed. This can be signed/encrypted/MACed, to obtain a resultant \mCose object containing the bitstring corresponding to the operation. The respective algorithms may also be fed some externally supplied data, which is carried along with the \mCose object, but is not part of it. \mEdhoc only uses the sxignature and encryption objects of \mCose. For encryptions, \mCose supports two different methods -- one where the recipient is not needed because the key is known implicitly, and one for all other cases. \mEdhoc only uses the former. 
+A \mCose{} object contains bitstrings corresponding to (cryptographically)
+protected parameters, unprotected parameter\kedit{}{s}, and the
+payload\kedit{}{s} to be signed. This \kedit{}{object} can be
+signed/encrypted/MACed, to obtain a resultant \mCose{} object containing the bitstring corresponding to the operation.
+\knote{The above is unclear to me. I think I can understand what it means
+    because I already know a bit about \mCose, but the "protected" and
+    "unprotected" parameters of the object for instance will not be clear to
+anyone who has not read the \mCose{} RFC. Maybe you could elaborate a bit more
+on this?}
+The respective algorithms may also be fed some externally supplied data, which
+is carried along with the \mCose{} object, but is not part of it.
+\knote{Unless we explain why the external data above could be or how it is used,
+the sentence will not help the reader I think.}
+\mEdhoc{} only uses the \kedit{sxignature}{signature} and encryption objects of \mCose.
+\knote{It has not been explained that these two types of objects exists yet. The
+    only thing the reader knows at this point is that cose objects can be signed
+    and encrypted, but that there is a specific object that has
+"encryption-type" or "sinature-type" has not been explained.}
+For encryptions, \mCose{} supports two different methods -- one where the
+recipient is not needed because the key is known implicitly, and one for all
+other cases. \mEdhoc{} only uses the former. 
+\knote{Here it is the same issue with the text. I know what receipient means in
+    terms of \mCose, but a reader who does not get much out of the above
+    sentence I belive. The last sentence states that \mEdhoc{} only supports the
+    former: maybe the above two sentences can simply be removed then?
+}
 
-A \mCoseEncrypt structure as used in \mEdhoc is a \mCbor array with a text field which contains the string ``Encrypt0'' to denote the use of the method with implicit recipient, a field for protected data, a field for externally supplied application data, and a field for ciphertext. All these fields store the corresponding bitstrings.
+A \mCoseEncrypt{} structure as used in \mEdhoc{} is a \mCbor{} array with a text field which contains the string ``Encrypt0'' to denote the use of the method with implicit recipient, a field for protected data, a field for externally supplied application data, and a field for ciphertext. All these fields store the corresponding bitstrings.
+\knote{This is the first time the \mCoseEncrypt{} structure is mentioned. How
+    does it relate to \mCose objects?  Maybe some more explanation is needed.
+}
 
-\subsubsection{\mAead}
-Authenticated encryption with associated data, or \mAead, is an authenticated encryption operation. The algorithm takes in a key, a unique nonce, a plaintext, and some associated data, and outputs a ciphertext. The plaintext is both authenticated and encrypted, while the associated data is merely authenticated. The ciphertext is at least as long as the plaintext. When the plaintext is empty, the \mAead algorithm acts as a MAC on the associated data. 
+\subsubsection{\mAead{}}
+Authenticated encryption with associated data, or \mAead{}, \kedit{is an authenticated
+    encryption operation}{is, as the name suggests an operation that provides
+both data authentication and encryption}~\cite{aead}. The \kedit{}{encryption} algorithm takes in a
+key, a unique nonce, a plaintext, and some associated data, and outputs a
+ciphertext. The plaintext is both authenticated and encrypted, while the
+associated data is merely authenticated. The ciphertext is at least as long as
+the plaintext. When the plaintext is empty, the \mAead{} \kedit{}{encryption}
+algorithm acts as a MAC on the associated data.
 
-The associated data is used to protect information that needs to be authenticated, but does not need to be kept confidential. It might be desirable to authenticate this information, although it must be left unencrypted to allow the system to function properly. Authentication is provided without copying the data into the plaintext.
+The associated data is used to protect information that needs to be authenticated, but does not need to be kept confidential. It might be desirable to authenticate this information, although it must be left unencrypted to allow the system to function properly.
+\knote{Is the two previous sentences not saying the same thing?}
+Authentication \kedit{}{of associated data} is provided without \kedit{copying the data into the
+plaintext}{including it in the ciphertext.}.
+
+\kedit{}{The \mAead{} decryption operation returns the decrypted ciphertext if
+    the MAC verifies. If the MAC fails to verify, the operation returns
+nothing.}
 
 \subsubsection{Key derivation function (KDF)}
 \knote{This section (or another section) could describe the key hierarchy used
