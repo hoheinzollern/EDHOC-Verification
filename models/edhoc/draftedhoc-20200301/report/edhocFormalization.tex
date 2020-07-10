@@ -159,8 +159,8 @@ diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
 draft~\cite{selander-lake-edhoc-01}, so that each element of the model is
 traceable to the standard.  There are a few exceptions to this, most notably
 some variable names that we introduce for the sake of the specification and are
-not present in the original document, which will appear in camelCase, and the
-syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
+not present in the original document, which will appear in \mT{camelCase}, and
+the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
 
 We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
@@ -174,10 +174,10 @@ hence \mTamarin{} produces the rule:
 [ !KU(k), !KU(m), !KU(ad), !KU(al) ] --[]-> [ !KU(aeadEncrypt(k, m, ad, al)) ]
 \end{lstlisting}
 %
-to denote that if the attacker knows a key $k$, a message
-$m$, the authenticated data $ad$, and an algorithm
-$al$, then they can construct the encryption using these parameters, hence get
-to know the message \lstinline{aeadEncrypt(k, m, ad, al)}.
+to denote that if the attacker knows a key \mT{k}, a message \mT{m}, the
+authenticated data \mT{ad}, and an algorithm \mT{al}, then they can construct
+the encryption using these parameters, hence get to know the message
+\lstinline{aeadEncrypt(k, m, ad, al)}.
 
 In our model we introduce a theory for authenticated encryption, plus the
 built-in theories of XOR and Diffie-Hellmann.
@@ -188,23 +188,23 @@ detailed in~\cite{aead}, has the following two equations:
   aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
   decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
 \end{lstlisting}
-With the first rule we allow the protocol to decrypt the message $m$ if the
-encryption has matching key $k$, authenticated data $ad$, and uses the same
-algorithm $al$.
+With the first rule we allow the protocol to decrypt the message \mT{m} if the
+encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the
+same algorithm \mT{al}.
 %
-The second rule allows the attacker to decrypt the message $m$ with the key $k$
-and without the authenticated data $ad$, and hence skip the check.
+The second rule allows the attacker to decrypt the message \mT{m} with the key
+\mT{k} and without the authenticated data \mT{ad}, and hence skip the check.
 
 The built-in theories for XOR and Diffie-Hellman are a fair bit more complex
 than authenticated encryption, hence we refer to the original
 papers~\cite{xorTamarin,dhTamarin} for a full reference.
 %
-Suffices to say that the XOR theory introduces the symbol $\oplus$, for
-expressing XOR operations $x \oplus y$, plus the necessary equational theory
+Suffices to say that the XOR theory introduces the symbol \mT{XOR}, for
+expressing XOR operations \mT{x XOR y}, plus the necessary equational theory
 including associativity, commutativity, and inverse.
 %
-The theory for Diffie-Hellman introduces exponentiation $x^y$ and product
-$x \cdot y$ as a built-in symbols in the language, plus the necessary equational
+The theory for Diffie-Hellman introduces exponentiation \mT{g^y} and product
+\mT{x * y} as a built-in symbols in the language, plus the necessary equational
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
