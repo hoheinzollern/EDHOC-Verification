@@ -20,6 +20,7 @@
                             ]{\textsf{\textbf{Vaishnavi:} #1}}}
                             
  \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
+ \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
 %\newcommand{\knote}[1]{}
 %\newcommand{\vnote}[1]{}
 %\newcommand{\anote}[1]{}
@@ -37,8 +38,8 @@
 \newcommand{\mVarStyle}[1]{\mathit{#1}}
 \newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
 
-\DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}\xspace}
-\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textsc{#1}}}
+\DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
+\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{#1}}
 
 % -- Macros for consistent wording
 \newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
@@ -46,26 +47,26 @@
 
 % -- Domain specific macros
 \newcommand{\mArxiv}{\texttt{arXiv}\xspace}
-\newcommand{\mTamarin}{\mProtocolStyle{tamarin}}
-\newcommand{\mProverif}{\mProtocolStyle{proverif}}
-\newcommand{\mEdhoc}{\mProtocolStyle{edhoc}}
-\newcommand{\mOscore}{\mProtocolStyle{oscore}}
-\newcommand{\mSigma}{\mProtocolStyle{sigma}}
-\newcommand{\mSigmaI}{\mProtocolStyle{sigma-i}}
-\newcommand{\mCbor}{\mProtocolStyle{cbor}}
-\newcommand{\mCose}{\mProtocolStyle{cose}}
-\newcommand{\mCoseEncrypt}{\mProtocolStyle{cose\_encrypt0}}
-\newcommand{\mHkdf}{\mProtocolStyle{hkdf}}
-\newcommand{\mHkdfExtract}{\mProtocolStyle{hkdf-extract}}
-\newcommand{\mHkdfExpand}{\mProtocolStyle{hkdf-expand}}
-\newcommand{\mHmac}{\mProtocolStyle{hmac}}
-\newcommand{\mAead}{\mProtocolStyle{aead}}
-\newcommand{\mOptls}{\mProtocolStyle{optls}}
-\newcommand{\mNoise}{\mProtocolStyle{noise}}
-\newcommand{\mTls}{\mProtocolStyle{tls}}
-\newcommand{\mDandTls}{\mProtocolStyle{(d)tls}}
-\newcommand{\mCtls}{\mProtocolStyle{ctls}}
-\newcommand{\mCoap}{\mProtocolStyle{coap}}
+\newcommand{\mTamarin}{\mProtocolStyle{Tamarin}}
+\newcommand{\mProverif}{\mProtocolStyle{ProVerif}}
+\newcommand{\mEdhoc}{\mProtocolStyle{EDHOC}}
+\newcommand{\mOscore}{\mProtocolStyle{OSCORE}}
+\newcommand{\mSigma}{\mProtocolStyle{SIGMA}}
+\newcommand{\mSigmaI}{\mProtocolStyle{SIGMA\nobreakdash-I}}
+\newcommand{\mCbor}{\mProtocolStyle{CBOR}}
+\newcommand{\mCose}{\mProtocolStyle{COSE}}
+\newcommand{\mCoseEncrypt}{\mProtocolStyle{COSE\_Encrypt0}}
+\newcommand{\mHkdf}{\mProtocolStyle{HKDF}}
+\newcommand{\mHkdfExtract}{\mProtocolStyle{HKDF\nobreakdash-extract}}
+\newcommand{\mHkdfExpand}{\mProtocolStyle{HKDF\nobreakdash-expand}}
+\newcommand{\mHmac}{\mProtocolStyle{HMAC}}
+\newcommand{\mAead}{\mProtocolStyle{AEAD}}
+\newcommand{\mOptls}{\mProtocolStyle{OPTLS}}
+\newcommand{\mNoise}{\mProtocolStyle{Noise}}
+\newcommand{\mTls}{\mProtocolStyle{TLS}}
+\newcommand{\mDandTls}{\mProtocolStyle{(D)TLS}}
+\newcommand{\mCtls}{\mProtocolStyle{cTLS}}
+\newcommand{\mCoap}{\mProtocolStyle{CoAP}}
 
 \newcommand{\mStat}{\mMethodStyle{STAT}}
 \newcommand{\mSig}{\mMethodStyle{SIG}}
