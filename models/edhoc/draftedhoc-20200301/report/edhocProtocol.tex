@@ -79,7 +79,7 @@ to \mEdhoc.}
 \vnote{I hope the above paragraph before the section addresses that.}
 \mCbor is a data format designed for small code size and small message size. The \mCbor Object Signing and Encryption (\mCose) protocol is used to create and process signatures, MACs, and encryption using \mCbor. 
 
-A \mCose object contains bitstrings corresponding to (cryptographically) protected parameters, unprotected parameter, and the payload to be signed. This can be signed/encrypted/MACed, to obtain a resultant \mCose object containing the bitstring corresponding to the operation. The respective algorithms may also be fed some externally supplied data, which is carried along with the \mCose object, but is not part of it. \mEdhoc only uses the signature and encryption objects of \mCose. For encryptions, \mCose supports two different methods -- one where the recipient is not needed because the key is known implicitly, and one for all other cases. \mEdhoc only uses the former. 
+A \mCose object contains bitstrings corresponding to (cryptographically) protected parameters, unprotected parameter, and the payload to be signed. This can be signed/encrypted/MACed, to obtain a resultant \mCose object containing the bitstring corresponding to the operation. The respective algorithms may also be fed some externally supplied data, which is carried along with the \mCose object, but is not part of it. \mEdhoc only uses the sxignature and encryption objects of \mCose. For encryptions, \mCose supports two different methods -- one where the recipient is not needed because the key is known implicitly, and one for all other cases. \mEdhoc only uses the former. 
 
 A \mCoseEncrypt structure as used in \mEdhoc is a \mCbor array with a text field which contains the string ``Encrypt0'' to denote the use of the method with implicit recipient, a field for protected data, a field for externally supplied application data, and a field for ciphertext. All these fields store the corresponding bitstrings.
 
@@ -105,7 +105,16 @@ There is a natural hierarchy obeyed by these pseudorandom strings. We start with
 
 The keys used for the \mAead encryptions are augmented with the suffix `e', for encrypting the ciphertext, or with the suffix `m', for generating the MAC (MACs only feature in the methods involving asymmetric keys). There are four keys -- \mKtwom, \mKtwoe, \mKthreem, and \mKthreeae. The suffixes in the names of the pseudorandom strings indicate which keys they are used to generate. \mPRKtwo is used to generate the key \mKtwoe along with the appropriate transaction hash. \mPRKthree is used for the keys \mKtwom and \mKthreeae, while \mPRKfour is used to generate \mKthreem.
 
-In order to generate these keys, the \mHkdfExpand function is used. This is run with a pseudorandom string, an info string, and the length of the output keying material (OKM) as input. The pseudorandom string is generated using \mHkdfExtract as above. The info string contains details of the \mAead encryption algorithm used, length of the OKM, and the transaction hash as used for the specific method (a detailed discussion follows, for each method). In case the length $l$ of the OKM is shorter than that of the transaction hash, the OKM is obtained by taking the first $l$ bits of the result of running \mHmac on the pseudorandom string, and a concatenation of 0x01 and the info strings.
+\begin{figure}[htp]
+\centering
+\input{kdfdiagram.tex}
+\caption{A diagram to illustrate the KDF key hierarchy}
+\label{fig:kdfdiagram}
+\end{figure}
+
+In order to generate these keys, the \mHkdfExpand function is used. This is run with a pseudorandom string, an info string, and the length of the output keying material (OKM) as input. The pseudorandom string is generated using \mHkdfExtract as above. The info string contains details of the \mAead encryption algorithm used, length of the OKM, and the transaction hash as used for the specific method (a detailed discussion follows, for each method). In case the length $l$ of the OKM is shorter than that of the transaction hash, the OKM is obtained by taking the first $l$ bits of the result of running \mHmac on the pseudorandom string, and a concatenation of 0x01 and the info strings. The KDF hierarchy is illustrated in Figure~\ref{fig:kdfdiagram}.
+
+
 
 We now discuss each of the \mEdhoc methods in detail over the next few sections.
 
