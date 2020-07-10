@@ -68,7 +68,14 @@ the data to be signed~\cite{aead,rfc5116,DBLP:conf/eurosp/KrawczykW16}.}
 %\mEdhoc has undergone a lot of change since version 08, as will be described in the following sections, and the formal verification of the current version, therefore, is a worthwhile exercise.
 
 \subsection{\kedit{Comparison with}{Relations to} \mSigma, \mOptls{} and \mNoise{}}
-\subsubsection{sec:optls}
+\subsubsection{\mSigma{}}
+As noted above, the \mSigSig{} based method of \mEdhoc{} is a very close
+derivative of \mSigmaI{} and was carefully analyzed by
+Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+So was the \mPskPsk{} method of \mEdhoc{}. Therefore, we will not focus on those
+in the reminder of this paper. We do however model them to the same extent and
+verify their properties with the same care as the other methods.
+\subsubsection{\mOptls{}}
 \knote{BTW, I silently added \{\} to all macros I found that needed it for
 trailing space}
 \mOptls~\cite{cryptoeprint:2015:978} is a key-exchange protocol developed \kedit{
@@ -91,15 +98,15 @@ ensures secrecy for as long as $s$ \kedit{is secure}{remains secret}, and the la
     derived the MAC key.  Under this assumption, the client further deduces that
     anything covered by the MAC is originating from the intended server.
 
-    This structure is sometimes referred to as a challenge-response signature.
+    This construction is sometimes referred to as a challenge-response signature.
     It is very efficient in terms of the number of transmitted bits.
 }
-It can be seen that in \mEdhoc, \kedit{an \mStat role is very similar to being either the client or the server in an \mOptls execution.}{a party authenticating with
+\kedit{It can be seen that in}{In} \mEdhoc, \kedit{an \mStat role is very similar to being either the client or the server in an \mOptls execution.}{a party authenticating with
     with the \mStat{} method essentially acts as an \mOptls{} client and the other
 party as an \mOptls{} server. There are differences, e.g., that \mEdhoc{} reuses
 the $g^x$ as a nonce, while \mOptls{} makes an explicit point about keeping
 these as separate elements.}  The \mStatStat{} method can be thought of as interleaving two
-\mOptls{} sessions\kedit{.}{, where the second \mEdhoc message carries both the response
+\mOptls{} sessions\kedit{.}{, where the second \mEdhoc{} message carries both the response
 message of the first \mOptls{} session and the request message of the second
 \mOptls{} session.}
 
@@ -117,8 +124,9 @@ the \mNoise{} framework. However, in the third message, the XX pattern requires
 the initiator to send their static key, followed by an encrypted payload using a
 key derived by a combination of the static key and an ephemeral key. In
 \mEdhoc{}, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator.
-\knote{There is something odd with the sentence above. "Same key" and then "one
-depending on ... second depending on.."}
+\knote{There is something odd with the sentence above. What does it mean that
+    the static key and payload are encrypted in the same key?
+}
 This perhaps diverges from the XX pattern of \mNoise{}, and one can no longer
 directly claim that \mEdhoc{} enjoys the same properties as XX. As a potential
 direction for future work, we relegate the further investigation of this pattern
