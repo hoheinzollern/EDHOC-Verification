@@ -39,7 +39,7 @@
 \newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
 
 \DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
-\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{#1}}
+\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
 
 % -- Macros for consistent wording
 \newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
@@ -61,6 +61,8 @@
 \newcommand{\mHkdfExpand}{\mProtocolStyle{HKDF\nobreakdash-expand}}
 \newcommand{\mHmac}{\mProtocolStyle{HMAC}}
 \newcommand{\mAead}{\mProtocolStyle{AEAD}}
+\newcommand{\mAeadDecrypt}{\mProtocolStyle{AEAD\nobreakdash-decrypt}}
+\newcommand{\mDecrypt}{\mProtocolStyle{decrypt}}
 \newcommand{\mOptls}{\mProtocolStyle{OPTLS}}
 \newcommand{\mNoise}{\mProtocolStyle{Noise}}
 \newcommand{\mTls}{\mProtocolStyle{TLS}}
@@ -147,8 +149,57 @@
 \newcommand{\mFr}{\mathsf{Fr}}
 \newcommand{\mKD}{\mathsf{KD}}
 \newcommand{\mKU}{\mathsf{KU}}
-\newcommand{\mRule}[1]{\mathit{#1}}
-\newcommand{\mAeadEncrypt}{\mathit{aeadEncrypt}}
-\newcommand{\mAeadDecrypt}{\mathit{aeadDecrypt}}
-\newcommand{\mDecrypt}{\mathit{decrypt}}
-\newcommand{\mT}[1]{\lstinline[basicstyle=\ttfamily\normalsize\color{codegray}]{#1}} % Tamarin code inline
+\newcommand{\mT}[1]{\lstinline[basicstyle=\sffamily\normalsize]{#1}} % Tamarin code inline
+\usepackage[final]{listings}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=,   
+    commentstyle=\color{Green},
+    identifierstyle=\color{black},
+    keywordstyle=\color{ForestGreen},
+    numberstyle=\color{Gray},
+    stringstyle=,
+    basicstyle=\sffamily\small,
+    keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=false,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    morecomment=[l]{//},
+    literate=
+    {=}{$=$}{1}
+    {[}{$[$}{1}%
+    {]}{$]$}{1}%
+    {<}{$\langle$}{1}%
+    {>}{$\rangle$}{1}%
+    {(}{$($}{1}%
+    {)}{$)$}{1}%
+    {&}{$\wedge$}{1}
+    {|}{$\vee$}{1}
+    {$}{\$}{1}
+    {<\ \#}{$<$\ \ \#}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
+    {--[}{$\mbox{-\hspace{-3pt}[}$}{2}%
+    {]->}{$\mbox{]\hspace{-3pt}\rightarrow}$}{2}%
+    {==>}{$\Rightarrow$}{1}
+    {XOR}{$\oplus$}{1}%
+    {aeadEncrypt}{\mAead{}}{6}%
+    {decrypt}{\mDecrypt}{7}
+    {aeadDecrypt}{\mAeadDecrypt}{14}
+    {hkdfExtract}{\mHkdfExtract}{14}
+    {hkdfExpand}{\mHkdfExpand}{14}
+    {All\ }{$\forall$\ }{3}
+    {Ex\ }{$\exists$\ }{3}
+    {h(}{H$($}{2}
+    }
+\lstset{style=mystyle}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
