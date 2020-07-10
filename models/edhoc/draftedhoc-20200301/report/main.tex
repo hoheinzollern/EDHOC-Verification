@@ -512,41 +512,131 @@ Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %-------------------------------------------------------------------------- sub
 \subsection{Design Practices}
 \label{sec:designPractices}
-\knote{Note to self: Long sentences. Not to the point. Revision needed.}
-We start with two observations on the design practices, which the \mEdhoc{}
-design shares with many other standards specifications.
+Determining whether security protocols are suitable for real-world applications
+is difficult, and this is especially true for \mEdhoc{}.
 %
-\mPoint{Lack of clear security model}
-The first observation is the lack of clearly defined security model.
+Suitability can only be evaluated against intended use of the protocol and an
+intended security model.
 %
-This is common in standardization, and a nuisance for the formal methods
-community~\cite{DBLP:conf/ccs/BasinDHRSS18}, who appear to expect industrial
-standards, from organizations such as IETF and 3GPP, to be built from a
-semi-theoretical framework to meet precise design goals.
-\knote{Need to polish this sentence to not offend anyone.}
-\vnote{I'm probably not sure whether this paragraph serves any purpose at all. Can be included into the next paragraph, without explicitly saying that the lack of a model is common in standardization or berated by the formal methods community.}
+The requirements document~\cite{ietf-lake-reqs-04} and the
+\mSpec{}~\cite{selander-lake-edhoc-01} itself list a
+number of detailed desirable security properties with little motivation for why
+these are suitable ones, and without an outline of a security model where these
+should hold.
 %
-Because industrial standards aim to meet the needs of
-existing, mixed with envisioned, use-cases, the work has a significant
-explorative element.
+While technical limitations, such as link restrictions and that only a certain
+type of credential are available to devices, are mentioned, and design
+choices are motivated by these, there are no application use cases or user
+stories capturing intended uses of \mEdhoc{}.
 %
-Defining a strict security model from the start is difficult in this setting.
+Consequently, while it is possible to verify that, given these restrictions and
+using the constructions in the \mSpec{}, \mEdhoc{} has certain security
+properties, it is hard to say whether these are the necessary or most useful
+ones for IoT use cases.
 %
-In many cases, a security model evolves during the design and is defined
-by resistance to the attacks discussed in the process, not by a small set of
-precise assumptions and the consequences drawn from those. \vnote{Why not? Should perhaps also make a note of designers being unused to thinking of protocols and models in the formal methods sense.}
+Having a better understanding of the security properties required by these use
+cases would clearly help guiding the design of \mEdhoc{}.
 %
-Even so, the lack of security model in \mEdhoc{} is somewhat troubling in that it does not even discuss general use-cases in its requirements
-document~\cite{ietf-lake-reqs-04}.
+It may also help reducing the number of methods to the ones that are needed.
 %
-The rationale is instead derived purely from technical aspects of the devices,
-communication links and accompanying protocols with which \mEdhoc{} is to be used.
+Further, better understanding the intended use of \mEdhoc{} helps
+defining a clearer security model.
 %
-No direct consideration is given to the intended uses-cases for the systems
-built from these technical components.
+The current security model is vague and largely implicitly defined by attacks
+that the protocol should withstand.
 %
-Because of this, it is unclear which security properties \mEdhoc{} should have.
+
+Similar to \mDandTls{}, \mEdhoc{} is intended to solve a variety of use cases,
+many not known today, so it is not possible to collect all types of use cases
+that need to be considered.
 %
+However, this is not valid argument against collecting typical uses cases and
+user stories to capture at least \emph{some} of the security properties a
+solution must exhibit.
+%
+\textbf{We propose that} the application usage of \mEdhoc{} is better defined via
+user stories or use cases.
+%
+In fact, while constructing our model, we came up with simple user stories to
+identify security properties to verify.
+%
+Several of these revealed undefined aspects of \mEdhoc{} that were then included
+in the \mSpec.
+%
+We now give a few examples to demonstrate where some of our use cases and user
+stories uncovered blind spots in the \mSpec.
+%
+
+\paragraph{Credentials stored in a trusted execution environment (TEE)}
+The simple question is whether there will be applications where device is
+deployed in a hostile environment, and where it is reasonable to assume it can
+be equipped with a TEE.
+%
+In our analysis we have chosen not to model TEEs via session state reveal
+queries.
+%
+This is because we received indications from the \mSpec{} authors that it was not
+necessary to consider reveal of the session state, in particular the ephemeral
+secret keys, with the rationale that \mSigma{} cannot protect against such an
+attack.
+\knote{\\===========================\\
+    WARNING!  RESTRUCTURING ONGOING!\\
+    ===========================\\
+}
+
+
+%
+This is however only true if one restricts attention to session key
+confidentiality of an ongoing session.
+%
+TEEs do provide value by for example allowing for weak PCS guarantees.
+%
+
+
+\paragraph{Non-repudiation}
+An access control solution for a nuclear power-plant may need to log who is
+passing through a door, whereas it may undesirable for privacy
+purposes if it was even possible for a coffee vending machine to log such
+information.
+%
+The vending machine may be satisfied with that it authenticated \emph{someone}
+who can pay.
+%
+Such a simple thought experiment caught that the \mSpec{} did not consider
+non-repudiation.
+%
+The authors of the \mSpec{} added a paragraph about which methods provided which
+types of (non)-repudiation.
+%
+It would, however, be helpful to application developers to also document
+example use cases showing the consequences of choosing the different methods,
+perhaps in the security considerations section.
+%
+Another aspect made visible by the short thought experiment is that mutual
+authentication may not always be necessary requirement.
+%
+
+
+
+
+
+
+
+Doing so would be helpful for subsequent formal verification, but would
+likely grind standards to a halt.
+%
+However, it would be useful to add some justification for claims and the
+intended mapping of the cryptographic core to the academic protocol used and
+which differences there are.
+%
+This would greatly help academics to reverse engineer appropriate security
+models and verify whether the claims do hold in that model.
+%
+It would also be useful to capture the intended uses of end-systems on a high
+level to learn which security properties are required.
+%
+
+SECOND ASPECT 
 Nonetheless, the \mSpec{} makes a number of detailed claims of properties
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
@@ -578,57 +668,6 @@ typically designed for a precise setting with many underlying assumptions.
 Without spelling those out in the \mSpec, and without showing how
 \mEdhoc's adaptations to the cryptographic cores map to the academic protocols
 used, such claims are not very informative and may even be misleading.
-%
-
-Another concrete example, which we believe is important, is whether distributing
-\mEdhoc{} processing across a trusted execution environment (TEE) and a less
-trusted part, should be considered in the security model.
-%
-In our analysis we have chosen not to model such a distribution.
-%
-This is because we received indications that it was not necessary to consider
-reveal of the session state, in particular the ephemeral secret keys when
-\mSigma{} cannot protect against such an attack.
-\knote{Personal correspondence. Should we include that?}
-\vnote{Yes we should, definitely needs a citation of some sort.}
-%
-This is however only true if one restricts attention to key confidentiality.
-%
-
-We believe it would be useful to consider TEEs. \vnote{Unnecessary sentence, follows smoothly from the previous paragraph.}
-%
-For example, TEE can provide protection against many other threats than
-confidentiality.
-%
-Given that many IoT devices will be deployed in hostile environments there may
-be use-cases where it may be acceptable that confidentiality is compromised, but
-where impersonation attacks would be dangerous.
-%
-Further, \mEdhoc{} re-uses cryptographic cores from academic protocols such as
-\mSigma{} and \mOptls, which were intentionally designed for a well-defined
-security model where compromise of ephemeral keys is less critical than
-compromise of long-term keys.
-%
-Not taking advantage of this seems wasteful.
-%
-With at least a roughly drawn security model, these considerations would have
-surfaced earlier in the standardization process.
-%
-\textbf{Proposal:} We do not suggest that standard security protocols
-necessarily should be built bottom up based on a formal theoretical framework.
-%
-Doing so would be helpful for subsequent formal verification, but would
-likely grind standards to a halt.
-%
-However, it would be useful to add some justification for claims and the
-intended mapping of the cryptographic core to the academic protocol used and
-which differences there are.
-%
-This would greatly help academics to reverse engineer appropriate security
-models and verify whether the claims do hold in that model.
-%
-It would also be useful to capture the intended uses of end-systems on a high
-level to learn which security properties are required.
 %
 
 \mPoint{Property diversity between methods}
@@ -667,24 +706,6 @@ Another aspect showing the usefulness of considering \mEdhoc{} light-weight
 use-cases is that, until we pointed it out, the \mSpec{} did not contain
 any discussion on the topic of (non)-repudiation.
 %
-Non-repudiation may be a very useful property for an access control
-solution for a nuclear power-plant, whereas it may undesirable for privacy
-purposes in coffee vending machine.
-%
-Such a simple thought experiment would have caught the missing topic.
-%
-\textbf{Proposal:} There are some use-cases discussed in the LAKE working
-group requirements draft~\cite{ietf-lake-reqs-04}.
-%
-It would, however, be useful to extend the security considerations section in
-the \mSpec{} with example use-cases and showing the consequences of
-choosing different methods.
-%
-It would also be helpful to capture and analyze more informal and light-weight
-use-cases in the requirements document, to better understand which properties
-are needed.
-\knote{Adjust the last sentence depending on what happens to the requirements
-draft.}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Unclear identity management and authentication}
@@ -772,13 +793,12 @@ set, but that one of the devices $A$ has been compromised.
 If another device $B$, unaware of the compromise, initiates a connection to a
 third device $C$, the compromised device $A$ may interfere.
 %
-$A$ may respond in $C$ place, which may require blocking the response from $C$.
+$A$ may respond in $C$'s place, blocking the legitimate response from $C$.
 %
-Since $A$ does not check that it is $C$'s identity in message 2, and device $A$
-is part of the restricted set, $A$ will complete and accept the \mEdhoc{} run with
-device $A$.
+Since $B$ does not check that it is $C$'s identity in message 2, and device $A$
+is part of the restricted set, $B$ will complete and accept the \mEdhoc{} run
+with device $A$ in stead of the intended $C$.
 
-\vnote{Naming issues in this example here, check. Some confusion of $A$ and $B$.}
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity.
@@ -888,7 +908,8 @@ We note that keeping state between protocol runs implicitly creates a long-lived
 meta-session covering multiple \mEdhoc{} sessions.
 %
 While the spirit of the description in Section 4.2.2 of the \mSpec{} is that
-within some kind of application session setup there is a re-negotiation due to
+within some kind of meta-session, presumably controlled by an application,
+there is a re-negotiation due to
 cipher suite mismatch between the initator and responder, the \mSpec{} does not
 describe for how long the initator should remember a rejected cipher suite for a
 given party.
@@ -899,12 +920,12 @@ next \mEdhoc{} run within a given application session would be sufficient.
 It would also result in that, if the responder is updated with a new cipher
 suite before the next application session, this would be taken into account.
 %
-On the other hand, caching the rejected between application sessions would
-reduce the number of round-trips for subsequent runs, should the responder not
-have been updated.
+On the other hand, caching the rejected cipher suite between application
+sessions would reduce the number of round-trips for subsequent runs, should
+the responder not have been updated.
 %
-Regardless, these considerations would be helpful in the security considerations
-section of the \mSpec{}.
+Regardless, these considerations would be helpful to cover in the security
+considerations section of the \mSpec{}.
 %
 
 %-------------------------------------------------------------------------- ack
