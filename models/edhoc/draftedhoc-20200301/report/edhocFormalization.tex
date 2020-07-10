@@ -16,74 +16,96 @@ and exclude hash collisions, for example; the attacker is also in control of the
 communication channel, and can interact with unbounded sessions of the protocol,
 dropping, injecting and modifying messages at their liking.
 
-One important point here is that we allow the attacker to impersonate malicious
-endpoints, by revealing their long-term and session key material at any given
-point.
+One important point of the modeling is that we allow the attacker to impersonate
+dishonest and/or compromised endpoints, by revealing their long-term and session
+key material at any given point.
 %
-\mEdhoc{} should remain secure under these assumptions, as we detail below. \vnote{What does it mean for \mEdhoc{} to remain secure? Security of what?}
+On the converse, we say that a party is honest if they never reveal their
+long-term key or session key material.
 
-\paragraph{Post-compromise security}
-Post-compromise security is a class of properties that relate to the ability of
-a protocol to maintain security of previous and future sessions under a
-compromise.
-%
-Cohn-Gordon et al.~\cite{cohn2016post} present a formal characterization of this
-class of properties.
-%
-In this paper we adopt their terminology, hence we refer to them for a detailed
-explanation.
+\subsection{Desired Properties}
+\label{sec:desired-properties}
+Next we list the properties that will be considered during verification.
 
-Briefly speaking,~\cite{cohn2016post} defines the \emph{classical adversary
-  model} as the model that considers only sessions ran by honest parties; other
-parties may be dishonest and thus reveal their private information to the
-attacker, however the honest parties remain honest.
+\paragraph{Secrecy}
+We say that a \mEdhoc{} satisfies secrecy of the established session key $sk$
+between two honest parties $A$ and $B$ if, for any run of the protocol $A$ and
+$B$, the attacker does not get to know $sk$.
 %
-Under the classical model security must be maintained for the parties
-considered.
+The attacker may passively observe---and actively interfere with---the
+communication, and run any number of sessions with $A$ and $B$, in either role,
+concurrently or otherwise.
+
+\paragraph{Authentication}
+To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
+of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
+\begin{quote}
+  ``We say that a protocol guarantees to an initiator $A$ [injective] agreement
+  with a responder $B$ on a set of data items $ds$ if, whenever $A$ (acting as
+  initiator) completes a run of the protocol, apparently with responder $B$,
+  then $B$ has previously been running the protocol, apparently with $A$, and
+  $B$ was acting as responder in his run, and the two agents agreed on the data
+  values corresponding to all the variables in $ds$, and each such run of $A$
+  corresponds to a unique run of $B$.''
+\end{quote}
+
+Different \mEdhoc{} methods offer different levels of authentication, namely
+\emph{explicit authentication} and \emph{implicit authentication}.
+
+We say that \mEdhoc in method $m$ satisfies \emph{explicit authentication} for
+the initiator $A$ with a responder $B$, if injective agreement holds for $A$
+with $B$ on the session key $sk$, when running method $m$.
+
+Explicit authentication requires that both parties agree on the session key
+\emph{at the end of a protocol run}.
 %
-\emph{Perfect forward secrecy} (PFS) drops the assumption that the parties
-involved in the sessions considered shall remain honest: hence long-term key
-material may be leaked after the run of a session, but such session must remain
-secure.
+This, however, does not hold for all \mEdhoc{} methods, in which cases we prove
+\emph{implicit authentication} as defined
+in~\cite{DBLP:journals/iacr/GuilhemFW19}.
 %
-Further, \emph{key-compromise impersonation} (KCI) takes the perspective of one
+In a nutshell, a protocol satisfies \emph{implicit authentication} if the
+initiator and responder agree on the session key \emph{only after} a successful
+execution of the protocol.
+%
+That is, authentication happens only implicitely, as there is no confirmation to
+the initiator that the responder has computed the same session key.
+%
+More precisely, we adapt the definition of~\cite{DBLP:journals/iacr/GuilhemFW19}
+to the symbolic model, and we prove that if an initiator $A$ and a responder $B$
+complete the protocol deriving the same session key, then $A$ believes she is
+talking to $B$ and $B$ believes he's talking to $A$.
+
+\paragraph{Session independence}
+A protocol satisfies session independence if the knowledge of a session key does
+not give the attacker any information about other sessions.  To model session
+key independence of \mEdhoc, we allow leakage of session keys, and additionally
+check security only of those sessions for which the session keys have not been
+directly revealed to the attacker.
+
+\paragraph{Perfect forward secrecy} (PFS) A protocol satisfies perfect forward
+secrecy if, for any run of the protocol in which the initiator and the responder
+agree on a session key $sk$, the attacker does not learn $sk$, even when the
+long-term keys are revealed after the session is completed.
+
+\paragraph{Key-compromise impersonation} (KCI) takes the perspective of one
 of the endpoints of the protocol, say Alice running a session with Bob. A
 protocol is secure under KCI if Alice can still establish a secure session with
 Bob, even though Alice's keys are compromised at any time, and Bob's key
 material is not leaked until the end of the session.
-%
-Finally, \emph{weak} and \emph{strong post-compromise security} (PCS) consider
-only those sessions run by parties that are not under control of the
-attacker. These same parties can be under the attacker's control even before and
-after the session.
-%
-A protocol with \emph{weak PCS} must guarantee security under a limited
-compromise, where the key material is not leaked, but the attacker has access to
-the compormised party to perform cryptographic operations (e.g. through
-interfacing with a trusted computing module).
-%
-A protocol with \emph{strong PCS} gurantees security even if the attacker has
-complete access to the state of both parties involved, up until before the
-execution of the session under consideration and even after.
-%
-This is usually achieved by maintaining some state and performing key rotations,
-hence the attacker must be able to observe the internal state of the device as
-the protocol runs.
-%
-\emph{We do not check strong PCS} for \mEdhoc, as it is not secure under these
-assumptions.
 
-\vnote{What does it even mean to check strong PCS for \mEdhoc? Possible reviewer comment: How do you know it is not secure if you haven't checked it?}
-
-\vnote{When I think about modelling and verifying a protocol, I start with properties like (normal) secrecy of some value of interest, authentication, maybe session independence at most. It feels a little precipitous to immediately jump to PCS without any introduction at all to what values are of interest in \mEdhoc, and what obvious properties one might check for before moving to this rather advanced class of properties.}
-
-\paragraph{Session independence}
-Finally we model \emph{session independence} of \mEdhoc, that is, we allow
-leakage of session key material, and additionally check security only of those
-sessions for which the session key material has not been revealed. We check this
-in conjunction with PCS properties.
-
-\vnote{This feels like an oddball selection of the properties that are actually verified. Why not mention all of them, and maybe go into detail about PCS after the simpler ones have been tackled, in the Properties section later? The threat model there is more advanced, and can be dealt with later. In fact, a note about the basic Dolev-Yao attacker can be very well combined with the Tamarin section, in my opinion.}
+\paragraph{Post-compromise security} (PCS) A protocol that has
+\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
+is capable of establishing a secure session even after one of the parties has
+been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
+PCS, namely weak and strong PCS: here we focus on the latter.
+%
+A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
+between the initiator and the responder, even if the run of the protocol that
+established $sk$ happens after a \emph{limited compromise}, where the key
+material is not leaked, but the attacker is capable of impersonating both
+parties (i.e. has the ability to perform all cryptographic operations using the
+initiator's and responder's long term keys, but has not access to the long term
+keys).
 
 \subsection{Tamarin}
 We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
@@ -139,12 +161,6 @@ to denote that if the attacker knows a key $k$, a message
 $m$, the authenticated data $ad$, and an algorithm
 $al$, then they can construct the encryption using these parameters, hence get
 to know the message $\mAeadEncrypt(k, m, ad, al)$.
-%
-There are two built-in persistent facts to denote attacker knowledge,
-$!\mKU$ and
-$!\mKD$, but we ignore their distinction for now as it is only necessary for
-\mTamarin's termination properties.
-\vnote{I don't think the above paragraph is necessary -- it feels like a distraction. A reference for \mTamarin{} and a note saying readers can refer to it for further details should be quite enough.}
 
 In our model we introduce a theory for authenticated encryption, plus the
 built-in theories of XOR and Diffie-Hellmann.
@@ -175,17 +191,22 @@ $x \cdot y$ as a built-in symbols in the language, plus the necessary equational
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
+\paragraph{Syntactic sugar} In the following presentation we use some syntactic
+sugar, which is necessary to understand to look at the concrete rules. First is
+the use of let bindings (\mT{let ... in}), which are series of
+definitions of patterns which are substituted in the rest of the rule. Another
+prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
+built-in concept in \mTamarin.
+
 \subsection{Modeling \mEdhoc{}}
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
-%
-\vnote{Karl and I have been referring to them as ``methods'', not ``modes''. Please follow the same terminology.}
 
-We model the five different modes of \mEdhoc{} from a single specification
-according to the five different combinations of authentication methods:
-\mPskPsk, \mSigSig, \mSigStat, \mStatSig and \mStatStat.
+We model the five different methods of \mEdhoc{} from a single specification
+that derives all valid combinations: \mPskPsk, \mSigSig, \mSigStat, \mStatSig
+and \mStatStat.
 %
-We use the M4 macro language to derive these different modes from a single
+We use the M4 macro language to derive these different methods from a single
 description of the protocol, thus enforcing uniformity in the presentation.
 %
 Other parameters to the model include the optional data of the \mEdhoc{}
@@ -213,20 +234,16 @@ rule registerLTK_STAT:
 rule registerLTK_PSK:
   [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 \end{lstlisting}
-\knote{We agreed to add a clarification that we use the variable names xx and yy
-    because \mTamarin's output includes x's for variable names and it was not
-    eaiser to distinguish the xx variables from \mTamarin's internal variable
-names}
     
 These three rules express the registering of the long term keys for the \mSig,
-\mStat{} and \mPsk{} modes respectively.
+\mStat{} and \mPsk{} methods respectively.
 %
-The \lstinline{registerLTK_PSK} registers a symmetric key for each pair of
-agents \lstinline{A} and \lstinline{B}, while the other two rules register a
+The \mT{registerLTK_PSK} registers a symmetric key for each pair of
+agents \mT{A} and \mT{B}, while the other two rules register a
 public key (for signing and encrypting, respectively) that are tied to the
-identities of one agent \lstinline{A}.
+identities of one agent \mT{A}.
 %
-The event \lstinline{UniqLTK} marks that the long term key is unique for each
+The event \mT{UniqLTK} marks that the long term key is unique for each
 agent or pair of agents, as enforced by the following restriction:
 \begin{lstlisting}
 restriction uniqLTKs:
@@ -234,7 +251,7 @@ restriction uniqLTKs:
 \end{lstlisting}
 
 Long term keys are revealed to the attacker through specific rules
-with the event \lstinline{LTKRev}.
+with the event \mT{LTKRev}.
 \begin{lstlisting}
 rule revealLTK_SIG:
     [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
@@ -249,53 +266,14 @@ keys to prove forward secrecy, as discussed in
 Section~\ref{sec:threat-model}.
 %
 Each of the session keys is also revealed with similar rules,
-depending on the mode to check session independence.
+depending on the method to check session independence.
 
-\paragraph{Implicit vs explicit authentication}
-\knote{Need to agree on how we denote section headings. Now we are mixing
-    paragraph and subsection for the same level it seems.
-}
-As we will discuss in Section~\ref{sec:properties}, not all modes of
-\mEdhoc{} enjoy the same properties, and different guarantees are
-provided for each method.
-%
-In particular we make a distinction between \emph{implicit and
-  explicit authentication}, as defined
-in~\cite{DBLP:journals/iacr/GuilhemFW19}.
-%
-Simply put, \emph{explicit authentication} occurs when the initiator
-and responder parties agree on the session data (i.e. identities, key
-material and so on) \emph{at the end of the protocol}, whereas for
-\emph{implicit authentication} the two parties may only agree after
-the protocol has ended when the first message encrypted with the
-session key is being transmitted.
-\vnote{This last sentence is confusing, restructure?}
-%
-We will discuss this concept again, however we mention it here as
-certain aspects of the modeling directly follow from it.
-
-\anote{Implicit authentication: note that comparing implicit
-  authentication from the Guilhelm paper with injective agreement is a
-  bit misleading. Quoting Lowe: ``We say that a protocol guar- antees
-  to an initiator A agreement with a responder B on a set of data
-  items ds if, whenever A (acting as initiator) com- pletes a run of
-  the protocol, apparently with responder B, then B has previously
-  been running the protocol, apparently with A, and B was acting as
-  responder in his run, and the two agents agreed on the data values
-  corresponding to all the variables in ds, and each such run of A
-  corresponds to a unique run of B.''. Technically injective agreement
-  holds when you choose the proper ds, as you do. If you include more,
-  that only works in the implicit mode. That is, implicit vs explicit
-  refers to when a protocol is considered to be completed, i.e. after
-  the first encrypted message is being sent vs. at the end of the key
-  agreement, whereas injective agreement is parametric on all this
-  stuff, including when a protocol is completed and what data should
-  be agreed upon.}
-
-  \paragraph{\mPskPsk{}} the following rules model the symmetric variant of
+\paragraph{\mPskPsk{}} the following rules model the symmetric variant of
 the protocol and are derived from the M4 file, as presented in
 Section~\ref{protocol-presentation}\footnote{link}.
 
+First we present the rule \mT{I1_PSK_PSK}, which corresponds to the
+Initiator starting a session:
 \begin{lstlisting}
 rule I1_PSK_PSK:
   let gx = 'g'^~xx
@@ -303,12 +281,33 @@ rule I1_PSK_PSK:
       m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK> 
   in
   [ !LTK_PSK(<$U, $V>, ~ltk), Fr(~xx), Fr(~tid) ]
-  --[ I1(~tid, $U, $V, m1)
-    , DHInvI1(~tid, 'g', ~xx, 'g'^inv(~xx), 'g'^~xx, 'g'^inv(~ltk))
-    , InvI1(~tid, ~xx, inv(~xx), ~ltk, inv(~ltk))
-    ]->
+  --[ I1(~tid, $U, $V, m1) ]->
   [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), Out(m1)]
+\end{lstlisting}
 
+This rule uses the persistent predicate \mT{!LTK_PSK} to retrieve the long-term
+symmetric key for the two parties U (the initiator) and V (the responder).  The
+two predicates \mT{Fr(~xx)} and \mT{Fr(~tid)} denote the creation of a fresh
+ephemeral key and a fresh session identifier.  We use \mT{xx} to name the
+ephemeral key for the initiator (resp. \mT{yy} for the responder) as to avoid
+confusion with \mTamarin's builtin variable names.  Message 1 is then
+constructed as a tuple in the let binder following the specification.  
+
+It is worth noting that there are some differences in the way \mT{m1} is
+constructed when compared to the specification. In particular, the \emph{method}
+field is divided into two fields representing the method for the initiator and
+the responder, the connection identifier is omitted and the ciphersuites is
+represented by the public variable
+\mT{$cSUITES0} (known to the attacker). We plan to introduce the connection
+identifier \mCi in our ongoing verification effort, whereas the other two are
+modeling choices that do not affect the behaviour of the model.
+
+Finally, we use the fact \mT{StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid)} %
+to save the internal state for the remainder of the initiator's protocol.
+
+The next rule models the responder receiving \mT{m1} from the initiator,
+constructing the Diffie-Hellman shared secret $g^{xy}$ and preparing \mT{m_2}.
+\begin{lstlisting}
 rule R2_PSK_PSK:
   let
     data_2 = <'g'^~yy>
@@ -325,12 +324,24 @@ rule R2_PSK_PSK:
   in
     [ !LTK_PSK(<$U, $V>, ~ltk), In(m1), Fr(~yy), Fr(~tid) ]
     --[ ExpRunningR(~tid, $V, exp_sk)
-      , R2(~tid, $V, m1, m2)
-      , InvR2(~tid, ~yy, inv(~yy), ~ltk, inv(~ltk))
-      ]->
+      , R2(~tid, $V, m1, m2) ]->
     [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2), Out(m2) ]
+\end{lstlisting}
 
+Here we obtain as input message 1 (\mT{m1}), create a fresh exponent \mT{yy} and
+session identifier \mT{tid}.  The let bindings in this rule show how to
+construct message \mT{m2}.  They can be easily mapped to the diagram in
+Figure~\ref{fig:edhocpsk}.  We use the public constant \mT{'emptyStr'} instead
+of an empty string since \mTamarin{} has no concept of strings (single quotes
+denote constants).
 
+Here we notice the introduction of the event \mT{ExpRunningR(~tid, $V, exp_sk)}%
+which we later use to show explicit authentication (hence the exp prefix) by
+finding an injective correspondence between two events.
+
+The next rule models the initiator receiving \mT{m2} and responding with the
+final message \mT{m3}:
+\begin{lstlisting}
 rule I3_PSK_PSK:
   let
     data_2 = <gy> 
@@ -340,7 +351,7 @@ rule I3_PSK_PSK:
     plainText2 = 'emptyStr' 
     extAad2 = TH_2
     K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
-    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
+    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
     m2 = <data_2, CIPHERTEXT_2>
     data_3 = 'emptyStr' 
     TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
@@ -356,10 +367,23 @@ rule I3_PSK_PSK:
   --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
     , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
     , I3(~tid, $U, $V, m1, m2, m3)
-    , DHInvI3(~tid, 'g'^~xx)
    ]->
    [ Out(m3) ]
+\end{lstlisting}
 
+Apart from observations similar to those already made for the previous messages,
+we should mention here the two events %
+\mT{ExpCommitI(~tid, $U, $V, exp_sk)} and \mT{CommitI(~tid, $U, $V, imp_sk)}. %
+These events mark the completion of the protocol for the initiator, which will
+be used for later verifying explicit and implicit authentication, respectively.
+The difference is the choice of key material on which we check authentication
+(\mT{exp_sk} vs \mT{imp_sk}), which in the case for the symmetric method is
+null, but that will be crucial when the initiator runs the \mStat method.
+\anote{I found a discrepacy for cHash0, should use the public constant and not
+  the nullary function!}
+
+Finally, we have the last rule for the responder:
+\begin{lstlisting}
 rule R4_PSK_PSK:
   let
     data_3 = 'emptyStr' 
@@ -367,7 +391,7 @@ rule R4_PSK_PSK:
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
     extAad3 = TH_3
     plainText3 = 'emptyStr'
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
     m3 = <data_3, CIPHERTEXT_3>
     exp_sk = <gxy> // SIG_SIG or PSK_PSK
     imp_sk =  exp_sk
@@ -380,62 +404,37 @@ rule R4_PSK_PSK:
     []
 \end{lstlisting}
 
-Here we won't dive into all the details to avoid repetition, however a
-few things are worth mentioning.  First is the introduction of the
-syntactic sugar \lstinline{let ... in}, which presents a series of
-definitions of patterns which are substituted in the rest of the
-rule. Each rule corresponds to one action of the protocol, hence rule
-\lstinline{I1_PSK_PSK} represents the Initiator sending the first
-message, whereas \lstinline{R2_PSK_PSK} represents the responder
-receiving the first message and responding with the second, and so on. \vnote{I feel like these two are features of \mTamarin, and not the modelling of \mEdhoc, so should go in the previous section.}
-
-Two other important details are the events which are used for checking
-authentication, and the facts which store the local state of the
-endpoints. \anote{we also have some events which are not checked in
-  any lemma, like InvR2. In my understanding they don't serve any
-  purpose, should they be in there? certainly not in the
-  presentation.}
-\knote{I have clean that up now, so these two notes can be deleted.}
-%
-The event \lstinline{ExpRunningR} denotes the start of the Responder's
-protocol, whereas \lstinline{ExpCommitI} and \lstinline{CommitI}
-denote both that the Initiator is running the protocol with the
-Responder and that she agreed on (i.e. committed to) the session key.
-%
-The \lstinline{Exp} prefix refers to explicit authentication, wheras
-the events lacking this prefix contain only those parameters which are
-agreed upon by the modes that only allow implicit authentication, as
-we discuss in Section~\ref{sec:properties}.
-%
-The facts \lstinline{StI1_PSK_PSK} and \lstinline{StR2_PSK_PSK} are
-used to represent the local knowledge of the initiator and the
-responder, when they are waiting for the second and third message to
-arrive, respectively.
+This rule receives message 3, checks against its local state that the
+Diffie-Hellman key $g^{xy}$ corresponds, then terminates the protocol.  As in
+the previous message, we mark acceptance of the third message from the responder
+with the two commit events, and conclude.
 
 \vnote{If you are going with \mPskPsk for the first example, it would make sense to explain it in some detail. At least a connection to the earlier section describing the variables in the code is necessary, because so far there is no mention of $U$, $V$ etc. If you directly jump to the events, a casual reader has no idea what the variables even correspond to. Once these things are explained here, they need not be repeated for the next method.}
+\anote{should be addressed now}
 
 \paragraph{\mStatSig{}}
-Next we present the mixed asymmetric mode \mStatSig. We chose \mStatSig{}
-for this presentation of the asymmetric modes as it's the
-\knote{Question on academic language: you use contractionns here "it's". Is that
-acceptable?  It sounds quite informal to me}
-configuration that shows all interesting features at once: mixed
-authentication methods, and implicit authentication on the responder.
+Next we present the mixed asymmetric method \mStatSig. We chose \mStatSig{} for
+this presentation of the asymmetric methods as this configuration shows all
+interesting features at once: mixed authentication methods, and implicit
+authentication on the responder.
 
 \begin{lstlisting}
 rule I1_STAT_SIG:
   let gx = 'g'^~xx
       m1 = <'STAT', 'SIG', $cSUITE0, gx> 
   in
-  [ !LTK_STAT($U, ~ltk)
-  , Fr(~xx)
-  , Fr(~tid)  /* Thread ID */
+  [ !LTK_STAT($U, ~ltk), Fr(~xx), Fr(~tid)
   ]
   --[ I1(~tid, $U, $V, m1) ]->
   [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
-  , Out(m1)
-  ]
+  , Out(m1)]
+\end{lstlisting}
+Like in the previous model, this rule starts the initiator and outputs the first
+message \mT{m1}, this time looking up the public key for \mT{U} and using the
+\mStatSig{} method.
 
+Next we look at the rule for the responder:
+\begin{lstlisting}
 rule R2_STAT_SIG:
   let
     data_2 = <'g'^~yy>
@@ -458,17 +457,28 @@ rule R2_STAT_SIG:
     m2 = <data_2, CIPHERTEXT_2>
     exp_sk = <gx^~yy>
   in
-  [ !LTK_SIG($V, ~ltk)
-  , !PK_SIG($V, pkV)
-  , In(m1)
-  , Fr(~yy)
-  , Fr(~tid)
+  [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV)
+  , In(m1), Fr(~yy), Fr(~tid)
   ]
   --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
   , Out(m2)
   ]
+\end{lstlisting}
+Here is a place where the model and the original specification differ
+slightly, the reason being that we must allow some behaviour that is
+otherwise not covered by symbolic handling of XOR encryption: it must
+be possible for the attacker to break apart the fields of
+\mT{CIPHERTEXT_2}, and obtain part of the key \mT{K_2e}
+if they know part of the plaintext, or viceversa.
+%
+Hence \mT{CIPHERTEXT_2} is not a direct XOR ``encryption'', but rather a tuple
+where each field is XORed with a half-key expansion (\mT{K_2e_1} and
+\mT{K_2e_2}).  Notice also the lack of \mT{exp_sk}, as the semi-static
+Diffie-Hellman key $g^{iy}$ cannot be computed by the responder at this stage.
 
+Next we have the second rule for the initiator:
+\begin{lstlisting}
 rule I3_STAT_SIG:
   let
     data_2 = <gy> 
@@ -514,7 +524,13 @@ rule I3_STAT_SIG:
   , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)
   ]->
   [ Out(m3) ]
+\end{lstlisting}
+Here is a crucial difference that follows from our last observation: we notice
+the addition of the semi-static Diffie-Hellman key to the term \mT{imp_sk}.
+This will be used later to check implicit authentication, as is reflected by the
+commit events.
 
+\begin{lstlisting}
 rule R4_STAT_SIG:
   let
     data_3 = 'emptyStr'
@@ -523,7 +539,7 @@ rule R4_STAT_SIG:
     CRED_U = pkU
     extAad3 = TH_3
     plainText3 = <$U, authI>
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
+    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
     giy = CRED_U^~yy
     prk_4x3m = hkdfExtract(prk_3e2m, giy)
     K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
@@ -548,24 +564,29 @@ rule R4_STAT_SIG:
   []
 \end{lstlisting}
 
-Let us focus on the interesting details of this model. First and
-foremost, it shows how to construct signatures in the static mode and
-the signing mode.
+
+% Let us focus on the interesting details of this model. First and
+% foremost, it shows how to construct signatures in the static method and
+% the signing method.
+% %
+% Looking at \mT{authU} how it is constructed in rule \mT{I3_STAT_SIG}, we can see
+% that it uses \mT{K_3m}, which is an expansion of \mT{prk_4x3m} that in turn uses
+% the semi-static Diffie-Hellman key \mGiy.
+% %
+\knote{Terminology: we need to harmonize terminology in the end. Here it is
+  called semi statc DH key. Sometimes this is referred to as a "DH key share"
+  and sometimes as a "DH half key". I don't care so much which we chose as long
+  as it is consitent.  }
 %
-Looking at \lstinline{authU} how it is constructed in rule
-\lstinline{I3_STAT_SIG}, we can see that it uses \lstinline{K_3m},
-which is an expansion of \lstinline{prk_4x3m} that in turn uses the
-semi-static Diffie-Hellman key \mGiy.
-\knote{Terminology: we need to harmonize terminology in the end. Here it is called semi
-    statc DH key. Sometimes this is referred to as a "DH key share" and sometimes
-    as a "DH half key". I don't care so much which we chose as long as it is
-    consitent.
-}
+\anote{semi static DH key carries the notion that part of the key is long term
+  and the other part is ephemeral. shall we keep this distinction? otherwise the
+  rest should harmonize to the same notation (the text is removed)}
 %
+\footnote{\anote{I kept this out of the main text as it's covered already, however it might be useful to discuss implicit authentication in relation to OSCORE as future work, to be put in the discussion section}
 On the same rule we can also see how \emph{implicit authentication}
 differs from explicit authentication for the Initiator running the
-static mode: on \lstinline{imp_sk} the semi-static key
-\mGiy{} is present, whereas \lstinline{exp_sk} does not include it
+static method: on \mT{imp_sk} the semi-static key
+\mGiy{} is present, whereas \mT{exp_sk} does not include it
 for injective agreement.
 %
 The reason for this is that, when sending message 2, the responder
@@ -581,24 +602,28 @@ both parties agree on.
 %
 In future work, it will be interesting to see the interaction of
 \mEdhoc{} with \mOscore, which is a transport standard that can use
-\mEdhoc's keys.
+\mEdhoc's keys.}
 
-Looking at \lstinline{authV} in rule \lstinline{R2_STAT_SIG} we can
-see how the signature mode is constructed: it is a signature of the
+Looking at \mT{authV} in rule \mT{R2_STAT_SIG} we can
+see how the signature method is constructed: it is a signature of the
 transcript including message 2, using the Responder's long term public
 key.
 %
-Here lies the main difference between the static and signature modes
+Here lies the main difference between the static and signature methods
 in the model, the other being the corresponding authentication check:
 a simple matching of the MAC tag on the initiator side
 %
-(\lstinline{Eq(authI, MAC_3)}), instead of verifying the public key
+(\mT{Eq(authI, MAC_3)}), instead of verifying the public key
 signature on the responder side
 %
-(\lstinline{Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)}).
+(\mT{Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)}).
 
-Finally, it's worth mentioning the construction of
-\lstinline{CIPHERTEXT_2}.
+The event \mT{Eq} has no special meaning in \mTamarin{}, but we use it to check
+that the two arguments are equal by introducing the following restriction:
+\begin{lstlisting}
+restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
+\end{lstlisting}
+
 \knote{We earlier agreed to use the macros for the constants in the model to get
     a consistent formatting and save time in the end, not having to go through
     everything and align formatting.
@@ -612,17 +637,10 @@ Finally, it's worth mentioning the construction of
     the former.
 }
 %
-Here is a place where the model and the original specification differ
-slightly, the reason being that we must allow some behaviour that is
-otherwise not covered by symbolic handling of XOR encryption: it must
-be possible for the attacker to break apart the fields of
-\lstinline{CIPHERTEXT_2}, and obtain part of the key \lstinline{K_2e}
-if they know part of the plaintext, or viceversa.
-%
-Hence \lstinline{CIPHERTEXT_2} is not a direct XOR ``encryption'', but
-rather a tuple where each field is XORed with a half-key expansion
-(\lstinline{K_2e_1} and \lstinline{K_2e_2}).
-
+\anote{I tried to be consistent and use lstinline (now mT) when referring to the
+  code, and the macros otherwise, but maybe something slipped me. when I use it
+  is because I really intend to point to the code, and when I don't I should use
+  the macros}
 % - Explain how we modeled inj-agree (a sentence or two).
 % - Explain why it fails when $I$ uses \mStat-method and the implicit
 % auth lemma we showed instead
@@ -635,24 +653,22 @@ rather a tuple where each field is XORed with a half-key expansion
 \subsection{Properties}
 \label{sec:properties}
 
-In this section we present the properties that we have shown for
-\mEdhoc, and show the lemmas that verify them.
+In this section we present the properties that we have shown for \mEdhoc, and
+show the lemmas that verify them. We refer to
+Section~\ref{sec:desired-properties} for a full explanation of the properties
+that we check. Here we focus on their formalization into \mTamarin{} lemmas.
 
 \subsubsection{Explicit authentication}
 
 We model explicit authentication between the the initiator and the
 responder.
 %
-For this lemma, we use the events \lstinline{ExpCommitI} and
-\lstinline{ExpRunningR}, and show that there is injective agreement
-between the two events on the parameters \lstinline{tidI},
-\lstinline{v} and the session key material \lstinline{expSk} (note
+For this lemma, we use the events \mT{ExpCommitI} and
+\mT{ExpRunningR}, and show that there is injective agreement
+between the two events on the parameters \mT{tidI},
+\mT{v} and the session key material \mT{expSk} (note
 that the session key material changes between the different \mEdhoc
 methods).
-%
-This is a standard adaptation of the injective agreement property as
-proposed by Lowe~\cite{lowes-paper}, which is widely used in symbolic
-models. \vnote{I believe a one-line description of injective agreement here, at least for the sake of completeness, would be good to have.}
 
 Additionally, we require that injective agreement must hold only when
 no long term key material for the two parties has been revealed before
@@ -660,7 +676,7 @@ the end of the protocol.
 %
 This is achieved by the main disjunction in lines 5-10 on the right of
 the implication, requiring to reveal the long term keys (i.e. one of
-the three \lstinline{LtkRev} events must trigger) if the responder has
+the three \mT{LtkRev} events must trigger) if the responder has
 not been running a matching session with the initiator.
 
 \begin{lstlisting}
@@ -681,15 +697,16 @@ lemma authInjAgreeGuaranteeForI:
 \knote{That is logically true, but \mTamarin{} does not accept it. Try it out to see what
 goes wrong. If you have proposals for better ways of modeling it, I'd love to
 know.}
+\anote{I made the change and it's not complaining for me}
 
 Note that this property \emph{does not hold when} the initiator is
-running the static method.
+running the \mStat method.
 %
 For that case we need to prove implicit authentication, as detailed in
 the next section.
 
-Similarly, we require that injective agreement also holds in the
-reverse direction:
+Similarly to the previous lemma, we require that injective agreement also holds
+in the reverse direction:
 
 \begin{lstlisting}
 lemma authInjAgreeGuaranteeForR:
@@ -706,8 +723,8 @@ lemma authInjAgreeGuaranteeForR:
 
 As the explicit and implicit authentication always correspond for the
 responder authenticating with the initiator, here we do not need the
-additional \lstinline{Exp} prefix to the running and commit events
-(\lstinline{CommitI} and \lstinline{CommitR} respectively).
+additional \mT{Exp} prefix to the running and commit events
+(\mT{CommitI} and \mT{CommitR} respectively).
 \anote{it would be nice to actually call CommitI -> RunningI for clarity}
 \knote{I have added that now}
 
@@ -715,11 +732,27 @@ additional \lstinline{Exp} prefix to the running and commit events
 
 The following lemma proves implicit authentication:
 \begin{lstlisting}
+lemma authGIYImplicitAuthGuaranteeForI2:
+    all-traces
+    "All tidI u v impSk #i.
+         CommitI(tidI, u, v, impSk)@i ==>
+         ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+             (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
+	        CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
+           & (not Ex #k. K(impSk)@k) )
+         | (Ex #k. LTKRev(u)@k)
+         | (Ex #k. LTKRev(v)@k)
+         | (Ex #k. LTKRev(<u, v>)@k)
+         )
+    "
+\end{lstlisting}
+\anote{this is the reformulated implicit authentication turned into a positive implication (almost no negation). All models are verified and it saves 5 minutes in verification time on my machine}
+\begin{lstlisting}
 lemma authGIYImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v impSk #i.
          CommitI(tidI, u, v, impSk)@i ==>
-         ( ( (All tidR #j. CommitR(tidR, u, v, impSk)@j)
+         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==> (u = u2  &  v = v2) )
            & (not Ex #k. K(impSk)@k)
            & (not( Ex tidR u v #j tidR2 u2 v2 #j2.
                       ( CommitR(tidR,  u,  v,  impSk)@j
@@ -731,15 +764,15 @@ lemma authGIYImplicitAuthGuaranteeForI:
          | (Ex #k. LTKRev(v)@k)
          | (Ex #k. LTKRev(<u, v>)@k) ) "
 \end{lstlisting}
-\anote{I changed the lemma removing u2, v2 on line 5, this is equivalent, and allows to remove the two expressions u = u2 and v = v2}
-\anote{I actually think that the formulation in lines 7-10 is a bit weird. It actually says that there are no two events with the same impSk but different tidR, u, V etc. Is that because of some problem verifying the lemma as in explicit agreement? Also, why is line 6 necessary?}
 
-The main difference between lemma
-\lstinline{authInjAgreeGuaranteeForI} and lemma\\
-\lstinline{authGIYImplicitAuthGuaranteeForI} presented here is that
-the latter proves injective agreement on the reduced set of keys
-\lstinline{impSk}, which only differs from the explicit set when the
-initiator runs in static mode.
+As opposed to lemma \mT{authInjAgreeGuaranteeForI}, here we prove that the two
+parties implicitely authenticate on the keys \mT{impSk}. %
+In this lemma we show that if any two parties (\mT{u} and \mT{v2} here) complete
+a run of the protocol, and \mT{u} believes she is talking to \mT{v} and \mT{v2}
+believes he is talking to \mT{u2}, then their identities match (that is, %
+\mT{u = u2} and \mT{v = v2}). Furthermore there is an injective correspondence
+between the \mT{CommitI} and \mT{CommitR} events, and the attacker does not
+learn the session key material.
 
 \subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
 
@@ -757,7 +790,7 @@ allowing to reveal the session keys.
 It still holds that the session keys are secret for all the other runs
 of the protocol.
 
-First we show the lemma for the symmetric mode:
+First we show the lemma for the symmetric method:
 \begin{lstlisting}
 lemma secrecyPFSGIYSessionKey:
         all-traces
@@ -767,7 +800,7 @@ lemma secrecyPFSGIYSessionKey:
             ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
 
-Next we present the lemma for the asymmetric modes:
+Next we present the lemma for the asymmetric methods:
 \begin{lstlisting}
 lemma secrecyPFSGIYSessionKey:
         all-traces
@@ -776,16 +809,6 @@ lemma secrecyPFSGIYSessionKey:
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
             ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
-
-Note that in case the responder is using the static mode, the lemma
-fails.  \anote{this is actually from the comments in the code, is that
-  correct? then we should find a formulation that succeeds. Also, if
-  one of the two sides holds and the other does not, it is equivalent
-  to splitting this lemma in two and proving each part separately. You
-  can prove a stronger lemma for the static responder mode.}
-  \knote{Please check which version of edhocM4.spthy you look at. The one from
-      June 12, does not include that comment. The comment may refer to an
-  artifact of the incomplete addition of C\_I, C\_R switches}
 
 % holds no matter which method user chooses.
 %  -  PFS on session key for all methods.

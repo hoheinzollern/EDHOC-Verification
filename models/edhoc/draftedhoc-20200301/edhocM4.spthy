@@ -465,15 +465,9 @@ lemma authInjAgreeGuaranteeForI:
                 & not(#i = #i2)
                 )
            )
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-<!
          | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-!>,
-<!
          | (Ex #j. LTKRev(u)@j & #j < #i)
          | (Ex #j. LTKRev(v)@j & #j < #i)
-!>
-)
          )
     "
 
@@ -493,16 +487,10 @@ lemma authInjAgreeGuaranteeForR:
                 & not(#i = #i2)
                 )
            )
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-<!
          | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-!>,
-<!
          | (Ex #j. LTKRev(u)@j & #j < #i)
          | (Ex #j. LTKRev(v)@j & #j < #i)
-!>
-)
-         )
+	          )
     "
 
 
@@ -551,6 +539,19 @@ lemma authGIYImplicitAuthGuaranteeForI:
          )
     "
 
+lemma authGIYImplicitAuthGuaranteeForI2:
+    all-traces
+    "All tidI u v impSk #i.
+         CommitI(tidI, u, v, impSk)@i ==>
+         ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+             (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
+	        CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
+           & (not Ex #k. K(impSk)@k) )
+         | (Ex #k. LTKRev(u)@k)
+         | (Ex #k. LTKRev(v)@k)
+         | (Ex #k. LTKRev(<u, v>)@k)
+         )
+    "
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
