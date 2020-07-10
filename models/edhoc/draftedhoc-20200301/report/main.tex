@@ -121,7 +121,7 @@ Third Author\inst{3}\orcidID{2222--3333-4444-5555}
 
 \begin{abstract}
 \hl{250 words}
-IETF is standardizing a key establishment protocol, named \mEdhoc, for
+IETF is standardizing a key establishment protocol named \mEdhoc, for
 constrained IoT devices.
 %
 In contrast to more powerful IoT devices, such as video cameras and cars,
@@ -361,22 +361,22 @@ This section is only for the outline and will be removed in the final
 \subsection{Background and motivation}
 \label{sec:motivation}
 IoT security threats involving cars, web-cameras and other resourceful devices
-receive most attention from media and academia.
+receive \vedit{most}{a lot of} attention from \vedit{media and academia}{the technical community as well as the media}.
 %
 These devices are computationally strong with no severe bandwidth or energy
 consumption restrictions.
 %
-Securing the communication between such devices can readily be done using
+Securing the communication between such devices can \vedit{readily be}{be readily} done using
 \mDandTls.
 %
-Constrained devices, on the other hand, where such restrictions are common,
+Constrained devices, on the other hand, where such restrictions \vedit{}{on bandwidth or energy} are common,
 have received much less attention.
 %
-These devices may be simple sensors with the only task of relaying
-measurements of their physical environment to a server every hour, and doing so
+These devices may be simple sensors with \vedit{the only}{a single} task of relaying
+measurements of their physical environment to a server every hour, \vedit{and}{but} doing so
 autonomously for a decade without maintenance.
 %
-Constrained devices therefore often have limitations on energy consumption.
+\vedit{Constrained devices therefore often have limitations on energy consumption.}{}
 %
 To keep energy consumption down, highly specialized radio links with small
 and heterogeneous frame-sizes are sometimes used.
@@ -391,26 +391,29 @@ communications between constrained devices, as a complement for when
 The \mOscore{} protocol requires a pre-established security context.
 %
 The IETF Lightweight Authenticated Key Exchange (LAKE) working group
-currently develops requirements and a key exchange protocol capable of
+\vedit{currently develops}{is currently developing} requirements and a key exchange protocol \vedit{}{, named \mEdhoc~\cite{selander-lake-edhoc-01},} capable of
 establishing \mOscore{} security contexts.
 %
-The key establishment protocol is named \mEdhoc~\cite{selander-lake-edhoc-01}.
+\vedit{The key establishment protocol is named \mEdhoc.}{}
 %
 Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
+
+\vnote{Should we say something about since when the LAKE WG has been working on this?}
 %
 
-While neither the requirements nor the use-cases for \mEdhoc{} are firmly set,
+While neither the requirements nor the \vedit{use-cases}{use cases} for \mEdhoc{} are firmly set,
 the overarching design goal of \mEdhoc{} is to establish an \mOscore{} security
 context with decent security while keeping the messages small.
+\vnote{``decent security'' is too vague/throwaway for a technical paper}
 %
 The LAKE working group is currently discussing whether a compressed version of
-\mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would solve the same use-cases as
-\mOscore{} and \mEdhoc{} combined.
+\mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would \vedit{solve the same use-cases}{suffice for the same use cases} as \vedit{}{the combination of}
+\mOscore{} and \mEdhoc{} \vedit{combined}{}.
 %
 
 The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
-messages and more use-cases.
+messages and more \vedit{use-cases}{use cases}.
 %
 The first incarnation of \mEdhoc{} appeared in March 2016.
 %
@@ -423,7 +426,7 @@ The latter was then replaced by \mSigma, and this version, from May 2018, was
 formally analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 The protocol has now further evolved and variants using challenge-response
-signatures have now been added again.
+signatures \vedit{}{based on \mOptls?} have now been added again.
 %
 On top of this, mixed variants where one party uses a challenge-response
 signature and the other a regular signature have also been added.
@@ -432,11 +435,11 @@ Consequently, there are now five cryptographic cores in total, and it is prudent
 to formally analyze them all to ensure a higher level of security assurance for
 \mEdhoc.
 %
-This is especially important, since the \mSpec{} itself lacks description of the
+This is especially important, since the \mSpec{} itself lacks \vedit{}{a} description of the
 intended security model and overall security goals.
 %
-Filling this gap and deriving circumstances under which \mEdhoc{} can be
-securely used to achieve certain goals is an important part of this paper.
+Filling this gap and \vedit{deriving}{specifying the} circumstances under which \mEdhoc{} can be
+securely used to achieve certain \vedit{}{expected?} goals is an important part of this paper.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -444,17 +447,18 @@ securely used to achieve certain goals is an important part of this paper.
 \label{sec:contributions}
 Our main contributions are the following.
 \begin{itemize}
-    \item We provide formalization of \mEdhoc's all five cryptographic cores
-        using\linebreak \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
+    \item We provide formalization of \vedit{\mEdhoc's}{}all five cryptographic cores \vedit{}{of \mEdhoc}
+        using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
     \item We give an explicit security model for the protocol and have verified
         essential security properties, such as session key and entity
         authentication, as well as Perfect Forward Secrecy (PFS), within that
         model.
+        \vnote{How are the model and these properties obtained? Say something about them being extrapolations of stuff mentioned in the \mSpec?}
     \item We provide consequence analysis of the verified properties to
         establish which types of use-cases \mEdhoc{} may be suitable for and
         to give recommendations for the future standards development.
-    \item Our discussions with IETF LAKE working group members have already
-        lead to improvements and clarifications of the standard \mSpec{} based
+    \item Our discussions with \vedit{}{members of the} IETF LAKE working group \vedit{members}{}have already
+        \vedit{lead}{led} to improvements and clarification\vedit{s}{} of the standard \mSpec{} based
         on observations we made during the construction of our formal model.
 \end{itemize}
 
@@ -463,17 +467,17 @@ Our main contributions are the following.
 \label{sec:relatedWork}
 The work closest to ours is Bruni~et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
-two cryptographic core, version of \mEdhoc.
+\vedit{two cryptographic}{two-cryptographic} core\vedit{,}{} version of \mEdhoc.
 %
-We consider our work to be a sort of follow-up to that, doing a similar kind of
-analysis of the most recent, and more elaborate, version of \mEdhoc{} using five
+We consider our work to be a \vedit{sort of}{} follow-up to that, doing a similar kind of
+analysis of the most recent, and more elaborate\vedit{,}{} version of \mEdhoc{} using five
 cores.
 %
-We also verify slightly different properties.
+\vedit{We also verify slightly different properties.
 %
-For instance, we include session key independence in our properties.
+For instance, we include session key independence in our properties.}{Naturally, since the model has undergone so much change, the set of properties which we verify is also different.}
 %
-The \mTamarin{} tool has been used to verify many other protocols, perhaps closest
+The \mTamarin{} tool has been used to verify many other protocols \vedit{, p}{. P}erhaps closest
 to our work is Cremers~et.~al's analysis of
 \mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
 %
@@ -483,12 +487,13 @@ Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls{} by Krawczyk and
 Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
 \knote{Add work on \mNoise{} here when Vaishnavi has added her section.}
+\vnote{This still needs to be done? Or is it enough that we cover it in my later section?}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Structure}
 \label{sec:structure}
 \knote{Only include this if we have space to spare.}
-
+\vnote{I don't think this is necessary. There really are only two major sections, and it's quite obvious what they would be!}
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} protocol}
 \label{sec:edhoc}
@@ -643,7 +648,7 @@ it similarly to how \mTls{} is used today.
 Many developers will assume that \mEdhoc{} provides sufficient security and may
 chose method based on performance rather than on security properties.
 %
-For example, consider a use-case where \mEdhoc{} is run over a near-field
+For example, consider a \vedit{use-case}{use case} where \mEdhoc{} is run over a near-field
 communication radio to derive a token from the derived session key.
 %
 The token is then to be used at a later point in time.
@@ -748,7 +753,7 @@ determine whether mutual authentication is an appropriate requirement or whether
 a more optimized unilateral authentication solution with possible \mCoap{} level
 authentication would be better.
 %
-We propose considering light-weight use-case analysis to explore this option.
+We propose considering light-weight \vedit{use-case}{use case} analysis to explore this option.
 %
 
 \mPoint{not verifying \mIdcredr{} is dangerous}
@@ -778,7 +783,7 @@ device $A$.
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity.
 %
-This is yet another example of where a small use-case or user-story uncovers
+This is yet another example of where a small \vedit{use-case}{use case} or user-story uncovers
 potential lacks in the \mSpec, and show that it would be a useful addition to
 the requirements document~\cite{ietf-lake-reqs-04}.
 
