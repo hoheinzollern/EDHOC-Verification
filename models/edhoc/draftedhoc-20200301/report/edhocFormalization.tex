@@ -52,7 +52,7 @@ of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
 Different \mEdhoc{} methods offer different levels of authentication, namely
 \emph{explicit authentication} and \emph{implicit authentication}.
 
-We say that \mEdhoc in method $m$ satisfies \emph{explicit authentication} for
+We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
 the initiator $A$ with a responder $B$, if injective agreement holds for $A$
 with $B$ on the session key $sk$, when running method $m$.
 
@@ -150,27 +150,44 @@ and
 $\mFr$ to denote a fresh constant created in the current rule, among
 others), rules and equations that represent the attacker's knowledge
 and standard equational theories in the symbolic model, plus syntactic
-sugar, all of which we introduce as we see necessary.
+sugar, which we present later.
 
+\paragraph{Notational conventions} In the remainder of this section we present
+\mTamarin{} code as it appears in the models that we verify, in the style of
+literate programming.  Whenever possible we match the style of the protocol
+diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
+draft~\cite{selander-lake-edhoc-01}, so that each element of the model is
+traceable to the standard.  There are a few exceptions to this, most notably
+some variable names that we introduce for the sake of the specification and are
+not present in the original document, which will appear in camelCase, and the
+syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
+
+We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
+for the responder) as to avoid confusion with \mTamarin's builtin variable
+names \mT{x} and \mT{y}.
+
+\paragraph{Protocol rules and equations}
 For example in our model we have a symbol to denote authenticated encryption and
 hence \mTamarin{} produces the rule:
 %
-\[ !\mKU( k ), !\mKU( m ), !\mKU( ad ), !\mKU( al ) \ifarrow !\mKU( \mAeadEncrypt(k, m, ad, al) ) \]
+\begin{lstlisting}
+[ !KU(k), !KU(m), !KU(ad), !KU(al) ] --[]-> [ !KU(aeadEncrypt(k, m, ad, al)) ]
+\end{lstlisting}
 %
 to denote that if the attacker knows a key $k$, a message
 $m$, the authenticated data $ad$, and an algorithm
 $al$, then they can construct the encryption using these parameters, hence get
-to know the message $\mAeadEncrypt(k, m, ad, al)$.
+to know the message \lstinline{aeadEncrypt(k, m, ad, al)}.
 
 In our model we introduce a theory for authenticated encryption, plus the
 built-in theories of XOR and Diffie-Hellmann.
 %
 Authenticated encryption, which is encryption with authentication data as
 detailed in~\cite{aead}, has the following two equations:
-\begin{align*}
-  \mAeadDecrypt(k, \mAeadEncrypt(k, m, ad, al), ad, al) = m\\
-  \mDecrypt(k, \mAeadEncrypt(k, m, ad, al), al) = m
-\end{align*}
+\begin{lstlisting}
+  aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
+  decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
+\end{lstlisting}
 With the first rule we allow the protocol to decrypt the message $m$ if the
 encryption has matching key $k$, authenticated data $ad$, and uses the same
 algorithm $al$.
@@ -226,13 +243,13 @@ code can be inspected at
 \paragraph{General setup}
 \begin{lstlisting}
 rule registerLTK_SIG:
-  [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
-    [!LTK_SIG($A, ~ltk), !PK_SIG($A, pk(~ltk)), Out(<!<$A, pk(~ltk)>!>)]
+ [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
+  [!LTK_SIG($A, ~ltk), !PK_SIG($A, pk(~ltk)), Out(<!<$A, pk(~ltk)>!>)]
 rule registerLTK_STAT:
-  [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]->
-    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+ [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]->
+  [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
 rule registerLTK_PSK:
-  [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+ [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 \end{lstlisting}
     
 These three rules express the registering of the long term keys for the \mSig,
@@ -254,11 +271,11 @@ Long term keys are revealed to the attacker through specific rules
 with the event \mT{LTKRev}.
 \begin{lstlisting}
 rule revealLTK_SIG:
-    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+  [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_STAT:
-    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+  [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+  [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
 \end{lstlisting}
 these rules are used to check the different lemmas for authetication
 and key secrecy, as we limit when the attacker is able to reveal the
@@ -288,10 +305,8 @@ rule I1_PSK_PSK:
 This rule uses the persistent predicate \mT{!LTK_PSK} to retrieve the long-term
 symmetric key for the two parties U (the initiator) and V (the responder).  The
 two predicates \mT{Fr(~xx)} and \mT{Fr(~tid)} denote the creation of a fresh
-ephemeral key and a fresh session identifier.  We use \mT{xx} to name the
-ephemeral key for the initiator (resp. \mT{yy} for the responder) as to avoid
-confusion with \mTamarin's builtin variable names.  Message 1 is then
-constructed as a tuple in the let binder following the specification.  
+ephemeral key and a fresh session identifier.  Message 1 is then constructed as
+a tuple in the let binder following the specification.
 
 It is worth noting that there are some differences in the way \mT{m1} is
 constructed when compared to the specification. In particular, the \emph{method}
@@ -335,7 +350,8 @@ Figure~\ref{fig:edhocpsk}.  We use the public constant \mT{'emptyStr'} instead
 of an empty string since \mTamarin{} has no concept of strings (single quotes
 denote constants).
 
-Here we notice the introduction of the event \mT{ExpRunningR(~tid, $V, exp_sk)}%
+Here we notice the introduction of the event \mT{ExpRunningR(~tid, $V, exp_sk)}
+% 
 which we later use to show explicit authentication (hence the exp prefix) by
 finding an injective correspondence between two events.
 
@@ -360,14 +376,13 @@ rule I3_PSK_PSK:
     plainText3 = 'emptyStr'
     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
     m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gy^~xx> // SIG_SIG or PSK_PSK
+    exp_sk = <gy^~xx>
     imp_sk =  exp_sk
   in
   [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), In(m2) ]
-  --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
-    , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-    , I3(~tid, $U, $V, m1, m2, m3)
-   ]->
+  --[ ExpCommitI(~tid, $U, $V, exp_sk)
+    , CommitI(~tid, $U, $V, imp_sk)
+    , I3(~tid, $U, $V, m1, m2, m3) ]->
    [ Out(m3) ]
 \end{lstlisting}
 
@@ -393,15 +408,14 @@ rule R4_PSK_PSK:
     plainText3 = 'emptyStr'
     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
     m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gxy> // SIG_SIG or PSK_PSK
+    exp_sk = <gxy>
     imp_sk =  exp_sk
   in
   [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2), In(m3) ]
   --[ ExpCommitR(~tid, $U, $V, exp_sk)
     , CommitR(~tid, $U, $V, imp_sk)
-    , R4(~tid, $U, $V, m1, m2, m3)
-    ]->
-    []
+    , R4(~tid, $U, $V, m1, m2, m3) ]->
+  []
 \end{lstlisting}
 
 This rule receives message 3, checks against its local state that the
@@ -423,8 +437,7 @@ rule I1_STAT_SIG:
   let gx = 'g'^~xx
       m1 = <'STAT', 'SIG', $cSUITE0, gx> 
   in
-  [ !LTK_STAT($U, ~ltk), Fr(~xx), Fr(~tid)
-  ]
+  [ !LTK_STAT($U, ~ltk), Fr(~xx), Fr(~tid) ]
   --[ I1(~tid, $U, $V, m1) ]->
   [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
   , Out(m1)]
@@ -458,12 +471,10 @@ rule R2_STAT_SIG:
     exp_sk = <gx^~yy>
   in
   [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV)
-  , In(m1), Fr(~yy), Fr(~tid)
-  ]
+  , In(m1), Fr(~yy), Fr(~tid) ]
   --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
-  , Out(m2)
-  ]
+  , Out(m2) ]
 \end{lstlisting}
 Here is a place where the model and the original specification differ
 slightly, the reason being that we must allow some behaviour that is
@@ -521,8 +532,7 @@ rule I3_STAT_SIG:
   , In(m2) ]
   --[ ExpCommitI(~tid, $U, $V, exp_sk), CommitI(~tid, $U, $V, imp_sk)
   , I3(~tid, $U, $V, m1, m2, m3)
-  , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)
-  ]->
+  , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true) ]->
   [ Out(m3) ]
 \end{lstlisting}
 Here is a crucial difference that follows from our last observation: we notice
@@ -554,13 +564,11 @@ rule R4_STAT_SIG:
   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
   , !PK_STAT($U, pkU)
   , !PK_SIG($V, pkV)
-  , In(m3)
-  ]
+  , In(m3) ]
   --[ ExpCommitR(~tid, $U, $V, exp_sk)
   , CommitR(~tid, $U, $V, imp_sk)
   , R4(~tid, $U, $V, m1, m2, m3)
-  , Eq(authI, MAC_3)
-  ]->
+  , Eq(authI, MAC_3) ]->
   []
 \end{lstlisting}
 
@@ -681,15 +689,15 @@ not been running a matching session with the initiator.
 
 \begin{lstlisting}
 lemma authInjAgreeGuaranteeForI:
-    all-traces
-    "All tidI u v expSk #i.
-         ExpCommitI(tidI, u, v, expSk)@i ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
-                & not(#i = #i2) ) )
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-         | (Ex #j. LTKRev(v)@j & #j < #i) )"
+  all-traces
+  "All tidI u v expSk #i.
+     ExpCommitI(tidI, u, v, expSk)@i ==>
+     ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+       & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
+        & not(#i = #i2) ) )
+     | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+     | (Ex #j. LTKRev(u)@j & #j < #i)
+     | (Ex #j. LTKRev(v)@j & #j < #i) )"
 \end{lstlisting}
 \anote{as this is a disjunction and the symmetric LTKRev happens only
   in the symmetric model and viceversa, this property is equivalent to
@@ -710,15 +718,15 @@ in the reverse direction:
 
 \begin{lstlisting}
 lemma authInjAgreeGuaranteeForR:
-    all-traces
-    "All tidR u v sk #i.
-         CommitR(tidR, u, v, sk)@i ==>
-         ( ( (Ex tidI #j. CommitI(tidI, u, v, sk)@j & #j < #i)
-           & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
-                & not(#i = #i2) ) )
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-         | (Ex #j. LTKRev(v)@j & #j < #i) ) "
+  all-traces
+  "All tidR u v sk #i.
+     CommitR(tidR, u, v, sk)@i ==>
+     ( ( (Ex tidI #j. CommitI(tidI, u, v, sk)@j & #j < #i)
+       & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
+        & not(#i = #i2) ) )
+     | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+     | (Ex #j. LTKRev(u)@j & #j < #i)
+     | (Ex #j. LTKRev(v)@j & #j < #i) ) "
 \end{lstlisting}
 
 As the explicit and implicit authentication always correspond for the
@@ -733,36 +741,36 @@ additional \mT{Exp} prefix to the running and commit events
 The following lemma proves implicit authentication:
 \begin{lstlisting}
 lemma authGIYImplicitAuthGuaranteeForI2:
-    all-traces
-    "All tidI u v impSk #i.
-         CommitI(tidI, u, v, impSk)@i ==>
-         ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
-             (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
-	        CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
-           & (not Ex #k. K(impSk)@k) )
-         | (Ex #k. LTKRev(u)@k)
-         | (Ex #k. LTKRev(v)@k)
-         | (Ex #k. LTKRev(<u, v>)@k)
-         )
-    "
+  all-traces
+  "All tidI u v impSk #i.
+     CommitI(tidI, u, v, impSk)@i ==>
+     ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+       (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
+	    CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
+       & (not Ex #k. K(impSk)@k) )
+     | (Ex #k. LTKRev(u)@k)
+     | (Ex #k. LTKRev(v)@k)
+     | (Ex #k. LTKRev(<u, v>)@k)
+     )
+  "
 \end{lstlisting}
 \anote{this is the reformulated implicit authentication turned into a positive implication (almost no negation). All models are verified and it saves 5 minutes in verification time on my machine}
 \begin{lstlisting}
 lemma authGIYImplicitAuthGuaranteeForI:
-    all-traces
-    "All tidI u v impSk #i.
-         CommitI(tidI, u, v, impSk)@i ==>
-         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==> (u = u2  &  v = v2) )
-           & (not Ex #k. K(impSk)@k)
-           & (not( Ex tidR u v #j tidR2 u2 v2 #j2.
-                      ( CommitR(tidR,  u,  v,  impSk)@j
-                      & CommitR(tidR2, u2, v2, impSk)@j2
-                      & not(#j = #j2)
-                      ) ) )
-           )
-         | (Ex #k. LTKRev(u)@k)
-         | (Ex #k. LTKRev(v)@k)
-         | (Ex #k. LTKRev(<u, v>)@k) ) "
+  all-traces
+  "All tidI u v impSk #i.
+     CommitI(tidI, u, v, impSk)@i ==>
+     ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==> (u = u2  &  v = v2) )
+       & (not Ex #k. K(impSk)@k)
+       & (not( Ex tidR u v #j tidR2 u2 v2 #j2.
+            ( CommitR(tidR,  u,  v,  impSk)@j
+            & CommitR(tidR2, u2, v2, impSk)@j2
+            & not(#j = #j2)
+            ) ) )
+       )
+     | (Ex #k. LTKRev(u)@k)
+     | (Ex #k. LTKRev(v)@k)
+     | (Ex #k. LTKRev(<u, v>)@k) ) "
 \end{lstlisting}
 
 As opposed to lemma \mT{authInjAgreeGuaranteeForI}, here we prove that the two
@@ -793,21 +801,23 @@ of the protocol.
 First we show the lemma for the symmetric method:
 \begin{lstlisting}
 lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) ) &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
+  all-traces
+  "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+     ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) ) &
+   (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+     ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
 
 Next we present the lemma for the asymmetric methods:
 \begin{lstlisting}
 lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) ) &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) )"
+  all-traces
+  "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+     ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j)
+     | (Ex #l. SKRev(sk)@l)) ) &
+   (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+     ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j)
+     | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
 
 % holds no matter which method user chooses.
@@ -820,9 +830,9 @@ lemma secrecyPFSGIYSessionKey:
 % what we have covered and what we haven't.
 
 %  -  Entity authentication - we show this in the same lemmas as we show
-%       inj-agree on session key.  We don't have this property when $I$ uses
-%       STAT method because $I$ then gets no confirmation of
-%       Pre-specified peer model.
+%     inj-agree on session key.  We don't have this property when $I$ uses
+%     STAT method because $I$ then gets no confirmation of
+%     Pre-specified peer model.
 %  -  Key confirmation (except for when $I$ uses \mStat
 %     method, then $I$ gets no key confirmation on \mGiy)
 

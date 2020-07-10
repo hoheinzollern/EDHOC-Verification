@@ -9,7 +9,7 @@
 \usepackage{soul}           % \hl for highlighting text; \st for strike-through
 
 \usepackage{graphicx}
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,tikzpeople}
 \usetikzlibrary{trees,snakes,arrows}
 \usetikzlibrary{shapes,chains}
@@ -35,36 +35,7 @@
     pdfcreator={PdfLaTeX}, % PDF Creator
 %   pdfproducer={Pandoc, XeLaTeX with hyperref} % PDF producer
   }
-\usepackage[final]{listings}
 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    identifierstyle=\color{black},
-    keywordstyle=\color{magenta},
-    numberstyle=\scriptsize\color{codegray},
-    stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\scriptsize\color{codegray},
-    breakatwhitespace=false,
-    breaklines=true,
-    captionpos=b,
-    keepspaces=true,
-    numbers=left,
-    numbersep=5pt,
-    showspaces=false,
-    showstringspaces=false,
-    showtabs=false,
-    tabsize=2,
-%    literate={--[}{$-\hspace{-3pt}[$}{3}{]->}{$]\hspace{-3pt}\rightarrow$}{3},
-    keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out}
-}
-
-\lstset{style=mystyle}
 
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
