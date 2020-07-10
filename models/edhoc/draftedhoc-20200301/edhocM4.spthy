@@ -1,6 +1,4 @@
-changequote(`<!', `!>')
-ifelse(m4ATTACKER, PASSIVE, <!define(Out, Msg($1)) define(In, Msg($1))!>, )
-theory <!edhoc_!>m4METHODI<!_!>m4METHODR<!_!>m4ATTACKER
+changequote(`<!', `!>') ifelse(m4ATTACKER, PASSIVE, <!define(Out, Msg($1)) define(In, Msg($1))!>, ) theory <!edhoc_!>m4METHODI<!_!>m4METHODR<!_!>m4ATTACKER
 begin
 builtins: diffie-hellman, xor, signing, hashing
 
@@ -192,7 +190,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
     /* Message 3 handling */
          data_3 = 'emptyStr' //~C_R
-         TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
          K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!extAad3 = TH_3
@@ -286,7 +284,7 @@ ifelse(<!SIG!>, m4METHODR,
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
         data_3 = 'emptyStr' //~C_R
-        TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+        TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
        <!extAad3 = TH_3
