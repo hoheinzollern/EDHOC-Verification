@@ -278,6 +278,9 @@ agent or pair of agents, as enforced by the following restriction:
 restriction uniqLTKs:
     "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
 \end{lstlisting}
+\kedit{}This models that there is an external mechanism ensuring that the
+long term keys are bound to the correct identity, e.g., a certificate authority,
+and that the attacker cannot register new public keys for an existing identity.}
 
 Long term keys are revealed to the attacker through specific rules
 with the event \mT{LTKRev}.
@@ -410,6 +413,17 @@ The difference is the choice of key material on which we check authentication
 null, but that will be crucial when the initiator runs the \mStat{} method.}{. In the case of the \mSig{} method, as above, these keys are the same, but there will be a crucial difference when the initiator runs the \mStat{} method.}
 \anote{I found a discrepacy for cHash0, should use the public constant and not
   the nullary function!}
+  \knote{ I fixed it in the code. How do you want to deal with code changes now?
+      Should we treat the code inlined here in the papers as imported and hence
+      needs to be pateched as well, or do you plan to bring in the sources from
+      the TMP-files again?
+  }
+  \knote{In the spthy code I used Haskell-style indentation. Now
+      that the font in the paper is no longer fixed width, that just looks plain
+      ugly. If the current style of the listings is the one that we will use in
+      the end, bringing the commas in lists from the front of a line to the end
+      of the previous line would probably look better.
+  }
 
 Finally, we have the last rule for the responder:
 \begin{lstlisting}

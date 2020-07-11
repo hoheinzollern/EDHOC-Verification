@@ -111,6 +111,11 @@ details on the particular method. I should have it done by Monday.}
 To achieve small message sizes and reuse implementations often supported by constrained IoT devices (\mcneed), \mEdhoc{} uses Concise Binary Object Representation (\mCbor) for data encoding and \mCbor{} Object Signing and Encryption (\mCose) for cryptographic operations. 
 
 \vnote{To Karl: What citation should I put here? You've asked for one, but I assume the only citation possible is the specification itself, which I don't think we need to refer to yet again.}
+\knote{I was thinking of something that shows that \mCbor{} and \mCose{} are
+    widely implemented. I did a quick google but didn't find anything good.
+    Propsal: Check if the specification gives a reference (they should since
+    this is a driving force for the design), and if there is none, ask
+G\"oran if he has some good link.}
 
 \mCbor{} is a data format designed for small code size and small message size. \mCose{} is used to create and process signatures, MACs, and encryption using \mCbor{} to encode and decode input and output objects.
 
