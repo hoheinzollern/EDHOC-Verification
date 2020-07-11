@@ -127,6 +127,7 @@ key derived by a combination of the static key and an ephemeral key. In
 \knote{There is something odd with the sentence above. What does it mean that
     the static key and payload are encrypted in the same key?
 }
+\vnote{The payload is \mADthree. The static key is \mCredi. Both of these are encrypted using \mKthreeae, which depends on \mKtwoe (obviously) -- I agree that the sentence about the key depending on the static key of the initiator is wrong. Unless I'm mistaken in my understanding?}
 This perhaps diverges from the XX pattern of \mNoise{}, and one can no longer
 directly claim that \mEdhoc{} enjoys the same properties as XX. As a potential
 direction for future work, we relegate the further investigation of this pattern
@@ -147,6 +148,7 @@ structure and the details of the} methods.
     the general framework in which each of the methods can be put in. I only
     scanned the method descriptions, but got the impression they go straight into
 details on the particular method. I should have it done by Monday.}
+\vnote{Yes, they do. Please go ahead if you want to add such text.}
 
 \subsection{Fundamental components of \mEdhoc{}}
 \subsubsection{\mCose{}}
@@ -191,6 +193,7 @@ A \mCoseEncrypt{} structure as used in \mEdhoc{} is a \mCbor{} array with a text
 \knote{This is the first time the \mCoseEncrypt{} structure is mentioned. How
     does it relate to \mCose objects?  Maybe some more explanation is needed.
 }
+\vnote{I think this section needs a full overhaul. I'll rewrite it.}
 
 \subsubsection{\mAead{}}
 Authenticated encryption with associated data, or \mAead{}, \kedit{is an authenticated
@@ -202,8 +205,9 @@ associated data is merely authenticated. The ciphertext is at least as long as
 the plaintext. When the plaintext is empty, the \mAead{} \kedit{}{encryption}
 algorithm acts as a MAC on the associated data.
 
-The associated data is used to protect information that needs to be authenticated, but does not need to be kept confidential. It might be desirable to authenticate this information, although it must be left unencrypted to allow the system to function properly.
+The associated data \vedit{is used to protect information that needs to be authenticated, but does not need to be kept confidential. It might be desirable to authenticate this}{field contains} information \vedit{}{which it might be desirable to authenticate, but} \vedit{, although it}{} must be left unencrypted to allow the system to function properly.
 \knote{Is the two previous sentences not saying the same thing?}
+\vnote{Sure, I've removed one.}
 Authentication \kedit{}{of associated data} is provided without \kedit{copying the data into the
 plaintext}{including it in the ciphertext.}.
 
@@ -231,6 +235,7 @@ nothing.}
     parts are different in my mind and should be described separately to make it
     clear what is new and what is old.
 }
+\vedit{This is a great point, and one I had thought about, but forgot to fix after I had added the figure. I'll do that.}
 One of the most important building blocks for \mEdhoc is the key derivation function based on \mHkdf~\cite{rfc5869}, which is used to generate the pseudorandom strings and keys for the encryption operations in the communicated messages. The three pseudorandom strings (\mPRKtwo, \mPRKthree, and \mPRKfour) are derived using the \mHkdfExtract function, while the keys  are generated using the \mHkdfExpand function. Both these functions are based on \mHmac~\cite{rfc2104}, which is a hashing system for message authentication.
 
 %The \mHkdfExtract function is run with a salt and some input keying material (IKM) as input. It produces as output a pseudorandom string. For the \mPskPsk method alone, the salt is the key pre-shared between the initiator and the responder, while for the other methods, it is empty. The IKM for all \mEdhoc methods is the ECDH shared secret $g^{xy}$. 
