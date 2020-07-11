@@ -495,18 +495,15 @@ number of detailed desirable security properties with little motivation for why
 these are suitable ones, and without an outline of a security model where these
 should hold.
 %
-While technical limitations, such as link restrictions and that only a certain
-type of credential are available to devices, are mentioned, and design
+While technical limitations, such as link restrictions and \vedit{that only a certain
+type of credential are available to devices}{the availability of only a certain type of credential for devices}, are mentioned, and design
 choices are motivated by these, there are no application use cases or user
 stories capturing intended uses of \mEdhoc{}.
 %
-Consequently, while it is possible to verify that, given these restrictions and
-using the constructions in the \mSpec{}, \mEdhoc{} has certain security
-properties, it is hard to say whether these are the necessary or most useful
-ones for IoT use cases.
+Consequently, while it is possible to verify that given these restrictions and using the constructions in the \mSpec{}, \mEdhoc{} has certain security properties, it is hard to say whether these are the necessary or \vedit{}{even the} most useful ones for IoT use cases.
 %
 Having a better understanding of the security properties required by these use
-cases would clearly help guiding the design of \mEdhoc{}.
+cases would clearly help \vedit{}{in} guiding the design of \mEdhoc{}.
 %
 It may also help reducing the number of methods to the ones that are needed.
 %
@@ -518,10 +515,10 @@ that the protocol should withstand.
 %
 
 Similar to \mDandTls{}, \mEdhoc{} is intended to solve a variety of use cases,
-many not known today, so it is not possible to collect all types of use cases
+many not known today, \vedit{so}{and therefore,} it is not possible to collect all types of use cases
 that need to be considered.
 %
-However, this is not valid argument against collecting typical uses cases and
+However, this is not \vedit{}{a} valid argument against collecting typical use cases and
 user stories to capture at least \emph{some} of the security properties a
 solution must exhibit.
 %
@@ -529,7 +526,7 @@ solution must exhibit.
 user stories or use cases.
 %
 In fact, while constructing our model, we came up with simple user stories to
-identify security properties to verify.
+identify security properties \vedit{to verify}{of interest}.
 %
 Several of these revealed undefined aspects of \mEdhoc{} that were then included
 in the \mSpec.
@@ -539,11 +536,11 @@ stories uncovered blind spots in the \mSpec.
 %
 
 \paragraph{Credentials stored in a trusted execution environment (TEE)}
-The simple question is whether there will be applications where device is
+The \vedit{simple}{} question is whether there will be applications where device is
 deployed in a hostile environment, and where it is reasonable to assume it can
 be equipped with a TEE.
 %
-In our analysis we have chosen not to model TEEs via session state reveal
+In our analysis we have chosen not to model TEEs \vedit{via}{, by making use of} session state reveal
 queries.
 %
 This is because we received indications from the \mSpec{} authors that it was not
