@@ -332,25 +332,23 @@ This section is only for the outline and will be removed in the final
 \subsection{Background and motivation}
 \label{sec:motivation}
 IoT security threats involving cars, web-cameras and other resourceful devices
-receive \vedit{most}{a lot of} attention from \vedit{media and academia}{the technical community as well as the media}.
+receive most attention from media and academia.
 %
 These devices are computationally strong with no severe bandwidth or energy
 consumption restrictions.
 %
-Securing the communication between such devices can \vedit{readily be}{be readily} done using
+Securing the communication between such devices can readily be done using
 \mDandTls.
 %
-Constrained devices, on the other hand, where such restrictions \vedit{}{on bandwidth or energy} are common,
-have received much less attention.
+Constrained devices, on the other hand, where such restrictions on bandwidth or
+energy are common, have received much less attention.
 %
-These devices may be simple sensors with \vedit{the only}{a single} task of relaying
-measurements of their physical environment to a server every hour, \vedit{and}{but} doing so
+These devices may be simple sensors with the only task of relaying
+measurements of their physical environment to a server every hour, but doing so
 autonomously for a decade without maintenance.
 %
-\vedit{Constrained devices therefore often have limitations on energy consumption.}{}
-%
 To keep energy consumption down, highly specialized radio links with small
-and heterogeneous frame-sizes are sometimes used.
+and heterogeneous frame sizes are sometimes used.
 %
 In some cases, \mDandTls{} messages are too large to fit into the radio frames.
 %
@@ -362,42 +360,55 @@ communications between constrained devices, as a complement for when
 The \mOscore{} protocol requires a pre-established security context.
 %
 The IETF Lightweight Authenticated Key Exchange (LAKE) working group
-\vedit{currently develops}{is currently developing} requirements and a key exchange protocol \vedit{}{, named \mEdhoc~\cite{selander-lake-edhoc-01},} capable of
+is currently developing requirements and a key exchange protocol,
+named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of
 establishing \mOscore{} security contexts.
-%
-\vedit{The key establishment protocol is named \mEdhoc.}{}
 %
 Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
 
 \vnote{Should we say something about since when the LAKE WG has been working on this?}
+\knote{We do write that the initial draft was in March 2016. IETF has been
+    working on the protocol since then. Before that there was also work that
+    lead up to recognizing the need for it. The forming of the LAKE WG came
+    later. So it is difficult to say exactly how long IETF has been working on
+    the problem. Also, giving the starting date of LAKE WG seems to be a bit
+    misleading. If you have any good proposals for formulation, please propose
+    one. Otherwise I'm OK with just giving March 2016 as first EDHOC draft.
+}
 %
 
-While neither the requirements nor the \vedit{use-cases}{use cases} for \mEdhoc{} are firmly set,
+While neither the requirements nor the use cases for \mEdhoc{} are firmly set,
 the overarching design goal of \mEdhoc{} is to establish an \mOscore{} security
 context with decent security while keeping the messages small.
 \vnote{``decent security'' is too vague/throwaway for a technical paper}
+\knote{I agree. But that is as what EDHOC aims for. They haven't defined it
+    better than that (if even that). There are trade-offs.
+    Highest priority is small messages. We could simply remove "decent
+    security". Would that be better?
+}
+
 %
 The LAKE working group is currently discussing whether a compressed version of
-\mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would \vedit{solve the same use-cases}{suffice for the same use cases} as \vedit{}{the combination of}
-\mOscore{} and \mEdhoc{} \vedit{combined}{}.
+\mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would suffice for the same use
+cases as the combination of \mOscore{} and \mEdhoc.
 %
 
 The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
-messages and more \vedit{use-cases}{use cases}.
+messages and more use cases.
 %
 The first incarnation of \mEdhoc{} appeared in March 2016.
 %
 It contained two different cryptographic cores, one based on a
 pre-shared key Diffie-Hellman and a second following a draft of the
-then emerging \mbox{\mTls{} v1.3} standard~\cite{ietf-tls-tls13-11}, using
+then emerging \mTls\ v1.3 standard~\cite{ietf-tls-tls13-11}, using
 challenge-response signatures.
 %
 The latter was then replaced by \mSigma, and this version, from May 2018, was
 formally analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 The protocol has now further evolved and variants using challenge-response
-signatures \vedit{}{based on \mOptls?} have now been added again.
+signatures have now been added again by integrating the \mOptls{} core.
 %
 On top of this, mixed variants where one party uses a challenge-response
 signature and the other a regular signature have also been added.
@@ -406,30 +417,43 @@ Consequently, there are now five cryptographic cores in total, and it is prudent
 to formally analyze them all to ensure a higher level of security assurance for
 \mEdhoc.
 %
-This is especially important, since the \mSpec{} itself lacks \vedit{}{a} description of the
-intended security model and overall security goals.
+This is especially important, since the \mSpec{} itself lacks a description
+of the intended security model and overall security goals.
 %
-Filling this gap and \vedit{deriving}{specifying the} circumstances under which \mEdhoc{} can be
-securely used to achieve certain \vedit{}{expected?} goals is an important part of this paper.
+Discussing how this gap can be filled, and how to identify what the expected
+security goals should be, is an important part of this paper.
 %
 
 %-------------------------------------------------------------------------- sub
 \subsection{Contributions}
 \label{sec:contributions}
+We have reviewed and analyzed the \mEdhoc{} protocol, which has continuously
+evolved, at times based on our feedback.
+%
+The analysis spanned over roughly five months, but the formal models and proven
+properties are based on to the version specified in the draft as it was
+2020-03-01~\cite{selander-lake-edhoc-01}.
+%
+
 Our main contributions are the following.
 \begin{itemize}
-    \item We provide formalization of \vedit{\mEdhoc's}{}all five cryptographic cores \vedit{}{of \mEdhoc}
+    \item We provide formalization of all five cryptographic cores of \mEdhoc{}
         using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
     \item We give an explicit security model for the protocol and have verified
         essential security properties, such as session key and entity
         authentication, as well as Perfect Forward Secrecy (PFS), within that
         model.
-        \vnote{How are the model and these properties obtained? Say something about them being extrapolations of stuff mentioned in the \mSpec?}
-    \item We provide consequence analysis of the verified properties to
-        establish which types of use-cases \mEdhoc{} may be suitable for and
-        to give recommendations for the future standards development.
-    \item Our discussions with \vedit{}{members of the} IETF LAKE working group \vedit{members}{}have already
-        \vedit{lead}{led} to improvements and clarification\vedit{s}{} of the standard \mSpec{} based
+        From these explicitly proven properties other properties follow, e.g.,
+        session key independence.
+    \item We discuss the relation between proven properties, potentially missing
+        properties and the lack of clear design goals and security model for
+        \mEdhoc{}.
+        Based on this we give recommendations for the future standards
+        development in regards to clarity, not only in terms of under which
+        technical restrictions the protocol must work, but also what its
+        envisioned uses are.
+    \item Our discussions with members of the IETF LAKE working group have already
+        lead to improvements and clarifications of the standard \mSpec{} based
         on observations we made during the construction of our formal model.
 \end{itemize}
 
@@ -438,27 +462,38 @@ Our main contributions are the following.
 \label{sec:relatedWork}
 The work closest to ours is Bruni~et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
-\vedit{two cryptographic}{two-cryptographic} core\vedit{,}{} version of \mEdhoc.
+two-cryptographic core, version of \mEdhoc.
 %
-We consider our work to be a \vedit{sort of}{} follow-up to that, doing a similar kind of
-analysis of the most recent, and more elaborate\vedit{,}{} version of \mEdhoc{} using five
-cores.
+We consider our work to be a sort of follow-up to that, doing a similar kind of
+analysis of the most recent, and more elaborate, version of \mEdhoc{} with its
+five cores.
 %
-\vedit{We also verify slightly different properties.
+We do, however, take a clean slate approach and look at the protocol as new.
 %
-For instance, we include session key independence in our properties.}{Naturally, since the model has undergone so much change, the set of properties which we verify is also different.}
+For example, since the model has undergone so much change, the set of properties
+which we verify is also different.
 %
-The \mTamarin{} tool has been used to verify many other protocols \vedit{, p}{. P}erhaps closest
-to our work is Cremers~et.~al's analysis of
+The \mTamarin{} tool has been used to verify many other protocols, perhaps
+closest to our work is Cremers~et.~al's analysis of
 \mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
 %
 Some of the cryptographic cores themselves have been analyzed in the
 computational model, e.g., \mSigma{} by Canetti and
-Krawczyk~\cite{DBLP:conf/crypto/CanettiK02} and \mOptls{} by Krawczyk and
-Wee~\cite{DBLP:conf/eurosp/KrawczykW16}.
+Krawczyk~\cite{DBLP:conf/crypto/CanettiK02}, \mOptls{} by Krawczyk and
+Wee~\cite{DBLP:conf/eurosp/KrawczykW16}, and \mNoise{} by
+Kobeissi~et.~al.~\cite{DBLP:conf/eurosp/KobeissiNB19}.
 %
-\knote{Add work on \mNoise{} here when Vaishnavi has added her section.}
-\vnote{This still needs to be done? Or is it enough that we cover it in my later section?}
+Computational models often rely on implicit session key authentication
+(see for example the definition of SK-security in the Canetti-Krawczyk
+model~\cite{DBLP:conf/crypto/CanettiK02}).
+%
+Although symbolic models predominantly rely on correspondence properties in the
+style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where implicit
+authentication has been used.
+%
+For example, Schmidt~et.~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
+symbolized version of an extended Canetti-Krawzcyk model.
+%
 
 %-------------------------------------------------------------------------- sub
 \subsection{Structure}
