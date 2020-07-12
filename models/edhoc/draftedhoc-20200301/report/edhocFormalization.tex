@@ -23,6 +23,16 @@ key material at any given point.
 \vedit{On the converse}{Conversely}, we say that a party is honest if they never reveal their
 long-term key or session key material.
 
+\kedit{Another important point is to define what the key material is.
+    \mEdhoc{} does not result in an explicit session key, but a cryptographic
+    state from which keys for \mOscore can be derived using \mHkdf.
+    As will be seen below, depending on how the key material is defined, the
+    different methods will have different authentication properties.
+    In particular, all methods except those where the initiator uses the
+    \mStat{} method provide a stronger form of authentication (injective
+    agreement) for the initator.
+}
+
 \subsection{Desired Properties}
 \label{sec:desired-properties}
 Next we list the properties that will be considered during verification.
