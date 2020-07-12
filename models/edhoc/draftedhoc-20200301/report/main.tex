@@ -720,7 +720,7 @@ the requirements document~\cite{ietf-lake-reqs-04}.
 \mEdhoc{} establishes a session key state as output, from which session keys for
 \mOscore{} can be derived using \mHkdf{}.
 %
-As discussed in section \hl{ref formalization section}, there are various
+As discussed in Section~\ref{sec:threat-model}, there are various
 possibilities for defining which parameters from the \mEdhoc{} run should
 provide the secret input to the session key state.
 
@@ -731,14 +731,15 @@ using the \mStat{} method themselves.
 Therefore, \mGiy{} cannot be considered part of the key material if mutual
 injective agreement is considered an important property for \mEdhoc{}.
 %
-This would deviate from \mOptls{}, which is the cryptographic core used for
-these methods.
+Excluding \mGiy{} would deviate from \mOptls{}, which is the cryptographic core
+used for these methods.
 %
 Specifically, the proof of session key confidentiality in the face of long-term
-key compromise for \mOptls{} cannot be adapted for \mEdhoc{}.
-\vnote{Perhaps this needs a citation, or more explanation?}
+key compromise for \mOptls{} cannot be adapted for \mEdhoc{} because the
+underlying assumption that \mGiy{} is part of the key material would no longer
+be true.
 %
-It is unclear whether other security properties of \mOptls{} would also fail if
+Other security properties of \mOptls{} may also fail to be true if
 \mGiy{} were excluded.
 %
 
@@ -782,7 +783,7 @@ against this option.
 %
 
 We have show implicit agreement on \mGx{}, \mGy{} for all methods, and also on
-\mGiy{} and \mGrx{} when these are used, see~\hl{ref formalization}.
+\mGiy{} and \mGrx{} when these are used, see Section~\ref{sec:formalization}.
 %
 If this weaker security guarantee is sufficient, both ephemeral and long-term
 keys can be part of the session key material.
@@ -798,7 +799,7 @@ Whether it is sufficient or not, depends on the intended uses of \mEdhoc{}.
 %
 That is, an initiator keeps state between protocol runs and proposes an updated
 set of cipher suites if the first run resulted in a rejection of the
-cipher suite from the responder (\hl{ref back to Protocol section}.
+cipher suite from the responder (see Section~\ref{sec:edhoc}.
 %
 Our model does not cover this.
 %
