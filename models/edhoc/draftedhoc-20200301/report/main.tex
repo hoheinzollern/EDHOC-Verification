@@ -377,23 +377,21 @@ Naturally, \mEdhoc{} must work under the same constrained requirements as
     one. Otherwise I'm OK with just giving March 2016 as first EDHOC draft.
 }
 \vnote{Maybe just say that? ``While there has been some work in the IETF on this problem, the first draft of EDHOC was proposed in March 2016...''?}
+\knote{We already do say that (see three paragraphs down). I think it fits with
+    the flow to keep it there, but feel free to propose an edit if you want to
+    mention it earlier.
+}
 %
 
 While neither the requirements nor the use cases for \mEdhoc{} are firmly set,
-the overarching design goal of \mEdhoc{} is to establish an \mOscore{} security
-context with decent security while keeping the messages small.
-\vnote{``decent security'' is too vague/throwaway for a technical paper}
-\knote{I agree. But that is as what EDHOC aims for. They haven't defined it
-    better than that (if even that). There are trade-offs.
-    Highest priority is small messages. We could simply remove "decent
-    security". Would that be better?
-}
-\vnote{I think so, yes.}
-
+the goal of \mEdhoc{} is to establish an \mOscore{} security
+context, keeping messages small being the most prominent driver for the
+design.
 %
 The LAKE working group is currently discussing whether a compressed version of
 \mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would suffice for the same use
-cases as the combination of \mOscore{} and \mEdhoc.
+cases as the combination of \mOscore{} and \mEdhoc, and try to identify which
+those use cases are.
 %
 
 The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
