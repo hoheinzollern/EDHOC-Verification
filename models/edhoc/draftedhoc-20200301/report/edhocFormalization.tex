@@ -57,30 +57,30 @@ of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
   values corresponding to all the variables in $ds$, and each such run of $A$
   corresponds to a unique run of $B$.''
 \end{quote}
-
-Different \mEdhoc{} methods offer different levels of authentication, namely
-\emph{explicit authentication} and \emph{implicit authentication}.
-\knote{I think we should try to make a point out of this. It was something we
-    discovered during the modeling. The way this sentence is written, it sounds
-    as if that it was a design choice that we just verified. We could treat it
-    as a discovery and get bonus points :-)
-}
+%
 We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
 the initiator $A$ with a responder $B$, if injective agreement holds for $A$
 with $B$ on the session key $sk$, when running method $m$.
-
-Explicit authentication requires that both parties agree on the session key
-\emph{at the end of a protocol run}.
 %
-This, however, does not hold for all \mEdhoc{} methods, in which cases we prove
-\emph{implicit authentication} as defined
-in~\cite{DBLP:journals/iacr/GuilhemFW19}.
+The corresponding definition for the responder is analogous.
+%
+If both parties obtain explicit authentication we refer to it as mutual explicit
+authentication or simply explicit authentication when it is clear from the
+context.
+
+A party obtains the explicit authentication guarantee when both parties agree
+on the session key (and other parameters), when the party completes the protocol
+run.
+%
+It turned out, however, that explicit authentication does not hold for all
+\mEdhoc{} methods, in which cases we prove \emph{implicit authentication} as
+defined in~\cite{DBLP:journals/iacr/GuilhemFW19}.
 %
 In a nutshell, a protocol satisfies \emph{implicit authentication} if the
 initiator and responder agree on the session key \emph{only after} a successful
 execution of the protocol.
 %
-That is, authentication happens only implicitely, as there is no confirmation to
+That is, authentication happens only implicitly, as there is no confirmation to
 the initiator that the responder has computed the same session key.
 %
 More precisely, we adapt the definition of~\cite{DBLP:journals/iacr/GuilhemFW19}
@@ -120,17 +120,20 @@ parties (i.e. has the ability to perform all cryptographic operations using the
 initiator's and responder's long term keys, but has not access to the long term
 keys).
 
-\vnote{If we are focussing on strong PCS, it deserves a definition of its own. Also, why are we defining weak PCS if we do not talk about it here and don't even contrast it against strong PCS?}
-
-\vnote{A minor note about style: It might be better to actually have each property be a subsubsection rather than a paragraph. That also typesets the ``headings'' neatly, unlike right now, where the parenthesized KCI and PCS appear in upright text, while the rest of the name is italicized.}
+\knote{TODO: The plan to show weak PCS, but are currently running out of memory.
+    If we get a hold of more powerful equipment before the deadline we will go
+    for it. Working on access to the security cluster now. If we won't make it
+    in time this will be removed.
+}
+%\vnote{A minor note about style: It might be better to actually have each property be a subsubsection rather than a paragraph. That also typesets the ``headings'' neatly, unlike right now, where the parenthesized KCI and PCS appear in upright text, while the rest of the name is italicized.}
 
 \subsection{Tamarin}
 \label{sec:tamarin}
 We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
 %
 \mTamarin{} is an interactive verification tool based on multi-set rewriting rules
-with event annotations, which allows the user to check LTL temporal formulas on these
-models.
+with event annotations, which allows the user to check Linear Temporal Logic
+(LTL) formulas on these models.
 %
 Multi-set rewrite rules with events take the form:
 %
@@ -160,7 +163,8 @@ and are never removed from the state.
 %
 The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
 constants and public values known to the attacker respectively, and are both
-sub-sorts of a base sort. \vnote{Could put the sort names in the typing convention used for the code.}
+sub-sorts of a base sort.
+%\vnote{TODO: Could put the sort names in the typing convention used for the code.}
 %
 Finally, \mTamarin{} has some built-in predicates ($\mIn,
 \mOut$ to represent input and output of messages with the attacker,
@@ -176,10 +180,9 @@ literate programming.  Whenever possible we match the style of the protocol
 diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
 \mSpec~\cite{selander-lake-edhoc-01}, so that each element of the model is
 traceable to the standard.  There are a few exceptions to this, most notably
-some variable names that we introduce for the sake of the specification and are
-not present in the original document, which will appear in \mT{camelCase}, and
+some variable names that we introduce for the sake of the \mTamarin{} model and are
+not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
 the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
-\vnote{``for the sake of the specification'': Since so far we are referring to the Edhoc document as the specification, maybe use a different word here? I'm not quite sure what you mean here, so I'm not adding an edit.}
 
 We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
@@ -223,15 +226,13 @@ papers~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}
 for a full reference.
 %
 Suffices to say that the XOR theory introduces the symbol \mT{XOR}, for
-expressing XOR operations \mT{x XOR y}, plus the necessary equational theory
+expressing XOR operations \mT{x} $\oplus$ \mT{y}, plus the necessary equational theory
 including associativity, commutativity, and inverse.
 %
-The theory for Diffie-Hellman introduces exponentiation \mT{g^y} and product
-\mT{x * y} as a built-in symbols in the language, plus the necessary equational
+The theory for Diffie-Hellman introduces exponentiation \mT{g^y} and product of
+exponents \mT{x * y} as a built-in symbols in the language, plus the necessary equational
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
-
-\vnote{Spacing is weird throughout for the code snippets. Especially in this x XOR y above. Please check.}
 
 \paragraph{Syntactic sugar} In the following presentation we use some syntactic
 sugar, which is necessary to understand to look at the concrete rules. First is
@@ -397,7 +398,7 @@ rule I3_PSK_PSK:
     CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
     m2 = <data_2, CIPHERTEXT_2>
     data_3 = 'emptyStr' 
-    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
     extAad3 = TH_3
     plainText3 = 'emptyStr'
@@ -421,26 +422,13 @@ be used later for verifying explicit and implicit authentication, respectively.
 The difference is the choice of key material on which we check authentication
 (\mT{exp_sk} vs \mT{imp_sk}). In the case of the \mSig{} method, as above, these
 keys are the same, but there will be a crucial difference when the initiator runs the \mStat{} method.
-\anote{I found a discrepacy for cHash0, should use the public constant and not
-  the nullary function!}
-  \knote{ I fixed it in the code. How do you want to deal with code changes now?
-      Should we treat the code inlined here in the papers as imported and hence
-      needs to be pateched as well, or do you plan to bring in the sources from
-      the TMP-files again?
-  }
-  \knote{In the spthy code I used Haskell-style indentation. Now
-      that the font in the paper is no longer fixed width, that just looks plain
-      ugly. If the current style of the listings is the one that we will use in
-      the end, bringing the commas in lists from the front of a line to the end
-      of the previous line would probably look better.
-  }
 
 Finally, we have the last rule for the responder:
 \begin{lstlisting}
 rule R4_PSK_PSK:
   let
     data_3 = 'emptyStr' 
-    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
     extAad3 = TH_3
     plainText3 = 'emptyStr'
@@ -544,7 +532,7 @@ rule I3_STAT_SIG:
     assocData2 = <protected2, extAad2>
     MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
     data_3 = 'emptyStr' 
-    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
     giy = gy^~ltk
     prk_4x3m = hkdfExtract(prk_3e2m, giy)
@@ -617,7 +605,7 @@ rule R4_STAT_SIG:
 % that it uses \mT{K_3m}, which is an expansion of \mT{prk_4x3m} that in turn uses
 % the semi-static Diffie-Hellman key \mGiy.
 % %
-\footnote{\anote{I kept this out of the main text as it's covered already, however it might be useful to discuss implicit authentication in relation to OSCORE as future work, to be put in the discussion section}
+%\footnote{\anote{I kept this out of the main text as it's covered already, however it might be useful to discuss implicit authentication in relation to OSCORE as future work, to be put in the discussion section}
 On the same rule we can also see how \emph{implicit authentication}
 differs from explicit authentication for the Initiator running the
 static method: on \mT{imp_sk} the semi-static key
@@ -636,8 +624,7 @@ this part out of the modeling and only focus on the key material that
 both parties agree on.
 %
 In future work, it will be interesting to see the interaction of
-\mEdhoc{} with \mOscore which can use
-\mEdhoc's keys.}
+\mEdhoc{} with \mOscore{} which can use \mEdhoc{}'s keys.
 
 Looking at \mT{authV} in rule \mT{R2_STAT_SIG} we can
 see how the signature message is constructed: it is a signature of the

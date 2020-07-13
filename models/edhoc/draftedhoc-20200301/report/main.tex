@@ -574,7 +574,8 @@ be equipped with a TEE.
 In our analysis we have chosen not to model TEEs, by making use of session
 state reveal queries.
 %
-This is because we received indications from the \mSpec{} authors [\mcneed] that it was not
+This is because we received indications from the \mSpec{} authors (personal
+correspondence) that it was not
 necessary to consider reveal of the session state, in particular the ephemeral
 secret keys, with the rationale that \mSigma{} cannot protect against such an
 attack (presumably based on the fact that the \mSigSig{} method is closely based on
@@ -603,18 +604,16 @@ When we did that simple thought experiment we caught that the \mSpec{} did not
 consider non-repudiation.
 %
 The authors of the \mSpec{} added a paragraph about which methods provided which
-types of (non)-repudiation.
-\vnote{In response to our pointing this out? Say that explicitly if this is the case.}
+types of (non)-repudiation in response.
 %
 It would, however, be helpful for application developers to also document
 example use cases showing the consequences of choosing the different methods,
 perhaps in the security considerations section.
 %
-\vedit{The}{Running the} \mPsk{} method or the \vedit{\mStat{}-based methods allow parties}{\mStat{} method allows a party} to obtain
-non-repudiation, whereas \vedit{\mSig{}-based method do}{the \mSig{} method does} not.
-
-\vedit{Do you mean a party that runs \mSig can get non-repudiation, no matter what the other party runs? My edits assume this. If this is not the case, fix accordingly.}
+%Using the \mPsk{} method and the \mStat{} method allows a party to obtain
+%non-repudiation, whereas the \mSig{} method does not.
 %
+%\knote{We don't formally prove this}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Security claims}
@@ -650,9 +649,10 @@ claims about security properties require justification.
 %-------------------------------------------------------------------------- sub
 \subsection{Unintended authentication confusion}
 \label{sec:usableSecurity}
-Section 3.2 of the \mSpec states that a policy is required restricting the set
-of peers an entity is allowed to run \mEdhoc{} with. 
-\vnote{Confusing sentence. A policy is not required to restrict the set of peers. What is the policy doing, and why does this restrict the set of peers?}
+Section 3.2 of the \mSpec{} states that a parties are required to be configured
+with a policy restricting the set of peers an they are allowed to run \mEdhoc{} with.
+%
+The intention is to configure groups which devices are allowed to connect to.
 %
 However, because the initiator is not required to verify that the \mIdcredr{}
 received in message 2 is the same as the one it intended when sending message 1,
@@ -661,8 +661,8 @@ this is insufficient for a general purpose AKE.
 The following thought experiment shows why.
 
 %
-Assume someone has configured all devices in their home to be in the \vedit{restricted}{allowed}
-set \vedit{}{of devices}, but that one of the devices $A$ has been compromised.
+Assume someone has configured all devices in their home to be in the allowed
+set of devices, but that one of the devices $A$ has been compromised.
 %
 If another device $B$, unaware of the compromise, initiates a connection to a
 third device $C$, the compromised device $A$ may interfere.
@@ -670,7 +670,7 @@ third device $C$, the compromised device $A$ may interfere.
 $A$ may respond in $C$'s place, blocking the legitimate response from $C$.
 %
 Since $B$ does not check that it is $C$'s identity in message 2, and device $A$
-is part of the \vedit{restricted}{allowed} set, $B$ will complete and accept the \mEdhoc{} run
+is part of the allowed set, $B$ will complete and accept the \mEdhoc{} run
 with device $A$ instead of the intended $C$.
 
 %
@@ -688,11 +688,6 @@ This is yet another example of where a small user story uncovers
 potential lacks in the \mSpec, and shows that it would be a useful addition to
 the requirements document~\cite{ietf-lake-reqs-04}.
 %
-\vnote{I feel like sections 4.1 and 4.2 together serve to give a rather long-winded rationale for the fact that there the specification a) ill-specifies some security properties, and b) does not root its desirable properties in any use-cases, especially considering that the various methods fulfil different properties. It might be worthwhile to consider editing this part to merge all these sections, with short descriptions of these possible pitfalls discussed here to make the same point without so much belabouring.}
-%
-\knote{Better now?}
-
-\vnote{Absolutely!}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Session key material}
@@ -731,7 +726,7 @@ This would give the initiator sufficient guarantee that the responder indeed
 uses the same \mGiy{} as the initiator.
 %
 The cost is an additional message, and our understanding is that this is
-unacceptable. \vnote{Again, personal correspondence?}
+unacceptable (personal correspondence with the \mSpec{} authors).
 %
 
 In some use-cases there will be a such as message as part of
@@ -779,14 +774,10 @@ Whether it is sufficient or not, depends on the intended uses of \mEdhoc{}.
 %
 That is, an initiator keeps state between protocol runs and proposes an updated
 set of cipher suites if the first run resulted in a rejection of the
-cipher suite from the responder (see Section~\ref{sec:edhoc}.
+cipher suite from the responder (see Section~\ref{sec:edhoc}).
 %
-Our model does not cover this.
+Our model does not cover this and leave it for future work.
 %
-\knote{It would be nice to be able to say something more than that "it is
-    obivious" that at least the reject is authentic because we have agreement
-on the keys for message 2 and it would be covered by the MAC. Ideas?}
-\vnote{I don't quite know what you mean here. In fact, I do not cover the cipher suite negotiation at all in the protocol section. We should perhaps discuss this.}
 
 We note that keeping state between protocol runs implicitly creates a long-lived
 meta-session covering multiple \mEdhoc{} sessions.
@@ -815,6 +806,7 @@ considerations section of the \mSpec{}.
 %-------------------------------------------------------------------------- sec
 \section{Conclusions}
 \label{sec:conclusions}
+TBD. Just a paragraph if needed.
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
@@ -832,10 +824,12 @@ clarifications regarding the specification.
 
 %\printbibliography
 
+\iffalse % BEGIN COMMENT -- appendix
 \appendix
 %-------------------------------------------------------------------------- sec
 \section*{Appendix}
 
 \input{notesFromModelConstruct}
+\fi % END COMMENT -- appendix
 
 \end{document}
