@@ -68,11 +68,11 @@
 \makeatother
 %
 \begin{document}
-\title{EDHOC - Tamarin modeling paper}
-\author{First Author\inst{1}\orcidID{0000-1111-2222-3333} \and
-Second Author\inst{2,3}\orcidID{1111-2222-3333-4444} \and
-Third Author\inst{3}\orcidID{2222--3333-4444-5555}
-{\color{red} DRAFT: \today}
+\title{EDHOC - Tamarin formal verification paper (TBD)}
+\author{Karl Norrman\inst{1,2}\orcidID{0000-0003-0164-1478} \and
+Vaishnavi Sundararajan\inst{3} \and
+Alessandro Bruni\inst{4}
+\\{\color{red} DRAFT: \today}
 }
 %
 \authorrunning{F. Author et al.}
@@ -80,11 +80,11 @@ Third Author\inst{3}\orcidID{2222--3333-4444-5555}
 % If there are more than two authors, 'et al.' is used.
 %
 \institute{
-    KTH Royal Institute of Technology, SE-100 44, Stockholm, Sweden \and
-    Ericsson Security Research, SE-164 83, Stockholm, Sweden,
+    KTH Royal Institute of Technology, Stockholm, Sweden \and
+    Ericsson Research, Security, Stockholm, Sweden,
     \email{karl.norrman@ericsson.com} \and
-    ITU Copenhagen $\ldots$ \and
-    Ericsson Intell. Autonomous sys$\ldots$
+    Ericsson Research, Int. Auton. Systems, Bangalore, India, \email{vaishnavi.sundararajan} \and
+    IT University of Copenhagen, Copenhagen, Denmark, \email{brun@itu.dk}
 }
 %
 \maketitle
@@ -117,6 +117,7 @@ heterogeneous security properties, and discuss consequences of this.
 %
 \end{abstract}
 %
+\iffalse %%%% BEGIN COMMENT
 {\color{red}
     Time plan (we keep weekly Thursday meetings for sync):
 \begin{itemize}
@@ -324,6 +325,7 @@ This section is only for the outline and will be removed in the final
         \end{itemize}
 \end{itemize}
 }
+\fi %%%% END COMMENT
 
 %-------------------------------------------------------------------------- sec
 \section{Introduction}
@@ -359,29 +361,13 @@ communications between constrained devices, as a complement for when
 
 The \mOscore{} protocol requires a pre-established security context.
 %
-The IETF Lightweight Authenticated Key Exchange (LAKE) working group
-is currently developing requirements and a key exchange protocol,
-named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of
+For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE)
+working group is currently developing requirements and mechanisms for a key
+exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of
 establishing \mOscore{} security contexts.
 %
 Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
-
-\vnote{Should we say something about since when the LAKE WG has been working on this?}
-\knote{We do write that the initial draft was in March 2016. IETF has been
-    working on the protocol since then. Before that there was also work that
-    lead up to recognizing the need for it. The forming of the LAKE WG came
-    later. So it is difficult to say exactly how long IETF has been working on
-    the problem. Also, giving the starting date of LAKE WG seems to be a bit
-    misleading. If you have any good proposals for formulation, please propose
-    one. Otherwise I'm OK with just giving March 2016 as first EDHOC draft.
-}
-\vnote{Maybe just say that? ``While there has been some work in the IETF on this problem, the first draft of EDHOC was proposed in March 2016...''?}
-\knote{We already do say that (see three paragraphs down). I think it fits with
-    the flow to keep it there, but feel free to propose an edit if you want to
-    mention it earlier.
-}
-\vnote{I meant in the sense of pointing out that the WG is not just \emph{currently} working on this stuff, but has been for a while now. The fact that that point is three paragraphs down is what is problematic. I'll see if I can restructure it to say something better, otherwise we can stick with the current organization.}
 %
 
 While neither the requirements nor the use cases for \mEdhoc{} are firmly set,
@@ -496,21 +482,16 @@ For example, Schmidt~et.~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
 symbolized version of an extended Canetti-Krawzcyk model.
 %
 
-%-------------------------------------------------------------------------- sub
-\subsection{Structure}
-\label{sec:structure}
-\knote{Only include this if we have space to spare.}
-\vnote{I don't think this is necessary. There really are only two major sections, and it's quite obvious what they would be!}
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} protocol}
 \label{sec:edhoc}
-\hl{Vaishnavi}
+%\hl{Vaishnavi}
 \input{edhocProtocol}
 
 %-------------------------------------------------------------------------- sec
 \section{Formalization and results}
 \label{sec:formalization}
-\hl{Alessandro}
+%\hl{Alessandro}
 \input{edhocFormalization}
 
 %-------------------------------------------------------------------------- sec
@@ -836,11 +817,18 @@ Regardless, these considerations would be helpful to cover in the security
 considerations section of the \mSpec{}.
 %
 
+%-------------------------------------------------------------------------- sec
+\section{Conclusions}
+\label{sec:conclusions}
+
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
 \subsubsection*{Acknowledgments} This work was partially supported by
 the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
 the Knut and Alice Wallenberg Foundation.
+%
+We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
+clarifications regarding the specification.
 %
 
 %-------------------------------------------------------------------------- bib
