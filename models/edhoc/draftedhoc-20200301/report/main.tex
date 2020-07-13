@@ -7,7 +7,10 @@
 \usepackage{enumitem}       % compacts lists and stuff
 \usepackage[subtle]{savetrees}
 \usepackage{soul}           % \hl for highlighting text; \st for strike-through
-
+\usepackage{draftwatermark}
+\SetWatermarkText{\textbf{DRAFT}}
+\SetWatermarkScale{2}
+\SetWatermarkColor[gray]{.92}
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,tikzpeople}
@@ -15,6 +18,7 @@
 \usetikzlibrary{shapes,chains}
 \usepackage{environ}  % For tikz fig spanning two columns
 \usetikzlibrary{positioning}
+\usepackage{url}
 % Used for displaying a sample figure. If possible, figure files should
 % be included in EPS format.
 %
@@ -23,7 +27,6 @@
 \usepackage{hyperref}
 %\renewcommand\UrlFont{\color{blue}\rmfamily}
 % not the way to do it for arXiv though...
-\usepackage{url}
 \hypersetup{
     final, % Uncomment to remove all links (useful for printing in black and white)
     colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
@@ -36,19 +39,11 @@
 %   pdfproducer={Pandoc, XeLaTeX with hyperref} % PDF producer
   }
 
-
-
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 %\usepackage{algorithm}
 %\usepackage{algpseudocode}         % https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmic_package
-
-\usepackage{draftwatermark}
-\SetWatermarkText{\textbf{DRAFT}}
-\SetWatermarkScale{2}
-\SetWatermarkColor[gray]{.92}
-
 
 \input{macros}
 
