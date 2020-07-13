@@ -522,16 +522,16 @@ symbolized version of an extended Canetti-Krawzcyk model.
 In this section we discuss the fact that the design of \mEdhoc{} seems to be
 mainly driven by what can be done given certain technical limitations.
 %
-There is a lack of goal-oriented design considerations, which we believe risk
+There is a lack of goal-oriented design considerations, which we believe risks
 creating a protocol that does not meet the needs of applications.
 %
 We also believe that this is related to the lack of a clear security model.
 %
 
-The basic premises for \mEdhoc{} are simple: establish an \mOscore{} security
+The basic premise for \mEdhoc{} is simple: establish an \mOscore{} security
 context with few roundtrips and small messages.
 %
-However, these premises are only sufficient for an explorative research effort
+However, this is only sufficient for an explorative research effort
 to determine what kind of security properties can be achieved under these
 restrictions.
 %
@@ -545,7 +545,7 @@ intended security model.
 The requirements document~\cite{ietf-lake-reqs-04} and the
 \mSpec{}~\cite{selander-lake-edhoc-01} itself list a
 number of detailed desirable security properties with little motivation for why
-these are suitable ones, and without an outline of a security model where these
+these are suitable ones, and without an outline of a security model under which these
 should hold.
 %
 While technical limitations, such as link restrictions and
@@ -555,19 +555,18 @@ application use cases or user stories capturing intended uses of \mEdhoc{}.
 %
 Consequently, while it is possible to verify that given these restrictions and
 using the constructions in the \mSpec{}, \mEdhoc{} has certain security
-properties, it is hard to say whether these are the necessary or even the
-most useful ones for IoT use cases.
+properties, it is hard to say whether these are the necessary, or even the
+most useful, ones for IoT use cases.
 %
 Having a better understanding of the security properties required by these use
 cases would clearly help in guiding the design of \mEdhoc{}.
 %
-It may also help reducing the number of methods to the ones that are needed.
+It may also help reducing the number of methods to only the ones that are needed.
 %
-Further, better understanding the intended use of \mEdhoc{} helps
-defining a clearer security model.
+%Further, better understanding the intended use of \mEdhoc{} helps in defining a clearer security model.
 %
 The current security model is vague and largely implicitly defined by attacks
-that the protocol should withstand.
+that the protocol should withstand, so better understanding the intended use of \mEdhoc{} would also help in defining a clearer security model.
 %
 
 Similar to \mDandTls{}, \mEdhoc{} is intended to solve a variety of use cases,
@@ -592,17 +591,17 @@ stories uncovered blind spots in the \mSpec.
 %
 
 \paragraph{Credentials stored in a trusted execution environment (TEE)}
-The question is whether there will be applications where device is
+The question is whether there will be applications where the device is
 deployed in a hostile environment, and where it is reasonable to assume it can
 be equipped with a TEE.
 %
 In our analysis we have chosen not to model TEEs, by making use of session
 state reveal queries.
 %
-This is because we received indications from the \mSpec{} authors that it was not
+This is because we received indications from the \mSpec{} authors [\mcneed] that it was not
 necessary to consider reveal of the session state, in particular the ephemeral
 secret keys, with the rationale that \mSigma{} cannot protect against such an
-attack (presumably based on that the \mSigSig{} method is closely based on
+attack (presumably based on the fact that the \mSigSig{} method is closely based on
 \mSigmaI{} and that it would be preferable to obtain some kind of homogeneity
 among the \mEdhoc{} methods when it comes to what security properties they
 provide).
@@ -610,11 +609,11 @@ provide).
 That argument is however only true if one restricts attention to session key
 confidentiality of an ongoing session.
 %
-TEEs do provide value by for example allowing for weak PCS guarantees.
+TEEs do provide value by, for example, allowing weak PCS guarantees.
 %
 Further, for protocols in the style of \mOptls{}, on which the \mStat{}-based
-methods are modeled, both a static long-term
-key an ephemeral are typically mixed to obtain the session key material.
+methods are modeled, a static long-term
+key and an ephemeral one are typically mixed to obtain the session key material.
 %
 This design is intentional, especially in the \mOptls{} case, where the protocol
 is designed to be provably secure in the Canetti-Krawzcyk model.
@@ -622,31 +621,32 @@ is designed to be provably secure in the Canetti-Krawzcyk model.
 
 \paragraph{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
-passing through a door, whereas it may be undesirable for privacy
-purposes if it was even possible for a coffee vending machine to log such
-information.
+passing through a door, whereas it may be undesirable for, say, a coffee machine to log a list of people and their coffee preferences. %whereas it may be undesirable for privacy purposes if it was even possible for a coffee vending machine to log such information.
 %
 When we did that simple thought experiment we caught that the \mSpec{} did not
 consider non-repudiation.
 %
 The authors of the \mSpec{} added a paragraph about which methods provided which
 types of (non)-repudiation.
+\vnote{In response to our pointing this out? Say that explicitly if this is the case.}
 %
 It would, however, be helpful for application developers to also document
 example use cases showing the consequences of choosing the different methods,
 perhaps in the security considerations section.
 %
-The \mPsk{} method or \mStat{}-based methods allow parties to obtain
-non-repudiation, whereas using a \mSig{}-based method do not.
+\vedit{The}{Running the} \mPsk{} method or the \vedit{\mStat{}-based methods allow parties}{\mStat{} method allows a party} to obtain
+non-repudiation, whereas \vedit{\mSig{}-based method do}{the \mSig{} method does} not.
+
+\vedit{Do you mean a party that runs \mSig can get non-repudiation, no matter what the other party runs? My edits assume this. If this is not the case, fix accordingly.}
 %
 
 %-------------------------------------------------------------------------- sub
 \subsection{Security claims}
 \label{sec:securityClaims}
-The \mSpec{} makes a number of detailed claims of properties
+The \mSpec{} makes a number of detailed claims about the properties that 
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
-The intention may be that, if the academic protocol \mSigma{} is re-used as a
+The intention may be that if the academic protocol \mSigma{} is re-used as a
 cryptographic core of \mEdhoc, then all the properties listed
 in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} are the
 necessary and sufficient ones and can be copied into the \mSpec.
@@ -655,36 +655,38 @@ necessary and sufficient ones and can be copied into the \mSpec.
 cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
 progress, it is not yet written down).
 %
-Section~8.1. states, \emph{"EDHOC inherits its security properties
+Section~8.1. states \emph{"EDHOC inherits its security properties
 from the theoretical SIGMA-I"}.
 %
 Designing a standard specification by re-using existing well-studied academic
 components is good practice.
 %
 But when doing so, it is important to relate any changes made to the referred
-cryptographic core or justification why the changes are appropriate.
+cryptographic core or give justification as to why the changes are appropriate.
 %
-Oterwise, one cannot draw the conclusions that a protocol inherits properties
+Otherwise, one cannot draw the conclusions that a protocol inherits properties
 from another.
 %
 The specification may not be the appropriate place for such analysis, but strong
-claims about security properties deserve justification.
+claims about security properties require justification.
 %
 
 %-------------------------------------------------------------------------- sub
 \subsection{Unintended authentication confusion}
 \label{sec:usableSecurity}
-Section 3.2 of the \mSpec, states that a policy is required restricting the set
-of peers an entity is allowed to run \mEdhoc{} with.
+Section 3.2 of the \mSpec states that a policy is required restricting the set
+of peers an entity is allowed to run \mEdhoc{} with. 
+\vnote{Confusing sentence. A policy is not required to restrict the set of peers. What is the policy doing, and why does this restrict the set of peers?}
 %
-However, because the initator is not required to verify that the \mIdcredr{}
+However, because the initiator is not required to verify that the \mIdcredr{}
 received in message 2 is the same as the one it intended when sending message 1,
 this is insufficient for a general purpose AKE.
 %
-This small thought example shows why.
+The following thought experiment shows why.
+
 %
-Assume someone has configured all devices in their home to be in the restricted
-set, but that one of the devices $A$ has been compromised.
+Assume someone has configured all devices in their home to be in the \vedit{restricted}{allowed}
+set \vedit{}{of devices}, but that one of the devices $A$ has been compromised.
 %
 If another device $B$, unaware of the compromise, initiates a connection to a
 third device $C$, the compromised device $A$ may interfere.
@@ -692,8 +694,8 @@ third device $C$, the compromised device $A$ may interfere.
 $A$ may respond in $C$'s place, blocking the legitimate response from $C$.
 %
 Since $B$ does not check that it is $C$'s identity in message 2, and device $A$
-is part of the restricted set, $B$ will complete and accept the \mEdhoc{} run
-with device $A$ in stead of the intended $C$.
+is part of the \vedit{restricted}{allowed} set, $B$ will complete and accept the \mEdhoc{} run
+with device $A$ instead of the intended $C$.
 
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
@@ -702,17 +704,19 @@ identity.
 Note that it is insufficient to let \mEdhoc{} report to the application which
 identity it established a security context with, because, even though the
 application could reject the connection when there is a mismatch, the
-application must be able to instruct \mEdhoc{} to not accept the same identity
+application must be able to instruct \mEdhoc{} to not accept the same identity in the 
 next attempt, or there would be an infinite loop.
 %
 
-This is yet another example of where a small use case or user story uncovers
+This is yet another example of where a small user story uncovers
 potential lacks in the \mSpec, and shows that it would be a useful addition to
 the requirements document~\cite{ietf-lake-reqs-04}.
 %
 \vnote{I feel like sections 4.1 and 4.2 together serve to give a rather long-winded rationale for the fact that there the specification a) ill-specifies some security properties, and b) does not root its desirable properties in any use-cases, especially considering that the various methods fulfil different properties. It might be worthwhile to consider editing this part to merge all these sections, with short descriptions of these possible pitfalls discussed here to make the same point without so much belabouring.}
 %
 \knote{Better now?}
+
+\vnote{Absolutely!}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Session key material}
