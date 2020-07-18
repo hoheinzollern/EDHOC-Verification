@@ -88,25 +88,25 @@ to the symbolic model, and we prove that if an initiator $A$ and a responder $B$
 complete the protocol deriving the same session key, then $A$ believes she is
 talking to $B$ and $B$ believes he is talking to $A$.
 
-\paragraph{Session independence}
+\subsubsection{Session independence}
 A protocol satisfies session independence if knowing a session key does
 not give the attacker any information about other sessions.  To model session
 key independence of \mEdhoc, we allow leakage of session keys, and additionally
 check security only of those sessions for which the session keys have not been
 directly revealed to the attacker.
 
-\paragraph{Perfect forward secrecy} (PFS) A protocol satisfies perfect forward
+\subsubsection{Perfect forward secrecy} (PFS) A protocol satisfies perfect forward
 secrecy if, for any run of the protocol in which the initiator and the responder
 agree on a session key $sk$, the attacker does not learn $sk$, even when the
 long-term keys are revealed after the session is completed.
 
-\paragraph{Key-compromise impersonation} (KCI) This property takes the perspective of one
+\subsubsection{Key-compromise impersonation} (KCI) This property takes the perspective of one
 of the endpoints of the protocol, say Alice running a session with Bob. A
 protocol is secure under KCI if Alice can still establish a secure session with
 Bob, even though Alice's keys are compromised at any time, and Bob's key
 material is not leaked until the end of the session.
 
-\paragraph{Post-compromise security} (PCS) A protocol that has
+\subsubsection{Post-compromise security} (PCS) A protocol that has
 \emph{post-compromise security} (following definitions in~\cite{cohn2016post})
 is capable of establishing a secure session even after one of the parties has
 been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
@@ -120,12 +120,18 @@ parties (i.e. has the ability to perform all cryptographic operations using the
 initiator's and responder's long term keys, but has not access to the long term
 keys).
 
-\knote{TODO: The plan to show weak PCS, but are currently running out of memory.
-    If we get a hold of more powerful equipment before the deadline we will go
-    for it. Working on access to the security cluster now. If we won't make it
-    in time this will be removed.
-}
-%\vnote{A minor note about style: It might be better to actually have each property be a subsubsection rather than a paragraph. That also typesets the ``headings'' neatly, unlike right now, where the parenthesized KCI and PCS appear in upright text, while the rest of the name is italicized.}
+\paragraph{Note} We plan to show weak PCS in a future version of the model,
+hence we mention it here. However at the moment verifying this property runs out
+of memory, so we will not present results relating to weak PCS in the current
+version of the report. It will be included in future versions however.
+
+% \knote{TODO: The plan to show weak PCS, but are currently running out of memory.
+%     If we get a hold of more powerful equipment before the deadline we will go
+%     for it. Working on access to the security cluster now. If we won't make it
+%     in time this will be removed.
+% }
+
+% \vnote{A minor note about style: It might be better to actually have each property be a subsubsection rather than a paragraph. That also typesets the ``headings'' neatly, unlike right now, where the parenthesized KCI and PCS appear in upright text, while the rest of the name is italicized.}
 
 \subsection{Tamarin}
 \label{sec:tamarin}
@@ -259,8 +265,7 @@ the authenticated data \mADone, \mADtwo{} and \mADthree.
 To keep the presentation brief, we
 only present two variants, where one party uses a signature key and the other a static DH key (\mSigStat{} and \mStatSig).
 However the full code can be inspected at
-\url{https://github.com/hoheinzollern/EDHOC-Verification}.
-\knote{TODO: make link point to the final code when it is in its final place.}
+\url{https://github.com/hoheinzollern/EDHOC-Verification/blob/2ee6e5877aa06ae90861317bfca0eee3a21c0e4f/models/edhoc/draftedhoc-20200301/edhocM4.spthy}.
 
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
@@ -740,6 +745,7 @@ The following lemma proves implicit authentication:
 %clear to me that it excludes the case that (u2 != u3 or v2 != v3) even though
 % #j = #j2
 %}
+%\anote{that case would never appear in Tamarin, since events are atomic, if #j = #j2 then all other parameters must match. Instead the case tidR2 != tidR, u2 != u2, v3 != v2 can be satisfied when #j != #j2, though this is not the only case that violates the attack. Hope it makes sense}
 \begin{lstlisting}
 lemma authGIYImplicitAuthGuaranteeForI:
   all-traces
