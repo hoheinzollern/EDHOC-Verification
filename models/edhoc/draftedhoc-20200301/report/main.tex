@@ -817,7 +817,26 @@ considerations section of the \mSpec{}.
 %-------------------------------------------------------------------------- sec
 \section{Conclusions}
 \label{sec:conclusions}
-TBD. Just a paragraph if needed.
+We have formally modeled all the five
+methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
+%
+Using the model, we identified and defined several important security properties
+and verified these.
+%
+We also identified security properties that does not hold for all
+methods.
+%
+Most importantly, injective agreement on \mGiy{} does not hold for
+initiators when they use the \mStat{} method, so this property cannot be claimed
+for the entire key material in those situations.
+%
+Further, we identify a situation where initiators may establish an \mOscore{}
+with a different party than the application using \mEdhoc{} intended, and
+propose a simple mitigation.
+%
+We discuss possible actions that IETF may take to extract and better define
+security properties to make better use of verification techniques.
+%
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
