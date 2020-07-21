@@ -86,23 +86,25 @@ Alessandro Bruni\inst{4}
 %
 
 \begin{abstract}
-\hl{250 words}
+%\hl{250 words}
 IETF is standardizing a key establishment protocol named \mEdhoc, for
-constrained IoT devices.
+constrained IoT devices~\cite{selander-lake-edhoc-01}.
 %
-In contrast to more powerful IoT devices, such as video cameras and cars,
+In contrast to more powerful IoT devices, such as web cameras and cars,
 which receive most attention from media, constrained devices often have severe
 restrictions on energy consumption.
 %
-Additionally, they often use specialized wireless communication links with tough
-constraints on message sizes, which may vary from message to message.
+Additionally, they often use specialized wireless communication links with
+demanding constraints on message sizes, which may also vary between messages.
 %
 \mEdhoc{} was first formally analyzed by
 Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
-Since then, IETF has significantly extended the protocol, which is now a
-framework with a number of cryptographic cores, called methods, where the
-initial version of \mEdhoc{} contained only two out of five possibilities.
+Since then, the protocol has been significantly extended and is now a
+framework with a number of cryptographic cores, called methods.
+%
+The initial version of \mEdhoc{} contained only two out of the current five
+methods~\cite{selander-ace-cose-ecdhe-08}.
 %
 In this paper we formally analyze all methods of \mEdhoc{} in a symbolic model,
 using the \mTamarin{} verification tool.
@@ -337,8 +339,8 @@ consumption restrictions.
 Securing the communication between such devices can readily be done using
 \mDandTls.
 %
-Constrained devices, on the other hand, where such restrictions on bandwidth or
-energy are common, have received much less attention.
+Constrained devices, on the other hand, on which bandwidth and
+energy consumption restrictions are common, have received much less attention.
 %
 These devices may be simple sensors with the only task of relaying
 measurements of their physical environment to a server every hour, but doing so
@@ -347,9 +349,15 @@ autonomously for a decade without maintenance.
 To keep energy consumption down, highly specialized radio links with small
 and heterogeneous frame sizes are sometimes used.
 %
+IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data
+transport in such situations~\cite{rfc7252}.
+%
+\mCoap{} does not include security protection on its own.
+%
 In some cases, \mDandTls{} messages are too large to fit into the radio frames.
 %
-This is one of the reasons IETF standardized the \mOscore{} protocol to secure
+This is one of the reasons IETF standardized the Object Security for
+Constrained RESTful Environments (\mOscore{}) protocol to secure
 communications between constrained devices, as a complement for when
 \mDandTls{} is too heavy weight~\cite{rfc8613}.
 %
@@ -357,7 +365,7 @@ communications between constrained devices, as a complement for when
 The \mOscore{} protocol requires a pre-established security context.
 %
 For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE)
-working group is currently developing requirements and mechanisms for a key
+working group has been developing requirements and mechanisms for a key
 exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of
 establishing \mOscore{} security contexts.
 %
@@ -365,15 +373,18 @@ Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
 %
 
-While neither the requirements nor the use cases for \mEdhoc{} are firmly set,
-the goal of \mEdhoc{} is to establish an \mOscore{} security
+While use cases for \mEdhoc{} are not firmly set,
+the overall goal of \mEdhoc{} is to establish an \mOscore{} security
 context, keeping messages small being the most prominent driver for the
 design.
 %
-The LAKE working group is currently discussing whether a compressed version of
-\mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would suffice for the same use
-cases as the combination of \mOscore{} and \mEdhoc, and try to identify which
-those use cases are.
+Discussions on the LAKE working group mailing list explored whether a
+compressed version of \mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would suffice
+for the same situations that
+the combination of \mOscore{} and \mEdhoc{} aim for.
+%
+They concluded to proceed developing \mEdhoc{} in parallel to the \mTls{}
+working groups efforts to develop \mCtls.
 %
 
 The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
@@ -383,14 +394,15 @@ The first incarnation of \mEdhoc{} appeared in March 2016.
 %
 It contained two different cryptographic cores, one based on a
 pre-shared key Diffie-Hellman and a second following a draft of the
-then emerging \mTls\ v1.3 standard~\cite{ietf-tls-tls13-11}, using
-challenge-response signatures.
+challenge-response signatures, in the style of the \mNoise{}
+framework~\cite{perrin2016noise}.
 %
 The latter was then replaced by \mSigma, and this version, from May 2018, was
 formally analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 The protocol has now further evolved and variants using challenge-response
-signatures have now been added again by integrating the \mOptls{} core.
+signatures have been added again by integrating the cryptographic core of
+\mOptls{}.
 %
 On top of this, mixed variants where one party uses a challenge-response
 signature and the other a regular signature have also been added.
@@ -444,7 +456,7 @@ Our main contributions are the following.
 \label{sec:relatedWork}
 The work closest to ours is Bruni~et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
-two-cryptographic core, version of \mEdhoc.
+two-cryptographic core, version of \mEdhoc~\cite{selander-ace-cose-ecdhe-08}.
 %
 We consider our work to be a sort of follow-up to that, doing a similar kind of
 analysis of the most recent, and more elaborate, version of \mEdhoc{} with its
@@ -495,57 +507,44 @@ symbolized version of an extended Canetti-Krawzcyk model.
 %-------------------------------------------------------------------------- sub
 \subsection{Unclear protocol use}
 \label{sec:unclearProtocolUse}
-In this section we discuss the fact that the design of \mEdhoc{} seems to be
-mainly driven by what can be done given certain technical limitations.
+In this section we discuss why formal verification of industrial standards
+aiming for general purpose use, like \mEdhoc{} often is difficult because their
+goals are vague~\cite{DBLP:conf/ccs/BasinDHRSS18}.
 %
-There is a lack of goal-oriented design considerations, which we believe risks
-creating a protocol that does not meet the needs of applications.
-%
-We also believe that this is related to the lack of a clear security model.
-%
-
 The basic premise for \mEdhoc{} is simple: establish an \mOscore{} security
 context with few roundtrips and small messages.
 %
-However, this is only sufficient for an explorative research effort
-to determine what kind of security properties can be achieved under these
-restrictions.
-%
-Developing standards additionally requires an understanding of which security
-properties would be suitable for products and applications implementing the
-standard in the real world.
-%
-Suitability can only be evaluated against intended use of the protocol and an
-intended security model.
-%
-The requirements document~\cite{ietf-lake-reqs-04} and the
-\mSpec{}~\cite{selander-lake-edhoc-01} itself list a
-number of detailed desirable security properties with little motivation for why
-these are suitable ones, and without an outline of a security model under which these
-should hold.
-%
-While technical limitations, such as link restrictions and
-the availability of only a certain type of credential for devices,
-are mentioned, and design choices are motivated by these, there are no
-application use cases or user stories capturing intended uses of \mEdhoc{}.
-%
-Consequently, while it is possible to verify that given these restrictions and
-using the constructions in the \mSpec{}, \mEdhoc{} has certain security
-properties, it is hard to say whether these are the necessary, or even the
-most useful, ones for IoT use cases.
-%
-Having a better understanding of the security properties required by these use
-cases would clearly help in guiding the design of \mEdhoc{}.
-%
-It may also help reducing the number of methods to only the ones that are needed.
-%
-%Further, better understanding the intended use of \mEdhoc{} helps in defining a clearer security model.
-%
-The current security model is vague and largely implicitly defined by attacks
-that the protocol should withstand, so better understanding the intended use of \mEdhoc{} would also help in defining a clearer security model.
+Starting from there, the design of \mEdhoc{} seems to be mainly driven by what
+can be achieved given certain technical restrictions.
 %
 
-Similar to \mDandTls{}, \mEdhoc{} is intended to solve a variety of use cases,
+There is a clash between formal verification activities, which aims to verify
+whether well-specified security goals are met within a given security model, and
+an industrial standard, where the overall goal is clear, but lacks
+specificity.
+%
+Further, the clash is emphasized by that formal verification requires settling
+on specific security models, in terms of attacker capabilities, assumptions on
+storage and processing by parties etc., whereas, the security model in
+industrial standards often arises from resistance to attacks identified
+attacks during the design.
+%
+The latter makes the assumptions required for the protocol unclear and hard to
+verify.
+%
+In our analysis we have made assumptions we believe represent useful models,
+and extracted properties that \mEdhoc{} has or does not have.
+%
+On the one hand, this approach is aligned with the basic premises that
+\mEdhoc{} should establish
+an \mOscore{} security context with generally useful security properties.
+%
+On the other, without a clearer picture of the intended uses of the
+protocol, whether these properties, or the ones claimed in the \mSpec{} are
+the most important ones for constrained IoT use cases cannot be determined.
+%
+
+Similarly to \mDandTls{}, \mEdhoc{} is intended to solve a variety of use cases,
 many not known today, and therefore, it is not possible to collect all types
 of use cases that need to be considered.
 %
@@ -553,8 +552,21 @@ However, this is not a valid argument against collecting typical use cases and
 user stories to capture at least \emph{some} of the security properties a
 solution must exhibit.
 %
-\textbf{We propose that} the application usage of \mEdhoc{} is better defined via
-user stories or use cases.
+
+Having a better understanding of the security properties required by these use
+cases would clearly help, not only verification activities, but also  guiding
+the design of \mEdhoc{}.
+%
+It may also help reducing the number of methods to only the ones that are needed.
+%
+The current security model is vague and largely implicitly defined by attacks
+that the protocol should withstand, so better understanding the intended use of
+\mEdhoc{} would also help in defining a clearer security model.
+%
+
+We propose that the application usage of \mEdhoc{} is better explored
+via user stories or use cases to identify security properties that are most
+commonly needed, or are essential for important applications.
 %
 In fact, while constructing our model, we came up with simple user stories to
 identify security properties of interest.
@@ -598,7 +610,8 @@ is designed to be provably secure in the Canetti-Krawzcyk model.
 
 \paragraph{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
-passing through a door, whereas it may be undesirable for, say, a coffee machine to log a list of people and their coffee preferences. %whereas it may be undesirable for privacy purposes if it was even possible for a coffee vending machine to log such information.
+passing through a door, whereas it may be undesirable for, say, a coffee machine
+to log a list of people and their coffee preferences.
 %
 When we did that simple thought experiment we caught that the \mSpec{} did not
 consider non-repudiation.
@@ -609,16 +622,11 @@ types of (non)-repudiation in response.
 It would, however, be helpful for application developers to also document
 example use cases showing the consequences of choosing the different methods,
 perhaps in the security considerations section.
-%
-%Using the \mPsk{} method and the \mStat{} method allows a party to obtain
-%non-repudiation, whereas the \mSig{} method does not.
-%
-%\knote{We don't formally prove this}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Security claims}
 \label{sec:securityClaims}
-The \mSpec{} makes a number of detailed claims about the properties that 
+The \mSpec{} makes a number of detailed claims about the properties that
 the protocol provides (see Section 8.1~\cite{selander-lake-edhoc-01}).
 %
 The intention may be that if the academic protocol \mSigma{} is re-used as a
@@ -650,13 +658,14 @@ claims about security properties require justification.
 \subsection{Unintended authentication confusion}
 \label{sec:usableSecurity}
 Section 3.2 of the \mSpec{} states that a parties are required to be configured
-with a policy restricting the set of peers an they are allowed to run \mEdhoc{} with.
+with a policy restricting the set of peers an they are allowed to run \mEdhoc{}
+with.
 %
 The intention is to configure groups which devices are allowed to connect to.
 %
 However, because the initiator is not required to verify that the \mIdcredr{}
-received in message 2 is the same as the one it intended when sending message 1,
-this is insufficient for a general purpose AKE.
+received in message 2 is the same as the one the application intended when
+initiating the \mEdhoc{} run, this is insufficient for a general purpose AKE.
 %
 The following thought experiment shows why.
 
@@ -675,18 +684,19 @@ with device $A$ instead of the intended $C$.
 
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
-identity.
+identity provided by the application.
 %
 Note that it is insufficient to let \mEdhoc{} report to the application which
 identity it established a security context with, because, even though the
 application could reject the connection when there is a mismatch, the
-application must be able to instruct \mEdhoc{} to not accept the same identity in the 
-next attempt, or there would be an infinite loop.
+application must be able to instruct \mEdhoc{} to not accept the same identity
+in the next attempt, or there would be an infinite loop.
 %
 
 This is yet another example of where a small user story uncovers
-potential lacks in the \mSpec, and shows that it would be a useful addition to
-the requirements document~\cite{ietf-lake-reqs-04}.
+potential lacks in the \mSpec, and shows that it would be a useful for
+standardization to explore such and which security properties they reveal
+suitable for \mEdhoc{} to have.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -757,7 +767,7 @@ Roles could hence be swapped, so identity protection is not a strong argument
 against this option.
 %
 
-We have show implicit agreement on \mGx{}, \mGy{} for all methods, and also on
+We have shown implicit agreement on \mGx{}, \mGy{} for all methods, and also on
 \mGiy{} and \mGrx{} when these are used, see Section~\ref{sec:formalization}.
 %
 If this weaker security guarantee is sufficient, both ephemeral and long-term
@@ -770,7 +780,8 @@ Whether it is sufficient or not, depends on the intended uses of \mEdhoc{}.
 \subsection{Cipher suite negotiation}
 \label{sec:ciphersuiteNegotiation}
 %
-\mEdhoc{}'s cipher suite negotiation spans two or more executions of the protocol.
+Cipher suite negotiation in \mEdhoc{} spans two or more executions of the
+protocol.
 %
 That is, an initiator keeps state between protocol runs and proposes an updated
 set of cipher suites if the first run resulted in a rejection of the
@@ -821,15 +832,4 @@ clarifications regarding the specification.
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{plain}
 \bibliography{ref}
-
-%\printbibliography
-
-\iffalse % BEGIN COMMENT -- appendix
-\appendix
-%-------------------------------------------------------------------------- sec
-\section*{Appendix}
-
-\input{notesFromModelConstruct}
-\fi % END COMMENT -- appendix
-
 \end{document}
