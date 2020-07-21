@@ -88,8 +88,8 @@ sense: genModels
 
 # This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	#$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},)
+	$(foreach meth,${SIGSTAT},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,sanity,${TIME_PROVE_AND_LOG})\
 		 )\

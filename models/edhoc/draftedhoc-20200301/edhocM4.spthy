@@ -180,7 +180,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     /* Message 3 handling */
          data_3 = 'emptyStr' //~C_R
          TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-         K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+         K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!extAad3 = TH_3
 ifdef(<!m4AD3!>,
@@ -254,7 +254,7 @@ ifdef(<!m4AD3!>,
         --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
           , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
           , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
-          , RunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
+          , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
@@ -274,7 +274,7 @@ rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
         data_3 = 'emptyStr' //~C_R
         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-        K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+        K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
        <!extAad3 = TH_3
 ifdef(<!m4AD3!>,
@@ -477,7 +477,7 @@ lemma authInjAgreeGuaranteeForR:
          | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
          | (Ex #j. LTKRev(u)@j & #j < #i)
          | (Ex #j. LTKRev(v)@j & #j < #i)
-	          )
+	     )
     "
 
 
