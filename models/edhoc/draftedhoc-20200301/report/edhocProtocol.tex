@@ -22,8 +22,12 @@ The \mSig-based methods of \mEdhoc{} {are derived from} \mSigmaI, a variant of t
 \subsection{Relations to \mSigma, \mOptls{} and \mNoise{}}
 \subsubsection{\mSigma{}}
 As noted above, the \mSigSig{} method of \mEdhoc{} is a very close
-derivative of \mSigmaI{} and the version from \mEdhoc{} v08 was carefully analyzed by
-Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}, as was the \mPskPsk{} method of that version of \mEdhoc{}. Since both of these methods are close in spirit to the versions already analyzed in that paper, we will not focus on those in the reminder of this paper. We do however model them to the same extent and
+derivative of \mSigmaI{} and the version from \mEdhoc{}
+v08~\cite{selander-ace-cose-ecdhe-08} was carefully analyzed by
+Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}, as was the \mPskPsk{} method of
+that version of \mEdhoc{}. Since both of these methods are close in spirit to
+the versions already analyzed in that paper, we will not focus on those in the
+remainder of this paper. We do however model them to the same extent and
 verify their properties with the same care as the other methods.
 
 \subsubsection{\mOptls{}}
@@ -130,7 +134,7 @@ We now discuss each of the \mEdhoc{} methods in detail over the next few section
 \subsection{\mPskPsk{} method}
 In this method, the initiator and responder are assumed to have a pre-shared key (\mPsk) which is secret to them, and can be retrieved by the responder using a public part of the first message (\mIDPsk). This method corresponds to the symmetric key method of \mEdhoc{} v08. 
 
-In the first message, the initiator sends a message consisting of parameters identifying the method and the correlation technique used (\mMethod), the cipher suites ranked in order of preference (we will come back to this later, in Section~\ref{sec:ciphersuite}), the initiator's ephemeral key (\mGx), their connection identifier (\mCi), the \mIDPsk identifier, and (optional) auxiliary data (\mADone). The responder, upon receipt of this message, must verify that the selected cipher suite is supported (see Section~\ref{sec:ciphersuite} for a description of how this is done),  and pass \mADone to the security application which needs it. Note that this first message is common to all \mEdhoc{} methods.
+In the first message, the initiator sends a message consisting of parameters identifying the method and the correlation technique used (\mMethod), the cipher suites ranked in order of preference (we will come back to this later, in Section~\ref{sec:ciphersuite}), the initiator's ephemeral key (\mGx), their connection identifier (\mCi), the \mIDPsk identifier, and (optional) auxiliary data (\mADone). The responder, upon receipt of this message, must verify that the selected cipher suite is supported (see Section~\ref{sec:ciphersuite} for a description of how this is done),  and pass \mADone to the security application which needs it.
 
 The second message, sent by the responder, is composed of \mCi, the responder's ephemeral key \mGy, their connection identifier \mCr, and a \mCose{} object. This contains as external data the transaction hash of the first message (\mTHtwo), along with an \mAead{} encryption of the (optional) auxiliary data \mADtwo. The key used for this (\mKtwoae) is derived using the \mEdhoc{} key derivation function with \mTHtwo and the pseudorandom string \mPRKtwo as input, while the associated data for the \mAead{} encryption is constructed by concatenating a constant string, plaintext \mhplain, and \mTHtwo. Recall that the PRKs in this method are constructed by running \mHkdfExtract{} using \mPsk{} as salt. 
 
@@ -193,7 +197,12 @@ The responder, upon receipt, verifies the cipher suites, passes any \mADone to t
 \subsubsection{\mSigStat}
 The initiator runs a \mSigma-based method, with signatures, while the responder operates with a static Diffie-Hellman key and MACs. Both the initiator and the responder generate ephemeral secrets $x$ and $y$, and also have their respective long term public-private authentication keypairs. The public authentication keys have identifiers for retrieval as well.
 
-The responder generates an ephemeral secret $y$, and an identifier \mCr. Then, it generates the pseudorandom strings. \mPRKtwo is obtained, as mentioned earlier, by running the KDF algorithm on the empty salt and the shared secret $g^{xy}$. Then, \mPRKthree is obtained by running the KDF algorithm on \mPRKtwo and \mGrx -- this is the result of raising the initiator's ECDH ephemeral public key \mGx to the responder's private authentication key \mLtkr. These pseudorandom strings will be used to generate encryption keys for this message.
+The responder generates an ephemeral secret $y$, and an identifier \mCr. Then,
+it generates the pseudorandom strings. \mPRKtwo is obtained, as mentioned
+earlier, by running the KDF algorithm on the empty salt and the shared secret
+$g^{xy}$. Then, \mPRKthree is obtained by running the KDF algorithm on \mPRKtwo
+and \mGrx -- this is the result of raising the initiator's ECDH ephemeral public
+key \mGx to the responder's long term key \mLtkr. These pseudorandom strings will be used to generate encryption keys for this message.
 
 The encrypted term for the second message is constructed as follows. First, we build the \mCose{} object that is the inner MAC, since the responder runs \mStat. The protected part of this object is an identifier for retrieving the responder's public authentication key, namely \mIdcredr~\footnote{The \mIdcredr parameter may be used by the initiator to look up the responder's static public key. While there need not be a unique correspondence between \mIdcredr and the actual \mCredr used by the responder, the initiator should be able to go through the list of matches to look up and obtain the ``correct'' \mCredr. Similarly for the responder with \mIdcredi and \mCredi. However, in our modelling, we choose to model the map from \mIdcredr to \mCredr (and that from \mIdcredi to \mCredi) as unique.}. The externally supplied data is the transaction hash \mTHtwo (obtained by hashing the first message and \mGy),  the responder's public authentication key \mCredr, and (optional) auxiliary data \mADtwo. The plaintext is empty. The key used for the encryption \mKtwom is the output of the KDF on being fed as input the pseudorandom string \mPRKthree and \mTHtwo. The resulting encrypted object is now referred to as the ciphertext \mMactwo. 
 
