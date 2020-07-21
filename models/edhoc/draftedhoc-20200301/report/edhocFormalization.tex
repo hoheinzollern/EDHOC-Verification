@@ -24,7 +24,7 @@ long-term key or session key material.
 
 Another important point is to define what the key material is.
     \mEdhoc{} does not result in an explicit session key, but a cryptographic
-    state from which keys for \mOscore can be derived using \mHkdf.
+    state from which keys for \mOscore{} can be derived using \mHkdf.
     As will be seen below, depending on how the key material is defined, the
     different methods will have different authentication properties.
     In particular, all methods except those where the initiator uses the
@@ -120,18 +120,10 @@ parties (i.e. has the ability to perform all cryptographic operations using the
 initiator's and responder's long term keys, but has not access to the long term
 keys).
 
-\paragraph{Note} We plan to show weak PCS in a future version of the model,
+\paragraph{Note} We plan to show weak PCS and KCI in a future version of the model,
 hence we mention it here. However at the moment verifying this property runs out
 of memory, so we will not present results relating to weak PCS in the current
 version of the report. It will be included in future versions however.
-
-% \knote{TODO: The plan to show weak PCS, but are currently running out of memory.
-%     If we get a hold of more powerful equipment before the deadline we will go
-%     for it. Working on access to the security cluster now. If we won't make it
-%     in time this will be removed.
-% }
-
-% \vnote{A minor note about style: It might be better to actually have each property be a subsubsection rather than a paragraph. That also typesets the ``headings'' neatly, unlike right now, where the parenthesized KCI and PCS appear in upright text, while the rest of the name is italicized.}
 
 \subsection{Tamarin}
 \label{sec:tamarin}
@@ -434,7 +426,7 @@ rule R4_PSK_PSK:
   let
     data_3 = 'emptyStr' 
     TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+    K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
     extAad3 = TH_3
     plainText3 = 'emptyStr'
     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
@@ -530,7 +522,7 @@ rule I3_STAT_SIG:
     K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
     K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
     CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> 
-    m2 = <data_2, CIPHERTEXT_2>
+    m2 = <data_2, CIPH3RTEXT_2>
     K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
     protected2 = $V // ID_CRED_V
     extAad2 = <TH_2, CRED_V> 
