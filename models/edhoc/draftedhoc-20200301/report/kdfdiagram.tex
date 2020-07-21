@@ -37,16 +37,17 @@ term/.style={rounded corners},
 \node [keyb, join, left=3cm of h6] (k3) {\mKthreem};
 
 \node [hkdfexp, shape border rotate=180, left= 3cm of p3] (h4) {\mHkdfExpand};
-\node [keyb, join, left=3cm of h4] (k2) {\mKthreeae};
+\node [keyb, join, left=3cm of h4] (k2) {\mKtwom};
 
 \node [hkdfexp, shape border rotate=180, left= 3cm of p2] (h2) {\mHkdfExpand};
 \node [keyb, join, left=3cm of h2] (k1) {\mKtwoe};
 
-
-\node [keyb, below=1cm of k2] (k2b) {\mKtwom};
+\node [hkdfexp, shape border rotate=180, below= 1cm of h4] (h8) {\mHkdfExpand};
+\node [keyb, below=1cm of k2] (k2b) {\mKthreeae};
 %\node [draw=none, fill=none, below=0.5cm of h4] (dummy) {};
 
-\draw [->, norm] (h4.south) -- ++(0,-0.58) -- (k2b);
+\draw [->, norm] (p3.south) -- ++(0,-0.58) -- (h8);
+\draw [->, norm] (h8) -- (k2b);
 \draw [->, norm] (p2) -- (h2); 
 \draw [->, norm] (p3) -- (h4); 
 \draw [->, norm] (p4) -- (h6);
@@ -78,9 +79,9 @@ term/.style={rounded corners},
 \node [term, above = 1cm of h4] (u5) {\mTHtwo};
 \draw [->, dotted, shorten >=1mm] (u5) -- (h4);
 
-\node [term, above = 1cm of h6] (u6) {\mTHthree};
+\node [term, above = 0.7cm of h6] (u6) {\mTHthree};
 \draw [->, dotted, shorten >=1mm] (u6) -- (h6);
-
+\draw [->, dotted, shorten >=1mm] (u6) -- (h8);
 %
 % ------------------------------------------------- 
 % 
