@@ -266,7 +266,23 @@
 	day =		9,
 	abstract =	{This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a very compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys. EDHOC provides mutual authentication, perfect forward secrecy, and identity protection. EDHOC is intended for usage in constrained scenarios and a main use case is to establish an OSCORE security context. By reusing COSE for cryptography, CBOR for encoding, and CoAP for transport, the additional code footprint can be kept very low.},
 }
-%% You should probably cite rfc8446 instead of this I-D.
+
+@techreport{selander-ace-cose-ecdhe-08,
+	number =	{draft-selander-ace-cose-ecdhe-08},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-selander-ace-cose-ecdhe-08},
+        author =	{Göran Selander and John Mattsson and Francesca Palombini},
+	title =		{{Ephemeral Diffie-Hellman Over COSE (EDHOC)}},
+	pagetotal =	30,
+	year =		2018,
+	month =		mar,
+	day =		5,
+	abstract =	{This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys that can be used over any layer. EDHOC messages are encoded with CBOR and COSE, allowing reuse of existing libraries.},
+}
+
 @techreport{ietf-tls-tls13-11,
 	number =	{draft-ietf-tls-tls13-11},
 	type =		{Internet-Draft},
@@ -479,3 +495,17 @@
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
+@misc{rfc7252,
+	series =	{Request for Comments},
+	number =	7252,
+	howpublished =	{RFC 7252},
+	publisher =	{RFC Editor},
+	doi =		{10.17487/RFC7252},
+	url =		{https://rfc-editor.org/rfc/rfc7252.txt},
+        author =	{Zach Shelby and Klaus Hartke and Carsten Bormann},
+	title =		{{The Constrained Application Protocol (CoAP)}},
+	pagetotal =	112,
+	year =		2014,
+	month =		jun,
+	abstract =	{The Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use with constrained nodes and constrained (e.g., low-power, lossy) networks. The nodes often have 8-bit microcontrollers with small amounts of ROM and RAM, while constrained networks such as IPv6 over Low-Power Wireless Personal Area Networks (6LoWPANs) often have high packet error rates and a typical throughput of 10s of kbit/s. The protocol is designed for machine- to-machine (M2M) applications such as smart energy and building automation. CoAP provides a request/response interaction model between application endpoints, supports built-in discovery of services and resources, and includes key concepts of the Web such as URIs and Internet media types. CoAP is designed to easily interface with HTTP for integration with the Web while meeting specialized requirements such as multicast support, very low overhead, and simplicity for constrained environments.},
+}
