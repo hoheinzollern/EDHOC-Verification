@@ -1,32 +1,28 @@
-%\usepackage[numbers, sort]{natbib}
-\usepackage[T1]{fontenc} % E.g., for small caps in section headings
-\usepackage{xspace}
+\usepackage{ifthen}
 
 % -- Editorial macros
 % http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
-\usepackage{todonotes}
-\newcommand{\knote}[1]{\todo[inline,
-                             color=orange,
-                             size=\footnotesize
-                            ]{\textsf{\textbf{Karl:} #1}}}
-\newcommand{\anote}[1]{\todo[inline,
-                             color=orange,
-                             size=\footnotesize
-                            ]{\textsf{\textbf{Alessandro:} #1}}}
-\newcommand{\vnote}[1]{\todo[inline,
-                             color=orange,
-                             size=\footnotesize
-                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
-                            
- \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
- \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
+%\usepackage{todonotes}
+%\newcommand{\knote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Karl:} #1}}}
+%\newcommand{\anote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Alessandro:} #1}}}
+%\newcommand{\vnote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
+% \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
+% \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
 %\newcommand{\knote}[1]{}
 %\newcommand{\vnote}[1]{}
 %\newcommand{\anote}[1]{}
-\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
-
-\newcommand{\mcneed}{\textbf{Citation needed}}
-\newcommand{\mcfix}{\textbf{Fix citation}}
+%\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
+%\newcommand{\mcneed}{\textbf{Citation needed}}
+%\newcommand{\mcfix}{\textbf{Fix citation}}
 
 
 % -- Fonts and styles for names
@@ -36,7 +32,6 @@
 \newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
 \newcommand{\mVarStyle}[1]{\mathit{#1}}
 \newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
-
 \DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
 \DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
 
@@ -45,7 +40,7 @@
 
 
 % -- Domain specific macros
-\newcommand{\mArxiv}{\texttt{arXiv}\xspace}
+\newcommand{\mArxiv}{\texttt{arXiv}}
 \newcommand{\mTamarin}{\mProtocolStyle{Tamarin}}
 \newcommand{\mProverif}{\mProtocolStyle{ProVerif}}
 \newcommand{\mEdhoc}{\mProtocolStyle{EDHOC}}
@@ -79,63 +74,61 @@
 \newcommand{\mSigSig}{\mMethodStyle{SIG-SIG}}
 \newcommand{\mPskPsk}{\mMethodStyle{PSK-PSK}}
 
-\newcommand{\mSid}{\mConstStyle{sid}\xspace}    % session id = (u, v, s-key)
+\newcommand{\mSid}{\mConstStyle{sid}}    % session id = (u, v, s-key)
 
-\newcommand{\mXor}{\mConstStyle{XOR}\xspace}
-\newcommand{\mSuites}{\mConstStyle{Suites\_I}\xspace}
-\newcommand{\mMethod}{\mConstStyle{Method}\xspace}
-\newcommand{\mCi}{\mConstStyle{C\_I}\xspace}
-\newcommand{\mCr}{\mConstStyle{C\_R}\xspace}
-\newcommand{\mGi}{\mConstStyle{G\_I}\xspace}
-\newcommand{\mGr}{\mConstStyle{G\_R}\xspace}
-\newcommand{\mGiy}{\mConstStyle{G\_IY}\xspace}
-\newcommand{\mGrx}{\mConstStyle{G\_RX}\xspace}
-\newcommand{\mGx}{\mConstStyle{G\_X}\xspace}
-\newcommand{\mGy}{\mConstStyle{G\_Y}\xspace}
-\newcommand{\mGxy}{\mConstStyle{G\_XY}\xspace}
-\newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}\xspace}
-\newcommand{\mTHtwo}{\mConstStyle{TH\_2}\xspace}
-\newcommand{\mKtwoe}{\mConstStyle{K\_2e}\xspace}
-\newcommand{\mKtwom}{\mConstStyle{K\_2m}\xspace}
-\newcommand{\mKtwoae}{\mConstStyle{K\_2ae}\xspace}
-\newcommand{\mSign}{\mConstStyle{sign}\xspace}
+\newcommand{\mXor}{\mConstStyle{XOR}}
+\newcommand{\mSuites}{\mConstStyle{Suites\_I}}
+\newcommand{\mMethod}{\mConstStyle{Method}}
+\newcommand{\mCi}{\mConstStyle{C\_I}}
+\newcommand{\mCr}{\mConstStyle{C\_R}}
+\newcommand{\mGi}{\mConstStyle{G\_I}}
+\newcommand{\mGr}{\mConstStyle{G\_R}}
+\newcommand{\mGiy}{\mConstStyle{G\_IY}}
+\newcommand{\mGrx}{\mConstStyle{G\_RX}}
+\newcommand{\mGx}{\mConstStyle{G\_X}}
+\newcommand{\mGy}{\mConstStyle{G\_Y}}
+\newcommand{\mGxy}{\mConstStyle{G\_XY}}
+\newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}}
+\newcommand{\mTHtwo}{\mConstStyle{TH\_2}}
+\newcommand{\mKtwoe}{\mConstStyle{K\_2e}}
+\newcommand{\mKtwom}{\mConstStyle{K\_2m}}
+\newcommand{\mKtwoae}{\mConstStyle{K\_2ae}}
+\newcommand{\mSign}{\mConstStyle{sign}}
 
-\newcommand{\mKthreeae}{\mConstStyle{K\_3ae}\xspace}
-\newcommand{\mKthreem}{\mConstStyle{K\_3m}\xspace}
+\newcommand{\mKthreeae}{\mConstStyle{K\_3ae}}
+\newcommand{\mKthreem}{\mConstStyle{K\_3m}}
 
-\newcommand{\mTHthree}{\mConstStyle{TH\_3}\xspace}
-\newcommand{\mhplain}{\mConstStyle{h''}\xspace}
-\newcommand{\mCredi}{\mConstStyle{CRED\_I}\xspace}
-\newcommand{\mCredr}{\mConstStyle{CRED\_R}\xspace}
-\newcommand{\mHash}{\mConstStyle{H}\xspace}
+\newcommand{\mTHthree}{\mConstStyle{TH\_3}}
+\newcommand{\mhplain}{\mConstStyle{h''}}
+\newcommand{\mCredi}{\mConstStyle{CRED\_I}}
+\newcommand{\mCredr}{\mConstStyle{CRED\_R}}
+\newcommand{\mHash}{\mConstStyle{H}}
 
-\newcommand{\mMactwo}{\mConstStyle{MAC\_2}\xspace}
-\newcommand{\mMacthree}{\mConstStyle{MAC\_3}\xspace}
+\newcommand{\mMactwo}{\mConstStyle{MAC\_2}}
+\newcommand{\mMacthree}{\mConstStyle{MAC\_3}}
 
-\newcommand{\mSigtwo}{\mConstStyle{Sig\_2}\xspace}
-\newcommand{\mSigthree}{\mConstStyle{Sig\_3}\xspace}
+\newcommand{\mSigtwo}{\mConstStyle{Sig\_2}}
+\newcommand{\mSigthree}{\mConstStyle{Sig\_3}}
 
-\newcommand{\mMsgone}{\mConstStyle{m1}\xspace}
-\newcommand{\mMsgtwo}{\mConstStyle{m2}\xspace}
-\newcommand{\mMsgthree}{\mConstStyle{m3}\xspace}
+\newcommand{\mMsgone}{\mConstStyle{m1}}
+\newcommand{\mMsgtwo}{\mConstStyle{m2}}
+\newcommand{\mMsgthree}{\mConstStyle{m3}}
 
-\newcommand{\mCipher}{\mConstStyle{cipher\_2}\xspace}
+\newcommand{\mCipher}{\mConstStyle{cipher\_2}}
 
-\newcommand{\mADone}{\mConstStyle{AD\_1}\xspace}
-\newcommand{\mADtwo}{\mConstStyle{AD\_2}\xspace}
-\newcommand{\mADthree}{\mConstStyle{AD\_3}\xspace}
+\newcommand{\mADone}{\mConstStyle{AD\_1}}
+\newcommand{\mADtwo}{\mConstStyle{AD\_2}}
+\newcommand{\mADthree}{\mConstStyle{AD\_3}}
 
-\newcommand{\mPRK}{\mConstStyle{PRK}\xspace}
-\newcommand{\mPRKtwo}{\mConstStyle{PRK\_2e}\xspace}
-\newcommand{\mPRKthree}{\mConstStyle{PRK\_3e2m}\xspace}
-\newcommand{\mPRKfour}{\mConstStyle{PRK\_4x3m}\xspace}
+\newcommand{\mPRK}{\mConstStyle{PRK}}
+\newcommand{\mPRKtwo}{\mConstStyle{PRK\_2e}}
+\newcommand{\mPRKthree}{\mConstStyle{PRK\_3e2m}}
+\newcommand{\mPRKfour}{\mConstStyle{PRK\_4x3m}}
 
-\newcommand{\mIdcredi}{\mConstStyle{ID\_CRED\_I}\xspace}
-\newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}\xspace}
-\newcommand{\mLtki}{\mConstStyle{ltk\_I}\xspace}
-\newcommand{\mLtkr}{\mConstStyle{ltk\_R}\xspace}
-
-
+\newcommand{\mIdcredi}{\mConstStyle{ID\_CRED\_I}}
+\newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}}
+\newcommand{\mLtki}{\mConstStyle{ltk\_I}}
+\newcommand{\mLtkr}{\mConstStyle{ltk\_R}}
 
 % TIKZ messages and actions
 \newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
@@ -198,8 +191,3 @@
     {h(}{H$($}{2}
     }
 \lstset{style=mystyle}
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "main"
-%%% End:

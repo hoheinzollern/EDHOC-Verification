@@ -1,73 +1,32 @@
-%\pdfoutput=1
 \documentclass[runningheads,draft,x11names]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
-%\usepackage{stmaryrd}       % Semantic brackets \llbracket and \rrbracket
-%\usepackage{mathpartir}     % inference rules
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
 \usepackage{enumitem}       % compacts lists and stuff
 \usepackage[subtle]{savetrees}
 \usepackage{soul}           % \hl for highlighting text; \st for strike-through
-\usepackage{draftwatermark}
-\SetWatermarkText{\textbf{DRAFT}}
-\SetWatermarkScale{2}
-\SetWatermarkColor[gray]{.92}
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,tikzpeople}
 \usetikzlibrary{trees,snakes,arrows}
 \usetikzlibrary{shapes,chains}
-\usepackage{environ}  % For tikz fig spanning two columns
 \usetikzlibrary{positioning}
 \usepackage{url}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-%
-% If you use the hyperref package, please uncomment the following line
-% to display URLs in blue roman font according to Springer's eBook style:
 \usepackage{hyperref}
-%\renewcommand\UrlFont{\color{blue}\rmfamily}
-% not the way to do it for arXiv though...
 \hypersetup{
     final, % Uncomment to remove all links (useful for printing in black and white)
     colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
     urlcolor=blue, linkcolor=black, citecolor=green, % Link colors
-%   pdftitle={title of paper}, % PDF title
-%   pdfauthor={auth1, auth2}, % PDF Author
-%   pdfsubject={}, % PDF Subject
     pdfkeywords={}, % PDF Keywords
     pdfcreator={PdfLaTeX}, % PDF Creator
-%   pdfproducer={Pandoc, XeLaTeX with hyperref} % PDF producer
   }
-
-\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
-    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-
-%\usepackage{algorithm}
-%\usepackage{algpseudocode}         % https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmic_package
 
 \input{macros}
 
-% Solution for letting a tikz figure to span two columns by Ulrike Fischer
-% https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
-\makeatletter
-\newsavebox{\measure@tikzpicture}
-\NewEnviron{scaletikzpicturetowidth}[1]{%
-  \def\tikz@width{#1}%
-  \def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
-  \BODY
-  \end{lrbox}%
-  \pgfmathparse{#1/\wd\measure@tikzpicture}%
-  \edef\tikzscale{\pgfmathresult}%
-  \BODY
-}
-\makeatother
-%
 \begin{document}
-\title{Formal analysis of EDHOC key establishment for constrained IoT devices}
+\title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
 \author{Karl Norrman\inst{1,2}\orcidID{0000-0003-0164-1478} \and
 Vaishnavi Sundararajan\inst{3} \and
 Alessandro Bruni\inst{4}
-\\{\color{red} DRAFT: \today}
 }
 %
 \authorrunning{K. Norrman et al.}
@@ -87,7 +46,7 @@ Alessandro Bruni\inst{4}
 
 \begin{abstract}
 %\hl{250 words}
-IETF is standardizing a key establishment protocol named \mEdhoc, for
+    IETF is standardizing a key establishment protocol named \mEdhoc{} for
 constrained IoT devices~\cite{selander-lake-edhoc-01}.
 %
 In contrast to more powerful IoT devices, such as web cameras and cars,
@@ -106,223 +65,14 @@ framework with a number of cryptographic cores, called methods.
 The initial version of \mEdhoc{} contained only two out of the current five
 methods~\cite{selander-ace-cose-ecdhe-08}.
 %
-In this paper we formally analyze all methods of \mEdhoc{} in a symbolic model,
-using the \mTamarin{} verification tool.
+In this paper we formally analyze all methods of \mEdhoc{} in a symbolic
+Dolev-Yao model, using the \mTamarin{} verification tool.
 %
 We show that the different methods provide sensible, but also rather
 heterogeneous security properties, and discuss consequences of this.
 %
 \end{abstract}
 %
-\iffalse %%%% BEGIN COMMENT
-{\color{red}
-    Time plan (we keep weekly Thursday meetings for sync):
-\begin{itemize}
-    \item \textbf{Target conference:} Security Standardization Research (SSR),
-                               \hl{Submit DL: 24/8},
-                               Notification: 1/10,
-                               Camera ready: 12/10,
-                               20 pages including bib, LCNS template
-    \item \textbf{18/6} Outline and work division proposed by Karl; Karl and
-        Vaishnavi start writing our parts
-    \item \textbf{25/6} Alessandro can start writing his parts
-    \item \textbf{\hl{9/7}} \mArxiv version ready for upload (minus formatting issues)
-    \item \textbf{13/7} \mArxiv formatted version sent out for review (at least to
-        Mads Dam, IETF team and internal Eri review).
-    \item \textbf{17/7} Possible comments from review fixed, and upload to
-        \mArxiv. This DL is needed. Otherwise people at the IETF meeting will
-        not be able to comment from the IETF meeting.
-    \item \textbf{---} Vacation(...)
-    \item \textbf{20/8} Reformatted to SSR 2020 LNCS; Possibly added properties
-        to model and paper if something useful came up during vacation
-    \item \textbf{24/8} SSR submission deadline
-\end{itemize}
-}
-
-%\input{diagram_sym.tex}
-
-%-------------------------------------------------------------------------- sec
-{\color{blue}
-\section*{Outline}
-This section is only for the outline and will be removed in the final
-    paper. Don't worry about the language or style. Only the content matters.
-\vspace{10pt}
-\knote{Please do use and define macros in the file \texttt{macros.tex}!}
-\knote{Notes like this one are defined for the macros
-    \texttt{\textbackslash knote},
-    \texttt{\textbackslash vnote} and
-    \texttt{\textbackslash anote}}
-
-\begin{itemize}
-    \item \textbf{Section: Situation and setting (\hl{Karl})}
-        \begin{itemize}
-            \item OK: Elaborate on the story line above
-            \item OK: Explain the exploratory and iterative nature of industrial
-                  standards and why this has resulted in the new \mStat methods.
-            \item OK: Contrast with \mTls. Motivate why \mEdhoc{} is needed in
-                addition to \mTls. Little analysis of \mEdhoc{} so far.
-                Motivate that most security analysis and media attention is on
-                larger IoT devices. Give examples and cite use cases whit
-                constrained devices. Paint the (true) picture that this will
-                become a serious security risk in the future if not a secure
-                \mEdhoc{} is created.
-            \item OK: Subsection: Contributions: model, verified properties,
-                guidance on how various methods can be used (for std and
-                implementations)
-            \item OK: Subsection: Related work: \mOptls, \mNoise,
-                Bruni~\cite{DBLP:conf/secsr/BruniJPS18}, Cremers' et. al. \mTls
-                analysis with \mTamarin.
-        \end{itemize}
-    \item \textbf{Section: \mEdhoc{} description (\hl{Vaishnavi})}
-        \begin{itemize}
-            \item Describe evolved protocol from last \mEdhoc{} verification,
-            \item Describe the overarching goal of \mEdhoc{} of security context
-                establishment for \mEdhoc.
-            \item Describe that \mEdhoc{} is a framework based on three different
-                crypto-cores (\mPsk-based DH, \mSigma and \mOptls/\mNoise).
-                Some inital thoughts on \mNoise here~\ref{sec:mail-notes-noise}.
-                Describe how one party may use a \mSigma-like authentication
-                whereas the other party may use \mOptls. The session key is
-                the combination of the corresponding key material.
-                Describe that this essentially makes
-                \mEdhoc{} a framework where it is possible to run one out of 5
-                different protocols.
-            \item Describe \mSigSig method and relate it to original \mEdhoc{} and
-                \mSigma. This can be brief. Identify and focus on potential
-                differences.
-            \item Describe \mPskPsk method.
-            \item Main focus of this section. Describe \mStat based methods, which
-                  have very different properties compared to original \mEdhoc,
-                  which only had the single \mSigma method.
-                  Draw a figure (use tikz for easiest handling), showing how the
-                  protocols look like (\mStatStat, \mStatSig, \mSigStat are
-                  sufficient, the \mPsk and \mSigSig methods are simpler/old and
-                  less interesting).
-                  Explain the difference in signatures: "Normal" vs. challenge
-                  response signatures of \mStat-based method.
-                  Explain how \mStatStat is basically running two interleaved
-                  \mOptls protocols runs. Compare how \mStat based methods relate
-                  to \mOptls and to relevant instance from \mNoise framework.
-                  Make mapping as precise as possible, down to key derivation
-                  inputs. If the mapping of protocol elements and inputs to
-                  key derivations and other processing is sufficiently close,
-                  then point to security proof for Noise and cite it. Otherwise
-                  point out the differences.
-             \item Describe additional components of \mEdhoc{} we've modeled,
-                  e.g., \mCi and \mCr etc.
-                  Explain relevance of \mCi and \mCr to \mOscore.
-             \item Describe algorithm negotiation.
-             \item Describe negotiation of method.
-             \item Describe transmission of aux data and expected security
-                 properties.
-        \end{itemize}
-    \item \textbf{Section: \mEdhoc{} security model and formalization (\hl{Alessandro})}
-        \begin{itemize}
-            \item Subsection: threat model. We assume secure binding between
-                credentials and the identity. We assume adversary cannot
-                register another key for a name for an uncorrupted party. We
-                assume adversary has Dolev-Yao style access to communication
-                between agents. We assume adversary can compromise session keys,
-                but is then not allowed to "test" that session key (in
-                computational terminology). We assume adversary can compromise
-                parties, but is not allowed to "test" them or their partners if
-                he has done so. Two peers are partnered if they agree on: Their
-                identities, and the session key material (except \mGiy in the
-                relevant cases of \mStat). That is the session identifier and it
-                is unique per run, which the injective agreement lemmas show.
-                Define what is the key material for each method
-                (see the \mTamarin model).
-            \item Subsection: Short description of \mTamarin. It is known by
-                now, but a short overview does not hurt.
-            \item Subsection: Explain details of model, which properties we have
-                modeled, how, which trade-offs were made and why.
-                Explain how we modeled inj-agree (a sentence or two). Explain
-                why it fails when $I$ uses \mStat-method and the implicit auth
-                lemma we showed instead
-                (cite~\cite{DBLP:journals/iacr/GuilhemFW19} here where I got the
-                basic idea. It is then extended with the reveal queries in our
-                model; obviously: if you know about other sources for this
-                please cite them too). Include code/lemmas as you see fit.
-            \item Subsection: Clear bullet-list of what we have shown, including
-                some statics of running time code size perhaps.
-                Scan draft-selander and check what props are claimed there; see
-                what we have covered and what we haven't.
-                Already shown:
-                \begin{itemize}
-                    \item Mutual injective agreement on session key, method and identities for
-                        $R \rightarrow I$ and $I \rightarrow R$ for all methods
-                        except when $I$ uses STAT. When $I$ uses STAT, $R \rightarrow I$ holds,
-                        but not $I \rightarrow R$.
-                    \item Injective implicit agreement on session key.
-                        Only really needed for $I \rightarrow R$, because in all other cases we have
-                        the stronger injective agreement property. But show it now for all
-                        methods to having a common (and reasonable) level of security that
-                        holds no matter which method user chooses.
-                    \item PFS on session key for all methods.
-                    \item Key secrecy (follows from PFS).
-                    \item Session key independence (follows from how we modeled PFS).
-                    \item Entity authentication - we show this in the same lemmas as we show
-                          inj-agree on session key.  We don't have this property when $I$ uses
-                          STAT method because $I$ then gets no confirmation of
-                          Pre-specified peer model.
-                    \item Key confirmation (except for when $I$ uses \mStat
-                        method, then $I$ gets no key confirmation on \mGiy)
-                \end{itemize}
-            \item See~\ref{sec:mail-notes-encr} for how encryption is modeled.
-            \item Caveat: we have not modeled running all methods in parallel,
-                so we don't know if an adversary can somehow trick $I$ into
-                running one method and $R$ another, and by that causing some
-                attack.
-        \end{itemize}
-    \item \textbf{Section: Discussion (\hl{Karl})}
-        \begin{itemize}
-            \item{\textbf{Design practices}}
-                \begin{itemize}
-                \item OK. Discuss that the security properties varies between methods
-                and that this may confuse implementers and user of libraries.
-                \item OK. Discuss practice of listing claimed properties (likely copied
-                from some academic paper) without justification in IETF drafts.
-                \end{itemize}
-            \item{\textbf{\mGiy and technical protocol issues}}
-                \begin{itemize}
-                \item Discuss unclearity regarding security model (trusted execution
-                environment or not?). \mOptls has clear separation and therefore
-                use both $g^{xy}$ and $g^{iy}$ etc. \mEdhoc{} is not as cleanly
-                designed and according to IETF guys they don't care about
-                trusted execution environments (see mail in txt-file).
-                Would \mEdhoc{} be OK with skipping $g^{iy}$ from the session key
-                material and only use $g^{xy}$ in that model? Probably yes, and
-                then we can get inj-agree on the session key material, but then
-                extending \mEdhoc{} implementations with a trusted execution
-                environment for LTK operations is useless.
-                \item OK: Discuss algorithm negotiation.
-                \item OK: Discuss what should be used as session key and what the
-                consequences of the choices are,
-                see~\ref{sec:mail-notes-secrecy-sessions} and
-                \ref{sec:mail-notes-session-key-mtrl}.
-                \item OK: Discuss session key authentication and the problem of \mGiy,
-                see~\ref{sec:mail-notes-session-key-auth}
-                and~\ref{sec:mail-notes-session-key-imp-auth}
-                \item OK: Discuss non-repudiation that was not included until we pointed
-                it out.
-                \item OK: Discuss the overlayed \mOptls construction and how an
-                additional \mOscore message $R \rightarrow I$ would give key
-                confirmation and hence explicit inj-agree also for $I$.
-                \item Discuss Transcipt hashes that lag behind one message and that
-                it is supposed to "cover as much as possible", but sometimes
-                does not (check tamarin model also for inconsistencies between
-                methods). Unclear design except "as much as possible".
-                \end{itemize}
-            \item{\textbf{Protocol user/implementor issues}}
-                \begin{itemize}
-                \item OK: Discuss Identities and use-cases with the neighbours printer
-                (now included in draft, but only after we mentioned it),
-                See~\ref{sec:mail-notes-identity}.
-                \end{itemize}
-        \end{itemize}
-\end{itemize}
-}
-\fi %%%% END COMMENT
 
 %-------------------------------------------------------------------------- sec
 \section{Introduction}
@@ -454,7 +204,7 @@ Our main contributions are the following.
 %-------------------------------------------------------------------------- sub
 \subsection{Related work}
 \label{sec:relatedWork}
-The work closest to ours is Bruni~et. al.~\cite{DBLP:conf/secsr/BruniJPS18},
+The work closest to ours is Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
 two-cryptographic core, version of \mEdhoc~\cite{selander-ace-cose-ecdhe-08}.
 %
@@ -492,13 +242,11 @@ symbolized version of an extended Canetti-Krawzcyk model.
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} protocol}
 \label{sec:edhoc}
-%\hl{Vaishnavi}
 \input{edhocProtocol}
 
 %-------------------------------------------------------------------------- sec
 \section{Formalization and results}
 \label{sec:formalization}
-%\hl{Alessandro}
 \input{edhocFormalization}
 
 %-------------------------------------------------------------------------- sec
@@ -605,7 +353,7 @@ methods are modeled, a static long-term
 key and an ephemeral one are typically mixed to obtain the session key material.
 %
 This design is intentional, especially in the \mOptls{} case, where the protocol
-is designed to be provably secure in the Canetti-Krawzcyk model.
+is designed to be provably secure in the Canetti-Krawczyk model.
 %
 
 \paragraph{Non-repudiation}
@@ -634,12 +382,12 @@ cryptographic core of \mEdhoc, then all the properties listed
 in the paper analyzing \mSigma~\cite{DBLP:conf/crypto/CanettiK02} are the
 necessary and sufficient ones and can be copied into the \mSpec.
 %
-(Note: presumably the intention is the same for the other reused cryprographic
+(Note: presumably the intention is the same for the other reused cryptographic
 cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
 progress, it is not yet written down).
 %
-Section~8.1. states \emph{"EDHOC inherits its security properties
-from the theoretical SIGMA-I"}.
+Section~8.1. states \emph{``EDHOC inherits its security properties
+from the theoretical SIGMA-I''}.
 %
 Designing a standard specification by re-using existing well-studied academic
 components is good practice.
@@ -665,7 +413,8 @@ The intention is to configure groups which devices are allowed to connect to.
 %
 However, because the initiator is not required to verify that the \mIdcredr{}
 received in message 2 is the same as the one the application intended when
-initiating the \mEdhoc{} run, this is insufficient for a general purpose AKE.
+initiating the \mEdhoc{} run, this is insufficient for a general purpose
+key exchange protocol.
 %
 The following thought experiment shows why.
 
@@ -830,11 +579,11 @@ Most importantly, injective agreement on \mGiy{} does not hold for
 initiators when they use the \mStat{} method, so this property cannot be claimed
 for the entire key material in those situations.
 %
-Further, we identify a situation where initiators may establish an \mOscore{}
-with a different party than the application using \mEdhoc{} intended, and
-propose a simple mitigation.
+Further, we identified a situation where initiators may establish an \mOscore{}
+security context with a different party than the application using \mEdhoc{}
+intended, and proposed a simple mitigation.
 %
-We discuss possible actions that IETF may take to extract and better define
+We discussed possible actions that IETF may take to extract and better define
 security properties to make better use of verification techniques.
 %
 

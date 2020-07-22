@@ -1,4 +1,4 @@
-% !TEX root =  main.tex
+% !TEX root =  ms.tex
 Next we describe our approach towards formalizing the \mEdhoc{} protocol. We use the
 symbolic (Dolev-Yao) model for verification, with \mTamarin{} for tool support.
 %
@@ -36,7 +36,7 @@ Another important point is to define what the key material is.
 \label{sec:desired-properties}
 Next we list the properties that will be considered during verification.
 
-\paragraph{Secrecy}
+\subsubsection{Secrecy}
 We say that \mEdhoc{} satisfies secrecy of the established session key $sk$
 between two honest parties $A$ and $B$ if, for any run of the protocol $A$ and
 $B$, the attacker does not get to know $sk$.
@@ -45,7 +45,7 @@ The attacker may passively observe---and actively interfere with---the
 communication, and run any number of sessions with $A$ and $B$, in either role,
 concurrently or otherwise.
 
-\paragraph{Authentication}
+\subsubsection{Authentication}
 To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
 of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
 \begin{quote}
@@ -125,7 +125,7 @@ hence we mention it here. However at the moment verifying this property runs out
 of memory, so we will not present results relating to weak PCS in the current
 version of the report. It will be included in future versions however.
 
-\subsection{Tamarin}
+\subsection{\mTamarin{}}
 \label{sec:tamarin}
 We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
 %
@@ -150,7 +150,7 @@ to denote that symmetric decryption reverses the encryption operation under this
 All operations on terms are defined under $E$, hence we omit the
 subscript from now on as the equational theory is fixed per model.
 
-\paragraph{Semantics and built-ins} \phantom{} \mTamarin{} states
+\subsubsection{Semantics and built-ins} \phantom{} \mTamarin{} states
 $S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$
 occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
 that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
@@ -162,7 +162,6 @@ and are never removed from the state.
 The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
 constants and public values known to the attacker respectively, and are both
 sub-sorts of a base sort.
-%\vnote{TODO: Could put the sort names in the typing convention used for the code.}
 %
 Finally, \mTamarin{} has some built-in predicates ($\mIn,
 \mOut$ to represent input and output of messages with the attacker,
@@ -172,7 +171,7 @@ others), rules and equations that represent the attacker's knowledge
 and standard equational theories in the symbolic model,
 which we present later.
 
-\paragraph{Notational conventions} In the remainder of this section we present
+\subsubsection{Notational conventions} In the remainder of this section we present
 \mTamarin{} code as it appears in the models that we verify, in the style of
 literate programming.  Whenever possible we match the style of the protocol
 diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
@@ -186,7 +185,7 @@ We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
 names \mT{x} and \mT{y}.
 
-\paragraph{Protocol rules and equations}
+\subsubsection{Protocol rules and equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
 rules, which are added to the set of considered rules during verification.
@@ -232,7 +231,7 @@ exponents \mT{x * y} as a built-in symbols in the language, plus the necessary e
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
-\paragraph{Syntactic sugar} In the following presentation we use some syntactic
+\subsubsection{Syntactic sugar} In the following presentation we use some syntactic
 sugar, which is necessary to understand to look at the concrete rules. First is
 the use of let bindings (\mT{let ... in}), which are series of
 definitions of patterns which are substituted in the rest of the rule. Another
@@ -262,7 +261,7 @@ repository~\cite{edhocTamarinRepo}.
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
 
-\paragraph{General setup}
+\subsubsection{General setup}
 \begin{lstlisting}
 rule registerLTK_SIG:
  [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
@@ -273,7 +272,7 @@ rule registerLTK_STAT:
 rule registerLTK_PSK:
  [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 \end{lstlisting}
-    
+
 These three rules express the registering of the long term keys for the \mSig,
 \mStat{} and \mPsk{} methods respectively.
 %
@@ -310,7 +309,7 @@ Section~\ref{sec:threat-model}.
 Each of the session keys is also revealed with similar rules,
 depending on the method to check session independence.
 
-\paragraph{\mPskPsk{}} The following rules model the symmetric key based
+\subsubsection{\mPskPsk{}} The following rules model the symmetric key based
 \mPskPsk{} method and are derived from the M4 file, as presented in
 Section~\ref{sec:edhoc}.
 
@@ -408,7 +407,7 @@ rule I3_PSK_PSK:
   --[ ExpCommitI(~tid, $U, $V, exp_sk)
     , CommitI(~tid, $U, $V, imp_sk)
     , I3(~tid, $U, $V, m1, m2, m3) ]->
-   [ Out(m3) ]
+  [ Out(m3) ]
 \end{lstlisting}
 
 Apart from observations similar to those already made for the previous messages,
@@ -442,13 +441,13 @@ rule R4_PSK_PSK:
 \end{lstlisting}
 
 This rule receives message 3, checks that the
-Diffie-Hellman key $g^{xy}$ corresponds to the local state, and then terminates
+Diffie-Hellman key \mGxy{} corresponds to the local state, and then terminates
 the protocol.  As in
 the previous message, we mark acceptance of the third message from the responder
 with the two commit events, and conclude.
 
-\paragraph{\mStatSig{}}
-Next we present the mixed asymmetric method \mStatSig. We chose \mStatSig{} for
+\subsubsection{\mStatSig{}}
+Next we present the mixed asymmetric method \mStatSig. We chose\\ \mStatSig{} for
 this presentation of the asymmetric methods as this configuration shows all
 interesting features at once: mixed authentication methods, and implicit
 authentication on the responder.
@@ -460,8 +459,7 @@ rule I1_STAT_SIG:
   in
   [ !LTK_STAT($U, ~ltk), Fr(~xx), Fr(~tid) ]
   --[ I1(~tid, $U, $V, m1) ]->
-  [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
-  , Out(m1)]
+  [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid), Out(m1)]
 \end{lstlisting}
 Like in the previous model, this rule starts the initiator and outputs the first
 message \mT{m1}, this time looking up the public key for \mT{U} and using the
@@ -491,8 +489,7 @@ rule R2_STAT_SIG:
     m2 = <data_2, CIPHERTEXT_2>
     exp_sk = <gx^~yy>
   in
-  [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV)
-  , In(m1), Fr(~yy), Fr(~tid) ]
+  [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV) , In(m1), Fr(~yy), Fr(~tid) ]
   --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
   , Out(m2) ]
@@ -552,8 +549,8 @@ rule I3_STAT_SIG:
   , !PK_STAT($U, pkU)
   , In(m2) ]
   --[ ExpCommitI(~tid, $U, $V, exp_sk), CommitI(~tid, $U, $V, imp_sk)
-  , I3(~tid, $U, $V, m1, m2, m3)
-  , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true) ]->
+    , I3(~tid, $U, $V, m1, m2, m3)
+    , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true) ]->
   [ Out(m3) ]
 \end{lstlisting}
 Here is a crucial difference that follows from our last observation: we notice
@@ -587,22 +584,12 @@ rule R4_STAT_SIG:
   , !PK_SIG($V, pkV)
   , In(m3) ]
   --[ ExpCommitR(~tid, $U, $V, exp_sk)
-  , CommitR(~tid, $U, $V, imp_sk)
-  , R4(~tid, $U, $V, m1, m2, m3)
-  , Eq(authI, MAC_3) ]->
+    , CommitR(~tid, $U, $V, imp_sk)
+    , R4(~tid, $U, $V, m1, m2, m3)
+    , Eq(authI, MAC_3) ]->
   []
 \end{lstlisting}
 
-
-% Let us focus on the interesting details of this model. First and
-% foremost, it shows how to construct signatures in the static method and
-% the signing method.
-% %
-% Looking at \mT{authU} how it is constructed in rule \mT{I3_STAT_SIG}, we can see
-% that it uses \mT{K_3m}, which is an expansion of \mT{prk_4x3m} that in turn uses
-% the semi-static Diffie-Hellman key \mGiy.
-% %
-%\footnote{\anote{I kept this out of the main text as it's covered already, however it might be useful to discuss implicit authentication in relation to OSCORE as future work, to be put in the discussion section}
 On the same rule we can also see how \emph{implicit authentication}
 differs from explicit authentication for the Initiator running the
 static method: on \mT{imp_sk} the semi-static key
@@ -655,7 +642,7 @@ that we check. Here we focus on their formalization into \mTamarin{} lemmas.
 
 \subsubsection{Explicit authentication}
 
-We model explicit authentication between the the initiator and the
+We model explicit authentication between the initiator and the
 responder.
 %
 For this lemma, we use the events \mT{ExpCommitI} and
@@ -717,43 +704,20 @@ additional \mT{Exp} prefix to the running and commit events
 \subsubsection{Implicit authentication}
 
 The following lemma proves implicit authentication:
-%\begin{lstlisting}
-%lemma authGIYImplicitAuthGuaranteeForI2:
-%  all-traces
-%  "All tidI u v impSk #i.
-%     CommitI(tidI, u, v, impSk)@i ==>
-%     ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
-%       (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
-%	    CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
-%       & (not Ex #k. K(impSk)@k) )
-%     | (Ex #k. LTKRev(u)@k)
-%     | (Ex #k. LTKRev(v)@k)
-%     | (Ex #k. LTKRev(<u, v>)@k)
-%     )
-%  "
-%\end{lstlisting}
-%\anote{this is the reformulated implicit authentication turned into a positive implication (almost no negation). All models are verified and it saves 5 minutes in verification time on my machine}
-%\knote{TODO: check whether the I2 version above says what we want. It is not
-%clear to me that it excludes the case that (u2 != u3 or v2 != v3) even though
-% #j = #j2
-%}
-%\anote{that case would never appear in Tamarin, since events are atomic, if #j = #j2 then all other parameters must match. Instead the case tidR2 != tidR, u2 != u2, v3 != v2 can be satisfied when #j != #j2, though this is not the only case that violates the attack. Hope it makes sense}
 \begin{lstlisting}
-lemma authGIYImplicitAuthGuaranteeForI:
+lemma authGIYImplicitAuthGuaranteeForI2:
   all-traces
   "All tidI u v impSk #i.
      CommitI(tidI, u, v, impSk)@i ==>
-     ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==> (u = u2  &  v = v2) )
-       & (not Ex #k. K(impSk)@k)
-       & (not( Ex tidR u v #j tidR2 u2 v2 #j2.
-            ( CommitR(tidR,  u,  v,  impSk)@j
-            & CommitR(tidR2, u2, v2, impSk)@j2
-            & not(#j = #j2)
-            ) ) )
-       )
+     ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+       (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
+	    CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
+       & (not Ex #k. K(impSk)@k) )
      | (Ex #k. LTKRev(u)@k)
      | (Ex #k. LTKRev(v)@k)
-     | (Ex #k. LTKRev(<u, v>)@k) ) "
+     | (Ex #k. LTKRev(<u, v>)@k)
+     )
+  "
 \end{lstlisting}
 
 As opposed to lemma \mT{authInjAgreeGuaranteeForI}, here we prove that the two
@@ -802,31 +766,3 @@ lemma secrecyPFSGIYSessionKey:
      ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j)
      | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
-
-% holds no matter which method user chooses.
-%  -  PFS on session key for all methods.
-%  -  Key secrecy (follows from PFS).
-%  -  Session key independence (follows from how we modeled PFS).
-
-% TODO: some statics of running time code size perhaps.
-% TODO: Scan draft-selander and check what props are claimed there; see
-% what we have covered and what we haven't.
-
-%  -  Entity authentication - we show this in the same lemmas as we show
-%     inj-agree on session key.  We don't have this property when $I$ uses
-%     STAT method because $I$ then gets no confirmation of
-%     Pre-specified peer model.
-%  -  Key confirmation (except for when $I$ uses \mStat
-%     method, then $I$ gets no key confirmation on \mGiy)
-
-% See~\ref{sec:mail-notes-encr} for how encryption is modeled.
-% \item Caveat: we have not modeled running all methods in parallel,
-% so we don't know if an adversary can somehow trick $I$ into
-% running one method and $R$ another, and by that causing some
-% attack.
-
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "main"
-%%% End:
