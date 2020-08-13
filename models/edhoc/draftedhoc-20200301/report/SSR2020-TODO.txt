@@ -1,0 +1,19 @@
+SSR 2020 submission - TODO list
+
+Deadline: 24/8
+https://ssr2020.mozilla.org/important-dates
+https://ssr2020.mozilla.org/paper-submission
+
+
+- Paper: [Karl] Cut down on detail in section 2 and describe things more abstractly
+- Paper: Cut down on detail in section 3 (remove some of the code?)
+- Paper: Fix upper-case letters where they are wrong in the references
+- Paper: [Vaishnavi] Update key hierarchy figure
+- Paper: Plan for what to write if we don't manage to prove PCS/KCI
+- Paper: Write up text on weak-PCS proof (if done)
+- Paper: Write up text on KCI proof (if done)
+- Paper: Check "compliance": https://ssr2020.mozilla.org/docs/Springer_Guidelines.pdf
+
+- Tamarin: [Alessandro] Define and prove weak-PCS
+- Tamarin: Define and prove KCI
+ 
