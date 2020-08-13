@@ -14,6 +14,8 @@ https://ssr2020.mozilla.org/paper-submission
 - Paper: Write up text on KCI proof (if done)
 - Paper: Check "compliance": https://ssr2020.mozilla.org/docs/Springer_Guidelines.pdf
 
+- Meta: [Vaishnavi] isolate PCS/KCI into one section, and identify all the references.
+
 - Tamarin: [Alessandro] Define and prove weak-PCS
 - Tamarin: Define and prove KCI
  
