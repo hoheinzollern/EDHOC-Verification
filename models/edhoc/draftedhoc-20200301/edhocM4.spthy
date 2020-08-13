@@ -392,10 +392,10 @@ rule revealLTK_PSK:
 /* PCS interface */
 rule forge_SIG:
     [!LTK_SIG($A, ~ltk), In(xx)] --[BrokenTEE($A)]-> [Out(sign(xx, ~ltk))]
-/*rule exp_STAT:
-    [!LTK_STAT($A, ~ltk), In(gx)] --[BrokenTEE($A)]-> [Out(gx^~ltk)]*/
+rule exp_STAT:
+    [!LTK_STAT($A, ~ltk), In('g'^x)] --[BrokenTEE($A)]-> [Out('g'^x^~ltk)]
 rule forge_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[BrokenTEE($A), BrokenTEE($B)]-> [Out(hkdfExtract(~ltk, xx))]
+    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[BrokenTEE($A), BrokenTEE($B)]-> [Out(hkdfExtract(~ltk, xx))] /* brokentee(a,b)? */
 
 /* Reveal session key for all methods.
  * Explicit authentication possible for:
