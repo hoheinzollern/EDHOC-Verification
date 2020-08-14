@@ -18,11 +18,16 @@ providing authentication information \mAuthr{}.
 Finally, in the third message \mMsgthree{}, the initiator authenticates itself
 to the responder by providing authentication information \mAuthi{}.
 %
+The authentication information consists of a MAC for all authentication methods.
+%
+That MAC is also signed when authentication is based on public key signatures.
+%
 In addition to exchange of Diffie-Hellman half-keys and authentication data,
 the messages also include agreement of parameters for the \mOscore{} security
 context, such as encryption algorithm identifiers (\mSuites{}) and \mOscore{}
-security context identifiers (\mCi{} and \mCr{}).
+security context identifiers \mCi{} and \mCr{}.
 %
+
 Optionally, messages may include application layer data \mAD{}, which enjoys
 differing levels of protection depending on in which message it is sent.
 %
@@ -67,29 +72,30 @@ authentication methods are used.
 The different authentication methods require different message content.
 %
 Specifically, the place holders \mAuthi{} and \mAuthr{} are constructed
-differently depending on method.
+differently depending on authentication method.
 %
-So, it is natural to break down the description of \mEdhoc{} based on
-these methods.
+As will be clear, it is natural to break down the description of \mEdhoc{}
+based on the combination of the authentication method used by the initator and
+the one used by the responder.
 %
 
 The authentication methods are digital signatures
 (\mSig), challenge-response signatures based on static long-term Diffie-Hellman
 keys (\mStat) and pre-shared symmetric keys (\mPsk).
 %
-We will sometimes refer to these authentication methods simply as methods.
-%
 Two parties may use different authentication methods in an \mEdhoc{} run.
 %
 Any combination of the \mSig{} and \mStat{} methods is possible, but when
 \mPsk{} is used, both parties use \mPsk{}.
 %
-Overloading terminology, we refer to these combinations of authentication
-methods also as methods, and
-denote them \mSigSig, \mSigStat, \mStatStat, \mStatSig{} and \mPskPsk.
+We refer to these combinations of authentication methods simply as methods to
+align terminology in the \mSpec{}.
 %
-The first method in the name denotes the method used by the initiator of the
-protocol run and the second denotes the method used by the responder.
+We denote the methods \mSigSig, \mSigStat, \mStatStat, \mStatSig{} and \mPskPsk.
+%
+The first authentication method in the name denotes the authentication method
+used by the initiator of the protocol run and the second denotes the 
+authentication method used by the responder.
 %
 Parties use mixed types of credentials in \mSigStat{} and \mStatSig{}, so
 we call these methods mixed methods.
@@ -155,14 +161,15 @@ long-term Diffie-Hellman keys, and proceed along the lines of
 \mOptls~\cite{cryptoeprint:2015:978}.
 %
 The challenge-response signature uses an ephemeral Diffie-Hellman half-key as
-challenge, mixes this half-key with the static Diffie-Hellman key to generate
+challenge, mixes this half-key with the secret static Diffie-Hellman key to
+generate
 the session key and a symmetric temporary key to authenticate the session key
 using an \mAead{}-transform~\cite{aead,rfc5116,DBLP:conf/eurosp/KrawczykW16}.
 %
 This authenticates one party to the other, which is sufficient for \mOptls in
 that it only aims for server authentication.
 %
-In \mEdhoc, a party authenticating with with the \mStat{} method
+In \mEdhoc, a party authenticating with with the \mStat{} authentication method
 essentially acts as an \mOptls{} client and the other party as an \mOptls{}
 server.
 %
@@ -185,18 +192,17 @@ point to use distinct elements for the Diffie-Hellman half-key and the
 challenge, following the principle of separation of concerns.
 %
 
+%------------------------------------------------------------------------- sub
 \subsubsection{\mNoise{}}
 The \mStatStat{} and \mPskPsk{} aim to follow the \mNoise{}
 framework~\cite{perrin2016noise}.
 %
 This framework defines how to construct authenticated key exchange protocols,
 known as patterns, using static long-term Diffie-Hellman keys or pre-shared
-keys as
-credentials.
+keys as credentials.
 %
 Its goal is to harmonize among the many static long-term key Diffie-Hellman 
-based key
-exchange protocols, of which \mOptls{} is one.
+based key exchange protocols, of which \mOptls{} is one.
 %
 \mNoise{} specifies how to derive keys, use transcript hashes to ensure
 authentication of the message flow among other things.
@@ -238,7 +244,7 @@ does not have or performs differently.
 %
 
 %------------------------------------------------------------------------- sub
-\subsection{Authentication methods}
+\subsection{Methods of key establishment}
 \label{sec:methods}
 We are now ready to dive into the details of the various methods supported by
 \mEdhoc.
@@ -284,14 +290,22 @@ The seeds are used to bind the key material and keys to certain parameters.
 The key hierarchy is rooted in an ephemeral Diffie-Hellman key \mGxy{}, i.e.,
 the combination of the two half-keys \mGx{} and \mGy{}.
 %
-From that, it is successively constructed with each transmitted message.
+From that, it is successively constructed with each transmitted message, weaving
+in information parties learn as the protocol progresses, culminating in the
+established session key material.
+%
+From the session key material, a key exporter based on \mHkdf{} can be used to
+extract actual encryption and integrity keys as needed by \mOscore{}.
 %
 Figure~\ref{fig:kdfdiagram} depicts a simplified version of the key hierarchy.
 %
-From \mGxy{} three intermediate keys are derived in a chain, one associated
-with the second message,
-\mPRKtwo{}, one associated with the third message, \mPRKthree{}, and a
-final one from which the final session key material is derived, \mPRKfour{}.
+
+From \mGxy{} three intermediate keys \mPRKtwo, \mPRKthree{} and
+\mPRKthree are derived.
+%
+Each one of them corresponds to a specific message in the protocol, and from
+these intermediate keys message specific encryption and integrity keys for the
+message is derived.
 %
 The seed used for \mPRKtwo{} is dependent on which method is used.
 %
@@ -305,14 +319,13 @@ are the same, i.e., $\mPRKtwo{} = \mPRKthree{} = \mPRKfour$.
 For the three \mStat-based methods, however, they differ.
 %
 The differences comes from that when a party uses \mStat{}-based authentication,
-the intermediate key \mPRKthree{} is dependent on the static long term key of
+the intermediate key \mPRKthree{} is dependent on the static long-term key of
 the party (possibly both) using \mStat{}-based authentication.
 %
 
 The result of an \mEdhoc{} run is not a key per se, but rather key material from
 which actual encryption keys etc can be derived.
 %
-
 
 %The keys used for the \mAead{} encryptions are augmented with the suffix `e',
 %for encrypting the ciphertext, or with the suffix `m', for generating the MAC
@@ -325,8 +338,15 @@ which actual encryption keys etc can be derived.
 
 \begin{figure}[htp]
 \centering
+\scalebox{.75}{
 \input{kdfdiagram.tex}
-\caption{A diagram to illustrate the KDF key hierarchy}
+}
+\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs
+included conditioned on which method $m$ is used. The digits should be
+interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
+The red boxes below \mGxy{} represent the intermediate key material used for
+different messages, and the blue left-most boxes represent the keys entering
+a \mAead{} transform or are used for XOR encryption.}
 \label{fig:kdfdiagram}
 \end{figure}
 
@@ -338,7 +358,7 @@ authentication is achieved.
 We therefore focus on that.
 %
 
-\subsection{\mPskPsk{} method}
+\subsubsection{\mPskPsk{} method}
 In this method, the initiator and responder are assumed to share a pre-shared
 key (\mPsk) identified by \mIDPsk.
 %
@@ -422,20 +442,65 @@ protected, and $y$ is the plaintext.}
 \end{figure}
 
 %------------------------------------------------------------------------- sub
-\subsection{\mStat-based methods}
+\subsubsection{\mStat-based methods}
 \mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and
 \mStatSig{}.
 %
-The first message is common for all these methods, and only contains the
-initiators ephemeral Diffie-Hellman half-key.
+The distinguishing feature of \mStat-based methods is that one or both of
+the initiator and responder authenticate to their peer using their secret
+static long-term Diffie-Hellman key, \mLtki{} and \mLtkr{} respectively.
 %
-The content of the second and third messages depend on the method used.
+
+Authentication is achieved using challenge-response signatures that work as
+follows when the responder authenticates to the initiator.
 %
-In contrast to the \mPskPsk{} method, each party provide an identifier,
-\mIdcredi{} and \mIdcredr{} respectively, for the credential they use (provided
-that the peer cannot be assumed to know this from out of band information).
+The initiator sends a challenge to the responder in the first message.
 %
-We now describe the specifics for each method.
+To save bandwidth, the ephemeral Diffie-Hellman half-key \mGx{} sent in the
+first message serves also as challenge.
+%
+When receiving \mGx{}, the responder raises it to the power of its secret
+static long-term Diffie-Hellman key, \mLtkr{}.
+%
+Assuming the discrete logarithm problem is hard in the underlying Diffie-Hellman
+group, only the initiator and responder will be able to compute
+$\mGx{}^\mLtkr{}$, and this value is woven in to the key hierarchy as depicted
+in Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
+%
+The responder computes authentication data \mAuthr{} in the form of the MAC
+\mMactwo{} (see Figure~\ref{fig:kdfdiagram} using the \mAead{} transform from
+\mSuites{} as proposed by the initiator in the first message.
+%
+The responder then includes \mMactwo{} in the second message.
+%
+Knowing the secret ephemeral Diffie-Hellman half-key corresponding to \mGx{},
+and the public static long-term Diffie-Hellman of the responder, the initiator
+can also compute $\mGx{}^\mLtkr{}$.
+%
+Because the initiator can assume the only other party knowing
+$\mGx{}^\mLtkr{}$ is the responder, the initiator can consider the responder
+authenticated if the \mAead{} transform completes successfully.
+%
+When the initiator is authenticating to the repsonder, the roles are reversed,
+and \mGy{} takes the place of \mGx{}, \mLtki{} the place of \mLtkr{}, and
+\mAuthi{} the place of \mAuthr{}.
+%
+\mAuthi{} is constructed from \mMacthree{}.
+%
+
+Independently of whether one party uses \mStat{}-based authentication, the other
+party may use \mSig{}-based authentication.
+%
+In that case, the authentication data for that party is constructed
+using a regular signature.
+%
+
+In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party
+provide an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the
+credential they use (provided that the peer cannot be assumed to know this
+from out of band information).
+%
+We now give the specifics for the methods in clarifying message sequence charts.
 %
 
 %------------------------------------------------------------------------- sub
@@ -444,28 +509,7 @@ The initiator uses the \mSig{} method, authenticating with a signature,
 while the responder uses the \mStat{} method, authenticating with a
 challenge-response signature.
 %
-
-In addition to being a Diffie-Hellman half-key, the value \mGx{} takes on the
-function of challenge for the responder authentication.
-%
-To compute the response signature, the responder raises \mGx{} to the power of
-its secret static long-term Diffie-Hellman key \mLtkr{}.
-%
-Assuming the discrete logarithm problem is hard in the underlying Diffie-Hellman
-group, only the initiator and responder will be able to compute
-$\mGx{}^\mLtkr{}$, and this value is woven in to the key hierarchy as depicted
-in Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
-%
-The responder computes authentication data in the form of the \mAead{}
-transform, similar to the \mPskPsk{} method, but the key is now dependent on
-$\mGx{}^\mLtkr{}$.
-%
-Because the initiator can assume the only other party knowing
-$\mGx{}^\mLtkr{}$ is the responder, the initiator can consider the responder
-authenticated if the \mAead{} transform completes successfully.
-%
-The initator authenticates to the responder by a normal signature in the third
-message.
+The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 %
 
 \begin{figure}[!h]
@@ -535,68 +579,32 @@ message.
 \label{fig:edhocsigstat}
 \end{figure}
 
+%------------------------------------------------------------------------- sub
 \subsubsection{\mStatStat}
 In this method, both the initiator and the responder use the \mStat{}
 authentication method.
 %
-The responder executes the same as in the previous subsection, except for how
-authenticating the initiator.
-%
-Because the initiator usess the \mStat{} method, it authenticates using a
-challenge-response signature, using \mGy{} as the challenge and raising that to
-the power of the initiator's secret static long-term Diffie-Hellman key
-\mLtki{}.
-%
-The result $\mGy{}^\mLtki{}$ is woven into the key hierarchy in the same way as
-$\mGx{}^\mLtkr{}$.
-%
-In contrast to the \mSigStat{} method, both parties' secret static long-term
+Contrasting with the \mSigStat{} method, both parties' secret static long-term
 Diffie-Hellman keys here affect the key hierarchy, and ultimately the session
 key material.
 %
-The initiator computes authentication data using the \mAead transform
+The initiator computes authentication data using the \mAead{} transform
 and includes that in the third message for the responder to verify.
 %
 As expected the initiator's behavior mirrors the \mStat{} authentication method
 used by the responder in the previous subsection.
+%
 
 %------------------------------------------------------------------------- sub
 \subsubsection{\mStatSig}
-Here, the responder runs the \mSig{} method, while the initiator runs the \mStat{} method. Thus, the second message, sent by the responder to the initiator needs an extra layer of signing. 
-
-The intermediate keys are now generated in a slightly different manner, since
-the responder is running \mSig. \mPRKtwo{} is still generated by running the KDF
-on the empty salt and \mGxy. However, \mPRKthree{} is now equal to \mPRKtwo.
-\mKtwom{} and \mKtwoe{} follow the same guidelines as earlier, but with these
-values of \mPRKtwo{} and \mPRKthree. The responder constructs \mMactwo{} as earlier.
-
-Once \mMactwo{} has been constructed, the responder runs the signature algorithm
-with a \mCose{} object. This object has \mIdcredr{} as protected data, a
-concatenation of \mTHtwo, \mCredr, and \mADtwo{} as external data, and the payload \mMactwo. This is signed using the responder's private authentication key to obtain \mSigtwo.
-
-The outer encryption object is constructed by considering a plaintext consisting
-of \mCredr, \mSigtwo{} (instead of \mMactwo), and \mADtwo. The key \mKtwoae{} is \mXor-ed with this plaintext to get a ciphertext, and the responder sends \mGy, \mCr, and this ciphertext to the initiator as the second message.
-
-The initiator generates the intermediate key \mPRKtwo by running the KDF on
-empty salt and \mGxy{} and sets \mPRKthree{} equal to \mPRKtwo. These are used
-for generating the \mKtwom{} and \mKtwoe{} for decrypting the message received
-from the responder. The intermediate key \mPRKfour{} is generated by giving as
-input to \mHkdfExtract{} \mPRKthree{} as salt, and \mGiy{} as IKM -- \mGiy{} is
-obtained as in the \mStatStat{} method.
-
-Now, to generate the encryption keys, the initiator generates \mKthreem{} by
-passing \mPRKfour{} and \mTHthree{} to the KDF. \mKthreeae{} is generated by
-running the KDF on \mPRKthree{} and \mTHthree. There is no signature, and the
-message is constructed exactly as in the \mStatStat{} case, except with these
-values of \mKthreem{} and \mKthreeae.
-
-In order to decrypt the message received from the initiator, the responder needs
-to generate keys. \mKthreeae{} is straightforward, but in order to generate
-\mKthreem, the responder needs \mPRKfour. To generate this intermediate key, the
-responder runs \mHkdfExtract{} on \mPRKthree{} as salt, and uses as IKM \mGiy,
-which is obtained by exponentiating the initiator's public authentication key to
-the responder's ephemeral secret \mGy. As earlier, this is an asymmetric key
-used for ``decrypting'' the \mGiy{} used by the initiator to construct its \mPRKfour. This method is illustrated in Figure~\ref{fig:edhocstatsig}.
+The \mStatSig{} method is in a sense the mirror of the \mSigStat{} method.
+%
+Here, the responder runs the \mSig{} method and create the \mAuthr{}
+authentication data as a signature over the MAC, while the initiator runs the
+\mStat{} method.
+%
+The method is illustrated in Figure~\ref{fig:edhocstatsig}.
+%
 
 \begin{figure}[!h]
 \centering
@@ -659,11 +667,32 @@ used for ``decrypting'' the \mGiy{} used by the initiator to construct its \mPRK
 \label{fig:edhocstatsig}
 \end{figure}
 
-\subsection{\mSigSig{} method}
-In this method, both parties run the \mSig{} method, and therefore, both the
-second and third messages need to be signed before being encrypted via \mAead.
-The intermediate key \mPRKtwo{} is generated as usual, by sending the empty salt
-and the shared secret to the KDF, and both \mPRKthree{} and \mPRKfour{} are set equal to \mPRKtwo. The second message looks like the one from the \mSigStat{} method described above, while the third looks like the one from the \mStatSig{} method.
+\subsubsection{\mSigSig{} method}
+In this method, both parties run the \mSig{} method and authenticates with
+signatures.
+%
+As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but
+there are notable deviations preventing security proofs from automatically
+carry over from \mSigmaI{} to \mEdhoc{}.
+%
+For example, \mEdhoc{} aims to provide some degree of identity protection
+for repsonders, and therefore uses the idea from \mSigmaI{} of encrypting
+the repsonder identifier \mIdcredr{} (and other items) in the second message.
+%
+Since a top driver for the \mEdhoc{} design is to keep the bandwidth consumption
+down, the authors of \mEdhoc{} consider it wasteful adding a second MAC
+in addition to the already included \mMactwo{}.
+%
+\mEdhoc{} applies XOR encryption, where the key derivation function
+\mHkdf{} is used to generate the key stream because the underlying
+crypto-library \mCose{} does not support unauthenticated encryption algorithms.
+%
+However, \mSigma{} assumes authenticated encryption for this purpose (see
+Section 5.2 of~\cite{sigma}).
+%
+
+
+%KARL: we didn't verify anything about this after all. Propose to delete it.
 
 %\subsection{Negotiating a cipher suite and method and correlation parameters}
 %\label{sec:ciphersuite}
@@ -674,28 +703,90 @@ and the shared secret to the KDF, and both \mPRKthree{} and \mPRKfour{} are set 
 %In order to keep the presentation clean, we have omitted the cipher suite negotiation process from the description of the methods. However, this process happens as follows, at the beginning of every method, once the responder receives the first message. The initiator proposes an ordered list of cipher suites they support. This list presented in descending order to the responder who either accepts the topmost entry in this list (if they also support that suite) or makes a counter-proposal, namely the topmost entry which they support from the remaining part of the list. If there is no such entry the responder can reject, and the protocol does not continue. Similarly, the responder can reject the initiator's choices for the method and correlation parameters as well -- in the case of a reject for either of these values, the protocol aborts.
 
 
-\subsection{Deriving an OSCORE context}
-\mEdhoc{} is often used to set up parameters for \mOscore. In this case, the
-parties make sure that the connection identifiers are distinct, i.e. $\mCredi
-\neq \mCredr$, since these are used as \mOscore{} sender IDs. If the initiator
-plays the role of the CoAP client, and the responder the role of the CoAP
-server, the client gets the sender ID \mCredr{} and the server the ID \mCredi{} (the identifiers are swapped). The \mAead{} and hash algorithms for \mOscore{} stay the same as those used for the selected cipher suite in \mEdhoc, while the master secret for \mOscore{} is derived using the key length of the \mAead{} algorithm of \mEdhoc. 
 
+%
 \subsection{Expected security properties}
-In this section, we list all the claims made by the authors of~\cite{selander-lake-edhoc-01} regarding the security properties satisfied by \mEdhoc. We will revisit these claims when we discuss the formal modeling and verification of \mEdhoc{} in Section~\ref{sec:formalization}. 
+\knote{This section was mainly rephrasing text from the \mSpec{} in prose
+    form. It is not easy to see how we should connect back to that clearly from
+    the analysis and discussion sections.
+    I have made a first itemization of the text, but propose that we go even
+    further and just bullet list the claimed properties, and for the ones that
+    are unclear we put in an interpretation and highlight that it is unclear.
+    Then we can tick-off in the conclusion what we have checked, what not and
+    what we have checked in addition.
+    Views on that approach?
+}
 
-The following are the claims made by the authors of~\cite{selander-lake-edhoc-01}. 
+In this section, we list the claims made by the authors
+of~\cite{selander-lake-edhoc-01} regarding the security properties satisfied
+by \mEdhoc{}.
+%
+We will revisit these claims when we discuss the formal modeling and
+verification of \mEdhoc{} in Section~\ref{sec:formalization} and in the
+discussions in Section~\ref{sec:discussion}. 
+%
+The following are the claims made by the authors
+of~\cite{selander-lake-edhoc-01}. 
+\begin{itemize}
+    \item \textit{ \mEdhoc{} inherits some security properties from the
+        \mSigma{} protocol. These are
+        \textbf{Perfect Forward Secrecy,
+                mutual authentication
+                    with aliveness,
+                         consistency,
+                         peer awareness (to the responder,
+                                         but not to the initiator),
+                identity protection, and
+                Key Compromise Impersonation (KCI) resistance.
+        }}
+    \item \textit{All methods except \mPskPsk{} offer
+            \textbf{identity protection of the initiator against active attacks
+            and that of the responder against passive attacks}.
+        }
+    \item \textit{\mEdhoc{} also provides
+        \textbf{protection against replay attacks} by the attacker.
+        The attacker also \textbf{cannot affect any negotiated parameters}.
+        \textbf{A single session of \mEdhoc{} enables the responder to verify
+            that the selected cipher suite is the most preferred of the
+            initiator which is supported by both parties, even though there is
+        no negotiation of cipher suites per se.}
+        }
+    \item \textit{In order to reduce the chances of pervasive monitoring,
+            \mEdhoc{} only supports methods with \textbf{perfect forward
+            secrecy}.
+        }
+    \item \textit{For the \mPskPsk{} method, compromising \mPsk{} lets the
+            attacker impersonate either party in \mEdhoc{} exchanges with the
+            other.
+            For the other methods, \textbf{compromising the private
+            authentication keys of one party lets the attacker impersonate only
+            the compromised party in exchanges with other parties}.
+            In particular, it does not let the attacker masquerade as any other
+            parties in communications with the compromised party.
+        }
+        \knote{The above is a convoluted, and possibly incorrect, phrasing of
+        KCI. I propose we delete it.}
+    \item \textit{Compromise of the \mHkdf{} input parameters (\mGxy{} shared
+            secret and/or \mPsk) leads to all session keys derived from that
+            shared secret being deemed compromised. However, the
+            \textbf{compromise of one session key does not affect other
+            session keys.}
+    }
+    \knote{The first sentence is unclear. I don't know which property it refers
+    to. The second is clear though: independence between session keys.}
+\item \textit{
+        If the long-term keys (\mPsk{} or private authentication keys) are
+        compromised, this does not affect the security of instances of
+        \mEdhoc{} which have completed prior to compromise.
+        }
+        \knote{The above seems to be PFS again, which was mentioned already in
+        he the first bullet. I suggest we keep only one.}
+\end{itemize}
 
-\mEdhoc{} inherits some security properties from the \mSigma{} protocol. These are perfect forward secrecy, mutual authentication with aliveness, consistency, peer awareness (to the responder, but not to the initiator), identity protection, and Key Compromise Impersonation (KCI) resistance.
-
-All methods other than \mPskPsk{} offer identity protection of the initiator against active attacks and that of the responder against passive attacks. The roles should be assigned to protect the more sensitive identity. This is usually the entity whose identity cannot be inferred from information in the lower layers.
-
-\mEdhoc{} also provides protection against replay attacks by the attacker. The attacker also cannot affect any negotiated parameters. A single session of \mEdhoc{} enables the responder to verify that the selected cipher suite is the most preferred of the initiator which is supported by both parties, even though there is no negotiation of cipher suites per se.
-
-In order to reduce the chances of pervasive monitoring, \mEdhoc{} only supports methods with perfect forward secrecy. One way to limit the effect of breaches is to minimize the use of symmetrical group keys for bootstrapping. \mEdhoc, therefore, uses raw public keys and self-signed certificates instead of symmetrical group keys for bootstrapping.
-
-For the \mPskPsk{} method, compromising \mPsk{} lets the attacker impersonate either party in \mEdhoc{} exchanges with the other. For the other methods, compromising the private authentication keys of one party lets the attacker impersonate only the compromised party in exchanges with other parties. In particular, it does not let the attacker masquerade as any other parties in communications with the compromised party. 
-
-Compromise of the \mHkdf{} input parameters (\mGxy{} shared secret and/or \mPsk) leads to all session keys derived from that shared secret being deemed compromised. However, the compromise of one session key does not affect other session keys. If the long-term keys (\mPsk{} or private authentication keys) are compromised, this does not affect the security of instances of \mEdhoc{} which have completed prior to compromise. 
-
-In this paper, we verify secrecy, authentication, session independence, perfect forward secrecy, key-compromise impersonation, and some flavor of post-compromise security. We will also discuss, in Section~\ref{sec:discussion} what it means for these properties to hold about this model.
+In this paper, we verify secrecy, authentication, session independence,
+perfect forward secrecy, key-compromise impersonation, and some
+flavor of post-compromise security.
+We will also discuss, in Section~\ref{sec:discussion} what it means for
+these properties to hold about this model.
+\knote{Need to revise the above paragraph when decided what to do about this
+section.}
