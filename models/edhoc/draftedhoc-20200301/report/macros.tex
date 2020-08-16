@@ -2,27 +2,27 @@
 
 % -- Editorial macros
 % http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
-%\usepackage{todonotes}
-%\newcommand{\knote}[1]{\todo[inline,
-%                             color=orange,
-%                             size=\footnotesize
-%                            ]{\textsf{\textbf{Karl:} #1}}}
-%\newcommand{\anote}[1]{\todo[inline,
-%                             color=orange,
-%                             size=\footnotesize
-%                            ]{\textsf{\textbf{Alessandro:} #1}}}
-%\newcommand{\vnote}[1]{\todo[inline,
-%                             color=orange,
-%                             size=\footnotesize
-%                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
+\usepackage{todonotes}
+\newcommand{\knote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Karl:} #1}}}
+\newcommand{\anote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Alessandro:} #1}}}
+\newcommand{\vnote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
 % \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
 % \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
 %\newcommand{\knote}[1]{}
 %\newcommand{\vnote}[1]{}
 %\newcommand{\anote}[1]{}
-%\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
-%\newcommand{\mcneed}{\textbf{Citation needed}}
-%\newcommand{\mcfix}{\textbf{Fix citation}}
+\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
+\newcommand{\mcneed}{\textbf{Citation needed}}
+\newcommand{\mcfix}{\textbf{Fix citation}}
 
 
 % -- Fonts and styles for names
@@ -89,6 +89,7 @@
 \newcommand{\mGy}{\mConstStyle{G\_Y}}
 \newcommand{\mGxy}{\mConstStyle{G\_XY}}
 \newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}}
+\newcommand{\mTH}{\mConstStyle{TH}}
 \newcommand{\mTHtwo}{\mConstStyle{TH\_2}}
 \newcommand{\mKtwoe}{\mConstStyle{K\_2e}}
 \newcommand{\mKtwom}{\mConstStyle{K\_2m}}
@@ -105,6 +106,8 @@
 \newcommand{\mHash}{\mConstStyle{H}}
 
 \newcommand{\mTHfour}{\mConstStyle{TH\_4}}
+\newcommand{\mAuthi}{\mConstStyle{Auth\_I}}
+\newcommand{\mAuthr}{\mConstStyle{Auth\_R}}
 
 \newcommand{\mMactwo}{\mConstStyle{MAC\_2}}
 \newcommand{\mMacthree}{\mConstStyle{MAC\_3}}
@@ -118,6 +121,7 @@
 
 \newcommand{\mCipher}{\mConstStyle{cipher\_2}}
 
+\newcommand{\mAD}{\mConstStyle{AD}}
 \newcommand{\mADone}{\mConstStyle{AD\_1}}
 \newcommand{\mADtwo}{\mConstStyle{AD\_2}}
 \newcommand{\mADthree}{\mConstStyle{AD\_3}}
@@ -131,6 +135,7 @@
 \newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}}
 \newcommand{\mLtki}{\mConstStyle{ltk\_I}}
 \newcommand{\mLtkr}{\mConstStyle{ltk\_R}}
+\newcommand{\mLtk}{\mConstStyle{ltk}}
 
 % TIKZ messages and actions
 \newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
