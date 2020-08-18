@@ -4,18 +4,36 @@ Deadline: 24/8
 https://ssr2020.mozilla.org/important-dates
 https://ssr2020.mozilla.org/paper-submission
 
+- means open AP
+x means closed AP (Please tick off when you are done)
 
-- Paper: [Karl] Cut down on detail in section 2 and describe things more abstractly
+Section 2 EDHOC Description:
+x Paper: [Karl] Cut down on detail in section 2 and describe things more abstractly
+x Paper: [Vaishnavi] Update key hierarchy figure
+- Paper: [Vaishnavi] Go through after Karl's updates on Tuesday
+
+Section 3 Model:
 - Paper: Cut down on detail in section 3 (remove some of the code?)
-- Paper: Fix upper-case letters where they are wrong in the references
-- Paper: [Vaishnavi] Update key hierarchy figure
-- Paper: Plan for what to write if we don't manage to prove PCS/KCI
 - Paper: Write up text on weak-PCS proof (if done)
 - Paper: Write up text on KCI proof (if done)
+x Paper: [Vaishnavi] isolate PCS/KCI into one section, and identify all the references.
+- Paper: [Vaishnavi] Plan for what to write if we don't manage to prove PCS/KCI
+
+Section 4 Discussion:
+- Paper: [Karl] Go through after Vaishnavi's updates on Tuesday
+
+General:
+- Paper: [Karl] Fix upper-case letters where they are wrong in the references
+- Paper: [Karl] remove unused references and compact
+- Paper: [Karl] Check Discussion section
+- Paper: [Vaishnavi] check font issue on xetex
 - Paper: Check "compliance": https://ssr2020.mozilla.org/docs/Springer_Guidelines.pdf
 
-- Meta: [Vaishnavi] isolate PCS/KCI into one section, and identify all the references.
 
-- Tamarin: [Alessandro] Define and prove weak-PCS
+Model:
+- Tamarin: [Alessandro] Define and prove weak-PCS; Decide Thursday 9:00 whether
+  to include it or not.
 - Tamarin: Define and prove KCI
- 
+
+
+
