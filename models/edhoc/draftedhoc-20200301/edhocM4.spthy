@@ -546,6 +546,7 @@ lemma authGIYImplicitAuthGuaranteeForI:
          )
     "
 
+/*
 lemma authGIYImplicitAuthGuaranteeForI2:
     all-traces
     "All tidI u v impSk #i.
@@ -559,6 +560,7 @@ lemma authGIYImplicitAuthGuaranteeForI2:
          | (Ex #k. LTKRev(<u, v>)@k)
          )
     "
+*/
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
@@ -642,8 +644,8 @@ lemma authKCIInjAgreeGuaranteeForI:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. BrokenTEE(v)@j & #j < #i)
-         | (Ex #j. LTKRev(v)@j & #j < #i)
+         | (Ex #j. BrokenTEE(v)@j)
+         | (Ex #j. LTKRev(v)@j)
          )
     "
 lemma authKCIInjAgreeGuaranteeForR:
@@ -656,10 +658,32 @@ lemma authKCIInjAgreeGuaranteeForR:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. BrokenTEE(u)@j & #j < #i)
-         | (Ex #j. LTKRev(u)@j & #j < #i)
+         | (Ex #j. BrokenTEE(u)@j)
+         | (Ex #j. LTKRev(u)@j)
 	     )
     "
+
+/* KCI for STAT-based methods */
+lemma authKCIImpGIYImplicitAuthGuaranteeForI:
+    all-traces
+    "All tidI u v impSk #i.
+         CommitI(tidI, u, v, impSk)@i ==>
+         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
+                (u = u2  &  v = v2)
+             )
+           &
+             (not Ex #k. K(impSk)@k)
+           &
+             (not( Ex tidR u v #j tidR2 u2 v2 #j2.
+                      ( CommitR(tidR,  u,  v,  impSk)@j
+                      & CommitR(tidR2, u2, v2, impSk)@j2
+                      & not(#j = #j2)
+                      )
+                 )
+             )
+           )
+         | (Ex #k. BrokenTEE(v)@k)
+         | (Ex #k. LTKRev(v)@k)
+         )
+    "
 end
-
-
