@@ -1,12 +1,12 @@
-\documentclass[runningheads,draft,x11names]{llncs}
+\documentclass[runningheads, envcountsame, a4paper, draft, x11names]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
-\usepackage{enumitem}       % compacts lists and stuff
-\usepackage[subtle]{savetrees}
-\usepackage{soul}           % \hl for highlighting text; \st for strike-through
+%\usepackage{enumitem}       % compacts lists and stuff
+%\usepackage[subtle]{savetrees}
+%\usepackage{soul}           % \hl for highlighting text; \st for strike-through
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{wrapfig}
+%\usepackage{wrapfig}
 \usepackage{tikz}
 \usetikzlibrary{trees,snakes,arrows}
 \usetikzlibrary{shapes,chains}
@@ -20,8 +20,14 @@
     pdfkeywords={}, % PDF Keywords
     pdfcreator={PdfLaTeX}, % PDF Creator
   }
+ 
+\setlength{\belowcaptionskip}{-10pt}
 
 \input{macros}
+%%%%%% HACKY COMMAND FOR VSPACE, REMOVE AT END %%%%%
+\newcommand{\spacehack}{\vspace{-1em}}
+\newcommand{\fillhack}{\vspace{-0.5em}}
+
 
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
@@ -76,11 +82,15 @@ heterogeneous security properties, and discuss consequences of this.
 %
 
 %-------------------------------------------------------------------------- sec
+\vspace{-2.5em}
 \section{Introduction}
 \label{sec:introduction}
+\fillhack
 %-------------------------------------------------------------------------- sub
+
 \subsection{Background and motivation}
 \label{sec:motivation}
+\fillhack
 IoT security threats involving cars, web-cameras and other resourceful devices
 receive most attention from media and academia.
 %
@@ -170,15 +180,17 @@ security goals should be, is an important part of this paper.
 %
 
 %-------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Contributions}
 \label{sec:contributions}
+\fillhack
 We have reviewed and analyzed the \mEdhoc{} protocol, which has continuously
 evolved, at times based on our feedback.
 %
 The analysis spanned over roughly five months, but the formal models and proven
 properties are based on to the version specified in the draft as it was on
 2020-03-01~\cite{selander-lake-edhoc-01}.
-%
+%x
 
 Our main contributions are the following.
 \begin{itemize}
@@ -203,8 +215,10 @@ Our main contributions are the following.
 \end{itemize}
 
 %-------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Related work}
 \label{sec:relatedWork}
+\fillhack
 The work closest to ours is Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
 two-cryptographic core, version of \mEdhoc~\cite{selander-ace-cose-ecdhe-08}.
@@ -241,27 +255,35 @@ symbolized version of an extended Canetti-Krawzcyk model.
 %
 
 %-------------------------------------------------------------------------- sec
+\spacehack
 \section{The \mEdhoc{} protocol}
 \label{sec:edhoc}
 \input{edhocProtocol}
 
 %-------------------------------------------------------------------------- sec
+\spacehack
 \section{Formalization and results}
 \label{sec:formalization}
 \input{edhocFormalization}
 
 %-------------------------------------------------------------------------- sec
+\spacehack
 \section{Discussion}
 \label{sec:discussion}
+\fillhack
 %-------------------------------------------------------------------------- sub
 There are a few instances where things are ill-specified in the \mSpec{}, which we found as part of this work. We discuss them below. 
 
+\spacehack
 \subsection{Security claims}
 \label{sec:securityClaims}
+\fillhack
 The \mSpec{} makes detailed claims about security properties that \mEdhoc{} enjoys. In particular, in Section~8.1 of~\cite{selander-lake-edhoc-01}, the authors claim that ``EDHOC inherits its security properties from the theoretical SIGMA-I''. While it is good practice to reuse well-studied academic components to design a standard, it is important to justify that any changes made still preserve the security properties enjoyed by the component. It is inadvisable for the \mSpec{} to make claims about security properties without any analysis to back this up.   
 
+\spacehack
 \subsection{Lack of clear use-cases}
 \label{sec:unclearProtocolUse}
+\fillhack
 Formal verification aims to verify whether well-specified security goals hold for particular security models, defined in terms of attacker capabilities, assumptions on storage and processing by parties etc. Without a clear picture of the intended uses of the protocol, it cannot be determined which properties are the most important ones for constrained IoT applications.
 
 Much like \mDandTls{}, \mEdhoc{} is intended for a variety of use cases,
@@ -269,6 +291,7 @@ many of which are not even known today. However, one can still collect a variety
 
 While constructing our model, we came up with simple user stories to identify security properties of interest. Several of these revealed undefined aspects of \mEdhoc{} that were then included in the \mSpec. We present below a couple of examples.
 
+\spacehack
 \subsubsection{Credentials stored in a trusted execution environment (TEE)}
 Does one need to consider applications of \mEdhoc{} where the device is
 deployed in a hostile environment, and might be equipped with a TEE? We received indications from the \mSpec{} authors (personal correspondence) that it was not necessary to consider revealing of the ephemeral secret keys, i.e. not necessary to consider compromised TEEs. 
@@ -277,11 +300,12 @@ The rationale is that \mSigma{} cannot protect against such an attack (presumabl
 %
 That argument is only true, however, if one restricts attention to session key confidentiality of an ongoing session. TEEs do provide value by, for example, allowing weak PCS guarantees. Furthermore, in the \mStat{}-based methods, a static long-term key and an ephemeral one are mixed to obtain the session key material. This design is intentional, especially in the \mOptls{} case, where the protocol is designed to be provably secure in the Canetti-Krawczyk model. \vnote{So?}
 %
-
+\spacehack
 \subsubsection{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is passing through a door, whereas it may be undesirable for, say, a coffee machine to log a list of users along with their coffee preferences. Via this simple thought experiment, we realized that the \mSpec{} did not
 consider non-repudiation. In response, the authors of the \mSpec{} added a paragraph about which methods provided which types of (non)-repudiation.
 
+\spacehack
 \subsubsection{Peer authentication}
 Section 3.2 of the \mSpec{} states that parties must be configured
 with a policy restricting the set of peers they can run \mEdhoc{} with. However, the initiator is not required to verify that the \mIdcredr{} received in message 2 is the same as the one intended at initialization. The following thought experiment shows why such a policy is insufficient.
@@ -289,8 +313,10 @@ with a policy restricting the set of peers they can run \mEdhoc{} with. However,
 Assume that someone has configured all devices in their home to be in the allowed set of devices, but that one of the devices ($A$) has since been compromised. If another device $B$, unaware of the compromise, initiates a connection to a third device $C$, the compromised device $A$ may interfere. $A$ may respond in $C$'s place, blocking the legitimate response from $C$. Since $B$ does not verify $C$'s identity in message 2, and device $A$ is part of the allowed set, $B$ will complete and accept the \mEdhoc{} run with device $A$ instead of the intended $C$. The obvious solution is for the initiator to match \mIdcredr{} to the intended identity provided by the application. \vnote{Has this been pointed out to the authors of the \mSpec?}
 
 %-------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Session key material}
 \label{sec:sessionKeyMaterial}
+\fillhack
 \mEdhoc{} establishes a session key state as output, from which session keys for \mOscore{} can be derived using \mHkdf{}. As discussed in Section~\ref{sec:threat-model}, there are various possibilities for defining which parameters from the \mEdhoc{} run should be included in the session key state.
 
 While we show bidirectional injective agreement on \mGx{} and \mGy{}
@@ -314,8 +340,10 @@ In this work, we have shown implicit agreement on \mGx{}, \mGy{} for all methods
 %
 
 %-------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Cipher suite negotiation}
 \label{sec:ciphersuiteNegotiation}
+\fillhack
 %
 Cipher suite negotiation in \mEdhoc{} spans two or more executions of the protocol. If a run terminates due to the proposed cipher suites being rejected by the responder, the initiator maintains state and initiates a new run, proposing an updated set of cipher suites (see Section~\ref{sec:edhoc}). Our model does not cover this, and we leave it for future work.
 
@@ -326,8 +354,10 @@ From a security perspective, remembering the rejected cipher suite for the
 next \mEdhoc{} run in the same meta-session would be sufficient. If the responder is updated with a new cipher suite before the next such session, this could be taken into account. On the other hand, caching the rejected cipher suite between meta-sessions would reduce the number of round-trips for subsequent runs, should the responder not have been updated. This needs to be clearly specified. 
 
 %-------------------------------------------------------------------------- sec
+\spacehack
 \section{Conclusions}
 \label{sec:conclusions}
+\fillhack
 We have formally modeled all the five
 methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
 %
@@ -351,6 +381,7 @@ security properties to make better use of verification techniques.
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
+\spacehack
 \subsubsection*{Acknowledgments} This work was partially supported by
 the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
 the Knut and Alice Wallenberg Foundation.
@@ -358,8 +389,8 @@ the Knut and Alice Wallenberg Foundation.
 We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
 clarifications regarding the specification.
 %
-
+\spacehack
 %-------------------------------------------------------------------------- bib
-\bibliographystyle{plain}
-\bibliography{ref}
+\bibliographystyle{abbrv}
+\bibliography{refv}
 \end{document}

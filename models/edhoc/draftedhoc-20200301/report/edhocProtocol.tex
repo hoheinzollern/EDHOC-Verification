@@ -1,4 +1,5 @@
 % !TEX root =  main.tex
+\fillhack
 The high-level goal of \mEdhoc{} is to establish an authenticated security
 context for the \mOscore{} security protocol. The overall structure for reaching this goal is a three-message protocol in the style of the \mNoise{} framework, outlined in Figure~\ref{fig:edhocFramework}. In the first message \mMsgone{}, the initiator provides the responder with an ephemeral DH ``half-key'' \mGx{} and, in the \mMethod{} element, suggests authentication methods to be used. The responder may reject the choice of authentication methods.
 %
@@ -16,13 +17,9 @@ In addition to the exchange of DH half-keys and authentication data, the message
 Optionally, messages may also include application layer data \mAD{}, which enjoys differing levels of protection depending on which message it is part of.
 %
 As will be described below, when the authentication information is based on a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not used. Instead, a single identifier for the pre-shared key is transmitted in message \mMsgone{}.
-%
-
 \begin{figure}[!h]
-%\begin{wrapfigure}{r}{20cm}
 \centering
-\scalebox{1}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=white,text=black}}
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
     \draw [very thick] (0, -0.5) -- (0,-2.7);
@@ -33,13 +30,11 @@ As will be described below, when the authentication information is based on a pr
     \msg{6em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
     \draw [line width=2mm] (-0.75,-2.7) -- (0.75,-2.7);
     \draw [line width=2mm] (7-0.75,-2.7) -- (7+0.75,-2.7);
-    \end{tikzpicture}}
+    \end{tikzpicture}
 \caption{Outline of the overall structure of \mEdhoc{}. Elements in square
 brackets are encrypted and integrity protected.}
 \label{fig:edhocFramework}
-%\end{wrapfigure}
 \end{figure}
-
 
 One of the driving design goals is to accommodate three credential types
 a party may use to to authenticate itself to peers -- certificates, private keys
@@ -69,8 +64,10 @@ methods.
 %
 
 %-----------------------------------------------------------------------------
+\spacehack
 \subsection{Relations to \mSigma, \mOptls{} and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
+\fillhack
 \mEdhoc{} uses cryptographic cores from existing protocols to
 establish the session key. In this section, we discuss the relationships between \mEdhoc{} and these protocols.
 %
@@ -84,6 +81,7 @@ We note that many key exchange protocols, e.g, \mSigma{}, have an explicit, gene
 %
 
 %-----------------------------------------------------------------------------
+\spacehack
 \subsubsection{\mSigma{}}
 \label{sec:sigma}
 The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigmaI{} variant of \mSigma{}~\cite{sigma}. This variant provides identity protection for the initiator. However, there are some differences, e.g., \mSigSig{} uses Mac-then-Sign like \mTls{} instead of Sign-then-Mac.
@@ -93,6 +91,7 @@ on it in this paper. We do however model \mSigSig{} and verify its properties wi
 %
 
 %-----------------------------------------------------------------------------
+\spacehack
 \subsubsection{\mOptls{}}
 \label{sec:optls}
 The \mStat-based methods use challenge-respsonse signatures using static
@@ -117,6 +116,7 @@ challenge, following the principle of separation of concerns.
 %
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{\mNoise{}}
 The \mStatStat{} and \mPskPsk{} methods aim to follow the \mNoise{}
 framework~\cite{perrin2016noise}.
@@ -172,19 +172,23 @@ does not have or performs differently.
 %
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Methods of \mEdhoc{}}
 \label{sec:methods}
+\fillhack
 We are now ready to dive into the various methods of \mEdhoc. Although \mCose{} and \mCbor{} are important building blocks of \mEdhoc{}, and we use their terminology in our \mTamarin{} model to better reflect the \mSpec{}, our model does not cover the details of encoding and \mCose{} interfaces.
 %
 For instance, it suffices for us to consider authenticated encryption with associated data (\mAead{})~\cite{aead} as a function call. Thus, we omit details about \mCose{} and \mCbor{}, and instead refer the reader to~\cite{}. \vnote{We need references here for both COSE and CBOR!}
 %
 
-All methods make use of a common key hierarchy, which we describe in the next section. We then describe the methods and how they utilize the key hierarchy.
+All methods make use of a common key hierarchy, which we describe first. We then describe the methods and how they utilize the key hierarchy.
 %
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{Key hierarchy}
 \label{sec:keyHierarchy}
+
 Keys are derived in \mEdhoc{} using \mHkdf{}~\cite{rfc5869}.
 %
 The interface of \mHkdf{} provides two functions -- \mHkdfExtract{}, which constructs uniformly distributed key material from random input and a seed, and \mHkdfExpand{}, which generates keys from key material and a seed.
@@ -230,7 +234,6 @@ The result of an \mEdhoc{} run is not a key per se, but rather key material from
 %while \mPRKfour{} is used to generate \mKthreem.
 
 \begin{figure}[!h]
-\centering
 \scalebox{.75}{
 \input{kdfdiagram.tex}
 }
@@ -240,14 +243,14 @@ The red boxes below \mGxy{} represent the intermediate key material used for dif
 \label{fig:kdfdiagram}
 \end{figure}
 
-With the key hierarchy outlined, we now describe each of the \mEdhoc{} methods.
+With the key hierarchy outlined, we now describe the \mEdhoc{} methods.
 %
 %As discussed above, the main difference between the methods is how authentication is achieved.
 %
 %We therefore focus on that.
 %
-
-\subsubsection{\mPskPsk{} method}
+\spacehack
+\subsubsection{\mPskPsk{}}
 In this method, the initiator and responder are assumed to share a pre-shared key (\mPsk) identified by \mIDPsk.
 %
 The message sequence is shown in Figure~\ref{fig:edhocpsk}.
@@ -269,16 +272,15 @@ This is the same for all methods, but it does not cause any problems with authen
 %
 
 \begin{figure}[!h]
-\centering
-\scalebox{.7}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=white,text=black}}
+\scalebox{.69}{
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
     \draw [very thick] (0, -0.5) -- (0,-11);
     \draw [very thick] (11.5, -0.5) -- (11.5,-11);
-    \node[below of=ini,fill=white,text=black] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
+    \node[below of=ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
     \node (res) at (11.5,0) {Responder};
-    \node[below of=res] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
+    \node[below of=res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
     \action{4em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
     \msg{8em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
     \action{9em}{res}{$
@@ -314,8 +316,8 @@ This is the same for all methods, but it does not cause any problems with authen
 protected, and $y$ is the plaintext.}
 \label{fig:edhocpsk}
 \end{figure}
-
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{\mStat-based methods}
 \mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and \mStatSig{}. One or both of the initiator and responder authenticate to their peer using their secret static long-term DH key, \mLtki{} or \mLtkr{} respectively.
 %
@@ -350,6 +352,7 @@ In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party prov
 %
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{\mSigStat}
 The initiator uses the \mSig{} method, authenticating with a signature,
 while the responder uses the \mStat{} method, authenticating with a
@@ -362,19 +365,19 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 \centering
 %\includegraphics[scale=0.3]{Images/asym.png}
 \scalebox{.7}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=white,text=black}}
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
     \draw [very thick] (0, -0.5) -- (0,-15);
     \draw [very thick] (9, -0.5) -- (9,-15);
-    \node[below of=ini,fill=white,text=black] {$
+    \node[below of=ini,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredi,\ \mLtki,\ \mIdcredi,\\
     \mIdcredr, \mADone,\ \mADthree
     \end{array}
     $};
     \node (res) at (9,0) {Responder};
-    \node[below of=res] {$
+    \node[below of=res,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredr,\ \mLtkr, \ \mIdcredr,\\
     \mIdcredi, \mADtwo
@@ -426,6 +429,7 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 \end{figure}
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{\mStatStat}
 In this method, both the initiator and the responder use the \mStat{}
 authentication method.
@@ -439,6 +443,7 @@ As expected, the initiator's behavior mirrors the \mStat{} authentication method
 %
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsubsection{\mStatSig}
 The \mStatSig{} method is in a sense the mirror of the \mSigStat{} method.
 %
@@ -509,7 +514,8 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
 \label{fig:edhocstatsig}
 \end{figure}
 
-\subsubsection{\mSigSig{} method}
+\spacehack
+\subsubsection{\mSigSig{}}
 In this method, both parties run the \mSig{} method and authenticates with signatures.
 %
 As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but there are some notable differences.
@@ -520,7 +526,7 @@ Since bandwidth consumption must be kept down, the designers of \mEdhoc{} consid
 %
 \mEdhoc{} applies XOR encryption, with \mHkdf{} being used to generate the key stream.
 %
-However, \mSigma{} assumes authenticated encryption for this purpose (see Section 5.2 of~\cite{sigma}).
+However, \mSigma{} assumes authenticated encryption for this purpose (see Section 5.2 of~\cite{sigma}). 
 %
 
 
@@ -535,14 +541,16 @@ However, \mSigma{} assumes authenticated encryption for this purpose (see Sectio
 %In order to keep the presentation clean, we have omitted the cipher suite negotiation process from the description of the methods. However, this process happens as follows, at the beginning of every method, once the responder receives the first message. The initiator proposes an ordered list of cipher suites they support. This list presented in descending order to the responder who either accepts the topmost entry in this list (if they also support that suite) or makes a counter-proposal, namely the topmost entry which they support from the remaining part of the list. If there is no such entry the responder can reject, and the protocol does not continue. Similarly, the responder can reject the initiator's choices for the method and correlation parameters as well -- in the case of a reject for either of these values, the protocol aborts.
 
 %------------------------------------------------------------------------- sub
+\spacehack
 \subsection{Expected security properties}
 \label{sec:claimedProperties}
+\fillhack
 We now identify the security properties that the authors
 of the \mSpec{}~\cite{selander-lake-edhoc-01} claim \mEdhoc{} satisfies.
 %
 We will revisit these claims when we discuss the formal modeling and
 verification of \mEdhoc{} in Section~\ref{sec:formalization} and in the
-discussions in Section~\ref{sec:disussion}.
+discussions in Section~\ref{sec:discussion}.
 \knote{Remember to refer back to this section from formalization section and
     describe which of the properties we model and which we don't (and why?).
     Also refer back to here from the discussion session.

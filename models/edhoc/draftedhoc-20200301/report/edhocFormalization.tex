@@ -1,4 +1,5 @@
-% !TEX root =  ms.tex
+% !TEX root =  main.tex
+\fillhack
 Next we describe our approach towards formalizing the \mEdhoc{} protocol. We use the
 symbolic (Dolev-Yao) model for verification, with \mTamarin{} for tool support.
 %
@@ -7,7 +8,9 @@ The next three subsections describe our threat model, briefly present the
 %
 Finally, we present the properties that we proved in this effort.
 
+\spacehack
 \subsection{Threat model}\label{sec:threat-model}
+\fillhack
 We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
 modeling, we assume all cryptographic primitives to be ``perfect'', and hence
 only allow the attacker to encrypt and decrypt messages when they know the key,
@@ -31,11 +34,13 @@ Another important point is to define what the key material is.
     \mStat{} method provide a stronger form of authentication (injective
     agreement) for the initator.
 
-
+\spacehack
 \subsection{Desired Properties}
 \label{sec:desired-properties}
+\fillhack
 Next we list the properties that will be considered during verification.
 
+\spacehack
 \subsubsection{Secrecy}
 We say that \mEdhoc{} satisfies secrecy of the established session key $sk$
 between two honest parties $A$ and $B$ if, for any run of the protocol $A$ and
@@ -45,6 +50,7 @@ The attacker may passively observe---and actively interfere with---the
 communication, and run any number of sessions with $A$ and $B$, in either role,
 concurrently or otherwise.
 
+\spacehack
 \subsubsection{Authentication}
 To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
 of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
@@ -88,6 +94,7 @@ to the symbolic model, and we prove that if an initiator $A$ and a responder $B$
 complete the protocol deriving the same session key, then $A$ believes she is
 talking to $B$ and $B$ believes he is talking to $A$.
 
+\spacehack
 \subsubsection{Session independence}
 A protocol satisfies session independence if knowing a session key does
 not give the attacker any information about other sessions.  To model session
@@ -95,17 +102,20 @@ key independence of \mEdhoc, we allow leakage of session keys, and additionally
 check security only of those sessions for which the session keys have not been
 directly revealed to the attacker.
 
+\spacehack
 \subsubsection{Perfect forward secrecy} (PFS) A protocol satisfies perfect forward
 secrecy if, for any run of the protocol in which the initiator and the responder
 agree on a session key $sk$, the attacker does not learn $sk$, even when the
 long-term keys are revealed after the session is completed.
 
+\spacehack
 \subsubsection{Key-compromise impersonation} (KCI) This property takes the perspective of one
 of the endpoints of the protocol, say Alice running a session with Bob. A
 protocol is secure under KCI if Alice can still establish a secure session with
 Bob, even though Alice's keys are compromised at any time, and Bob's key
 material is not leaked until the end of the session.
 
+\spacehack
 \subsubsection{Post-compromise security} (PCS) A protocol that has
 \emph{post-compromise security} (following definitions in~\cite{cohn2016post})
 is capable of establishing a secure session even after one of the parties has
@@ -125,8 +135,10 @@ hence we mention it here. However at the moment verifying this property runs out
 of memory, so we will not present results relating to weak PCS in the current
 version of the report. It will be included in future versions however.
 
+\spacehack
 \subsection{\mTamarin{}}
 \label{sec:tamarin}
+\fillhack
 We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
 %
 \mTamarin{} is an interactive verification tool based on multi-set rewriting rules
@@ -150,6 +162,7 @@ to denote that symmetric decryption reverses the encryption operation under this
 All operations on terms are defined under $E$, hence we omit the
 subscript from now on as the equational theory is fixed per model.
 
+\spacehack
 \subsubsection{Semantics and built-ins} \phantom{} \mTamarin{} states
 $S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$
 occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
@@ -171,6 +184,7 @@ others), rules and equations that represent the attacker's knowledge
 and standard equational theories in the symbolic model,
 which we present later.
 
+\spacehack
 \subsubsection{Notational conventions} In the remainder of this section we present
 \mTamarin{} code as it appears in the models that we verify, in the style of
 literate programming.  Whenever possible we match the style of the protocol
@@ -185,6 +199,7 @@ We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
 names \mT{x} and \mT{y}.
 
+\spacehack
 \subsubsection{Protocol rules and equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
@@ -231,6 +246,7 @@ exponents \mT{x * y} as a built-in symbols in the language, plus the necessary e
 theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
+\spacehack
 \subsubsection{Syntactic sugar} In the following presentation we use some syntactic
 sugar, which is necessary to understand to look at the concrete rules. First is
 the use of let bindings (\mT{let ... in}), which are series of
@@ -238,7 +254,9 @@ definitions of patterns which are substituted in the rest of the rule. Another
 prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
 built-in concept in \mTamarin.
 
+\spacehack
 \subsection{Modeling \mEdhoc{}}
+\fillhack
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
 
@@ -257,11 +275,12 @@ To keep the presentation brief, we
 only present two variants, where one party uses a signature key and the other a static DH key (\mSigStat{} and \mStatSig).
 However the full code can be inspected at the github
 repository~\cite{edhocTamarinRepo}.
-
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
 
+\spacehack
 \subsubsection{General setup}
+\vnote{Section name doesn't appear here! Needs some text before the rule.}
 \begin{lstlisting}
 rule registerLTK_SIG:
  [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
@@ -309,6 +328,7 @@ Section~\ref{sec:threat-model}.
 Each of the session keys is also revealed with similar rules,
 depending on the method to check session independence.
 
+\spacehack
 \subsubsection{\mPskPsk{}} The following rules model the symmetric key based
 \mPskPsk{} method and are derived from the M4 file, as presented in
 Section~\ref{sec:edhoc}.
@@ -446,6 +466,7 @@ the protocol.  As in
 the previous message, we mark acceptance of the third message from the responder
 with the two commit events, and conclude.
 
+\spacehack
 \subsubsection{\mStatSig{}}
 Next we present the mixed asymmetric method \mStatSig. We chose\\ \mStatSig{} for
 this presentation of the asymmetric methods as this configuration shows all
@@ -632,14 +653,16 @@ that the two arguments are equal by introducing the following restriction:
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 \end{lstlisting}
 
+\spacehack
 \subsection{Properties}
 \label{sec:properties}
-
+\fillhack
 In this section we present the properties that we have shown for \mEdhoc, and
 show the lemmas that verify them. We refer to
 Section~\ref{sec:desired-properties} for a full explanation of the properties
 that we check. Here we focus on their formalization into \mTamarin{} lemmas.
 
+\spacehack
 \subsubsection{Explicit authentication}
 
 We model explicit authentication between the initiator and the
@@ -701,6 +724,7 @@ responder authenticating with the initiator, here we do not need the
 additional \mT{Exp} prefix to the running and commit events
 (\mT{CommitI} and \mT{CommitR} respectively).
 
+\spacehack
 \subsubsection{Implicit authentication}
 
 The following lemma proves implicit authentication:
@@ -729,6 +753,7 @@ believes he is talking to \mT{u2}, then their identities match (that is,
 between the \mT{CommitI} and \mT{CommitR} events, and the attacker does not
 learn the session key material.
 
+\spacehack
 \subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
 
 Finally, we prove secrecy of session keys, perfect forward secrecy
