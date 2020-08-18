@@ -88,6 +88,7 @@ def genPrios(goalLines, lemma):
                  re.match(".*KU\( hkdfExpand.*", line):
                     prioritize(goal, 80, line)
             elif re.match(".*LTKRev.*", line) or\
+                 re.match(".*BrokenTEE.*", line) or\
                  re.match(".*sign.*", line) or\
                  re.match(".*StI.*", line) or\
                  re.match(".*StR.*", line) or\
@@ -113,6 +114,7 @@ def genPrios(goalLines, lemma):
                  re.match(".*KU\( hkdfExpand.*", line):
                     prioritize(goal, 80, line)
             elif re.match(".*LTKRev.*", line) or\
+                 re.match(".*BrokenTEE.*", line) or\
                  re.match(".*sign.*", line) or\
                  re.match(".*StI.*", line) or\
                  re.match(".*StR.*", line) or\
