@@ -1,42 +1,21 @@
-The high level goal of \mEdhoc{} is to establish an authenticated security
-context for the \mOscore{} security protocol.
-%
-The overall structure for reaching this goal is a three-message protocol in
-the style of the \mNoise{} framework, outlined in
-Figure~\ref{fig:edhocFramework}.
-%
-In the first message \mMsgone{}, the initiator provides the responder with an
-ephemeral Diffie-Hellman half-key \mGx{} and dictates which authentication
-methods should be used in the \mMethod{} element.
-%
-The responder may reject the choice of authentication methods.
+% !TEX root =  main.tex
+The high-level goal of \mEdhoc{} is to establish an authenticated security
+context for the \mOscore{} security protocol. The overall structure for reaching this goal is a three-message protocol in the style of the \mNoise{} framework, outlined in Figure~\ref{fig:edhocFramework}. In the first message \mMsgone{}, the initiator provides the responder with an ephemeral DH ``half-key'' \mGx{} and, in the \mMethod{} element, suggests authentication methods to be used. The responder may reject the choice of authentication methods.
 %
 In the second message \mMsgtwo{}, the responder provides its ephemeral
-Diffie-Hellman half-key \mGy{} and authenticates itself to the initiator by
+DH half-key \mGy{} and authenticates itself to the initiator by
 providing authentication information \mAuthr{}.
 %
-Finally, in the third message \mMsgthree{}, the initiator authenticates itself
-to the responder by providing authentication information \mAuthi{}.
+Finally, in the third message \mMsgthree{}, the initiator authenticates itself to the responder by providing authentication information \mAuthi{}.
 %
-The authentication information consists of a MAC for all authentication methods.
+The authentication information consists of a MAC for all authentication methods. This MAC is also signed when authentication is based on public key signatures.
 %
-That MAC is also signed when authentication is based on public key signatures.
-%
-In addition to exchange of Diffie-Hellman half-keys and authentication data,
-the messages also include agreement of parameters for the \mOscore{} security
-context, such as encryption algorithm identifiers (\mSuites{}) and \mOscore{}
-security context identifiers \mCi{} and \mCr{}.
+In addition to the exchange of DH half-keys and authentication data, the messages also include parameters for the \mOscore{} security context, such as encryption algorithm identifiers (\mSuites{}) and \mOscore{} security context identifiers \mCi{} and \mCr{}.
 %
 
-Optionally, messages may include application layer data \mAD{}, which enjoys
-differing levels of protection depending on in which message it is sent.
+Optionally, messages may also include application layer data \mAD{}, which enjoys differing levels of protection depending on which message it is part of.
 %
-As will be described below, when the authentication information is based on a
-pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not
-used.
-%
-Instead a single identifier for the pre-shared key is transmitted in message
-\mMsgone{}.
+As will be described below, when the authentication information is based on a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not used. Instead, a single identifier for the pre-shared key is transmitted in message \mMsgone{}.
 %
 
 \begin{figure}[!h]
@@ -62,49 +41,29 @@ brackets are encrypted and integrity protected.}
 \end{figure}
 
 
-A driving protocol design goal is to accommodate three credential types
+One of the driving design goals is to accommodate three credential types
 a party may use to to authenticate itself to peers -- certificates, private keys
-and static long-term Diffie-Hellman keys.
+and static long-term DH keys. Depending on the credential types used, the authentication methods may differ, and \mAuthi{} and \mAuthr{} need to be constructed accordingly.
 %
-Depending on the credential types used by two peers running \mEdhoc{}, different
-authentication methods are used.
+%As will be clear, it is natural to break down the description of \mEdhoc{} based on the combination of the authentication method used by the initiator and the one used by the responder.
 %
-The different authentication methods require different message content.
+The three broad authentication methods are based on digital signatures (\mSig), challenge-response signatures based on static long-term DH keys (\mStat) and pre-shared symmetric keys (\mPsk). The two parties may use different authentication methods in an \mEdhoc{} run.
 %
-Specifically, the place holders \mAuthi{} and \mAuthr{} are constructed
-differently depending on authentication method.
+While any combination of the \mSig{} and \mStat{} methods is possible, when \mPsk{} is used, both parties must use \mPsk{}.
 %
-As will be clear, it is natural to break down the description of \mEdhoc{}
-based on the combination of the authentication method used by the initator and
-the one used by the responder.
-%
-
-The authentication methods are digital signatures
-(\mSig), challenge-response signatures based on static long-term Diffie-Hellman
-keys (\mStat) and pre-shared symmetric keys (\mPsk).
-%
-Two parties may use different authentication methods in an \mEdhoc{} run.
-%
-Any combination of the \mSig{} and \mStat{} methods is possible, but when
-\mPsk{} is used, both parties use \mPsk{}.
-%
-We refer to these combinations of authentication methods simply as methods to
-align terminology in the \mSpec{}.
+We refer to these combinations of authentication methods simply as methods to follow the terminology in the \mSpec{}.
 %
 We denote the methods \mSigSig, \mSigStat, \mStatStat, \mStatSig{} and \mPskPsk.
 %
-The first authentication method in the name denotes the authentication method
-used by the initiator of the protocol run and the second denotes the 
-authentication method used by the responder.
+The first authentication method in the name denotes the authentication method used by the initiator of the protocol run and the second denotes the one used by the responder.
 %
 Parties use mixed types of credentials in \mSigStat{} and \mStatSig{}, so
-we call these methods mixed methods.
+we often refer to these methods as mixed methods.
 %
-We refer to a method where at least one party uses \mSig{} as a \mSig-based
-method and similarly for \mStat{} and \mPsk.
+We refer to a method where at least one party uses \mSig{} as a \mSig-based method and similarly for \mStat{} and \mPsk.
 %
 
-To put \mEdhoc{} in context we briefly discuss relations to
+To put \mEdhoc{} in context, we first briefly discuss relations to
 the protocols on which \mEdhoc{} is based before providing details on the
 methods.
 %
@@ -112,96 +71,61 @@ methods.
 %-----------------------------------------------------------------------------
 \subsection{Relations to \mSigma, \mOptls{} and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
-The different methods use cryptographic cores from existing protocols to
-establish the session key.
+\mEdhoc{} uses cryptographic cores from existing protocols to
+establish the session key. In this section, we discuss the relationships between \mEdhoc{} and these protocols.
 %
-In conjunction with these cryptographic cores, \mEdhoc{} negotiates parameters
-required for establishing a complete \mOscore{} security context.
+%\mEdhoc{} also negotiates parameters (like the encryption algorithm identifiers discussed previously) required for establishing a complete \mOscore{} security context.
 %
-Examples of such parameters are encryption algorithm identifiers discussed
-previously.
+%Examples of such parameters are encryption algorithm identifiers discussed previously.
 %
-We note that many key exchange protocols, e.g, \mSigma{}, has an explicit and
-generic mechanism to securely negotiate such parameters, and that others can
-easily be extended with such.
+We note that many key exchange protocols, e.g, \mSigma{}, have an explicit, generic mechanism to securely negotiate such parameters, which other protocols can easily extend. However, they do not always specify exactly how messages and parameters are encoded, which is a requirement for an industrially-standardized protocol like \mEdhoc{}, which needs to negotiate parameters for establishing a complete \mOscore{} security context.
 %
-We also note that academic protocols, like \mSigma{} and \mOptls{} do not
-specify exactly how messages and parameters are encoded, whereas an
-industrially standardized protocol like \mEdhoc{} has to.
-%
-We leave those encoding details out when discussing the relations between
-\mEdhoc{} and existing protocols.
+%We leave those encoding details out when discussing the relations between \mEdhoc{} and existing protocols.
 %
 
 %-----------------------------------------------------------------------------
 \subsubsection{\mSigma{}}
 \label{sec:sigma}
-The \mSigSig{} method is closely modeled on \mSigma{}~\cite{sigma}.
-%
-Specifically, it is modeled on the \mSigmaI{} variant which provides identity
-protection for the initiator.
-%
-However, \mSigSig{} deviates from \mSigmaI{} in some details, e.g.,
-\mEdhoc{} uses Mac-then-Sign like \mTls{} instead of Sign-then-Mac.
-%
+The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigmaI{} variant of \mSigma{}~\cite{sigma}. This variant provides identity protection for the initiator. However, there are some differences, e.g., \mSigSig{} uses Mac-then-Sign like \mTls{} instead of Sign-then-Mac.
 
-Because \mSigSig{} is so close in spirit to \mSigmaI{} and is already carefully
-analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}, we will not focus
-on it in this paper.
-%
-We do however model \mSigSig{} to the same extent and
-verify its properties with the same care as the other methods.
+Because \mSigSig{} has already been carefully analyzed in~\cite{DBLP:conf/secsr/BruniJPS18}, we will not focus 
+on it in this paper. We do however model \mSigSig{} and verify its properties with the same care as for the other methods.
 %
 
 %-----------------------------------------------------------------------------
 \subsubsection{\mOptls{}}
 \label{sec:optls}
-The \mStat-based methods use challenge-response signatures using static
-long-term Diffie-Hellman keys, and proceed along the lines of
-\mOptls~\cite{cryptoeprint:2015:978}.
+The \mStat-based methods use challenge-respsonse signatures using static
+long-term DH keys, and proceed along the lines of
+\mOptls~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
-The challenge-response signature uses an ephemeral Diffie-Hellman half-key as
-challenge, mixes this half-key with the secret static Diffie-Hellman key to
-generate
-the session key and a symmetric temporary key to authenticate the session key
-using an \mAead{}-transform~\cite{aead,rfc5116,DBLP:conf/eurosp/KrawczykW16}.
+The challenge-response signature uses an ephemeral DH half-key as a challenge, mixes this half-key with the secret static DH key to generate the session key and a symmetric temporary key to authenticate the session key using an \mAead{}-transform~\cite{DBLP:conf/eurosp/KrawczykW16,aead}.
+\vnote{I'm not quite sure what this sentence intends, but it's terribly run-on. Maybe chop it into smaller, less ambiguous ones?}
 %
-This authenticates one party to the other, which is sufficient for \mOptls in
-that it only aims for server authentication.
+This authenticates one party to the other, which is sufficient for \mOptls, in that it only aims for server authentication.
 %
-In \mEdhoc, a party authenticating with with the \mStat{} authentication method
-essentially acts as an \mOptls{} client and the other party as an \mOptls{}
-server.
+%In \mEdhoc, a party authenticating with with the \mStat{} authentication method essentially acts as an \mOptls{} client and the other party as an \mOptls{} server. 
 %
-\mEdhoc{} requires mutual authentication~\cite{ietf-lake-reqs-04} and achieves
-this for \mStat{}-based methods by mirroring the actions just described, or
-by using \mSig{}-based authentication for the other party.
-%
+However, unlike \mOptls{}, \mEdhoc{} requires mutual authentication~\cite{ietf-lake-reqs-04}. The \mStatStat{} method can be thought of as interleaving two \mOptls{} sessions, where the second \mEdhoc{} message carries both the response message of the first \mOptls{} session and the request message of the second \mOptls{} session. For the other \mStat{}-based methods, the party authenticating with with the \mStat{} authentication method essentially acts as an \mOptls{} client and the other party (using \mSig{}-based authentication) as an \mOptls{} server. 
 
-The \mStatStat{} method can be thought of as interleaving two \mOptls{}
-sessions, where the second \mEdhoc{} message carries both the response
-message of the first \mOptls{} session and the request message of the second
-\mOptls{} session.
+ %and achieves this for the \mStat{}-based methods by mirroring the actions, or by using \mSig{}-based authentication for the other party.
 %
-
-Despite the close resemblances, there are differences.
 %
-For instance, \mEdhoc{} reuses the Diffie-Hellman half-key as a challenge to
-save bandwidth, whereas \mOptls{} makes an explicit
-point to use distinct elements for the Diffie-Hellman half-key and the
+However, there are some differences between \mOptls{} and the \mStat{}-based methods. For instance, \mEdhoc{} reuses the DH half-key as a challenge to save bandwidth, whereas \mOptls{} makes an explicit
+point to use distinct elements for the DH half-key and the
 challenge, following the principle of separation of concerns.
 %
 
 %------------------------------------------------------------------------- sub
 \subsubsection{\mNoise{}}
-The \mStatStat{} and \mPskPsk{} aim to follow the \mNoise{}
+The \mStatStat{} and \mPskPsk{} methods aim to follow the \mNoise{}
 framework~\cite{perrin2016noise}.
 %
 This framework defines how to construct authenticated key exchange protocols,
-known as patterns, using static long-term Diffie-Hellman keys or pre-shared
+known as patterns, using static long-term DH keys or pre-shared
 keys as credentials.
 %
-Its goal is to harmonize among the many static long-term key Diffie-Hellman 
+Its goal is to harmonize among the many static long-term key DH 
 based key exchange protocols, of which \mOptls{} is one.
 %
 \mNoise{} specifies how to derive keys, use transcript hashes to ensure
@@ -248,87 +172,52 @@ does not have or performs differently.
 %
 
 %------------------------------------------------------------------------- sub
-\subsection{Methods of key establishment}
+\subsection{Methods of \mEdhoc{}}
 \label{sec:methods}
-We are now ready to dive into the details of the various methods supported by
-\mEdhoc.
+We are now ready to dive into the various methods of \mEdhoc. Although \mCose{} and \mCbor{} are important building blocks of \mEdhoc{}, and we use their terminology in our \mTamarin{} model to better reflect the \mSpec{}, our model does not cover the details of encoding and \mCose{} interfaces.
 %
-Although \mCose{} and \mCbor{} are important building blocks of \mEdhoc{}, and
-we use their terminology in our \mTamarin{} model to better reflect the
-\mSpec{}, our model does not cover
-the details of encoding and \mCose{} interfaces.
-%
-For instance, on the abstraction level we work it suffices to consider
-authenticated encryption with associated data (\mAead{})~\cite{aead} as a
-function call.
-%
-Thus, we will not give more details on \mCose{} or \mCbor{}.
+For instance, it suffices for us to consider authenticated encryption with associated data (\mAead{})~\cite{aead} as a function call. Thus, we omit details about \mCose{} and \mCbor{}, and instead refer the reader to~\cite{}. \vnote{We need references here for both COSE and CBOR!}
 %
 
-All methods make use of a common key hierarchy, which we will first describe.
-%
-We then move on to describe the methods and how they interact with the
-key hierarchy.
+All methods make use of a common key hierarchy, which we describe in the next section. We then describe the methods and how they utilize the key hierarchy.
 %
 
 %------------------------------------------------------------------------- sub
 \subsubsection{Key hierarchy}
 \label{sec:keyHierarchy}
-Key derivations in \mEdhoc{} are done using the key derivation function
-\mHkdf{}~\cite{rfc5869}.
+Keys are derived in \mEdhoc{} using \mHkdf{}~\cite{rfc5869}.
 %
-The interface of \mHkdf{} provides two functions.
+The interface of \mHkdf{} provides two functions -- \mHkdfExtract{}, which constructs uniformly distributed key material from random input and a seed, and \mHkdfExpand{}, which generates keys from key material and a seed.
 %
-The first, \mHkdfExtract{}, is intended to construct a uniformly distributed
-key material from random input and a seed.
+The seeds are used to bind the key material and keys to certain parameters. Derived keys are then used as input to encryption and integrity protection algorithms.
 %
-The second, \mHkdfExpand{}, is used to generate keys from key material and a
-seed.
-%
-Derived keys are then used as input to encryption and integrity protection
-algorithms.
-%
-The seeds are used to bind the key material and keys to certain parameters.
 %
 
-The key hierarchy is rooted in an ephemeral Diffie-Hellman key \mGxy{}, i.e.,
-the combination of the two half-keys \mGx{} and \mGy{}.
+The key hierarchy is rooted in the ephemeral DH key \mGxy{}, the combination of the two half-keys \mGx{} and \mGy{}.
 %
-From that, it is successively constructed with each transmitted message, weaving
-in information parties learn as the protocol progresses, culminating in the
-established session key material.
+From this, keys are successively constructed with each transmitted message, weaving in information parties learn as the protocol progresses, culminating in the established session key material.
 %
-From the session key material, a key exporter based on \mHkdf{} can be used to
-extract actual encryption and integrity keys as needed by \mOscore{}.
+From the session key material, a key exporter based on \mHkdf{} can be used to extract the encryption and integrity keys required for \mOscore{}.
 %
-Figure~\ref{fig:kdfdiagram} depicts a simplified version of the key hierarchy.
+Figure~\ref{fig:kdfdiagram} shows an abstract description of the key hierarchy.
 %
 
-From \mGxy{} three intermediate keys \mPRKtwo, \mPRKthree{} and
-\mPRKthree are derived.
+From \mGxy{}, three intermediate keys \mPRKtwo, \mPRKthree{} and
+\mPRKthree{} are derived.
 %
-Each one of them corresponds to a specific message in the protocol, and from
-these intermediate keys message specific encryption and integrity keys for the
-message is derived.
+Each one of them corresponds to a specific message in the protocol, and from these intermediate keys, encryption and integrity keys for that message are derived.
 %
-The seed used for \mPRKtwo{} is dependent on which method is used.
-%
-For \mPskPsk{}, the pre-shared key is used as seed.
-%
-For all other methods the seed is empty.
+For \mPskPsk{}, the pre-shared key is used as seed for \mPRKtwo. For all other methods the seed for \mPRKtwo{} is empty.
 %
 In the \mPskPsk{} and \mSigSig{} methods, all three intermediate keys
 are the same, i.e., $\mPRKtwo{} = \mPRKthree{} = \mPRKfour$.
 %
-For the three \mStat-based methods, however, they differ.
-%
-The differences comes from that when a party uses \mStat{}-based authentication,
-the intermediate key \mPRKthree{} is dependent on the static long-term key of
-the party (possibly both) using \mStat{}-based authentication.
+For the three \mStat-based methods, however, they differ. This is because the intermediate key \mPRKthree{} is dependent on the static long-term key of the party (or parties, if both) using \mStat{}-based authentication.
 %
 
-The result of an \mEdhoc{} run is not a key per se, but rather key material from
-which actual encryption keys etc can be derived.
+The result of an \mEdhoc{} run is not a key per se, but rather key material from which encryption keys etc can be derived.
+\vnote{Diagram from G\"oran had EDHOC-Exporter() in it. We should mention what that does?}
+
 %
 
 %The keys used for the \mAead{} encryptions are augmented with the suffix `e',
@@ -340,62 +229,43 @@ which actual encryption keys etc can be derived.
 %transaction hash. \mPRKthree{} is used for the keys \mKtwom{} and \mKthreeae,
 %while \mPRKfour{} is used to generate \mKthreem.
 
-\begin{figure}[htp]
+\begin{figure}[!h]
 \centering
 \scalebox{.75}{
 \input{kdfdiagram.tex}
 }
-\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs
-included conditioned on which method $m$ is used. The digits should be
+\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be
 interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
-The red boxes below \mGxy{} represent the intermediate key material used for
-different messages, and the blue left-most boxes represent the keys entering
-a \mAead{} transform or are used for XOR encryption.}
+The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
 \label{fig:kdfdiagram}
 \end{figure}
 
 With the key hierarchy outlined, we now describe each of the \mEdhoc{} methods.
 %
-As discussed above, the main differentiator between the methods is how
-authentication is achieved.
+%As discussed above, the main difference between the methods is how authentication is achieved.
 %
-We therefore focus on that.
+%We therefore focus on that.
 %
 
 \subsubsection{\mPskPsk{} method}
-In this method, the initiator and responder are assumed to share a pre-shared
-key (\mPsk) identified by \mIDPsk.
+In this method, the initiator and responder are assumed to share a pre-shared key (\mPsk) identified by \mIDPsk.
 %
 The message sequence is shown in Figure~\ref{fig:edhocpsk}.
 %
 The first message contains the \mIDPsk{} identifier.
 %
-The responder obtains the corresponding \mPsk{} and uses that to construct the
-authentication data included in the second message.
+The responder obtains the corresponding \mPsk{} and uses that to construct the authentication data (the MAC in the \mAead{} transform) included in the second message.
 %
-The authentication data consists of the MAC in the \mAead{} transform used.
+%The authentication data consists of the MAC in the \mAead{} transform used.
 %
-In the third message, the initiator uses the same technique to authenticate to
-the responder.
+In the third message, the initiator uses this same technique to authenticate to the responder.
 %
 
-Following custom, the transcript hash \mTH{} is tracking the data sent in the
-messages.
+The transcript hash \mTH{} tracks the data sent in the messages.
 %
-Perhaps, one notable thing is that the transcript hash is lagging one message
-behind.
+One unconventional feature is that the transcript hash lags behind by one message. That is, the second transcript hash \mTHtwo{}, does not cover the content of the second message (similarly for \mTHthree). The reason for this is that \mTHtwo{} cannot cover the output of the \mAead{} transform, since \mTHtwo{} is itself an input to it.
 %
-That is, the transcript hash of the second message \mTHtwo{}, does not cover the
-content of the second message.
-%
-The reason for this is that cannot cover the output of the \mAead{} transform,
-because \mTHtwo{} is itself an input to it.
-%
-This is the same for all methods, but it turns out not to be an issue for the
-properties we verify.
-%
-This is because the data not covered by the transcript hash is instead MACed or
-signed.
+This is the same for all methods, but it does not cause any problems with authentication, since the data not covered by the transcript hash is instead MACed or signed.
 %
 
 \begin{figure}[!h]
@@ -447,64 +317,36 @@ protected, and $y$ is the plaintext.}
 
 %------------------------------------------------------------------------- sub
 \subsubsection{\mStat-based methods}
-\mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and
-\mStatSig{}.
-%
-The distinguishing feature of \mStat-based methods is that one or both of
-the initiator and responder authenticate to their peer using their secret
-static long-term Diffie-Hellman key, \mLtki{} and \mLtkr{} respectively.
+\mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and \mStatSig{}. One or both of the initiator and responder authenticate to their peer using their secret static long-term DH key, \mLtki{} or \mLtkr{} respectively.
 %
 
-Authentication is achieved using challenge-response signatures that work as
-follows when the responder authenticates to the initiator.
+Authentication is achieved using challenge-response signatures that work as follows when the responder authenticates to the initiator.
 %
-The initiator sends a challenge to the responder in the first message.
+The initiator sends the ephemeral DH half-key \mGx{} as a challenge to the responder in the first message.
 %
-To save bandwidth, the ephemeral Diffie-Hellman half-key \mGx{} sent in the
-first message serves also as challenge.
+%To save bandwidth,  sent in the first message also serves as challenge.
 %
-When receiving \mGx{}, the responder raises it to the power of its secret
-static long-term Diffie-Hellman key, \mLtkr{}.
+Upon receiving \mGx{}, the responder exponentiates it by \mLtkr{}.
 %
-Assuming the discrete logarithm problem is hard in the underlying Diffie-Hellman
-group, only the initiator and responder will be able to compute
-$\mGx{}^\mLtkr{}$, and this value is woven in to the key hierarchy as depicted
-in Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
+Assuming the discrete logarithm problem is hard in the underlying DH group, only the initiator and responder will be able to compute $\mGx{}^\mLtkr{}$, and this value is woven in to the key hierarchy as depicted in Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
 %
-The responder computes authentication data \mAuthr{} in the form of the MAC
-\mMactwo{} (see Figure~\ref{fig:kdfdiagram} using the \mAead{} transform from
-\mSuites{} as proposed by the initiator in the first message.
+The responder computes authentication data \mAuthr{} in the form of the MAC \mMactwo{} using the \mAead{} transform from \mSuites{} as proposed by the initiator in the first message.
 %
 The responder then includes \mMactwo{} in the second message.
 %
-Knowing the secret ephemeral Diffie-Hellman half-key corresponding to \mGx{},
-and the public static long-term Diffie-Hellman of the responder, the initiator
-can also compute $\mGx{}^\mLtkr{}$.
+Knowing the secret ephemeral DH half-key corresponding to \mGx{}, and the public static long-term half-key of the responder, the initiator can also compute $\mGx{}^\mLtkr{}$.
 %
-Because the initiator can assume the only other party knowing
-$\mGx{}^\mLtkr{}$ is the responder, the initiator can consider the responder
-authenticated if the \mAead{} transform completes successfully.
+The initiator assumes that only the responder knows $\mGx{}^\mLtkr{}$, and therefore considers the responder authenticated if the \mAead{} transform completes successfully.
 %
-When the initiator is authenticating to the repsonder, the roles are reversed,
-and \mGy{} takes the place of \mGx{}, \mLtki{} the place of \mLtkr{}, and
-\mAuthi{} the place of \mAuthr{}.
-%
-\mAuthi{} is constructed from \mMacthree{}.
+When the initiator is authenticating to the responder, the roles are reversed, and \mGy{} takes the place of \mGx{}, \mLtki{} the place of \mLtkr{}, and \mAuthi{} the place of \mAuthr{}. \mAuthi{} is constructed from \mMacthree{}.
 %
 
-Independently of whether one party uses \mStat{}-based authentication, the other
-party may use \mSig{}-based authentication.
-%
-In that case, the authentication data for that party is constructed
-using a regular signature.
+Independently of whether one party uses \mStat{}-based authentication, the other party may use \mSig{}-based authentication. In that case, the authentication data for that party is constructed using a regular signature.
 %
 
-In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party
-provide an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the
-credential they use (provided that the peer cannot be assumed to know this
-from out of band information).
+In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
 %
-We now give the specifics for the methods in clarifying message sequence charts.
+%We now give the specifics for the methods in clarifying message sequence charts.
 %
 
 %------------------------------------------------------------------------- sub
@@ -588,15 +430,12 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 In this method, both the initiator and the responder use the \mStat{}
 authentication method.
 %
-Contrasting with the \mSigStat{} method, both parties' secret static long-term
-Diffie-Hellman keys here affect the key hierarchy, and ultimately the session
-key material.
+Both parties' secret static long-term DH keys feed into the key hierarchy.
 %
 The initiator computes authentication data using the \mAead{} transform
 and includes that in the third message for the responder to verify.
 %
-As expected the initiator's behavior mirrors the \mStat{} authentication method
-used by the responder in the previous subsection.
+As expected, the initiator's behavior mirrors the \mStat{} authentication method used by the responder in the \mSigStat{} method.
 %
 
 %------------------------------------------------------------------------- sub
@@ -604,8 +443,7 @@ used by the responder in the previous subsection.
 The \mStatSig{} method is in a sense the mirror of the \mSigStat{} method.
 %
 Here, the responder runs the \mSig{} method and create the \mAuthr{}
-authentication data as a signature over the MAC, while the initiator runs the
-\mStat{} method.
+authentication data as a signature over the MAC, while the initiator runs the \mStat{} method.
 %
 The method is illustrated in Figure~\ref{fig:edhocstatsig}.
 %
@@ -672,27 +510,17 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
 \end{figure}
 
 \subsubsection{\mSigSig{} method}
-In this method, both parties run the \mSig{} method and authenticates with
-signatures.
+In this method, both parties run the \mSig{} method and authenticates with signatures.
 %
-As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but
-there are notable deviations preventing security proofs from automatically
-carry over from \mSigmaI{} to \mEdhoc{}.
+As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but there are some notable differences.
 %
-For example, \mEdhoc{} aims to provide some degree of identity protection
-for repsonders, and therefore uses the idea from \mSigmaI{} of encrypting
-the repsonder identifier \mIdcredr{} (and other items) in the second message.
+For example, \mEdhoc{} aims to provide some degree of identity protection for responders, and therefore uses the idea from \mSigmaI{} of encrypting the responder identifier \mIdcredr{} (and other items) in the second message.
 %
-Since a top driver for the \mEdhoc{} design is to keep the bandwidth consumption
-down, the authors of \mEdhoc{} consider it wasteful adding a second MAC
-in addition to the already included \mMactwo{}.
+Since bandwidth consumption must be kept down, the designers of \mEdhoc{} consider it wasteful adding a second MAC in addition to the already included \mMactwo{}.
 %
-\mEdhoc{} applies XOR encryption, where the key derivation function
-\mHkdf{} is used to generate the key stream because the underlying
-crypto-library \mCose{} does not support unauthenticated encryption algorithms.
+\mEdhoc{} applies XOR encryption, with \mHkdf{} being used to generate the key stream.
 %
-However, \mSigma{} assumes authenticated encryption for this purpose (see
-Section 5.2 of~\cite{sigma}).
+However, \mSigma{} assumes authenticated encryption for this purpose (see Section 5.2 of~\cite{sigma}).
 %
 
 
@@ -709,7 +537,7 @@ Section 5.2 of~\cite{sigma}).
 %------------------------------------------------------------------------- sub
 \subsection{Expected security properties}
 \label{sec:claimedProperties}
-We now identify the security properties the authors
+We now identify the security properties that the authors
 of the \mSpec{}~\cite{selander-lake-edhoc-01} claim \mEdhoc{} satisfies.
 %
 We will revisit these claims when we discuss the formal modeling and
