@@ -462,8 +462,8 @@ lemma authInjAgreeGuaranteeForI:
     "All tidI u v expSk #i.
          (ExpCommitI(tidI, u, v, expSk)@i & 
 	      //(All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(v)@k ==> k < j) & (All #k. BrokenTEE(u)@k ==> k < j)))
-	      (All #j m1. I1(tidI, u, v, m1) @ j ==> All #k. BrokenTEE(u)@k ==> k < j) & 
-          (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> All #k. BrokenTEE(v)@k ==> k < j))
+	      (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
+          (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)))
           ==>
          ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
            & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
@@ -487,8 +487,8 @@ lemma authInjAgreeGuaranteeForR:
     "All tidR u v sk #i.
          (CommitR(tidR, u, v, sk)@i &
 //	      (All #j m2. R2(tidR, u, v, m2) @ j ==> (All #k. BrokenTEE(v)@k ==> k < j) & (All #k. BrokenTEE(u)@k ==> k < j)))
-	      (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> All #k. BrokenTEE(u)@k ==> k < j) & 
-          (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> All #k. BrokenTEE(v)@k ==> k < j))
+	      (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
+          (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)))
          ==>
          ( ( (Ex tidI #j. RunningI(tidI, u, v, sk)@j & #j < #i)
            & not( Ex tidR2 u2 v2 #i2. CommitR(tidR2, u2, v2, sk)@i2
