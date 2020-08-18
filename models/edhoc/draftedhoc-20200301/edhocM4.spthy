@@ -631,6 +631,22 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  * Likely that setting would result in even more complex task for Tamarin
  * to handle.
  */
+
+/* KCI */
+lemma authKCIInjAgreeGuaranteeForI:
+    all-traces
+    "All tidI u v expSk #i.
+         ExpCommitI(tidI, u, v, expSk)@i ==>
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
+                & not(#i = #i2)
+                )
+           )
+         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
+         /* | (Ex #j. LTKRev(u)@j & #j < #i) */
+         | (Ex #j. LTKRev(v)@j & #j < #i)
+         )
+    "
 end
 
 
