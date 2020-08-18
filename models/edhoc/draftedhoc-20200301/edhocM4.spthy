@@ -396,7 +396,7 @@ ifelse(ifelse(<!SIG!>, m4METHODI, 1, ifelse(<!SIG!>, m4METHODR, 1, 0)), 1,
 )
 ifelse(ifelse(<!STAT!>, m4METHODI, 1, ifelse(<!STAT!>, m4METHODR, 1, 0)), 1,
 <!rule exp_STAT:
-    [!LTK_STAT($A, ~ltk), In('g'^x)] --[BrokenTEE($A)]-> [Out('g'^x^~ltk)]!>
+    [!LTK_STAT($A, ~ltk), In(x)] --[BrokenTEE($A)]-> [Out(x^~ltk)]!>
 )
 ifelse(<!PSK!>, m4METHODI,
 <!rule forge_PSK:
