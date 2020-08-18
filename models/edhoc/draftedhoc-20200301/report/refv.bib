@@ -1,0 +1,490 @@
+% TLS 1.3 draft using static DH keys for auth
+@techreport{ietf-tls-semistatic-dh-01,
+	number =	{draft-ietf-tls-semistatic-dh-01},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-tls-semistatic-dh-01},
+        author =	{Eric Rescorla and Nick Sullivan and Christopher A. Wood},
+	title =		{{Semi-Static Diffie-Hellman Key Establishment for TLS 1.3}},
+	pagetotal =	7,
+	year =		2020,
+	month =		mar,
+	day =		7,
+	abstract =	{TLS 1.3 {[}RFC8446{]} specifies a signed Diffie-Hellman exchange modelled after SIGMA {[}SIGMA{]}. This design is suitable for endpoints whose certified credential is a signing key, which is the common situation for current TLS servers. This document describes a mode of TLS 1.3 in which one or both endpoints have a certified DH key which is used to authenticate the exchange. Note to Readers Source for this draft and an issue tracker can be found at https://github.com/ekr/draft-rescorla-tls13-semistatic-dh (https://github.com/ekr/draft-rescorla-tls13-semistatic-dh).},
+}
+
+% TLS 1.3 draft using static DH keys for auth -- original non-WG adpoted version
+@techreport{rescorla-tls13-semistatic-dh-00,
+	number =	{draft-rescorla-tls13-semistatic-dh-00},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-rescorla-tls13-semistatic-dh-00},
+        author =	{Eric Rescorla and Nick Sullivan},
+	title =		{{Semi-Static Diffie-Hellman Key Establishment for TLS 1.3}},
+	pagetotal =	8,
+	year =		2018,
+	month =		mar,
+	day =		5,
+	abstract =	{TLS 1.3 {[}I-D.ietf-tls-tls13{]} specifies a signed Diffie-Hellman exchange modelled after SIGMA {[}SIGMA{]}. This design is suitable for endpoints whose certified credential is a signing key, which is the common situation for current TLS servers. This document describes a mode of TLS 1.3 in which one or both endpoints have a certified DH key which is used to authenticate the exchange.},
+}
+
+% eprint report defining OPTLS
+@misc{cryptoeprint:2015:978,
+    author = {Hugo Krawczyk and Hoeteck Wee},
+    title = {The OPTLS Protocol and TLS 1.3},
+    howpublished = {Cryptology ePrint Archive, Report 2015/978},
+    year = {2015},
+    note = {\url{https://eprint.iacr.org/2015/978}},
+}
+
+% Conference version of OPTLS eprint report
+@inproceedings{DBLP:conf/eurosp/KrawczykW16,
+  author    = {Hugo Krawczyk and
+               Hoeteck Wee},
+  title     = {The {OPTLS} Protocol and {TLS} 1.3},
+  booktitle = {Proc. of {IEEE} EuroS{\&}P 2016},
+  pages     = {81--96},
+  year      = {2016},
+  url       = {https://doi.org/10.1109/EuroSP.2016.18},
+  doi       = {10.1109/EuroSP.2016.18},
+  timestamp = {Wed, 16 Oct 2019 14:14:55 +0200},
+  biburl    = {https://dblp.org/rec/conf/eurosp/KrawczykW16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{sigma,
+  title={{SIGMA}: The ‘{SIG}n-and-{MA}c’approach to authenticated {D}iffie-{H}ellman and its use in the {IKE} protocols},
+  author={Krawczyk, Hugo},
+  booktitle={Annual International Cryptology Conference},
+  pages={400--425},
+  year={2003},
+}
+
+@article{Lorawan1,
+  title={Enhancing {L}o{R}a{WAN} security through a lightweight and authenticated key management approach},
+  author={Sanchez-Iborra, Ramon and S{\'a}nchez-G{\'o}mez, Jes{\'u}s and P{\'e}rez, Salvador and Fern{\'a}ndez, Pedro J and Santa, Jos{\'e} and Hern{\'a}ndez-Ramos, Jos{\'e} L and Skarmeta, Antonio F},
+  journal={Sensors},
+  volume={18},
+  number={6},
+  pages={1833},
+  year={2018},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
+
+@inproceedings{Lorawan2,
+  title={Internet access for {L}o{R}a{WAN} devices considering security issues},
+  author={Sanchez-Iborra, Ramon and S{\'a}nchez-G{\'o}mez, Jes{\'u}s and P{\'e}rez, Salvador and Fern{\'a}ndez, Pedro J and Santa, Jos{\'e} and Hern{\'a}ndez-Ramos, Jos{\'e} L and Skarmeta, Antonio F},
+  booktitle={2018 Global Internet of Things Summit (GIoTS)},
+  pages={1--6},
+  year={2018},
+  organization={IEEE}
+}
+
+@inproceedings{aead,
+  title={Authenticated-encryption with associated-data},
+  author={Rogaway, Phillip},
+  booktitle={Proc. of {ACM} {CCS} 2002},
+  pages={98--107},
+  year={2002}
+}
+
+@article{DBLP:journals/iacr/GuilhemFW19,
+  author    = {Cyprien Delpech de Saint Guilhem and
+               Marc Fischlin and Bogdan Warinschi},
+  title      = {Authentication in Key-Exchange: Definitions, Relations and
+               Composition},
+  journal   = {{IACR} Cryptol. ePrint Arch.},
+  volume    = {2019},
+  pages     = {1203},
+  year      = {2019},
+  url       = {https://eprint.iacr.org/2019/1203},
+  timestamp = {Mon, 11 May 2020 15:55:54 +0200},
+  biburl    = {https://dblp.org/rec/journals/iacr/GuilhemFW19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/secsr/BruniJPS18,
+  author    = {Alessandro Bruni and Thorvald Sahl J{\o}rgensen and
+               Theis Gr{\o}nbech Petersen and Carsten Sch{\"{u}}rmann},
+  title     = {Formal Verification of Ephemeral Diffie-Hellman Over {COSE}
+                   {(EDHOC)}},
+  booktitle = {Proc. of {SSR} 2018},
+  pages     = {21--36},
+  year      = {2018},
+  url       = {https://doi.org/10.1007/978-3-030-04762-7\_2},
+  doi       = {10.1007/978-3-030-04762-7\_2},
+  timestamp = {Tue, 14 May 2019 10:00:40 +0200},
+  biburl    = {https://dblp.org/rec/conf/secsr/BruniJPS18.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{rfc2104,
+  series =    {Request for Comments},
+  number =    2104,
+  howpublished =  {RFC 2104},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC2104},
+  url = {https://rfc-editor.org/rfc/rfc2104.txt},
+  author =    {Hugo Krawczyk and Mihir Bellare and Ran Canetti},
+  title =     {{HMAC: Keyed-hashing for message authentication}},
+  pagetotal = 11,
+  year =      1997,
+  month =     feb
+}
+
+@misc{rfc5116,
+  series =    {Request for Comments},
+  number =    5116,
+  howpublished =  {RFC 5116},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC5116},
+  url = {https://rfc-editor.org/rfc/rfc5116.txt},
+  author =    {David McGrew},
+  title =     {{An Interface and Algorithms for Authenticated Encryption}},
+  pagetotal = 22,
+  year =      2008,
+  month =     jan
+}
+
+@misc{rfc5869,
+  series =    {Request for Comments},
+  number =    5869,
+  howpublished =  {RFC 5869},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC5869},
+  url = {https://rfc-editor.org/rfc/rfc5869.txt},
+  author =    {Hugo Krawczyk and Pasi Eronen},
+  title =     {{HMAC-based extract-and-expand key derivation function (HKDF)}},
+  pagetotal = 14,
+  year =      2010,
+  month =     may
+}
+
+
+@misc{rfc8152,
+  series =    {Request for Comments},
+  number =    8152,
+  howpublished =  {RFC 8152},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC8152},
+  url = {https://rfc-editor.org/rfc/rfc8152.txt},
+  author =    {J. Schaad},
+  title =     {{CBOR Object Signing and Encryption (COSE)}},
+  pagetotal = 121,
+  year =      2017,
+  month =     jul
+}
+
+@misc{rfc8576,
+  series =    {Request for Comments},
+  number =    8576,
+  howpublished =  {RFC 8576},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC8576},
+  url = {https://rfc-editor.org/rfc/rfc8576.txt},
+  author =    {Oscar Garcia-Morchon and Sandeep Kumar and Mohit Sethi},
+  title =     {{Internet of Things (IoT) Security: State of the Art and
+                     Challenges}},
+  pagetotal = 50,
+  year =      2019,
+  month =     apr
+}
+
+@misc{rfc7228,
+  series =    {Request for Comments},
+  number =    7228,
+  howpublished =  {RFC 7228},
+  publisher = {RFC Editor},
+  doi =       {10.17487/RFC7228},
+  url = {https://rfc-editor.org/rfc/rfc7228.txt},
+  author =    {Carsten Bormann and Mehmet Ersue and Ari Keränen},
+  title =     {{Terminology for Constrained-Node Networks}},
+  pagetotal = 17,
+  year =      2014,
+  month =     may
+}
+
+@inproceedings{DBLP:conf/ccs/CremersHHSM17,
+  author    = {Cas Cremers and
+               Marko Horvat and
+               Jonathan Hoyland and
+               Sam Scott and
+               Thyla van der Merwe},
+  title     = {A Comprehensive Symbolic Analysis of {TLS} 1.3},
+  booktitle = {Proc. of {ACM} {CCS}},
+  pages     = {1773--1788},
+  year      = {2017},
+  url       = {https://doi.org/10.1145/3133956.3134063},
+  doi       = {10.1145/3133956.3134063},
+  timestamp = {Tue, 06 Nov 2018 11:07:28 +0100},
+  biburl    = {https://dblp.org/rec/conf/ccs/CremersHHSM17.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{rfc8613,
+	series =	{Request for Comments},
+	number =	8613,
+	howpublished =	{RFC 8613},
+	publisher =	{RFC Editor},
+	doi =		{10.17487/RFC8613},
+	url =		{https://rfc-editor.org/rfc/rfc8613.txt},
+        author =	{Göran Selander and John Mattsson and Francesca Palombini and Ludwig Seitz},
+	title =		{{Object Security for Constrained RESTful Environments (OSCORE)}},
+	pagetotal =	94,
+	year =		2019,
+	month =		jul,
+	abstract =	{This document defines Object Security for Constrained RESTful Environments (OSCORE), a method for application-layer protection of the Constrained Application Protocol (CoAP), using CBOR Object Signing and Encryption (COSE). OSCORE provides end-to-end protection between endpoints communicating using CoAP or CoAP-mappable HTTP. OSCORE is designed for constrained nodes and networks supporting a range of proxy operations, including translation between different transport protocols. Although an optional functionality of CoAP, OSCORE alters CoAP options processing and IANA registration. Therefore, this document updates RFC 7252.},
+}
+
+@techreport{selander-lake-edhoc-01,
+	number =	{draft-selander-lake-edhoc-01},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress - Accessed 2020-03-01},
+	url =		{https://datatracker.ietf.org/doc/html/draft-selander-lake-edhoc-01},
+        author =	{Göran Selander and John Mattsson and Francesca Palombini},
+	title =		{{Ephemeral Diffie-Hellman Over COSE (EDHOC)}},
+	pagetotal =	60,
+	year =		2020,
+	month =		mar,
+	day =		9,
+	abstract =	{This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a very compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys. EDHOC provides mutual authentication, perfect forward secrecy, and identity protection. EDHOC is intended for usage in constrained scenarios and a main use case is to establish an OSCORE security context. By reusing COSE for cryptography, CBOR for encoding, and CoAP for transport, the additional code footprint can be kept very low.},
+}
+
+@techreport{selander-ace-cose-ecdhe-08,
+	number =	{draft-selander-ace-cose-ecdhe-08},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-selander-ace-cose-ecdhe-08},
+        author =	{Göran Selander and John Mattsson and Francesca Palombini},
+	title =		{{Ephemeral Diffie-Hellman Over COSE (EDHOC)}},
+	pagetotal =	30,
+	year =		2018,
+	month =		mar,
+	day =		5,
+	abstract =	{This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys that can be used over any layer. EDHOC messages are encoded with CBOR and COSE, allowing reuse of existing libraries.},
+}
+
+@techreport{ietf-tls-tls13-11,
+	number =	{draft-ietf-tls-tls13-11},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-tls-tls13-11},
+        author =	{Eric Rescorla},
+	title =		{{The Transport Layer Security (TLS) Protocol Version 1.3}},
+	pagetotal =	115,
+	year =		2015,
+	month =		dec,
+	day =		28,
+	abstract =	{This document specifies Version 1.3 of the Transport Layer Security (TLS) protocol. The TLS protocol allows client/server applications to communicate over the Internet in a way that is designed to prevent eavesdropping, tampering, and message forgery.},
+}
+
+@inproceedings{DBLP:conf/crypto/CanettiK02,
+  author    = {Ran Canetti and
+               Hugo Krawczyk},
+  title     = {Security Analysis of {IKE}'s Signature-Based Key-Exchange Protocol},
+  booktitle = {Proc. of {CRYPTO}},
+  pages     = {143--161},
+  year      = {2002},
+  url       = {https://doi.org/10.1007/3-540-45708-9\_10},
+  doi       = {10.1007/3-540-45708-9\_10},
+  timestamp = {Fri, 26 May 2017 14:09:15 +0200},
+  biburl    = {https://dblp.org/rec/bib/conf/crypto/CanettiK02},
+  bibsource = {dblp computer science bibliography, https://dblp.org},
+}
+
+
+% Tamarin the tool
+@inproceedings{DBLP:conf/cav/MeierSCB13,
+  author    = {Simon Meier and
+               Benedikt Schmidt and
+               Cas Cremers and
+               David A. Basin},
+  title     = {The {TAMARIN} Prover for the Symbolic Analysis of Security Protocols},
+  booktitle = {Proc. of {CAV}},
+  pages     = {696--701},
+  year      = {2013},
+  url       = {https://doi.org/10.1007/978-3-642-39799-8\_48},
+  doi       = {10.1007/978-3-642-39799-8\_48},
+  timestamp = {Thu, 25 May 2017 00:39:06 +0200},
+  biburl    = {https://dblp.org/rec/bib/conf/cav/MeierSCB13},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/csfw/Blanchet01,
+  author    = {Bruno Blanchet},
+  title     = {An Efficient Cryptographic Protocol Verifier Based on
+                     Prolog Rules},
+  booktitle = {Proc. of {IEEE} {CSFW-14}},
+  pages     = {82--96},
+  year      = {2001},
+  url       = {https://doi.org/10.1109/CSFW.2001.930138},
+  doi       = {10.1109/CSFW.2001.930138},
+  timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
+  biburl    = {https://dblp.org/rec/conf/csfw/Blanchet01.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@techreport{ietf-tls-ctls-00,
+  number =    {draft-ietf-tls-ctls-00},
+  type =      {Internet-Draft},
+  institution =   {Internet Engineering Task Force},
+  publisher = {Internet Engineering Task Force},
+  note =      {Work in Progress},
+  url = {https://datatracker.ietf.org/doc/html/draft-ietf-tls-ctls-00},
+  author =    {Eric Rescorla and Richard Barnes and Hannes Tschofenig},
+  title =     {{Compact TLS 1.3}},
+  pagetotal = 17,
+  year =      2020,
+  month =     apr,
+  day =       26,
+  abstract =  {This document specifies a "compact"
+               version of TLS 1.3. It is isomorphic to
+               TLS 1.3 but saves space by trimming
+               obsolete material, tighter encoding,
+               and a template-based specialization
+               technique. cTLS is not directly
+               interoperable with TLS 1.3, but it
+               should eventually be possible for a
+               cTLS/TLS 1.3 server to exist and
+               successfully interoperate.},
+}
+
+@inproceedings{DBLP:conf/ccs/BasinDHRSS18,
+  author    = {David A. Basin and Jannik Dreier and Lucca Hirschi and
+               Sasa Radomirovic and Ralf Sasse and Vincent Stettler},
+  editor    = {David Lie and Mohammad Mannan and Michael Backes and
+               XiaoFeng Wang},
+  title     = {A Formal Analysis of {5G} Authentication},
+  booktitle = {Proc. of {ACM} {CCS}},
+  pages     = {1383--1396},
+  year      = {2018},
+  url       = {https://doi.org/10.1145/3243734.3243846},
+  doi       = {10.1145/3243734.3243846},
+  timestamp = {Wed, 25 Sep 2019 18:06:20 +0200},
+  biburl    = {https://dblp.org/rec/conf/ccs/BasinDHRSS18.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@techreport{ietf-lake-reqs-04,
+	number =	{draft-ietf-lake-reqs-04},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-lake-reqs-04},
+        author =	{Mališa Vučinić and Göran Selander and John Mattsson and Dan Garcia-Carillo},
+	title =		{{Requirements for a Lightweight AKE for OSCORE}},
+	pagetotal =	25,
+	year =		2020,
+	month =		jun,
+	day =		8,
+	abstract =	{This document compiles the requirements for a lightweight authenticated key exchange protocol for OSCORE. This draft has completed a working group last call (WGLC) in the LAKE working group. Post-WGLC, the requirements are considered sufficiently stable for the working group to proceed with its work. It is not currently planned to publish this draft as an RFC.},
+}
+
+@misc{perrin2016noise,
+  title={The Noise protocol framework},
+  author={Perrin, Trevor},
+  howpublished={\url{http://noiseprotocol.org/noise.pdf}},
+  year={2016}
+}
+
+@inproceedings{cohn2016post,
+  title={On post-compromise security},
+  author={Cohn-Gordon, Katriel and Cremers, Cas and Garratt, Luke},
+  booktitle={Proc. of {IEEE} {CSF}},
+  pages={164--178},
+  year={2016},
+}
+
+@inproceedings{DBLP:conf/csfw/Lowe97a,
+  author    = {Gavin Lowe},
+  title     = {A Hierarchy of Authentication Specification},
+  booktitle = {Proc. of {IEEE} {CSFW-10}},
+  pages     = {31--44},
+  year      = {1997},
+  url       = {https://doi.org/10.1109/CSFW.1997.596782},
+  doi       = {10.1109/CSFW.1997.596782},
+  timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
+  biburl    = {https://dblp.org/rec/conf/csfw/Lowe97a.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/csfw/SchmidtMCB12,
+  author    = {Benedikt Schmidt and Simon Meier and Cas J. F. Cremers and
+               David A. Basin},
+  title     = {Automated Analysis of {D}iffie-{H}ellman Protocols and Advanced
+               Security Properties},
+  booktitle = {Proc. of {IEEE} {CSF}},
+  pages     = {78--94},
+  year      = {2012},
+  url       = {https://doi.org/10.1109/CSF.2012.25},
+  doi       = {10.1109/CSF.2012.25},
+  timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
+  biburl    = {https://dblp.org/rec/conf/csfw/SchmidtMCB12.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/eurosp/KobeissiNB19,
+  author    = {Nadim Kobeissi and
+               Georgio Nicolas and
+               Karthikeyan Bhargavan},
+  title     = {Noise Explorer: Fully Automated Modeling and Verification for Arbitrary
+               Noise Protocols},
+  booktitle = {Proc. of {IEEE} EuroS{\&}P},
+  pages     = {356--370},
+  year      = {2019},
+  url       = {https://doi.org/10.1109/EuroSP.2019.00034},
+  doi       = {10.1109/EuroSP.2019.00034},
+  timestamp = {Wed, 16 Oct 2019 14:14:55 +0200},
+  biburl    = {https://dblp.org/rec/conf/eurosp/KobeissiNB19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/csfw/DreierHRS18,
+  author    = {Jannik Dreier and
+               Lucca Hirschi and
+               Sasa Radomirovic and
+               Ralf Sasse},
+  title     = {Automated Unbounded Verification of Stateful Cryptographic Protocols
+               with Exclusive {OR}},
+  booktitle = {Proc. of {IEEE} {CSF}},
+  pages     = {359--373},
+  year      = {2018},
+  url       = {https://doi.org/10.1109/CSF.2018.00033},
+  doi       = {10.1109/CSF.2018.00033},
+  timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
+  biburl    = {https://dblp.org/rec/conf/csfw/DreierHRS18.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{rfc7252,
+	series =	{Request for Comments},
+	number =	7252,
+	howpublished =	{RFC 7252},
+	publisher =	{RFC Editor},
+	doi =		{10.17487/RFC7252},
+	url =		{https://rfc-editor.org/rfc/rfc7252.txt},
+        author =	{Zach Shelby and Klaus Hartke and Carsten Bormann},
+	title =		{{The Constrained Application Protocol (CoAP)}},
+	pagetotal =	112,
+	year =		2014,
+	month =		jun,
+	abstract =	{The Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use with constrained nodes and constrained (e.g., low-power, lossy) networks. The nodes often have 8-bit microcontrollers with small amounts of ROM and RAM, while constrained networks such as IPv6 over Low-Power Wireless Personal Area Networks (6LoWPANs) often have high packet error rates and a typical throughput of 10s of kbit/s. The protocol is designed for machine- to-machine (M2M) applications such as smart energy and building automation. CoAP provides a request/response interaction model between application endpoints, supports built-in discovery of services and resources, and includes key concepts of the Web such as URIs and Internet media types. CoAP is designed to easily interface with HTTP for integration with the Web while meeting specialized requirements such as multicast support, very low overhead, and simplicity for constrained environments.},
+}
+
+@misc{edhocTamarinRepo,
+    author = {EDHOC Tamarin repository},
+    title = {\url{https://github.com/hoheinzollern/EDHOC-Verification/blob/2ee6e5877aa06ae90861317bfca0eee3a21c0e4f/models/edhoc/draftedhoc-20200301/edhocM4.spthy}},
+    year = {2020}
+}
+
+
