@@ -22,14 +22,14 @@ As will be described below, when the authentication information is based on a pr
 \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-2.7);
-    \draw [very thick] (7, -0.5) -- (7,-2.7);
+    \draw [very thick] (0, -0.25) -- (0,-2.2);
+    \draw [very thick] (7, -0.25) -- (7,-2.2);
     \node (res) at (7,0) {Responder};
-    \msg{2em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-\msg{4em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
-    \msg{6em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
-    \draw [line width=2mm] (-0.75,-2.7) -- (0.75,-2.7);
-    \draw [line width=2mm] (7-0.75,-2.7) -- (7+0.75,-2.7);
+    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+\msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
+    \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
+    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
+    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
     \end{tikzpicture}
 \caption{Outline of the overall structure of \mEdhoc{}. Elements in square
 brackets are encrypted and integrity protected.}
@@ -68,7 +68,7 @@ methods.
 \subsection{Relations to \mSigma, \mOptls{} and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
 \fillhack
-\mEdhoc{} uses cryptographic cores from existing protocols to
+\mEdhoc{} uses existing protocols as cryptographic cores to
 establish the session key. In this section, we discuss the relationships between \mEdhoc{} and these protocols.
 %
 %\mEdhoc{} also negotiates parameters (like the encryption algorithm identifiers discussed previously) required for establishing a complete \mOscore{} security context.
@@ -251,9 +251,8 @@ that now}.
 \scalebox{.75}{
 \input{kdfdiagram.tex}
 }
-\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be
-interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
-The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
+%\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat. The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
+\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on the method $m$, with 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.}
 \label{fig:kdfdiagram}
 \end{figure}
 
@@ -290,14 +289,14 @@ This is the same for all methods, but it does not cause any problems with authen
 \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-11);
-    \draw [very thick] (11.5, -0.5) -- (11.5,-11);
-    \node[below of=ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
+    \draw [very thick] (0, -0.5) -- (0,-10.1);
+    \draw [very thick] (11.5, -0.5) -- (11.5,-10.1);
+    \node[below=0.5em of ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
     \node (res) at (11.5,0) {Responder};
-    \node[below of=res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
-    \action{4em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
-    \msg{8em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
-    \action{9em}{res}{$
+    \node[below=0.5em of res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
+    \action{3em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
+    \msg{6.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
+    \action{7em}{res}{$
       \begin{array}{c}
         \text{Generates } \mCr,\ $y$\\
         \mGy = g^{y}\\
@@ -305,8 +304,8 @@ This is the same for all methods, but it does not cause any problems with authen
         \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
         \mKtwoae = \mHkdfExpand(\mPRKtwo, \mTHtwo)
       \end{array}$};
-    \msg{18em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mAead(\mKtwoae; \mTHtwo, \mADtwo)}^{\mCipher}$};
-    \action{19em}{ini}{$
+    \msg{15.5em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mAead(\mKtwoae; \mTHtwo, \mADtwo)}^{\mCipher}$};
+    \action{16.5em}{ini}{$
       \begin{array}{c}
        \mTHtwo = \mHash(\mMsgone, \mGy)\\
        \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
@@ -316,16 +315,16 @@ This is the same for all methods, but it does not cause any problems with authen
         \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
       \end{array}$};
     
-    \msg{28em}{ini}{res}{\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \mADthree)};
-    \action{29em}{res}{$
+    \msg{25.5em}{ini}{res}{\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \mADthree)};
+    \action{26em}{res}{$
     \begin{array}{c}
     	\mPRKthree = \mPRKtwo \\
         \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
     \end{array}$};
-    \draw [line width=2mm] (-2,-11) -- (2,-11);
-    \draw [line width=2mm] (9.5,-11) -- (13.5,-11);
+    \draw [line width=1mm] (-2,-10.1) -- (2,-10.1);
+    \draw [line width=1mm] (9.5,-10.1) -- (13.5,-10.1);
     \end{tikzpicture}}
-\caption{The \mPskPsk{} method of \mEdhoc. $\mAead(k; x; y)$ is used to denote
+\caption{The \mPskPsk{} method. $\mAead(k; x; y)$ is used to denote
 \mAead{} encryption where $k$ is the key, $x$ is associated data to be integrity
 protected, and $y$ is the plaintext.}
 \label{fig:edhocpsk}
@@ -372,7 +371,7 @@ The initiator uses the \mSig{} method, authenticating with a signature,
 while the responder uses the \mStat{} method, authenticating with a
 challenge-response signature.
 %
-The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
+The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.  \mCredi{} and \mLtki{} must be signature keys since the initiator is using the \mSig{} method. 
 %
 
 \begin{figure}[!h]
@@ -382,23 +381,23 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-15);
-    \draw [very thick] (9, -0.5) -- (9,-15);
-    \node[below of=ini,fill=white] {$
+    \draw [very thick] (0, -0.5) -- (0,-14.1);
+    \draw [very thick] (9, -0.5) -- (9,-14.1);
+    \node[below=0.5em of ini,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredi,\ \mLtki,\ \mIdcredi,\\
     \mIdcredr, \mADone,\ \mADthree
     \end{array}
     $};
     \node (res) at (9,0) {Responder};
-    \node[below of=res,fill=white] {$
+    \node[below=0.5em of res,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredr,\ \mLtkr, \ \mIdcredr,\\
     \mIdcredi, \mADtwo
     \end{array}$};
-    \action{5em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
-    \msg{10em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-    \action{11em}{res}{$
+    \action{4.5em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
+    \msg{9em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+    \action{9.5em}{res}{$
       \begin{array}{c}
         \text{Generates } \mCr,\ $y$\\
         \mGy = g^{y}\\
@@ -410,8 +409,8 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
         \mMactwo = \mAead(\mKtwom; \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle; \textrm{``\phantom{}''}) \\
         \mKtwoe = \mHkdfExpand(\mPRKtwo, \mTHtwo)
       \end{array}$};
-    \msg{26em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mMactwo, \mADtwo \rangle}^{\mCipher}$};
-    \action{27em}{ini}{$
+    \msg{24em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mMactwo, \mADtwo \rangle}^{\mCipher}$};
+    \action{25em}{ini}{$
       \begin{array}{c}
         %\mTHtwo = \mHash(\mMsgone, \langle \mCi, \mGy, \mCr \rangle) \
         \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, g^{xy}) \\
@@ -425,19 +424,18 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
         \mMacthree = \mAead(\mKthreem; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle; \textrm{``\phantom{}''}) \\
         \mSigthree = \mSign(\mLtki; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle, \mMacthree \rangle)
       \end{array}$};
-    \msg{39em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mSigthree, \mADthree \rangle$)};
-    \action{40em}{res}{$
+    \msg{37em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mSigthree, \mADthree \rangle$)};
+    \action{37.5em}{res}{$
     \begin{array}{c}
         \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
         \mKthreem = \mHkdfExpand(\mPRKthree, \mTHthree) \\
         \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
     \end{array}$};
-    \draw [line width=2mm] (-2,-15) -- (2,-15);
-    \draw [line width=2mm] (7,-15) -- (11,-15);
+    \draw [line width=1mm] (-2,-14.1) -- (2,-14.1);
+    \draw [line width=1mm] (7,-14.1) -- (11,-14.1);
     \end{tikzpicture}}
-    \caption{The \mSigStat{} method of \mEdhoc. \mCredi{} and \mLtki, and
-        \mCredr{} and \mLtkr{} are two public-private key pairs. \mCredi{} and
-    \mLtki{} must be signature keys in the \mSig{} method. $\mSign(k; x)$ is
+    \caption{The \mSigStat{} method. (\mCredi{}, \mLtki), and
+        (\mCredr{}, \mLtkr{}) are public-private key pairs. $\mSign(k; x)$ is
     used to denote the signing of message $x$ using key $k$.}
 \label{fig:edhocsigstat}
 \end{figure}
@@ -471,26 +469,26 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
 \centering
 %\includegraphics[scale=0.3]{Images/asym.png}
 \scalebox{.7}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=white,text=black}}
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
     \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-15.2);
-    \draw [very thick] (9, -0.5) -- (9,-15.2);
-    \node[below of=ini,fill=white,text=black] {$
+    \draw [very thick] (0, -0.5) -- (0,-14.2);
+    \draw [very thick] (9, -0.5) -- (9,-14.2);
+    \node[below=0.5em of ini,fill=white,text=black] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredi,\ \mLtki,\ \mIdcredi,\\
     \mIdcredr, \mADone,\ \mADthree
     \end{array}
     $};
     \node (res) at (9,0) {Responder};
-    \node[below of=res] {$
+    \node[below=0.5em of res,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredr,\ \mLtkr,\ \mIdcredr,\\
     \mIdcredi, \mADtwo
     \end{array}$};
-    \action{5em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
-    \msg{10em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-    \action{11em}{res}{$
+    \action{4.5em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
+    \msg{8.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+    \action{9.5em}{res}{$
       \begin{array}{c}
         \text{Generates } \mCr,\ $y$\\
         \mGy = g^{y}\\
@@ -501,8 +499,8 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
         \mSigtwo = \mSign(\mLtkr; \langle \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle, \mMactwo \rangle)\\
         \mKtwoe = \mHkdfExpand(\mPRKtwo, \mTHtwo)
       \end{array}$};
-    \msg{25em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mSigtwo, \mADtwo \rangle}^{\mCipher}$};
-    \action{26em}{ini}{$
+    \msg{23em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mSigtwo, \mADtwo \rangle}^{\mCipher}$};
+    \action{24em}{ini}{$
       \begin{array}{c}
         \mPRKthree = \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, g^{xy}) \\
         \mGiy = \mGy^{\mLtki} \\
@@ -512,8 +510,8 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
         \mMacthree = \mAead(\mKthreem; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle; \textrm{``\phantom{}''}) \\
         \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree) \\
       \end{array}$};
-    \msg{37em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mMacthree, \mADthree \rangle$)};
-    \action{38em}{res}{$
+    \msg{34.7em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mMacthree, \mADthree \rangle$)};
+    \action{35.2em}{res}{$
     \begin{array}{c}
        \mGiy = \mCredi^{y} \\
        \mPRKfour = \mHkdfExtract(\mPRKthree, \mGiy) \\
@@ -521,8 +519,8 @@ The method is illustrated in Figure~\ref{fig:edhocstatsig}.
         \mKthreem = \mHkdfExpand(\mPRKfour, \mTHthree) \\
         \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
     \end{array}$};
-    \draw [line width=2mm] (-2,-15.2) -- (2,-15.2);
-    \draw [line width=2mm] (7,-15.2) -- (11,-15.2);
+    \draw [line width=1mm] (-2,-14.2) -- (2,-14.2);
+    \draw [line width=1mm] (7,-14.2) -- (11,-14.2);
     \end{tikzpicture}}
 \caption{The \mStatSig{} method of \mEdhoc}
 \label{fig:edhocstatsig}

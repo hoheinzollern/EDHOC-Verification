@@ -97,13 +97,23 @@ alotofsense: genModels
 
 # Injective agreement on session key except when G_IY is included for I.
 # Inj-agreement for full session key for R.
-auth: genModels
+authpsksig: genModels
 	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	$(foreach meth,${PSKPSK} ${SIGSIG},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,authInj,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
+
+authstat: genModels
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authInj,${TIME_PROVE_AND_LOG})\
+		 )\
+	)
+
+auth: authpsksig authstat
 
 authimplicit: genModels
 	#$(foreach meth,${PSKPSK},)

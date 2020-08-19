@@ -1,9 +1,11 @@
+% !TEX TS-program = pdflatexmk
+
 \documentclass[runningheads, envcountsame, a4paper, draft, x11names]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
 %\usepackage{enumitem}       % compacts lists and stuff
 %\usepackage[subtle]{savetrees}
-%\usepackage{soul}           % \hl for highlighting text; \st for strike-through
+\usepackage{soul}           % \hl for highlighting text; \st for strike-through
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
 %\usepackage{wrapfig}
@@ -20,11 +22,11 @@
     pdfkeywords={}, % PDF Keywords
     pdfcreator={PdfLaTeX}, % PDF Creator
   }
- 
-\setlength{\belowcaptionskip}{-10pt}
+
 
 \input{macros}
 %%%%%% HACKY COMMAND FOR VSPACE, REMOVE AT END %%%%%
+\setlength{\belowcaptionskip}{-10pt}
 \newcommand{\spacehack}{\vspace{-1em}}
 \newcommand{\fillhack}{\vspace{-0.5em}}
 
@@ -56,27 +58,23 @@ Alessandro Bruni\inst{4}
     IETF is standardizing a key establishment protocol named \mEdhoc{} for
 constrained IoT devices~\cite{selander-lake-edhoc-01}.
 %
-In contrast to more powerful IoT devices, such as web cameras and cars,
-which receive most attention from media, constrained devices often have severe
-restrictions on energy consumption.
+%In contrast to more powerful IoT devices, such as web cameras and cars, which receive most attention from media, constrained devices often have severe restrictions on energy consumption.
+Compared to more powerful devices like web cameras and cars, which receive a lot of media attention, such devices operate under severe restrictions on energy consumption and message sizes.
 %
-Additionally, they often use specialized wireless communication links with
-demanding constraints on message sizes, which may also vary between messages.
+%They also often use specialized wireless communication links with constraints on message sizes, which may also vary between messages.
 %
-\mEdhoc{} was first formally analyzed by
-Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+A version of \mEdhoc{} was first formally analyzed in 2018 by Bruni~et~al~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, the protocol has been significantly extended and is now a
-framework with a number of cryptographic cores, called methods.
+framework with five \vedit{cryptographic cores, called}{methods}, of which three are new.
 %
-The initial version of \mEdhoc{} contained only two out of the current five
-methods~\cite{selander-ace-cose-ecdhe-08}.
+%The initial version of \mEdhoc{} contained only two out of the current five methods~\cite{selander-ace-cose-ecdhe-08}.
 %
 In this paper we formally analyze all methods of \mEdhoc{} in a symbolic
-Dolev-Yao model, using the \mTamarin{} verification tool.
+Dolev-Yao model, using the \mTamarin{} verification tool. 
 %
 We show that the different methods provide sensible, but also rather
-heterogeneous security properties, and discuss consequences of this.
+heterogeneous security properties, and discuss various consequences of this. Our work has also led to improvements in the design and the specification of \mEdhoc.
 %
 \end{abstract}
 %
@@ -90,14 +88,12 @@ heterogeneous security properties, and discuss consequences of this.
 \subsection{Background and motivation}
 \label{sec:motivation}
 \fillhack
-IoT security threats involving cars, web-cameras and other resourceful devices
-receive most attention from media and academia.
+IoT security threats involving cars, web-cameras and similar devices
+receive the most attention from media and academia.
 %
-These devices are computationally strong with no severe bandwidth or energy
-consumption restrictions.
+These devices are computationally strong with no severe bandwidth or energy consumption restrictions.
 %
-Securing the communication between such devices can readily be done using
-\mDandTls.
+Securing the communication between such devices can readily be done using existing protocols like \mDandTls.
 %
 Constrained devices, on the other hand, on which bandwidth and
 energy consumption restrictions are common, have received much less attention.
@@ -112,14 +108,13 @@ and heterogeneous frame sizes are sometimes used.
 IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data
 transport in such situations~\cite{rfc7252}.
 %
-\mCoap{} does not include security protection on its own.
+\mCoap{} does not include security protection on its own, and in some cases, \mDandTls{} messages are too large to fit into the radio frames.
 %
-In some cases, \mDandTls{} messages are too large to fit into the radio frames.
-%
-This is one of the reasons IETF standardized the Object Security for
+%This is one of the reasons 
+Therefore, IETF standardized the Object Security for
 Constrained RESTful Environments (\mOscore{}) protocol to secure
 communications between constrained devices, as a complement for when
-\mDandTls{} is too heavy weight~\cite{rfc8613}.
+\mDandTls{} is too heavyweight~\cite{rfc8613}.
 %
 
 The \mOscore{} protocol requires a pre-established security context.
@@ -133,49 +128,35 @@ Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
 %
 
-While use cases for \mEdhoc{} are not firmly set,
-the overall goal of \mEdhoc{} is to establish an \mOscore{} security
-context, keeping messages small being the most prominent driver for the
-design.
+While use cases for \mEdhoc{} are not firmly set, the overall goal of \mEdhoc{} is to establish an \mOscore{} security context, with message size limitations driving the design.
 %
-Discussions on the LAKE working group mailing list explored whether a
-compressed version of \mTls, named \mCtls~\cite{ietf-tls-ctls-00}, would suffice
-for the same situations that
-the combination of \mOscore{} and \mEdhoc{} aim for.
+Discussions on the LAKE working group mailing list explored whether \mCtls~\cite{ietf-tls-ctls-00}, a compressed version of \mTls, would suffice for the same situations that the combination of \mOscore{} and \mEdhoc{} aim for.
 %
-They concluded to proceed developing \mEdhoc{} in parallel to the \mTls{}
-working groups efforts to develop \mCtls.
+The resulting consensus was to develop \mEdhoc{} in parallel with the development of \mCtls{} by the \mTls{} working groups.
 %
 
-The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
-messages and more use cases.
+The \mEdhoc{} protocol has evolved significantly over time to cater for smaller messages and more use cases.
 %
 The first incarnation of \mEdhoc{} appeared in March 2016.
 %
-It contained two different cryptographic cores, one based on a
-pre-shared Diffie-Hellman (DH) key and a second following a draft of the
+It contained two different \vedit{cryptographic cores}{methods}, one based on a
+pre-shared Diffie-Hellman (DH) key and a second based on a variant of
 challenge-response signatures, in the style of the \mNoise{}
 framework~\cite{perrin2016noise}.
 %
-The latter was then replaced by \mSigma, and this version, from May 2018, was
-formally analyzed by Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+The latter was then replaced by \mSigma{} in May 2018, and this version was formally analyzed by Bruni~et~al~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
-The protocol has now further evolved and variants using challenge-response
-signatures have been added again by integrating the cryptographic core of
-\mOptls{}.
+Now, variants using challenge-response signatures have been added again by integrating the cryptographic core of \mOptls{}.
 %
-On top of this, mixed variants where one party uses a challenge-response
+Additionally, mixed variants where one party uses a challenge-response
 signature and the other a regular signature have also been added.
 %
-Consequently, there are now five cryptographic cores in total, and it is prudent
-to formally analyze them all to ensure a higher level of security assurance for
-\mEdhoc.
+Consequently, there are now five \vedit{cryptographic cores}{methods} in total, and formal analysis is required to provide security guarantees for \mEdhoc.
 %
 This is especially important, since the \mSpec{} itself lacks a description
 of the intended security model and overall security goals.
 %
-Discussing how this gap can be filled, and how to identify what the expected
-security goals should be, is an important part of this paper.
+Discussing how this gap can be filled, and how to identify what the expected security goals should be, is an important part of this paper.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -183,34 +164,28 @@ security goals should be, is an important part of this paper.
 \subsection{Contributions}
 \label{sec:contributions}
 \fillhack
-We have reviewed and analyzed the \mEdhoc{} protocol, which has continuously
-evolved, at times based on our feedback.
+We formally analyze the \mEdhoc{} protocol, which has continuously evolved, at times based on our feedback.
 %
-The analysis spanned over roughly five months, but the formal models and proven
-properties are based on to the version specified in the draft as it was on
-2020-03-01~\cite{selander-lake-edhoc-01}.
+%The analysis spanned roughly five months, but t
+The formal models and proven properties are based on the version as on 2020-03-01~\cite{selander-lake-edhoc-01}.
 %x
-
-Our main contributions are the following.
+Our main contributions are as follows.
 \begin{itemize}
-    \item We provide formalization of all five cryptographic cores of \mEdhoc{}
-        using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
-    \item We give an explicit security model for the protocol and have verified
+    %\item We formally analyze all five methods of \mEdhoc{} using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
+    \item We give an explicit security model for the protocol and verify
         essential security properties, such as session key and entity
         authentication, as well as Perfect Forward Secrecy (PFS), within that
-        model.
-        From these explicitly proven properties other properties follow, e.g.,
-        session key independence.
+        model, for all five methods of \mEdhoc.
+        %From these explicitly proven properties other properties follow, e.g., session key independence. 
+        The formal analysis is done using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
     \item We discuss the relation between proven properties, potentially missing
         properties and the lack of clear design goals and security model for
         \mEdhoc{}.
-        Based on this we give recommendations for the future standards
-        development in regards to clarity, not only in terms of under which
-        technical restrictions the protocol must work, but also what its
-        envisioned uses are.
+        Based on this we give recommendations for future standards
+        development. %with regard to clarity, not only in terms of the         technical restrictions under which the protocol must work, but also what its         envisioned uses are.
     \item Our discussions with members of the IETF LAKE working group have already
         lead to improvements and clarifications of the standard \mSpec{} based
-        on observations we made during the construction of our formal model.
+        on observations we made during the construction of our formal model. We discuss these in Section~\ref{sec:discussion}.
 \end{itemize}
 
 %-------------------------------------------------------------------------- sub
@@ -218,38 +193,28 @@ Our main contributions are the following.
 \subsection{Related work}
 \label{sec:relatedWork}
 \fillhack
-The work closest to ours is Bruni~et.~al.~\cite{DBLP:conf/secsr/BruniJPS18},
-which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier,
-two-cryptographic core, version of \mEdhoc~\cite{selander-ace-cose-ecdhe-08}.
+The work closest to ours is Bruni~et~al~\cite{DBLP:conf/secsr/BruniJPS18},
+which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier version of \mEdhoc{} with two \vedit{cryptographic cores}{methods}. %~\cite{selander-ace-cose-ecdhe-08}.
 %
-We consider our work to be a sort of follow-up to that, doing a similar kind of
-analysis of the most recent, and more elaborate, version of \mEdhoc{} with its
-five cores.
+We consider our work to be a sort of follow-up to that, doing a similar kind of analysis of the most recent version of \mEdhoc{} with
+five \vedit{cores}{methods}.
 %
-We do, however, take a clean slate approach and look at the protocol as new.
+%We do, however, look at the protocol afresh.
 %
-For example, since the model has undergone so much change, the set of properties
-which we verify is also different.
+%For example, since the model has undergone so much change, the set of properties which we verify is also different.
 %
-The \mTamarin{} tool has been used to verify many other protocols, perhaps
-closest to our work is Cremers~et.~al's analysis of
-\mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
+%The \mTamarin{} tool has been used to verify many other protocols, perhaps closest to our work is Cremers~et.~al's analysis of \mTls~\cite{DBLP:conf/ccs/CremersHHSM17}.
 %
 Some of the cryptographic cores themselves have been analyzed in the
-computational model, e.g., \mSigma{} by Canetti and
-Krawczyk~\cite{DBLP:conf/crypto/CanettiK02}, \mOptls{} by Krawczyk and
-Wee~\cite{DBLP:conf/eurosp/KrawczykW16}, and \mNoise{} by
-Kobeissi~et.~al.~\cite{DBLP:conf/eurosp/KobeissiNB19}.
+computational model, e.g., \mSigma{}~\cite{DBLP:conf/crypto/CanettiK02}, \mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}, and \mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}.
 %
 Computational models often rely on implicit session key authentication
-(see for example the definition of SK-security in the Canetti-Krawczyk
-model~\cite{DBLP:conf/crypto/CanettiK02}).
+(see, for example, the definition of SK-security in the Canetti-Krawczyk model~\cite{DBLP:conf/crypto/CanettiK02}).
 %
-Although symbolic models predominantly rely on correspondence properties in the
-style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where implicit
-authentication has been used.
+Although symbolic models predominantly rely on correspondence properties, there are examples where implicit authentication has been used.
+%in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}
 %
-For example, Schmidt~et.~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
+For example, Schmidt~et~al~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
 symbolized version of an extended Canetti-Krawzcyk model.
 %
 
@@ -593,25 +558,19 @@ This needs to be clearly specified.
 \section{Conclusions}
 \label{sec:conclusions}
 \fillhack
-We have formally modeled all the five
+We have formally modeled all five
 methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
 %
-Using the model, we identified and defined several important security properties
-and verified these.
+We formulated and verified several important security properties in this model. 
 %
-We also identified security properties that does not hold for all
-methods.
+%We also identified security properties that do not hold for all methods.
 %
-Most importantly, injective agreement on \mGiy{} does not hold for
-initiators when they use the \mStat{} method, so this property cannot be claimed
-for the entire key material in those situations.
+Most importantly, we found that injective agreement on \mGiy{} does not hold for
+initiators when they use the \mStat{} method.
 %
-Further, we identified a situation where initiators may establish an \mOscore{}
-security context with a different party than the application using \mEdhoc{}
-intended, and proposed a simple mitigation.
+Further, we identified a situation where initiators may establish an \mOscore{} security context with a different party than the application using \mEdhoc{} intended, and proposed a simple mitigation.
 %
-We discussed possible actions that IETF may take to extract and better define
-security properties to make better use of verification techniques.
+We discussed how the IETF may extract and better define security properties to enable easier verification.
 %
 
 %-------------------------------------------------------------------------- ack
