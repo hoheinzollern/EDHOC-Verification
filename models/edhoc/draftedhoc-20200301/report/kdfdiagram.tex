@@ -1,4 +1,5 @@
 % !TEX root =  edhocProtocol.tex
+
 % Start the picture
 \begin{tikzpicture}[%
     >=latex,              % Nice arrows; your taste may be different
@@ -14,13 +15,16 @@
 terminput/.style={rounded corners, text width=6em},
 term/.style={rounded corners},
   base/.style={draw, thick, on chain, on grid, align=center, minimum height=6ex},
-  dhk/.style={base, draw=Goldenrod1, fill=Goldenrod1!25, rectangle},
-  prk/.style={base, draw=Red3, fill=Red3!25, rectangle},
+  dhkbox/.style={draw=Goldenrod1, fill=Goldenrod1!25, rectangle},
+  dhk/.style={base, dhkbox},
+  prkbox/.style={draw=Red3, fill=Red3!25, rectangle},
+  prk/.style={base, prkbox},
   %hkdfext/.style={base, draw=Green3, fill=Green3!25, isosceles triangle, isosceles triangle apex angle=60, anchor=base, shape border rotate=-90, text width=6em},
   hkdfext/.style={base, draw=Green3, fill=Green3!25, rectangle},
   %hkdfexp/.style={base, draw=orange, fill=orange!50, isosceles triangle, isosceles triangle apex angle=60, anchor=base, shape border rotate=-90, text width=6em},
   hkdfexp/.style={base, draw=orange, fill=orange!50, rectangle, text width=8em},
-  keyb/.style={base, draw=Blue3, fill=Blue3!25, rectangle, text width=4em},
+  keybbox/.style={draw=Blue3, fill=Blue3!25, rectangle},
+  keyb/.style={base, keybbox, text width=4em},
   % -------------------------------------------------
   norm/.style={->, draw, Blue3},
   cond/.style={base, draw=black, fill=white, diamond},
@@ -29,7 +33,8 @@ term/.style={rounded corners},
 % -------------------------------------------------
 % Start by placing the nodes
 \node [dhk] (p0) {$\mGxy$};
-\node [hkdfext, join] (h1) {\mHkdfExtract};
+%\node [hkdfext, join] (h1) {\mHkdfExtract};
+\node [hkdfext, right=2.2cm of p0, join] (h1) {\mHkdfExtract};
 \node [prk, join] (p2) {\mPRKtwo};
 \node [cond, join] (c1) {$m \in \{1, 3\}$};
 
@@ -94,8 +99,16 @@ term/.style={rounded corners},
 \draw [->, dotted, shorten >=1mm] (u6) -- (h6);
 \draw [->, dotted, shorten >=1mm] (u6) -- (h8);
 
-\node [term, below= 1cm of h9] (u7) {\mTHfour};
-\draw [->, dotted, shorten >=1mm] (u7) -- (h9);
+%\node [term, below= 1cm of h9] (u7) {\mTHfour};
+\node [term, below=0.5cm of p4] (u7) {\mTHfour};
+%\draw [->, dotted, shorten >=1mm] (u7) -- (h9.south);
+\draw [->, dotted, shorten >=1mm] (u7.west) -- ([yshift=-0.5em] h9.east);
+
+\matrix [draw, ultra thick, double, below=3.5em of t1.east] {
+  \node [dhkbox, semithick, label=right:DH key] {}; \\
+  \node [prkbox, semithick, label=right:Intermediate key material] {}; \\
+  \node [keybbox, semithick, label=right:Key for \mAead{} or \mXor] {}; \\
+};
 
 %
 % ------------------------------------------------- 
