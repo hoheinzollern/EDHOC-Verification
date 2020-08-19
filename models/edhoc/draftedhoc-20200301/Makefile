@@ -121,13 +121,22 @@ pfs: genModels
 		 )\
 	 )
 
-kci: genModels
-	#$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},)
-	$(foreach meth,${PSKPSK},\
-		$(subst METH,$(meth),\
+kcisigsig: genModels
+	$(foreach meth,${SIGSIG},\
+		$(subst METH,${meth},\
 			$(subst LEMMAPREFIX,authKCIInj,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
+
+kcistat: genModels
+	#$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},)
+	$(foreach meth,${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authKCIImp,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+kci: kcisig kcistat
 
 all: sense alotofsense auth authimplicit pfs
 
