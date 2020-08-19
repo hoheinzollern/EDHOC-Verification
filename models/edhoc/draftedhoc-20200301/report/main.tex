@@ -115,7 +115,7 @@ transport in such situations~\cite{rfc7252}.
 Therefore, IETF standardized the Object Security for
 Constrained RESTful Environments (\mOscore{}) protocol to secure
 communications between constrained devices, as a complement for when
-\mDandTls{} is too heavy weight~\cite{rfc8613}.
+\mDandTls{} is too heavyweight~\cite{rfc8613}.
 %
 
 The \mOscore{} protocol requires a pre-established security context.
@@ -133,7 +133,7 @@ While use cases for \mEdhoc{} are not firmly set, the overall goal of \mEdhoc{} 
 %
 Discussions on the LAKE working group mailing list explored whether \mCtls~\cite{ietf-tls-ctls-00}, a compressed version of \mTls, would suffice for the same situations that the combination of \mOscore{} and \mEdhoc{} aim for.
 %
-The resulting consensus was to develop \mEdhoc{} in parallel with the development of \mCtls by the \mTls working groups.
+The resulting consensus was to develop \mEdhoc{} in parallel with the development of \mCtls{} by the \mTls{} working groups.
 %
 
 The \mEdhoc{} protocol has evolved significantly over time to cater for smaller messages and more use cases.
@@ -536,12 +536,12 @@ We formulated and verified several important security properties in this model.
 %
 %We also identified security properties that do not hold for all methods.
 %
-Most importantly, injective agreement on \mGiy{} does not hold for
-initiators when they use the \mStat{} method, so this property cannot be claimed for the entire key material in those situations.
+Most importantly, we found that injective agreement on \mGiy{} does not hold for
+initiators when they use the \mStat{} method.
 %
 Further, we identified a situation where initiators may establish an \mOscore{} security context with a different party than the application using \mEdhoc{} intended, and proposed a simple mitigation.
 %
-We discussed possible actions that IETF may take to extract and better define security properties to make better use of verification techniques.
+We discussed how the IETF may extract and better define security properties to enable easier verification.
 %
 
 %-------------------------------------------------------------------------- ack
