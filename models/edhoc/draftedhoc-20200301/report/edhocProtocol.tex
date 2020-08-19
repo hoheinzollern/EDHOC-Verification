@@ -237,9 +237,8 @@ The result of an \mEdhoc{} run is not a key per se, but rather key material from
 \scalebox{.75}{
 \input{kdfdiagram.tex}
 }
-\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be
-interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
-The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
+%\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat. The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
+\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on the method $m$, with 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.}
 \label{fig:kdfdiagram}
 \end{figure}
 
