@@ -87,7 +87,6 @@ heterogeneous security properties, and discuss consequences of this.
 \label{sec:introduction}
 \fillhack
 %-------------------------------------------------------------------------- sub
-
 \subsection{Background and motivation}
 \label{sec:motivation}
 \fillhack
@@ -312,91 +311,70 @@ claims may benefit from note of caution.
 wrong. We should constructively propose solutions to problems.}
 
 %-------------------------------------------------------------------------- sub
-\subsection{Lack of clear use-cases}
+\subsection{Lack of clear use and security model}
 \label{sec:unclearProtocolUse}
 \fillhack
-Formal verification aims to verify whether well-specified security goals hold
-for particular security models, defined in terms of attacker capabilities,
-assumptions on storage and processing by parties etc.
+\knote{I added comments in the text prefixed by the keywoard "meta" to show
+    The intended flow in case future revisions copy/paste single sentences
+    between sections. Please check that the flow still makes sense if doing
+    that, or change the flow to a new one.
+}
+% meta: FM clashes with ind. std. Also for EDHOC
+Formal verification methodologies often clash with industrial standard
+development practices; this is true also in our case.
 %
-Without a clear picture of the intended uses of the protocol, it cannot be
-determined which properties are the most important ones for constrained IoT
-applications.
+% meta: This is the most important way they clash
+The most important reason for the clash is that formal verification aims to
+verify whether well-specified security goals are met within a given security
+model, whereas industrial standards are developed with a clear abstract goal,
+but one that lacks specificity, and do not have a specified security model.
+%
+% meta: EDHOC tries to remedy this to some degree by listing specific goals from
+% academic papers
+Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
+several specific security goals, e.g., KCI and identity protection.
+% meta: ...but that is insufficient
+However, without knowing how the protocol is to be used
+it is not clear whether these are important in the form they are listed.
 %
 
-Much like \mDandTls{}, \mEdhoc{} is intended for a variety of use cases,
-many of which are not even known today. However, one can still collect a
-variety of \emph{typical} use cases and user stories.
+% meta: This is the specific way in which EDHOC clashes and the consequences of that
+The abstract goal of \mEdhoc{} is simple: establish an \mOscore{} security
+context using few roundtrips and small messages.
 %
-Having a better understanding of the security properties required by these use
-cases would help define a clearer security model, and thus guide the design of
-\mEdhoc{}.
+% meta: The specifics of the abstract goal follows from restrictions
+Starting from there, the design of \mEdhoc{} is mainly driven by what
+can be achieved given certain technical restrictions.
 %
-For example, one might be able to reduce the number of methods to only
-a few needed ones.
+% meta: That design philosophy does not take the use of the protocol into
+% account -> % risk leading to insecure results
+Focusing too much on what can be achieved within given restrictions, and paying
+too little attention to the use cases and attacker models with which the
+protocol is to be used, risks resulting in making sub-optimal trade-offs and
+design decisions.
 %
 
+% EDHOC aims to be generic, but some typical use cases can still be defined
+\mEdhoc{} is intended for a variety of use cases, many of which are not
+known today.
+%
+This intention does not prevent collecting a variety of \emph{typical}
+use cases and user stories to identify more specific security goals.
+%
+
+% To decided which properties we should verify we identified some use cases.
 While constructing our model, we came up with simple user stories to identify
 security properties of interest.
 %
-Several of these revealed undefined aspects of \mEdhoc{} that were then
-included in the \mSpec.
+% These use cases revealed undefined aspects in the spec
+Several of these revealed undefined aspects of \mEdhoc{}.
 %
-We present below a couple of examples.
+% The aspects were then covered by EDHOC spec
+We informed \mEdhoc{} authors and they included these aspects the \mSpec{}.
 %
-
-\spacehack
-\subsubsection{Credentials stored in a Trusted Execution Environment (TEE)}
-It is conceivable that IoT devices deployed in a hostile environments can be
-hardened by equipping them with a TEE, but \mEdhoc{} is not intentionally
-designed to take advantage of this.
-%
-The reason is, as already mentioned in Section~\ref{sec:unclearProtocolUse},
-that \mEdhoc{}
-To see this, consider typical theoretical security frameworks, e.g.,
-CK~\cite{DBLP:conf/crypto/CanettiK02}, which model TEEs in a device by allowing
-an attacker access to ephemeral keys or session state while long-term keys
-stored in the TEE remain secret (for example as we modeled it in
-Section~\ref{sec:formalization}.
-%
-Even with these strengthened attacker capabilities, some or all of the intended
-security properties shall still hold.
-%
-\mEdhoc{} is however not constructed with theoretical analysis framework in
-mind.
-ed indications from the \mSpec{} authors (personal correspondence) that it was
-not necessary to consider revealing of the ephemeral secret keys, i.e., not
-necessary to consider compromised TEEs. 
+We now present a couple of examples.
 %
 
-The rationale is that \mSigma{} cannot protect against such an attack
-(presumably based on the fact that the \mSigSig{} method is closely based on
-\mSigmaI{} and that it would be preferable to obtain some kind of homogeneity
-among the \mEdhoc{} methods when it comes to what security properties
-they provide).
-\vnote{Speculation?}
-\knote{No, it is based on the personal correspondance referred to in the
-previous sentence.}
-%
-That argument is only true, however, if one restricts attention to session key
-confidentiality of an ongoing session.
-%
-TEEs do provide value by, for example, allowing weak PCS guarantees.
-%
-Furthermore, in the \mStat{}-based methods, a static long-term key and an
-ephemeral one are mixed to obtain the session key material.
-%
-This design is intentional, especially in the \mOptls{} case, where the
-protocol is designed to be provably secure in the Canetti-Krawczyk model.
-\vnote{So?}
-\knote{You have now split the text over separate sections so the explanation is
-    even less clear than originally. The point is that there is a difference
-    between academic protocol design, which has clear definitions and goals to
-    verify, and industrial protocol design which more follows the
-    penetrate-and-patch approach (that is an exaggeration, but just to make
-    the point).
-}
-%
 \spacehack
 \subsubsection{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
@@ -407,7 +385,7 @@ Via this simple thought experiment, we realized that the \mSpec{} did not
 consider non-repudiation.
 %
 In response, the authors of the \mSpec{} added a paragraph about which methods
-provided which types of (non)-repudiation.
+provided which types of (non)-repudiation~\cite{personalCommunication}.
 
 \spacehack
 \subsubsection{Unintended peer authentication}
@@ -421,23 +399,70 @@ The following thought experiment shows why such a policy is insufficient.
 %
 
 Assume that someone has configured all devices in their home to be in the
-allowed set of devices, but that one of the devices ($A$) has since been
-compromised.
+allowed set of devices, but that one of the devices ($A$) is compromised.
 %
-If another device $B$, unaware of the compromise, initiates a connection to a
-third device $C$, the compromised device $A$ may interfere.
+If another device $B$, initiates a connection to a third device $C$, the
+compromised device $A$ may interfere by responding in $C$'s place, blocking
+the legitimate response from $C$.
 %
-$A$ may respond in $C$'s place, blocking the legitimate response from $C$.
-%
-Since $B$ does not verify $C$'s identity in the second message, and device $A$
-is part of the allowed set, $B$ will complete and accept the \mEdhoc{} run
-with device $A$ instead of the intended $C$.
+Since $B$ does not verify that the received identity in the second message
+matches the intended identity $C$, and device $A$ is part of the allowed set,
+$B$ will complete and accept the \mEdhoc{} run with device $A$ instead of the
+intended $C$.
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity provided by the application.
+%
+We have communicated this situation to the \mEdhoc{} authors and they consider
+how to resolve the issue.
+%
 
-\vnote{Has this been pointed out to the authors of the \mSpec?}
-\knote{Yes, everything has been pointed out to the authors of \mSpec{}.}
+%------------------------------------------------------------------------- sub
+\subsection{Unclear security model}
+It is conceivable that IoT devices deployed in a hostile environments can be
+hardened by equipping them with a TEE, but \mEdhoc{} is not intentionally
+designed to take advantage of this.
+%
+Even though \mEdhoc{} incorporates cryptographic cores from different academic
+security protocols, its design does not take into account the attacker models
+for which these protocols were designed.
+%
+For example, \mOptls{} is designed to be secure in the CK
+model~\cite{DBLP:conf/crypto/CanettiK02}.
+%
+The CK security model explicitly separates the secure storage of long-term
+credentials from storage of session state and ephemeral keys to model
+use of TEEs.
+%
+
+The \mEdhoc{} authors indicated to us that it was
+not necessary to consider compromised ephemeral session keys separately from
+from compromised long-term keys~\cite{personalCommunication}. 
+%
+The rationale is that \mSigma{} cannot protect against compromised ephemeral
+keys.
+%
+That rationale is presumably based on that the \mSigSig{} method is
+closely modeled on \mSigmaI{} and that it would be preferable to obtain a
+homogeneous security level among the \mEdhoc{}
+methods\cite{personalCommunication}.
+\vnote{Speculation?}
+\knote{To some degree. I cannot be certain about what the rationale was based
+    on. I can only write what they have replied in mails. I could have
+misinterpreted that. The rationale as such is not speculation though.}
+%
+That rationale is only true, however, if one restricts attention to session key
+confidentiality of an ongoing session.
+%
+TEEs provide value in other ways, for example, by allowing contractions with 
+weak PCS guarantees.
+%
+It would be wasteful to not consider TEEs for long-term key storage as part of
+the security, since it would otherwise make use of many good properties of the
+re-used cryptographic cores.
+%
+For example, coming back to \mOptls{}, which was intentionally
+designed to be provably secure in the CK model.
 
 %-------------------------------------------------------------------------- sub
 \spacehack
@@ -530,6 +555,10 @@ However, this also depends on the intended use of \mEdhoc{}.
 \subsection{Cipher suite negotiation}
 \label{sec:ciphersuiteNegotiation}
 \fillhack
+\knote{If we are tight on space, we can consider removing this section since we
+    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
+    with this though.
+}
 %
 Cipher suite negotiation in \mEdhoc{} spans two or more executions of the
 protocol.
@@ -598,5 +627,5 @@ clarifications regarding the specification.
 \spacehack
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{abbrv}
-\bibliography{refv}
+\bibliography{ref}
 \end{document}

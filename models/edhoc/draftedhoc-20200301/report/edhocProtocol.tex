@@ -176,9 +176,19 @@ does not have or performs differently.
 \subsection{Methods of \mEdhoc{}}
 \label{sec:methods}
 \fillhack
-We are now ready to dive into the various methods of \mEdhoc. Although \mCose{} and \mCbor{} are important building blocks of \mEdhoc{}, and we use their terminology in our \mTamarin{} model to better reflect the \mSpec{}, our model does not cover the details of encoding and \mCose{} interfaces.
+We are now ready to dive into the various methods of \mEdhoc.
 %
-For instance, it suffices for us to consider authenticated encryption with associated data (\mAead{})~\cite{aead} as a function call. Thus, we omit details about \mCose{} and \mCbor{}, and instead refer the reader to~\cite{}. \vnote{We need references here for both COSE and CBOR!}
+Although \mCose{} and \mCbor{} are important building blocks of \mEdhoc{}, and
+we use their terminology in our \mTamarin{} model to better reflect the
+\mSpec{}, our model does not cover the details of encoding and \mCose{}
+interfaces.
+%
+For instance, it suffices for us to consider authenticated encryption with
+associated data (\mAead{})~\cite{aead} as a function call. Thus, we omit details
+about \mCose{} and \mCbor{}, and instead refer the reader
+to~\cite{rfc8152,rfc7049}. \vnote{We need references here for both COSE and CBOR!}
+\knote{I added CBOR, which was missing to the ref.bib file. Note: not to the
+refv.bib file, which I don't know exactly what it is.}
 %
 
 All methods make use of a common key hierarchy, which we describe first. We then describe the methods and how they utilize the key hierarchy.
@@ -201,7 +211,9 @@ The key hierarchy is rooted in the ephemeral DH key \mGxy{}, the combination of 
 %
 From this, keys are successively constructed with each transmitted message, weaving in information parties learn as the protocol progresses, culminating in the established session key material.
 %
-From the session key material, a key exporter based on \mHkdf{} can be used to extract the encryption and integrity keys required for \mOscore{}.
+From the session key material, a key exporter, named \mEdhoc{}-Exporter, based
+on \mHkdf{} can be used to extract the encryption and integrity keys required
+for \mOscore{}.
 %
 Figure~\ref{fig:kdfdiagram} shows an abstract description of the key hierarchy.
 %
@@ -221,6 +233,8 @@ For the three \mStat-based methods, however, they differ. This is because the in
 
 The result of an \mEdhoc{} run is not a key per se, but rather key material from which encryption keys etc can be derived.
 \vnote{Diagram from G\"oran had EDHOC-Exporter() in it. We should mention what that does?}
+\knote{It was described above, bot explicitly named "EDHOC-Exporter". I fixed
+that now}.
 
 %
 
