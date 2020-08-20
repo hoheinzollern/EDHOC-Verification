@@ -387,7 +387,7 @@ rule revealLTK_SIG:
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev($A), LTKRev($B)]-> [Out(~ltk)]
 
 /* PCS interface */
 ifelse(ifelse(<!SIG!>, m4METHODI, 1, ifelse(<!SIG!>, m4METHODR, 1, 0)), 1,
@@ -460,7 +460,6 @@ lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
          (ExpCommitI(tidI, u, v, expSk)@i & 
-	      //(All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(v)@k ==> k < j) & (All #k. BrokenTEE(u)@k ==> k < j)))
 	      (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
           (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)))
           ==>
@@ -469,8 +468,6 @@ lemma authInjAgreeGuaranteeForI:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
-//         | (Ex #j. LTKRev(u)@j & #j < #i)
          | (Ex #j. LTKRev(v)@j & #j < #i))
     "
 
@@ -485,7 +482,6 @@ lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
          (CommitR(tidR, u, v, sk)@i &
-//	      (All #j m2. R2(tidR, u, v, m2) @ j ==> (All #k. BrokenTEE(v)@k ==> k < j) & (All #k. BrokenTEE(u)@k ==> k < j)))
 	      (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
           (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) )
          ==>
@@ -494,9 +490,7 @@ lemma authInjAgreeGuaranteeForR:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. LTKRev(<u, v>)@j & #j < #i)
          | (Ex #j. LTKRev(u)@j & #j < #i)
-         //| (Ex #j. LTKRev(v)@j & #j < #i)
 	     )
     "
 
@@ -539,9 +533,8 @@ lemma authGIYImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. LTKRev(u)@k)
-         | (Ex #k. LTKRev(v)@k)
-         | (Ex #k. LTKRev(<u, v>)@k)
+         | (Ex #k. LTKRev(u)@k) | (Ex #k. BrokenTEE(u)@k)
+         | (Ex #k. LTKRev(v)@k) | (Ex #k. BrokenTEE(v)@k)
          )
     "
 
@@ -567,11 +560,11 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(<u, v>)@l & #l < #j) | (Ex #l. SKRev(sk)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
