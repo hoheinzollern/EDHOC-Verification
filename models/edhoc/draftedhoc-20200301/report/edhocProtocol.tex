@@ -131,22 +131,22 @@ The closest \mNoise{} pattern to the \mStatStat{} method appears to be the
 XX pattern.
 %
 
-\knote{I don't believe the blue text is true. From the Noise spec it seems to
-    me as if the message elements of XX and \mStatStat are exactly the same.
-    XX does not describe any encrypted payload. "ee" means "create a DH-key from
-    the two DH-half-keys" in \mNoise{}-language.
-}
-{\color{blue}
-It can be seen that the first two messages of \mStatStat{}
-correspond perfectly to the first two messages of the XX pattern of
-the \mNoise{} framework.
-%
-However, in the third message, the XX pattern requires
-the initiator to send their static key, followed by an encrypted payload using a
-key derived from a combination of the static key and an ephemeral key.
-%
-In \mEdhoc{}, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator.
-}
+%\knote{I don't believe the blue text is true. From the Noise spec it seems to
+%    me as if the message elements of XX and \mStatStat are exactly the same.
+%    XX does not describe any encrypted payload. "ee" means "create a DH-key from
+%    the two DH-half-keys" in \mNoise{}-language.
+%}
+%{\color{blue}
+%It can be seen that the first two messages of \mStatStat{}
+%correspond perfectly to the first two messages of the XX pattern of
+%the \mNoise{} framework.
+%%
+%However, in the third message, the XX pattern requires
+%the initiator to send their static key, followed by an encrypted payload using a
+%key derived from a combination of the static key and an ephemeral key.
+%%
+%In \mEdhoc{}, the static key and the payload are both encrypted in the same key, one depending on the key used for the second message, and on the static key of the initiator.
+%}
 
 \mEdhoc{} does not use all functions of \mNoise{} exactly as prescribed though.
 %
@@ -154,16 +154,13 @@ For example, \mNoise{} prescribes that the mixHash function, which corresponds
 to the transcript hash of \mEdhoc{}, is called on pre-message public keys
 during the initialization.
 %
-This would correspond to that \mEdhoc{} computes a first intermediate transcript
-hash doing the same, which is not the case.
+This would correspond to \mEdhoc{} computing a first intermediate transcript hash for this, which is not the case.
 %
-Another example is that the optional application layer data sent along with
-the second message of \mNoise{}
+Another example is that the optional application layer data sent along with the second message of \mNoise.
 
 Because of these, and possibly other, discrepancies one cannot automatically
 claim claim that \mEdhoc{} enjoys
-the same properties as XX -- proofs may depend on functionality that \mEdhoc{}
-does not have or performs differently.
+the same properties as XX. %-- proofs may depend on functionality that \mEdhoc{} does not have or performs differently.
 %
 
 %------------------------------------------------------------------------- sub
@@ -350,7 +347,7 @@ Knowing the secret ephemeral DH half-key corresponding to \mGx{}, and the public
 %
 The initiator assumes that only the responder knows $\mGx{}^\mLtkr{}$, and therefore considers the responder authenticated if the \mAead{} transform completes successfully.
 %
-When the initiator is authenticating to the responder, the roles are reversed, and \mGy{} takes the place of \mGx{}, \mLtki{} the place of \mLtkr{}, and \mAuthi{} the place of \mAuthr{}. \mAuthi{} is constructed from \mMacthree{}.
+When the initiator is authenticating to the responder, the roles are reversed, and \mGy{} takes the place of \mGx{}, \mLtki{} that of \mLtkr{}, and \mAuthi{} that of \mAuthr{}. \mAuthi{} is constructed from \mMacthree{}.
 %
 
 Independently of whether one party uses \mStat{}-based authentication, the other party may use \mSig{}-based authentication. In that case, the authentication data for that party is constructed using a regular signature.
