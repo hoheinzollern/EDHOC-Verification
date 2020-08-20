@@ -1,37 +1,3 @@
-% TLS 1.3 draft using static DH keys for auth
-@techreport{ietf-tls-semistatic-dh-01,
-	number =	{draft-ietf-tls-semistatic-dh-01},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress},
-	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-tls-semistatic-dh-01},
-        author =	{Eric Rescorla and Nick Sullivan and Christopher A. Wood},
-	title =		{{Semi-Static Diffie-Hellman Key Establishment for TLS 1.3}},
-	pagetotal =	7,
-	year =		2020,
-	month =		mar,
-	day =		7,
-	abstract =	{TLS 1.3 {[}RFC8446{]} specifies a signed Diffie-Hellman exchange modelled after SIGMA {[}SIGMA{]}. This design is suitable for endpoints whose certified credential is a signing key, which is the common situation for current TLS servers. This document describes a mode of TLS 1.3 in which one or both endpoints have a certified DH key which is used to authenticate the exchange. Note to Readers Source for this draft and an issue tracker can be found at https://github.com/ekr/draft-rescorla-tls13-semistatic-dh (https://github.com/ekr/draft-rescorla-tls13-semistatic-dh).},
-}
-
-% TLS 1.3 draft using static DH keys for auth -- original non-WG adpoted version
-@techreport{rescorla-tls13-semistatic-dh-00,
-	number =	{draft-rescorla-tls13-semistatic-dh-00},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress},
-	url =		{https://datatracker.ietf.org/doc/html/draft-rescorla-tls13-semistatic-dh-00},
-        author =	{Eric Rescorla and Nick Sullivan},
-	title =		{{Semi-Static Diffie-Hellman Key Establishment for TLS 1.3}},
-	pagetotal =	8,
-	year =		2018,
-	month =		mar,
-	day =		5,
-	abstract =	{TLS 1.3 {[}I-D.ietf-tls-tls13{]} specifies a signed Diffie-Hellman exchange modelled after SIGMA {[}SIGMA{]}. This design is suitable for endpoints whose certified credential is a signing key, which is the common situation for current TLS servers. This document describes a mode of TLS 1.3 in which one or both endpoints have a certified DH key which is used to authenticate the exchange.},
-}
-
 % eprint report defining OPTLS
 @misc{cryptoeprint:2015:978,
     author = {Hugo Krawczyk and Hoeteck Wee},
@@ -49,8 +15,6 @@
   booktitle = {Proc. of {IEEE} EuroS{\&}P 2016},
   pages     = {81--96},
   year      = {2016},
-  url       = {https://doi.org/10.1109/EuroSP.2016.18},
-  doi       = {10.1109/EuroSP.2016.18},
   timestamp = {Wed, 16 Oct 2019 14:14:55 +0200},
   biburl    = {https://dblp.org/rec/conf/eurosp/KrawczykW16.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -59,7 +23,7 @@
 @inproceedings{sigma,
   title={{SIGMA}: The ‘{SIG}n-and-{MA}c’approach to authenticated {D}iffie-{H}ellman and its use in the {IKE} protocols},
   author={Krawczyk, Hugo},
-  booktitle={Annual International Cryptology Conference},
+  booktitle={Proc. of {CRYPTO}},
   pages={400--425},
   year={2003},
 }
@@ -115,8 +79,6 @@
   booktitle = {Proc. of {SSR} 2018},
   pages     = {21--36},
   year      = {2018},
-  url       = {https://doi.org/10.1007/978-3-030-04762-7\_2},
-  doi       = {10.1007/978-3-030-04762-7\_2},
   timestamp = {Tue, 14 May 2019 10:00:40 +0200},
   biburl    = {https://dblp.org/rec/conf/secsr/BruniJPS18.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -127,7 +89,6 @@
   number =    2104,
   howpublished =  {RFC 2104},
   publisher = {RFC Editor},
-  doi =       {10.17487/RFC2104},
   url = {https://rfc-editor.org/rfc/rfc2104.txt},
   author =    {Hugo Krawczyk and Mihir Bellare and Ran Canetti},
   title =     {{HMAC: Keyed-hashing for message authentication}},
@@ -141,7 +102,6 @@
   number =    5116,
   howpublished =  {RFC 5116},
   publisher = {RFC Editor},
-  doi =       {10.17487/RFC5116},
   url = {https://rfc-editor.org/rfc/rfc5116.txt},
   author =    {David McGrew},
   title =     {{An Interface and Algorithms for Authenticated Encryption}},
@@ -150,27 +110,26 @@
   month =     jan
 }
 
-@misc{rfc5869,
-  series =    {Request for Comments},
-  number =    5869,
-  howpublished =  {RFC 5869},
-  publisher = {RFC Editor},
-  doi =       {10.17487/RFC5869},
-  url = {https://rfc-editor.org/rfc/rfc5869.txt},
+@techreport{rfc5869,
   author =    {Hugo Krawczyk and Pasi Eronen},
   title =     {{HMAC-based extract-and-expand key derivation function (HKDF)}},
-  pagetotal = 14,
+	series =    {Request for Comments},
+  howpublished =  {RFC 5869},
+	type = {RFC},	
+	number =    5869,
+  publisher = {RFC Editor},
+  url = {https://rfc-editor.org/rfc/rfc5869.txt},
   year =      2010,
-  month =     may
+	month =     may
 }
 
 
-@misc{rfc8152,
+@techreport{rfc8152,
   series =    {Request for Comments},
   number =    8152,
+	type = {RFC},
   howpublished =  {RFC 8152},
   publisher = {RFC Editor},
-  doi =       {10.17487/RFC8152},
   url = {https://rfc-editor.org/rfc/rfc8152.txt},
   author =    {J. Schaad},
   title =     {{CBOR Object Signing and Encryption (COSE)}},
@@ -184,7 +143,6 @@
   number =    8576,
   howpublished =  {RFC 8576},
   publisher = {RFC Editor},
-  doi =       {10.17487/RFC8576},
   url = {https://rfc-editor.org/rfc/rfc8576.txt},
   author =    {Oscar Garcia-Morchon and Sandeep Kumar and Mohit Sethi},
   title =     {{Internet of Things (IoT) Security: State of the Art and
@@ -199,7 +157,6 @@
   number =    7228,
   howpublished =  {RFC 7228},
   publisher = {RFC Editor},
-  doi =       {10.17487/RFC7228},
   url = {https://rfc-editor.org/rfc/rfc7228.txt},
   author =    {Carsten Bormann and Mehmet Ersue and Ari Keränen},
   title =     {{Terminology for Constrained-Node Networks}},
@@ -218,19 +175,17 @@
   booktitle = {Proc. of {ACM} {CCS}},
   pages     = {1773--1788},
   year      = {2017},
-  url       = {https://doi.org/10.1145/3133956.3134063},
-  doi       = {10.1145/3133956.3134063},
   timestamp = {Tue, 06 Nov 2018 11:07:28 +0100},
   biburl    = {https://dblp.org/rec/conf/ccs/CremersHHSM17.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@misc{rfc8613,
+@techreport{rfc8613,
 	series =	{Request for Comments},
 	number =	8613,
+	type = {RFC},
 	howpublished =	{RFC 8613},
 	publisher =	{RFC Editor},
-	doi =		{10.17487/RFC8613},
 	url =		{https://rfc-editor.org/rfc/rfc8613.txt},
         author =	{Göran Selander and John Mattsson and Francesca Palombini and Ludwig Seitz},
 	title =		{{Object Security for Constrained RESTful Environments (OSCORE)}},
@@ -242,28 +197,21 @@
 
 @techreport{selander-lake-edhoc-01,
 	number =	{draft-selander-lake-edhoc-01},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress - Accessed 2020-03-01},
-	url =		{https://datatracker.ietf.org/doc/html/draft-selander-lake-edhoc-01},
+	type =		{IETF Internet-Draft},
+	note =		{Accessed 2020-03-01},
+	url =		{https://datatracker.ietf.org/doc/draft-ietf-lake-edhoc/},
         author =	{Göran Selander and John Mattsson and Francesca Palombini},
 	title =		{{Ephemeral Diffie-Hellman Over COSE (EDHOC)}},
 	pagetotal =	60,
 	year =		2020,
-	month =		mar,
-	day =		9,
 	abstract =	{This document specifies Ephemeral Diffie-Hellman Over COSE (EDHOC), a very compact, and lightweight authenticated Diffie-Hellman key exchange with ephemeral keys. EDHOC provides mutual authentication, perfect forward secrecy, and identity protection. EDHOC is intended for usage in constrained scenarios and a main use case is to establish an OSCORE security context. By reusing COSE for cryptography, CBOR for encoding, and CoAP for transport, the additional code footprint can be kept very low.},
 }
 
 @techreport{selander-ace-cose-ecdhe-08,
 	number =	{draft-selander-ace-cose-ecdhe-08},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress},
+	type =		{IETF Internet-Draft},
 	url =		{https://datatracker.ietf.org/doc/html/draft-selander-ace-cose-ecdhe-08},
-        author =	{Göran Selander and John Mattsson and Francesca Palombini},
+  author =	{Göran Selander and John Mattsson and Francesca Palombini},
 	title =		{{Ephemeral Diffie-Hellman Over COSE (EDHOC)}},
 	pagetotal =	30,
 	year =		2018,
@@ -274,10 +222,7 @@
 
 @techreport{ietf-tls-tls13-11,
 	number =	{draft-ietf-tls-tls13-11},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress},
+	type =		{IETF Internet-Draft},
 	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-tls-tls13-11},
         author =	{Eric Rescorla},
 	title =		{{The Transport Layer Security (TLS) Protocol Version 1.3}},
@@ -295,8 +240,6 @@
   booktitle = {Proc. of {CRYPTO}},
   pages     = {143--161},
   year      = {2002},
-  url       = {https://doi.org/10.1007/3-540-45708-9\_10},
-  doi       = {10.1007/3-540-45708-9\_10},
   timestamp = {Fri, 26 May 2017 14:09:15 +0200},
   biburl    = {https://dblp.org/rec/bib/conf/crypto/CanettiK02},
   bibsource = {dblp computer science bibliography, https://dblp.org},
@@ -313,8 +256,6 @@
   booktitle = {Proc. of {CAV}},
   pages     = {696--701},
   year      = {2013},
-  url       = {https://doi.org/10.1007/978-3-642-39799-8\_48},
-  doi       = {10.1007/978-3-642-39799-8\_48},
   timestamp = {Thu, 25 May 2017 00:39:06 +0200},
   biburl    = {https://dblp.org/rec/bib/conf/cav/MeierSCB13},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -327,8 +268,6 @@
   booktitle = {Proc. of {IEEE} {CSFW-14}},
   pages     = {82--96},
   year      = {2001},
-  url       = {https://doi.org/10.1109/CSFW.2001.930138},
-  doi       = {10.1109/CSFW.2001.930138},
   timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
   biburl    = {https://dblp.org/rec/conf/csfw/Blanchet01.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -336,10 +275,7 @@
 
 @techreport{ietf-tls-ctls-00,
   number =    {draft-ietf-tls-ctls-00},
-  type =      {Internet-Draft},
-  institution =   {Internet Engineering Task Force},
-  publisher = {Internet Engineering Task Force},
-  note =      {Work in Progress},
+  type =      {IETF Internet-Draft},
   url = {https://datatracker.ietf.org/doc/html/draft-ietf-tls-ctls-00},
   author =    {Eric Rescorla and Richard Barnes and Hannes Tschofenig},
   title =     {{Compact TLS 1.3}},
@@ -368,32 +304,26 @@
   booktitle = {Proc. of {ACM} {CCS}},
   pages     = {1383--1396},
   year      = {2018},
-  url       = {https://doi.org/10.1145/3243734.3243846},
-  doi       = {10.1145/3243734.3243846},
   timestamp = {Wed, 25 Sep 2019 18:06:20 +0200},
   biburl    = {https://dblp.org/rec/conf/ccs/BasinDHRSS18.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 @techreport{ietf-lake-reqs-04,
 	number =	{draft-ietf-lake-reqs-04},
-	type =		{Internet-Draft},
-	institution =	{Internet Engineering Task Force},
-	publisher =	{Internet Engineering Task Force},
-	note =		{Work in Progress},
+	type =		{IETF Internet-Draft},
 	url =		{https://datatracker.ietf.org/doc/html/draft-ietf-lake-reqs-04},
         author =	{Mališa Vučinić and Göran Selander and John Mattsson and Dan Garcia-Carillo},
 	title =		{{Requirements for a Lightweight AKE for OSCORE}},
 	pagetotal =	25,
 	year =		2020,
-	month =		jun,
-	day =		8,
+	month =	jun,
 	abstract =	{This document compiles the requirements for a lightweight authenticated key exchange protocol for OSCORE. This draft has completed a working group last call (WGLC) in the LAKE working group. Post-WGLC, the requirements are considered sufficiently stable for the working group to proceed with its work. It is not currently planned to publish this draft as an RFC.},
 }
 
 @misc{perrin2016noise,
   title={The Noise protocol framework},
   author={Perrin, Trevor},
-  howpublished={\url{http://noiseprotocol.org/noise.pdf}},
+  howpublished={\url{http://noiseprotocol.org}},
   year={2016}
 }
 
@@ -411,8 +341,6 @@
   booktitle = {Proc. of {IEEE} {CSFW-10}},
   pages     = {31--44},
   year      = {1997},
-  url       = {https://doi.org/10.1109/CSFW.1997.596782},
-  doi       = {10.1109/CSFW.1997.596782},
   timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
   biburl    = {https://dblp.org/rec/conf/csfw/Lowe97a.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -426,8 +354,6 @@
   booktitle = {Proc. of {IEEE} {CSF}},
   pages     = {78--94},
   year      = {2012},
-  url       = {https://doi.org/10.1109/CSF.2012.25},
-  doi       = {10.1109/CSF.2012.25},
   timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
   biburl    = {https://dblp.org/rec/conf/csfw/SchmidtMCB12.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -442,8 +368,6 @@
   booktitle = {Proc. of {IEEE} EuroS{\&}P},
   pages     = {356--370},
   year      = {2019},
-  url       = {https://doi.org/10.1109/EuroSP.2019.00034},
-  doi       = {10.1109/EuroSP.2019.00034},
   timestamp = {Wed, 16 Oct 2019 14:14:55 +0200},
   biburl    = {https://dblp.org/rec/conf/eurosp/KobeissiNB19.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
@@ -459,31 +383,35 @@
   booktitle = {Proc. of {IEEE} {CSF}},
   pages     = {359--373},
   year      = {2018},
-  url       = {https://doi.org/10.1109/CSF.2018.00033},
-  doi       = {10.1109/CSF.2018.00033},
   timestamp = {Wed, 16 Oct 2019 14:14:49 +0200},
   biburl    = {https://dblp.org/rec/conf/csfw/DreierHRS18.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
 @misc{rfc7252,
+  author =	{Zach Shelby and Klaus Hartke and Carsten Bormann},
+	title =		{{The Constrained Application Protocol (CoAP)}},
 	series =	{Request for Comments},
 	number =	7252,
 	howpublished =	{RFC 7252},
 	publisher =	{RFC Editor},
-	doi =		{10.17487/RFC7252},
 	url =		{https://rfc-editor.org/rfc/rfc7252.txt},
-        author =	{Zach Shelby and Klaus Hartke and Carsten Bormann},
-	title =		{{The Constrained Application Protocol (CoAP)}},
-	pagetotal =	112,
+  pagetotal =	112,
 	year =		2014,
 	month =		jun,
 	abstract =	{The Constrained Application Protocol (CoAP) is a specialized web transfer protocol for use with constrained nodes and constrained (e.g., low-power, lossy) networks. The nodes often have 8-bit microcontrollers with small amounts of ROM and RAM, while constrained networks such as IPv6 over Low-Power Wireless Personal Area Networks (6LoWPANs) often have high packet error rates and a typical throughput of 10s of kbit/s. The protocol is designed for machine- to-machine (M2M) applications such as smart energy and building automation. CoAP provides a request/response interaction model between application endpoints, supports built-in discovery of services and resources, and includes key concepts of the Web such as URIs and Internet media types. CoAP is designed to easily interface with HTTP for integration with the Web while meeting specialized requirements such as multicast support, very low overhead, and simplicity for constrained environments.},
 }
 
 @misc{edhocTamarinRepo,
-    author = {EDHOC Tamarin repository},
-    title = {\url{https://github.com/hoheinzollern/EDHOC-Verification/blob/2ee6e5877aa06ae90861317bfca0eee3a21c0e4f/models/edhoc/draftedhoc-20200301/edhocM4.spthy}},
+    author = {},
+    title = {Code repository},
+		howpublished = {\textbf{INSERT LINK HERE}},
+    year = {2020}
+}
+
+@misc{personalCommunication,
+    author = {{EDHOC authors}},
+    title = {{Personal communication}},
     year = {2020}
 }
 
