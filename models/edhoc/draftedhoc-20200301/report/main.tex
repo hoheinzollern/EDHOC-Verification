@@ -55,7 +55,7 @@ Alessandro Bruni\inst{4}
 
 \begin{abstract}
 %\hl{250 words}
-    IETF is standardizing a key establishment protocol named \mEdhoc{} for
+IETF is standardizing a key establishment protocol named \mEdhoc{} for
 constrained IoT devices~\cite{selander-lake-edhoc-01}.
 %
 In contrast to more powerful devices like web cameras and cars, which receive a
@@ -114,9 +114,6 @@ transport in such situations~\cite{rfc7252}.
 \mCoap{} does not include security protection on its own, and in some cases,
 \mDandTls{} messages are too large to fit into the radio frames.
 %
-%This is one of the reasons (KARL: Göran complained earlier that this was not
-%the only reason, so "one of" is correct. Maybe we there is a better phrasing
-%though)
 This is one of the reasons, IETF standardized the Object Security for
 Constrained RESTful Environments (\mOscore{}) protocol to secure
 communications between constrained devices, as a complement for when
@@ -214,11 +211,6 @@ Our main contributions are as follows.
         already lead to improvements and clarifications of the standard
         based on observations we made during the construction of our
         formal model.  We discuss these in Section~\ref{sec:discussion}.
-%        \knote{Now I understand your comment on Teams. Even though the word
-%            "standard" in the above item is the same document we later on call
-%            \mSpec{}, I think "standard" is an important signaling word we
-%            should use here to clarify the importance. I removed the word
-%            "\mSpec{}" above.}
 \end{itemize}
 
 %-------------------------------------------------------------------------- sub
@@ -228,10 +220,7 @@ Our main contributions are as follows.
 \fillhack
 The work closest to ours is Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18},
 which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier
-version of \mEdhoc{} with only two methods. %~\cite{selander-ace-cose-ecdhe-08}.
-\knote{Should we not reference the earlier version?  Not sure what the citation
-is deleted.}
-\vnote{No, we don't need to. It's enough to say it's an earlier version with fewer methods. Alessandro's paper itself mentions which version it is, with a link that still works, so that's fine.}
+version of \mEdhoc{} with only two methods.
 %
 We consider our work to follow the same trajectory as that, performing a
 similar kind of analysis of the most recent fiver-method version of \mEdhoc{}.
@@ -248,13 +237,6 @@ model~\cite{DBLP:conf/crypto/CanettiK02}).
 Although symbolic models predominantly rely on correspondence properties
 in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a},
 there are examples where implicit session key authentication has been used.
-\knote{I think this is important to mention Lowe's paper given our discussion
-    Wednesday about trace properties vs correspondence properties. It is not
-    super clear even to formal methodologists :-).
-    We also give quite a bit of details copied from that document in
-    Section 3, so the document deserves being mentioned on a high-level already
-here.}
-\vnote{Ok.}
 %
 For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
 symbolized version of an extended Canetti-Krawzcyk model.
@@ -277,13 +259,6 @@ symbolized version of an extended Canetti-Krawzcyk model.
 \section{Discussion}
 \label{sec:discussion}
 \fillhack
-\knote{Please do not remove the latex formatting with a percentage sign
-    separating sentences in the source code and keeping lines below 80
-    characters.  That formatting makes it so much easier to see when sentences
-    become too long, and most importantly: it makes it easier to see differences
-    between commits.  When one line is an entire paragraph that is much more
-    painful.
-}
 There are a few instances where things are ill-specified in the \mSpec{},
 which we found as part of this work. We discuss them below.
 %
@@ -318,65 +293,49 @@ claims may benefit from note of caution.
 wrong. We should constructively propose solutions to problems.}
 
 %-------------------------------------------------------------------------- sub
-\subsection{Lack of clear intended use}
+\subsection{Unclear intended use}
 \label{sec:unclearProtocolUse}
 \fillhack
-\knote{I added comments in the text prefixed by the keywoard "meta" to show
-    The intended flow in case future revisions copy/paste single sentences
-    between sections. Please check that the flow still makes sense if doing
-    that, or change the flow to a new one.
-}
-% meta: FM clashes with ind. std. Also for EDHOC
 Formal verification methodologies often clash with industrial standard
 development practices; this is true also in our case.
 %
-% meta: This is the most important way they clash
 The most important reason for the clash is that formal verification aims to
 verify whether well-specified security goals are met, whereas industrial
 standards are developed with a clear abstract goal,
 but one that lacks specificity.
 %
-% meta: EDHOC tries to remedy this to some degree by listing specific goals from
-% academic papers
 Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
 several specific security goals, e.g., KCI and identity protection.
-% meta: ...but that is insufficient
+%
 However, without knowing how the protocol is to be used
 it is not clear whether these are important in the form they are listed.
 %
 
-% meta: This is the specific way in which EDHOC clashes and the consequences of that
 The abstract goal of \mEdhoc{} is simple: establish an \mOscore{} security
 context using few roundtrips and small messages.
 %
-% meta: The specifics of the abstract goal follows from restrictions
 Starting from there, the design of \mEdhoc{} is mainly driven by what
 can be achieved given certain technical restrictions.
 %
-% meta: That design philosophy does not take the use of the protocol into
-% account -> % risk leading to insecure results
 Focusing too much on what can be achieved within given restrictions, and paying
-too little attention to the use cases with which the
-protocol is to be used, risks resulting in making sub-optimal trade-offs and
-design decisions.
+too little attention to the use cases where the
+protocol is to be used and their specific goals, risks resulting in
+sub-optimal trade-offs and design decisions.
 %
 
-% EDHOC aims to be generic, but some typical use cases can still be defined
-\mEdhoc{} is intended for a variety of use cases, many of which are not
-known today.
+\mEdhoc{} is intended to cover a variety of use cases, many of which are
+difficult to predict today.
 %
-This intention does not prevent collecting a variety of \emph{typical}
-use cases and user stories to identify more specific security goals.
+Just because it is difficult to predict these use cases, does not
+prevent collecting a \emph{typical} use cases and user stories
+to identify more specific security goals that will be important in most cases.
 %
 
-% To decided which properties we should verify we identified some use cases.
 While constructing our model, we came up with simple user stories to identify
 security properties of interest.
 %
-% These use cases revealed undefined aspects in the spec
 Several of these revealed undefined aspects of \mEdhoc{}.
 %
-% The aspects were then covered by EDHOC spec
 We informed \mEdhoc{} authors and they included these aspects the \mSpec{}.
 %
 We now present a couple of examples.
@@ -458,7 +417,7 @@ use of TEEs.
 
 The \mEdhoc{} authors indicated to us that it was
 not necessary to consider compromised ephemeral session keys separately from
-from compromised long-term keys~\cite{personalCommunication}. 
+from compromised long-term keys~\cite{personalCommunication}.
 %
 The rationale is that \mSigma{} cannot protect against compromised ephemeral
 keys.
@@ -467,15 +426,11 @@ That rationale is presumably based on that the \mSigSig{} method is
 closely modeled on \mSigmaI{} and that it would be preferable to obtain a
 homogeneous security level among the \mEdhoc{}
 methods\cite{personalCommunication}.
-\vnote{Speculation?}
-\knote{To some degree. I cannot be certain about what the rationale was based
-    on. I can only write what they have replied in mails. I could have
-misinterpreted that. The rationale as such is not speculation though.}
 %
 That rationale is only true, however, if one restricts attention to session key
 confidentiality of an ongoing session.
 %
-TEEs provide value in other ways, for example, by allowing contractions with 
+TEEs provide value in other ways, for example, by allowing contractions with
 weak PCS guarantees.
 %
 It would be wasteful to not consider TEEs for long-term key storage as part of
@@ -491,60 +446,46 @@ designed to be provably secure in the CK model.
 \subsection{Session key material}
 \label{sec:sessionKeyMaterial}
 \fillhack
-\mEdhoc{} establishes a session key state as output, from which session keys
-for \mOscore{} can be derived using \mHkdf{}.
+\mEdhoc{} establishes session key material as output, from which session keys
+for \mOscore{} can be derived using the \mEdhoc{}-Exporter.
 %
-As discussed in Section~\ref{sec:threat-model}, there are various possibilities
-for defining which parameters from the \mEdhoc{} run should be included in the
-session key state.
+The session key material is always affected by \mGxy{}, and if a party uses the
+\mStat{} method, also that party's secret static long-term DH key.
 %
-
-While we show bidirectional injective agreement on \mGx{} and \mGy{}
-for all methods, initiators cannot obtain injective agreement on \mGiy{} when
-using the \mStat{} method themselves. Therefore, \mGiy{} cannot be considered
-part of the key material if mutual injective agreement is considered important.
+As shown in Section~\ref{sec:formalization}, mutual injective agreement cannot
+be achieved for \mGiy{}.
+%
+If injective agreement is an important property for constrained IoT devices then
+\mGiy{} cannot be affecting the session key material.
 %
 Excluding \mGiy{} would deviate from \mOptls{}, which is the cryptographic core
-used for the \mStat-based methods. Specifically, the proof of session key
-confidentiality in the face of long-term key compromise for \mOptls{} cannot be
-adapted for \mEdhoc{}.
-%
-Other security properties of \mOptls{} may also fail to be true if
-\mGiy{} were excluded. \vnote{Conjecture.}
-\knote{Correct. The logic is the same as when we want to give at least one
-    example to show that \mEdhoc{} is different from \mNoise{} and therefore the
-proofs of \mNoise{} does not carry over to \mEdhoc{}. }
+used for the \mStat-based methods, and security properties of \mOptls{} will not
+be inherited by \mEdhoc{}.
 %
 
-=>>> flow broken by copy/paste FIXME
-This can be avoided by including a fourth message from responder to initiator
+We identified four options for handling the situation.
+%
+One option is to include a fourth message from responder to initiator
 carrying a message authentication code using a key derived from session key
 material including \mGiy{}.
 %
 This would give the initiator sufficient guarantees about the same \mGiy{}
-being used by the responder as well.
+being used by the responder.
 %
 However, the cost is an additional message, and our understanding is that this
-is unacceptable (personal correspondence with the \mSpec{} authors).
-%
-In some use cases there could be a such as message as part of
-the subsequent \mOscore{} protocol run. It would, however, create an additional
-dependency between the two protocols, increasing complexity and the risk of
-insecure implementations.
+is unacceptable (personal correspondence,~\cite{personalCorrespondence}.
 %
 
-Yet another option is to include \mGi{}, or a hash of it, in the first and
+Another option is to include \mGi{}, or a hash of it, in the first and
 second message.
 %
 This would, however, increase message sizes, a grave concern for \mEdhoc{},
 and would also prevent initiator identity protection.
 %
 While identity protection is important in general, neither the \mSpec{} nor
-the requirements document give any rationale why one identity (the intiator's)
-is deemed more important (and needs protection) than the other
-(the responder's).
+the requirements document give any rationale why the initiator needs stronger
+protection than the responder.
 %
-
 The \mSpec{} states that the initiator's identity is protected against active
 attacks and the responder's against passive attacks, but that the roles should
 be assigned to the \mCoap{} peers to protect the most sensitive identity the
@@ -553,23 +494,18 @@ most (see Section~8~\cite{selander-lake-edhoc-01}).
 Roles could hence be swapped, so identity protection is not a strong argument
 against this option.
 %
-So perhaps this method can be used to obtain injective agreement on \mGiy.
+
+A third option is to exclude \mGiy{} and accept the deviation from \mOptls{}.
 %
-\knote{If I did not uncomment the first two sentences in the paragraph above,
-the last sentence made no sense on its own. I believe the idea is important,
-because it gives a suggestion on how standardization may proceed if they
-actually want inj-agree on \mGiy. We want to propose solutions, not just point
-out problems.}
+Doing so would would destroy \mOptls{}' protection against compromise of the
+initiator's ephemeral DH key.
 %
 
-In this work, we have shown implicit agreement on \mGx{}, \mGy{} for all
-methods, and also on \mGiy{} and \mGrx{} when these are used,
-see Section~\ref{sec:formalization}.
+The fourth option is to include \mGiy{} in the session key material and accept
+that \mEdhoc{}'s methods will provide very different security properties.
 %
-If this weaker security guarantee is sufficient, both ephemeral and long-term
-keys can be part of the session key material.
-%
-However, this also depends on the intended use of \mEdhoc{}.
+We have shown mutual implicit agreement on all of \mGixy{}, \mGiy{} and \mGrx{},
+which holds for all methods.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -625,9 +561,12 @@ We formulated and verified several important security properties in this model.
 Most importantly, we found that injective agreement on \mGiy{} does not hold for
 initiators when they use the \mStat{} method.
 %
-Further, we identified a situation where initiators may establish an \mOscore{} security context with a different party than the application using \mEdhoc{} intended, and proposed a simple mitigation.
+Further, we identified a situation where initiators may establish an \mOscore{}
+security context with a different party than the application using \mEdhoc{}
+intended, and proposed a simple mitigation.
 %
-We discussed how the IETF may extract and better define security properties to enable easier verification.
+We discussed how the IETF may extract and better define security properties to
+enable easier verification.
 %
 
 %-------------------------------------------------------------------------- ack
