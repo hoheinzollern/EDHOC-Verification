@@ -15,16 +15,16 @@ The responder may reject the choice of authentication methods.
 %
 In the second message \mMsgtwo{}, the responder provides its ephemeral
 DH half-key \mGy{} and authenticates itself to the initiator by
-providing authentication information \mAuthr{}.
+providing authentication data \mAuthr{}.
 %
 Finally, in the third message \mMsgthree{}, the initiator authenticates itself
-to the responder by providing authentication information \mAuthi{}.
+to the responder by providing authentication data \mAuthi{}.
 %
-The authentication information consists of a MAC for all authentication methods.
+The authentication data consists of a MAC for all authentication methods.
 %
 This MAC is also signed when authentication is based on public key signatures.
 %
-In addition to the exchange of DH half-keys and authentication information, the
+In addition to the exchange of DH half-keys and authentication data, the
 messages also include parameters for the \mOscore{} security context, such as
 encryption algorithm identifiers (\mSuites{}) and \mOscore{} security context
 identifiers \mCi{} and \mCr{}.
@@ -32,7 +32,7 @@ identifiers \mCi{} and \mCr{}.
 Optionally, messages may also include application layer data \mAD{}, which
 enjoys differing levels of protection depending on which message it is part of.
 %
-As will be described below, when the authentication information is based on
+As will be described below, when the authentication data is based on
 a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not
 used.
 %
@@ -418,7 +418,7 @@ that of \mAuthr{}. \mAuthi{} is constructed from \mMacthree{}.
 Independently of whether one party uses \mStat{}-based authentication, the
 other party may use \mSig{}-based authentication.
 %
-In that case, the authentication information for that party is constructed
+In that case, the authentication data for that party is constructed
 using a regular signature.
 %
 In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party
