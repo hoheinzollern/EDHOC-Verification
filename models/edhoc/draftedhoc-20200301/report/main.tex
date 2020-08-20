@@ -15,6 +15,7 @@
 \usetikzlibrary{positioning}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage[nospace]{cite}
 \hypersetup{
     final, % Uncomment to remove all links (useful for printing in black and white)
     colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
@@ -640,12 +641,11 @@ the Knut and Alice Wallenberg Foundation.
 We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
 clarifications regarding the specification.
 %
-\vnote{Using the refv file to have ``cleaner'' references without extraneous details like full conference names (``Symposium on Computer Security Foundations''), conference locations, editor names for conference citations etc.}
 
 \vnote{We need to fix the link for the code repository.}
 
 \spacehack
 %-------------------------------------------------------------------------- bib
-\bibliographystyle{abbrv}
+\bibliographystyle{spmpsci}
 \bibliography{refv}
 \end{document}
