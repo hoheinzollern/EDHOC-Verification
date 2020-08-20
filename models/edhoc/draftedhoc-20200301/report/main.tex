@@ -214,11 +214,11 @@ Our main contributions are as follows.
         already lead to improvements and clarifications of the standard
         based on observations we made during the construction of our
         formal model.  We discuss these in Section~\ref{sec:discussion}.
-        \knote{Now I understand your comment on Teams. Even though the word
-            "standard" in the above item is the same document we later on call
-            \mSpec{}, I think "standard" is an important signaling word we
-            should use here to clarify the importance. I removed the word
-            "\mSpec{}" above.}
+%        \knote{Now I understand your comment on Teams. Even though the word
+%            "standard" in the above item is the same document we later on call
+%            \mSpec{}, I think "standard" is an important signaling word we
+%            should use here to clarify the importance. I removed the word
+%            "\mSpec{}" above.}
 \end{itemize}
 
 %-------------------------------------------------------------------------- sub
@@ -231,6 +231,7 @@ which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier
 version of \mEdhoc{} with only two methods. %~\cite{selander-ace-cose-ecdhe-08}.
 \knote{Should we not reference the earlier version?  Not sure what the citation
 is deleted.}
+\vnote{No, we don't need to. It's enough to say it's an earlier version with fewer methods. Alessandro's paper itself mentions which version it is, with a link that still works, so that's fine.}
 %
 We consider our work to follow the same trajectory as that, performing a
 similar kind of analysis of the most recent fiver-method version of \mEdhoc{}.
@@ -253,6 +254,7 @@ there are examples where implicit session key authentication has been used.
     We also give quite a bit of details copied from that document in
     Section 3, so the document deserves being mentioned on a high-level already
 here.}
+\vnote{Ok.}
 %
 For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
 symbolized version of an extended Canetti-Krawzcyk model.
@@ -638,8 +640,12 @@ the Knut and Alice Wallenberg Foundation.
 We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
 clarifications regarding the specification.
 %
+\vnote{Using the refv file to have ``cleaner'' references without extraneous details like full conference names (``Symposium on Computer Security Foundations''), conference locations, editor names for conference citations etc.}
+
+\vnote{We need to fix the link for the code repository.}
+
 \spacehack
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{abbrv}
-\bibliography{ref}
+\bibliography{refv}
 \end{document}
