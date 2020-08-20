@@ -15,7 +15,7 @@
                              color=orange,
                              size=\footnotesize
                             ]{\textsf{\textbf{Vaishnavi:} #1}}}
-% \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
+\newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
 % \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
 %\newcommand{\knote}[1]{}
 %\newcommand{\vnote}[1]{}
@@ -26,17 +26,32 @@
 
 
 % -- Fonts and styles for names
-\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
-\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
-\newcommand{\mFunStyle}[1]{\text{\textup{\textsf{#1}}}}
-\newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
+%\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+%\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+%\newcommand{\mFunStyle}[1]{\text{\textup{\textsf{#1}}}}
+%\newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
+%\newcommand{\mVarStyle}[1]{\mathit{#1}}
+%\newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
+%\newcommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
+%\newcommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
+
+%\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+%\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+\newcommand{\mFunStyle}[1]{\textsf{#1}}
+\newcommand{\mConstStyle}[1]{\textsf{#1}}
 \newcommand{\mVarStyle}[1]{\mathit{#1}}
-\newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
-\DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
-\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
+\newcommand{\mFactStyle}[1]{\textsf{#1}}
+\newcommand{\mMethodStyle}[1]{\mConstStyle{#1}}
+\newcommand{\mProtocolStyle}[1]{\text{#1}}
+
+
 
 % -- Macros for consistent wording
 \newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
+
+
+
+
 
 
 % -- Domain specific macros
@@ -139,7 +154,7 @@
 
 % TIKZ messages and actions
 \newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
-\newcommand{\action}[3]{\node[draw,thick,align=center,below={#1} of {#2}]{#3}}
+\newcommand{\action}[3]{\node[draw,thick,fill=white,align=center,below={#1} of {#2}]{#3}}
 
 % Tamarin symbols
 \newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-3pt}[{#1}]\hspace{-3pt}\rightarrow}}
