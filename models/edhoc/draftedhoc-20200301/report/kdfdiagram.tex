@@ -36,10 +36,10 @@ term/.style={rounded corners},
 %\node [hkdfext, join] (h1) {\mHkdfExtract};
 \node [hkdfext, right=2.2cm of p0, join] (h1) {\mHkdfExtract};
 \node [prk, join] (p2) {\mPRKtwo};
-\node [cond, join] (c1) {$m \in \{1, 3\}$};
+\node [cond, join] (c1) {R uses \\ \mStat};
 
 \node [prk, join, below=8mm of c1.south] (p3) {\mPRKthree};
-\node [cond, join, below=10mm of p3.south] (c2) {$m \in \{2, 3\}$};
+\node [cond, join, below=10mm of p3.south] (c2) {I uses \\ \mSig};
 \node [prk, join, below=8mm of c2.south] (p4) {\mPRKfour};
 
 \node [hkdfext, right=3cm of c1] (h3) {\mHkdfExtract};
