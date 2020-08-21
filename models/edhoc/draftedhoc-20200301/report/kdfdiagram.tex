@@ -38,9 +38,12 @@ term/.style={rounded corners},
 \node [prk, join] (p2) {\mPRKtwo};
 \node [cond, join] (c1) {R uses \\ \mStat};
 
-\node [prk, join, below=8mm of c1.south] (p3) {\mPRKthree};
+\node [prk, below=8mm of c1.south] (p3) {\mPRKthree};
+\draw [->, norm] (c1.south) -- (p3.north) node[midway, above right] {N};
+
 \node [cond, join, below=10mm of p3.south] (c2) {I uses \\ \mSig};
-\node [prk, join, below=8mm of c2.south] (p4) {\mPRKfour};
+\node [prk, below=8mm of c2.south] (p4) {\mPRKfour};
+\draw [->, norm] (c2.south) -- (p4.north) node[midway, above right] {N};
 
 \node [hkdfext, right=3cm of c1] (h3) {\mHkdfExtract};
 \node [hkdfext, right=3cm of c2] (h5) {\mHkdfExtract};
@@ -69,14 +72,16 @@ term/.style={rounded corners},
 \draw [->, norm] (k2b.west) -- (t2b.east);
 \draw [->, norm] (k3.west) -- (t3.east);
 
-\draw [->, norm] (p3.south) -- ++(0,-0.58) -- (h8);
+\draw [->, norm] (p3.south) ++(0,-0.58) -- (h8);
 \draw [->, norm] (h8) -- (k2b);
 \draw [->, norm] (p2) -- (h2); 
-\draw [->, norm] (c1) -- (h3);
-\draw [->, norm] (h3.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (c1) -- (h3) node[midway,above left] {Y};
+%\draw [->, norm] (h3.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (h3.south) -- ++(0,-1.8) -- (p3.east);
 \draw [->, norm] (p3) -- (h4); 
-\draw [->, norm] (c2) -- (h5);
-\draw [->, norm] (h5.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (c2) -- (h5) node[midway,above left] {Y};
+%\draw [->, norm] (h5.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (h5.south) -- ++(0,-1.75) -- (p4.east);
 \draw [->, norm] (p4) -- (h6);
 \draw [->, norm] (p4.west) ++(-0.25,-0) -- ++(0,-1) -- (h9.east);
 
