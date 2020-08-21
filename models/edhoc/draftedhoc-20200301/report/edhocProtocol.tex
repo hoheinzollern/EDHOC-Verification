@@ -237,7 +237,7 @@ and \mHkdfExpand{}, which generates keys from key material and a seed.
 %
 The seeds are used to bind the key material and keys to certain parameters.
 %
-Derived keys are then used as input to encryption and integrity protection
+Derived keys (\mKtwoe, \mKtwom{}, \mKthreeae, and \mKthreem) are then used as input to encryption and integrity protection
 algorithms.
 %
 
@@ -281,8 +281,8 @@ authentication.
 \input{kdfdiagram.tex}
 }
 %\caption{Joint key hierarchy for all methods. Diamond shapes denote inputs conditioned on which method $m$ is used. The digits should be interpreted as 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat. The red boxes below \mGxy{} represent the intermediate key material used for different messages, and the blue left-most boxes represent the keys entering a \mAead{} transform or used for XOR encryption.}
-\knote{We have not mentioned the blue-boxed keys by name anywhere else in
-the text. The idea of mentioning them here in the caption was so we don't have to.}
+%\knote{We have not mentioned the blue-boxed keys by name anywhere else in
+%the text. The idea of mentioning them here in the caption was so we don't have to.}
 \caption{Joint key hierarchy for all methods.
 %Diamond shapes denote inputs conditioned on the method $m$,
 %with 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
