@@ -17,9 +17,9 @@
                             ]{\textsf{\textbf{Vaishnavi:} #1}}}
 \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
 % \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
-%\newcommand{\knote}[1]{}
-%\newcommand{\vnote}[1]{}
-%\newcommand{\anote}[1]{}
+\renewcommand{\knote}[1]{}
+\renewcommand{\vnote}[1]{}
+\renewcommand{\anote}[1]{}
 \newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
 \newcommand{\mcneed}{\textbf{Citation needed}}
 \newcommand{\mcfix}{\textbf{Fix citation}}
@@ -201,11 +201,12 @@
     {<\ \#}{$<$\ \ \#}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
     {--[}{$\mbox{-\hspace{-3pt}[}$}{2}%
     {]->}{$\mbox{]\hspace{-3pt}\rightarrow}$}{2}%
+    {-->}{$\rightarrow$}{1}
     {==>}{$\Rightarrow$}{1}
     {XOR}{$\oplus$}{1}%
     {aeadEncrypt}{\mAead{}}{6}%
-    {decrypt}{\mDecrypt}{7}
-    {aeadDecrypt}{\mAeadDecrypt}{14}
+    {decrypt}{\mDecrypt}{6}
+    {aeadDecrypt}{\mAeadDecrypt}{11}
     {hkdfExtract}{\mHkdfExtract}{14}
     {hkdfExpand}{\mHkdfExpand}{14}
     {All\ }{$\forall$\ }{3}

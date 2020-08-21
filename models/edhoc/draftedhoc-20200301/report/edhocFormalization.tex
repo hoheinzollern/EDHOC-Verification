@@ -130,11 +130,6 @@ parties (i.e. has the ability to perform all cryptographic operations using the
 initiator's and responder's long term keys, but has not access to the long term
 keys).
 
-\paragraph{Note} We plan to show weak PCS and KCI in a future version of the model,
-hence we mention it here. However at the moment verifying this property runs out
-of memory, so we will not present results relating to weak PCS in the current
-version of the report. It will be included in future versions however.
-
 \spacehack
 \subsection{\mTamarin{}}
 \label{sec:tamarin}
@@ -145,19 +140,12 @@ We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
 with event annotations, which allows the user to check Linear Temporal Logic
 (LTL) formulas on these models.
 %
-Multi-set rewrite rules with events take the form:
-%
-\[ l \ifarrow[e] r \]
-%
+Multi-set rewrite rules with events take the form $ l \ifarrow[e] r $,
 where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
-%
 Facts are $n$-ary predicates over a term algebra, which defines a set of function
 symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. \mTamarin{}
 checks equality of these terms under an equational theory $E$. For example,
-one can write
-%
-\[ dec(enc(x,y),y) =_E x \]
-%
+one can write $ dec(enc(x,y),y) =_E x $
 to denote that symmetric decryption reverses the encryption operation under this theory.
 All operations on terms are defined under $E$, hence we omit the
 subscript from now on as the equational theory is fixed per model.
@@ -184,7 +172,7 @@ others), rules and equations that represent the attacker's knowledge
 and standard equational theories in the symbolic model,
 which we present later.
 
-\spacehack
+\anote{This can go, I make a shorter note later:\\
 \subsubsection{Notational conventions} In the remainder of this section we present
 \mTamarin{} code as it appears in the models that we verify, in the style of
 literate programming.  Whenever possible we match the style of the protocol
@@ -194,10 +182,9 @@ traceable to the standard.  There are a few exceptions to this, most notably
 some variable names that we introduce for the sake of the \mTamarin{} model and are
 not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
 the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
-
 We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
-names \mT{x} and \mT{y}.
+names \mT{x} and \mT{y}.}
 
 \spacehack
 \subsubsection{Protocol rules and equations}
@@ -208,7 +195,7 @@ For example, in our model we have a symbol to denote authenticated encryption an
 hence \mTamarin{} produces the rule:
 %
 \begin{lstlisting}
-[ !KU(k), !KU(m), !KU(ad), !KU(al) ] --[]-> [ !KU(aeadEncrypt(k, m, ad, al)) ]
+[!KU(k), !KU(m), !KU(ad), !KU(al)] --> [!KU(aeadEncrypt(k, m, ad, al))]
 \end{lstlisting}
 %
 to denote that if the attacker knows a key \mT{k}, a message \mT{m}, the
@@ -222,8 +209,8 @@ the built-in theories of exclusive-or and Diffie-Hellman operations.
 Authenticated encryption, which is encryption with authentication data as
 detailed in~\cite{aead}, has the following two equations:
 \begin{lstlisting}
-  aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
-  decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
+aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
+decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
 \end{lstlisting}
 With the first rule we allow the protocol to decrypt the message \mT{m} if the
 encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the
@@ -259,22 +246,24 @@ built-in concept in \mTamarin.
 \fillhack
 In this section we detail the modeling choices that we have made for this formal
 verification effort.
-
+%
 We model the five different methods of \mEdhoc{} from a single specification
-that derives all valid combinations: \mPskPsk, \mSigSig, \mSigStat, \mStatSig{}
-and \mStatStat.
+using the M4 macro language to derive all valid combinations: \mPskPsk,
+\mSigSig, \mSigStat, \mStatSig{} and \mStatStat.
 %
-We use the M4 macro language to derive these different methods from a single
-description of the protocol, thus enforcing uniformity in the presentation.
+Whenever possible we adhere with the variable names present in the standard and
+in Section~\ref{sec:edhoc}. There are a few exceptions: we present in
+\mT{camelCase} those names introduced with the modeling, and we use \mT{xx} and
+\mT{yy} for the ephemeral keys, to avoid name clashes.
 %
-Other parameters to the model include the optional data of the \mEdhoc{}
+\anote{Do we need this: Other parameters to the model include the optional data of the \mEdhoc{}
 specification, that is, the connection identifiers \mCi{} and \mCr{}, and
-the authenticated data \mADone, \mADtwo{} and \mADthree.
+the authenticated data \mADone, \mADtwo{} and \mADthree.}
 %
-To keep the presentation brief, we
-only present two variants, where one party uses a signature key and the other a static DH key (\mSigStat{} and \mStatSig).
-However the full code can be inspected at the github
-repository~\cite{edhocTamarinRepo}.
+To keep the presentation brief, we only present the \mStatSig{} mode, as it
+shows both asymmetric modes at the same time. The PSK case can be found in the
+appendix and the full code at the GitHub repository~\cite{edhocTamarinRepo}.
+\anote{Fix: give a dropbox link instead of the repo}
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
 
@@ -283,22 +272,20 @@ repository~\cite{edhocTamarinRepo}.
 \vnote{Section name doesn't appear here! Needs some text before the rule.}
 \begin{lstlisting}
 rule registerLTK_SIG:
- [Fr(~ltk)] --[UniqLTK($A, ~ltk)]->
+ [Fr(~ltk)] --[ UniqLTK($A, ~ltk) ]->
   [!LTK_SIG($A, ~ltk), !PK_SIG($A, pk(~ltk)), Out(<!<$A, pk(~ltk)>!>)]
 rule registerLTK_STAT:
- [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]->
+ [Fr(~ltk)] --[ UniqLTK($A, 'g'^~ltk) ]->
   [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
-rule registerLTK_PSK:
- [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 \end{lstlisting}
 
-These three rules express the registering of the long term keys for the \mSig,
-\mStat{} and \mPsk{} methods respectively.
+These rules express the registering of the long term keys for the \mSig and
+\mStat{} methods respectively.
 %
-\mT{registerLTK_PSK} registers a symmetric key for each pair of
-agents \mT{A} and \mT{B}, while the other two rules register a
-public key (for signing and encrypting, respectively) that are tied to the
-identity of an agent \mT{A}.
+\mT{registerLTK_SIG} and \mT{registerLTK_STAT} register a public key (for
+signing and encrypting, respectively) that are tied to the identity of an agent
+\mT{A}. A similar rule \mT{registerLTK_PSK} registers symmetric keys for pairs
+of agents.
 %
 The event \mT{UniqLTK} marks that the long term key is unique for each
 agent or pair of agents, as enforced by the following restriction:
@@ -313,12 +300,13 @@ and that the attacker cannot register new public keys for an existing identity.
 Long term keys are revealed to the attacker through specific rules
 with the event \mT{LTKRev}.
 \begin{lstlisting}
-rule revealLTK_SIG:
-  [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-rule revealLTK_STAT:
-  [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-rule revealLTK_PSK:
-  [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+rule revealLTK_SIG: [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_STAT: [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+\end{lstlisting}
+Furthermore, we give the attacker access to the cryptographic interface of the
+device with the following rules:
+\begin{lstlisting}
+  
 \end{lstlisting}
 These rules are used to check the different lemmas for authentication
 and key secrecy, as we limit when the attacker is able to reveal the
@@ -328,143 +316,143 @@ Section~\ref{sec:threat-model}.
 Each of the session keys is also revealed with similar rules,
 depending on the method to check session independence.
 
-\spacehack
-\subsubsection{\mPskPsk{}} The following rules model the symmetric key based
-\mPskPsk{} method and are derived from the M4 file, as presented in
-Section~\ref{sec:edhoc}.
+% \spacehack
+% \subsubsection{\mPskPsk{}} The following rules model the symmetric key based
+% \mPskPsk{} method and are derived from the M4 file, as presented in
+% Section~\ref{sec:edhoc}.
 
-First we present the rule \mT{I1_PSK_PSK}, which corresponds to the
-Initiator starting a session:
-\begin{lstlisting}
-rule I1_PSK_PSK:
-  let gx = 'g'^~xx
-      ID_PSK = <$U, $V>
-      m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK> 
-  in
-  [ !LTK_PSK(<$U, $V>, ~ltk), Fr(~xx), Fr(~tid) ]
-  --[ I1(~tid, $U, $V, m1) ]->
-  [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), Out(m1)]
-\end{lstlisting}
+% First we present the rule \mT{I1_PSK_PSK}, which corresponds to the
+% Initiator starting a session:
+% \begin{lstlisting}
+% rule I1_PSK_PSK:
+%   let gx = 'g'^~xx
+%       ID_PSK = <$U, $V>
+%       m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK> 
+%   in
+%   [ !LTK_PSK(<$U, $V>, ~ltk), Fr(~xx), Fr(~tid) ]
+%   --[ I1(~tid, $U, $V, m1) ]->
+%   [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), Out(m1)]
+% \end{lstlisting}
 
-This rule uses the persistent predicate \mT{!LTK_PSK} to retrieve the long-term
-symmetric key for the two parties U (the initiator) and V (the responder).  The
-two predicates \mT{Fr(~xx)} and \mT{Fr(~tid)} denote the creation of a fresh
-ephemeral key and a fresh session identifier.  Message 1 is then constructed as
-a tuple in the let binder following the specification.
+% This rule uses the persistent predicate \mT{!LTK_PSK} to retrieve the long-term
+% symmetric key for the two parties U (the initiator) and V (the responder).  The
+% two predicates \mT{Fr(~xx)} and \mT{Fr(~tid)} denote the creation of a fresh
+% ephemeral key and a fresh session identifier.  Message 1 is then constructed as
+% a tuple in the let binder following the specification.
 
-It is worth noting that there are some differences in the way \mT{m1} is
-constructed when compared to the specification. In particular, the \emph{method}
-field is divided into two fields representing the method for the initiator and
-the responder, the connection identifier is omitted and the ciphersuite is
-represented by the public variable
-\mT{$cSUITES0} (known to the attacker). We plan to introduce the connection
-identifier \mCi in our ongoing verification effort, whereas the other two are
-modeling choices that do not affect the behaviour of the model.
+% It is worth noting that there are some differences in the way \mT{m1} is
+% constructed when compared to the specification. In particular, the \emph{method}
+% field is divided into two fields representing the method for the initiator and
+% the responder, the connection identifier is omitted and the ciphersuite is
+% represented by the public variable
+% \mT{$cSUITES0} (known to the attacker). We plan to introduce the connection
+% identifier \mCi in our ongoing verification effort, whereas the other two are
+% modeling choices that do not affect the behaviour of the model.
 
-Finally, we use the fact \mT{StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid)} %
-to save the internal state for the remainder of the initiator's protocol.
+% Finally, we use the fact \mT{StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid)} %
+% to save the internal state for the remainder of the initiator's protocol.
 
-The next rule models the responder receiving \mT{m1} from the initiator,
-constructing the Diffie-Hellman shared secret $g^{xy}$ and preparing \mT{m_2}.
-\begin{lstlisting}
-rule R2_PSK_PSK:
-  let
-    data_2 = <'g'^~yy>
-    ID_PSK = <$U, $V>
-    m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK>
-    TH_2 = h(<$cHash0, m1, data_2>)
-    prk_2e = hkdfExtract(~ltk, gx^~yy)
-    prk_3e2m = prk_2e
-    extAad2 = TH_2
-    plainText2 = 'emptyStr'
-    K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
-    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
-    m2 = <data_2, CIPHERTEXT_2>
-  in
-    [ !LTK_PSK(<$U, $V>, ~ltk), In(m1), Fr(~yy), Fr(~tid) ]
-    --[ ExpRunningR(~tid, $V, exp_sk)
-      , R2(~tid, $V, m1, m2) ]->
-    [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2), Out(m2) ]
-\end{lstlisting}
+% The next rule models the responder receiving \mT{m1} from the initiator,
+% constructing the Diffie-Hellman shared secret $g^{xy}$ and preparing \mT{m_2}.
+% \begin{lstlisting}
+% rule R2_PSK_PSK:
+%   let
+%     data_2 = <'g'^~yy>
+%     ID_PSK = <$U, $V>
+%     m1 = <'PSK', 'PSK', $cSUITE0, gx, ID_PSK>
+%     TH_2 = h(<$cHash0, m1, data_2>)
+%     prk_2e = hkdfExtract(~ltk, gx^~yy)
+%     prk_3e2m = prk_2e
+%     extAad2 = TH_2
+%     plainText2 = 'emptyStr'
+%     K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+%     CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
+%     m2 = <data_2, CIPHERTEXT_2>
+%   in
+%     [ !LTK_PSK(<$U, $V>, ~ltk), In(m1), Fr(~yy), Fr(~tid) ]
+%     --[ ExpRunningR(~tid, $V, exp_sk)
+%       , R2(~tid, $V, m1, m2) ]->
+%     [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2), Out(m2) ]
+% \end{lstlisting}
 
-Here we obtain as input message 1 (\mT{m1}), create a fresh exponent \mT{yy} and
-session identifier \mT{tid}.  The let bindings in this rule show how to
-construct message \mT{m2}.  They can be easily mapped to the diagram in
-Figure~\ref{fig:edhocpsk}.  We use the public constant \mbox{\mT{'emptyStr'}} instead
-of an empty string since \mTamarin{} has no concept of strings (single quotes
-denote constants).
+% Here we obtain as input message 1 (\mT{m1}), create a fresh exponent \mT{yy} and
+% session identifier \mT{tid}.  The let bindings in this rule show how to
+% construct message \mT{m2}.  They can be easily mapped to the diagram in
+% Figure~\ref{fig:edhocpsk}.  We use the public constant \mbox{\mT{'emptyStr'}} instead
+% of an empty string since \mTamarin{} has no concept of strings (single quotes
+% denote constants).
 
-Here we notice the introduction of the event \mT{ExpRunningR(~tid, $V, exp_sk)}
-% 
-which we later use to show explicit authentication (hence the \mT{Exp} prefix) by
-finding an injective correspondence between two events.
+% Here we notice the introduction of the event \mT{ExpRunningR(~tid, $V, exp_sk)}
+% % 
+% which we later use to show explicit authentication (hence the \mT{Exp} prefix) by
+% finding an injective correspondence between two events.
 
-The next rule models the initiator receiving \mT{m2} and responding with the
-final message \mT{m3}:
-\begin{lstlisting}
-rule I3_PSK_PSK:
-  let
-    data_2 = <gy> 
-    TH_2 = h(<$cHash0, m1, data_2>)
-    prk_2e = hkdfExtract(~ltk, gy^~xx)
-    prk_3e2m = prk_2e
-    plainText2 = 'emptyStr' 
-    extAad2 = TH_2
-    K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
-    CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
-    m2 = <data_2, CIPHERTEXT_2>
-    data_3 = 'emptyStr' 
-    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
-    extAad3 = TH_3
-    plainText3 = 'emptyStr'
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
-    m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gy^~xx>
-    imp_sk =  exp_sk
-  in
-  [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), In(m2) ]
-  --[ ExpCommitI(~tid, $U, $V, exp_sk)
-    , CommitI(~tid, $U, $V, imp_sk)
-    , I3(~tid, $U, $V, m1, m2, m3) ]->
-  [ Out(m3) ]
-\end{lstlisting}
+% The next rule models the initiator receiving \mT{m2} and responding with the
+% final message \mT{m3}:
+% \begin{lstlisting}
+% rule I3_PSK_PSK:
+%   let
+%     data_2 = <gy> 
+%     TH_2 = h(<$cHash0, m1, data_2>)
+%     prk_2e = hkdfExtract(~ltk, gy^~xx)
+%     prk_3e2m = prk_2e
+%     plainText2 = 'emptyStr' 
+%     extAad2 = TH_2
+%     K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+%     CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
+%     m2 = <data_2, CIPHERTEXT_2>
+%     data_3 = 'emptyStr' 
+%     TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
+%     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+%     extAad3 = TH_3
+%     plainText3 = 'emptyStr'
+%     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
+%     m3 = <data_3, CIPHERTEXT_3>
+%     exp_sk = <gy^~xx>
+%     imp_sk =  exp_sk
+%   in
+%   [ StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid), In(m2) ]
+%   --[ ExpCommitI(~tid, $U, $V, exp_sk)
+%     , CommitI(~tid, $U, $V, imp_sk)
+%     , I3(~tid, $U, $V, m1, m2, m3) ]->
+%   [ Out(m3) ]
+% \end{lstlisting}
 
-Apart from observations similar to those already made for the previous messages,
-we should mention here the two events %
-\mT{ExpCommitI(~tid, $U, $V, exp_sk)} and \mT{CommitI(~tid, $U, $V, imp_sk)}. %
-These events mark the completion of the protocol for the initiator, and will
-be used later for verifying explicit and implicit authentication, respectively.
-The difference is the choice of key material on which we check authentication
-(\mT{exp_sk} vs \mT{imp_sk}). In the case of the \mSig{} method, as above, these
-keys are the same, but there will be a crucial difference when the initiator runs the \mStat{} method.
+% Apart from observations similar to those already made for the previous messages,
+% we should mention here the two events %
+% \mT{ExpCommitI(~tid, $U, $V, exp_sk)} and \mT{CommitI(~tid, $U, $V, imp_sk)}. %
+% These events mark the completion of the protocol for the initiator, and will
+% be used later for verifying explicit and implicit authentication, respectively.
+% The difference is the choice of key material on which we check authentication
+% (\mT{exp_sk} vs \mT{imp_sk}). In the case of the \mSig{} method, as above, these
+% keys are the same, but there will be a crucial difference when the initiator runs the \mStat{} method.
 
-Finally, we have the last rule for the responder:
-\begin{lstlisting}
-rule R4_PSK_PSK:
-  let
-    data_3 = 'emptyStr' 
-    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-    K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
-    extAad3 = TH_3
-    plainText3 = 'emptyStr'
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
-    m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gxy>
-    imp_sk =  exp_sk
-  in
-  [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2), In(m3) ]
-  --[ ExpCommitR(~tid, $U, $V, exp_sk)
-    , CommitR(~tid, $U, $V, imp_sk)
-    , R4(~tid, $U, $V, m1, m2, m3) ]->
-  []
-\end{lstlisting}
+% Finally, we have the last rule for the responder:
+% \begin{lstlisting}
+% rule R4_PSK_PSK:
+%   let
+%     data_3 = 'emptyStr' 
+%     TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
+%     K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
+%     extAad3 = TH_3
+%     plainText3 = 'emptyStr'
+%     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)
+%     m3 = <data_3, CIPHERTEXT_3>
+%     exp_sk = <gxy>
+%     imp_sk =  exp_sk
+%   in
+%   [ StR2_PSK_PSK($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2), In(m3) ]
+%   --[ ExpCommitR(~tid, $U, $V, exp_sk)
+%     , CommitR(~tid, $U, $V, imp_sk)
+%     , R4(~tid, $U, $V, m1, m2, m3) ]->
+%   []
+% \end{lstlisting}
 
-This rule receives message 3, checks that the
-Diffie-Hellman key \mGxy{} corresponds to the local state, and then terminates
-the protocol.  As in
-the previous message, we mark acceptance of the third message from the responder
-with the two commit events, and conclude.
+% This rule receives message 3, checks that the
+% Diffie-Hellman key \mGxy{} corresponds to the local state, and then terminates
+% the protocol.  As in
+% the previous message, we mark acceptance of the third message from the responder
+% with the two commit events, and conclude.
 
 \spacehack
 \subsubsection{\mStatSig{}}
@@ -791,3 +779,8 @@ lemma secrecyPFSGIYSessionKey:
      ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j)
      | (Ex #l. SKRev(sk)@l)) )"
 \end{lstlisting}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
