@@ -266,7 +266,6 @@ appendix and the full code at the GitHub repository~\cite{edhocTamarinRepo}.
 \anote{Fix: give a dropbox link instead of the repo}
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
-
 \spacehack
 \subsubsection{General setup}
 \vnote{Section name doesn't appear here! Needs some text before the rule.}
@@ -279,8 +278,8 @@ rule registerLTK_STAT:
   [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
 \end{lstlisting}
 
-These rules express the registering of the long term keys for the \mSig and
-\mStat{} methods respectively.
+These rules express the registering of the long term keys for the \mSig{} and
+\mStat{} methods, respectively.
 %
 \mT{registerLTK_SIG} and \mT{registerLTK_STAT} register a public key (for
 signing and encrypting, respectively) that are tied to the identity of an agent
@@ -288,33 +287,30 @@ signing and encrypting, respectively) that are tied to the identity of an agent
 of agents.
 %
 The event \mT{UniqLTK} marks that the long term key is unique for each
-agent or pair of agents, as enforced by the following restriction:
-\begin{lstlisting}
-restriction uniqLTKs:
-    "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
-\end{lstlisting}
+agent.
+% or pair of agents, as enforced by the following restriction:
+% \begin{lstlisting}
+% restriction uniqLTKs:
+%     "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
+% \end{lstlisting}
 This models that there is an external mechanism ensuring that the
 long term keys are bound to the correct identity, e.g., a certificate authority,
 and that the attacker cannot register new public keys for an existing identity.
 
-Long term keys are revealed to the attacker through specific rules
-with the event \mT{LTKRev}.
+In our model we introduce specific rules to give the attacker access to
+long-term keys, session keys and the cryptographic interface of the device.
 \begin{lstlisting}
 rule revealLTK_SIG: [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_STAT: [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealSessionKeyI: [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+rule revealSessionKeyR: [CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+rule forge_SIG: [!LTK_SIG($A, ~ltk), In(xx)] --[TEE($A)]-> [Out(sign(xx, ~ltk))]
+rule exp_STAT: [!LTK_STAT($A, ~ltk), In('g'^x)] --[TEE($A)]-> [Out(('g'^x)^~ltk)]
 \end{lstlisting}
-Furthermore, we give the attacker access to the cryptographic interface of the
-device with the following rules:
-\begin{lstlisting}
-  
-\end{lstlisting}
-These rules are used to check the different lemmas for authentication
-and key secrecy, as we limit when the attacker is able to reveal the
-keys to prove forward secrecy, as discussed in
-Section~\ref{sec:threat-model}.
-%
-Each of the session keys is also revealed with similar rules,
-depending on the method to check session independence.
+These rules allow to check Perfect Forward Secrecy, Key Compromise Impersonation
+and (weak) Post Compromise Security as defined in Section~\ref{sec:desired-properties},
+by giving the attacker the ability to access to long term and session keys, or
+to the cryptographic interface, at the appropriate time.
 
 % \spacehack
 % \subsubsection{\mPskPsk{}} The following rules model the symmetric key based
@@ -475,34 +471,34 @@ message \mT{m1}, this time looking up the public key for \mT{U} and using the
 \mStatSig{} method.
 
 Next we look at the rule for the responder:
-\begin{lstlisting}
-rule R2_STAT_SIG:
-  let
-    data_2 = <'g'^~yy>
-    m1 = <'STAT', 'SIG', $cSUITE0, gx> 
-    TH_2 = h(<$cHash0, m1, data_2>)
-    prk_2e = hkdfExtract('emptyStr', gx^~yy)
-    prk_3e2m = prk_2e
-    K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
-    protected2 = $V // ID_CRED_V
-    CRED_V = pkV
-    extAad2 = <TH_2, CRED_V> 
-    assocData2 = <protected2, extAad2>
-    MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
-    authV = sign(<assocData2, MAC_2>, ~ltk)
-    plainText2 = <$V, authV>
-    K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
-    K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-    K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-    CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> 
-    m2 = <data_2, CIPHERTEXT_2>
-    exp_sk = <gx^~yy>
-  in
-  [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV) , In(m1), Fr(~yy), Fr(~tid) ]
-  --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
-  [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
-  , Out(m2) ]
-\end{lstlisting}
+% \begin{lstlisting}
+% rule R2_STAT_SIG:
+%   let
+%     data_2 = <'g'^~yy>
+%     m1 = <'STAT', 'SIG', $cSUITE0, gx> 
+%     TH_2 = h(<$cHash0, m1, data_2>)
+%     prk_2e = hkdfExtract('emptyStr', gx^~yy)
+%     prk_3e2m = prk_2e
+%     K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+%     protected2 = $V // ID_CRED_V
+%     CRED_V = pkV
+%     extAad2 = <TH_2, CRED_V> 
+%     assocData2 = <protected2, extAad2>
+%     MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+%     authV = sign(<assocData2, MAC_2>, ~ltk)
+%     plainText2 = <$V, authV>
+%     K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+%     K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+%     K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+%     CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2> 
+%     m2 = <data_2, CIPHERTEXT_2>
+%     exp_sk = <gx^~yy>
+%   in
+%   [ !LTK_SIG($V, ~ltk), !PK_SIG($V, pkV) , In(m1), Fr(~yy), Fr(~tid) ]
+%   --[ ExpRunningR(~tid, $V, exp_sk), R2(~tid, $V, m1, m2) ]->
+%   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2) 
+%   , Out(m2) ]
+% \end{lstlisting}
 Here is a place where the model and the original specification differ
 slightly, the reason being that we must allow some behaviour that is
 otherwise not covered by the symbolic handling of XOR encryption. It must
@@ -516,88 +512,88 @@ where each field is XORed with a half-key expansion (\mT{K_2e_1} and
 Diffie-Hellman key $g^{iy}$ cannot be computed by the responder at this stage.
 
 Next we have the second rule for the initiator:
-\begin{lstlisting}
-rule I3_STAT_SIG:
-  let
-    data_2 = <gy> 
-    TH_2 = h(<$cHash0, m1, data_2>)
-    prk_2e = hkdfExtract('emptyStr', gy^~xx)
-    plainText2 = <$V, authR> 
-    CRED_V = pkV
-    prk_3e2m = prk_2e
-    K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-    K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
-    CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> 
-    m2 = <data_2, CIPH3RTEXT_2>
-    K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
-    protected2 = $V // ID_CRED_V
-    extAad2 = <TH_2, CRED_V> 
-    assocData2 = <protected2, extAad2>
-    MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
-    data_3 = 'emptyStr' 
-    TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
-    giy = gy^~ltk
-    prk_4x3m = hkdfExtract(prk_3e2m, giy)
-    K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
-    protected3 = $U // ID_CRED_U
-    CRED_U = pkU
-    extAad3 = <TH_3, CRED_U>
-    assocData3 = <protected3, extAad3>
-    MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
-    authU = MAC_3
-    plainText3 = <$U, authU>
-    extAad3Outer = TH_3
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
-    m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gy^~xx>
-    imp_sk = <exp_sk, giy>
-  in
-  [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
-  , !PK_SIG($V, pkV)
-  , !PK_STAT($U, pkU)
-  , In(m2) ]
-  --[ ExpCommitI(~tid, $U, $V, exp_sk), CommitI(~tid, $U, $V, imp_sk)
-    , I3(~tid, $U, $V, m1, m2, m3)
-    , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true) ]->
-  [ Out(m3) ]
-\end{lstlisting}
+% \begin{lstlisting}
+% rule I3_STAT_SIG:
+%   let
+%     data_2 = <gy> 
+%     TH_2 = h(<$cHash0, m1, data_2>)
+%     prk_2e = hkdfExtract('emptyStr', gy^~xx)
+%     plainText2 = <$V, authR> 
+%     CRED_V = pkV
+%     prk_3e2m = prk_2e
+%     K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+%     K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+%     CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2> 
+%     m2 = <data_2, CIPH3RTEXT_2>
+%     K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+%     protected2 = $V // ID_CRED_V
+%     extAad2 = <TH_2, CRED_V> 
+%     assocData2 = <protected2, extAad2>
+%     MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+%     data_3 = 'emptyStr' 
+%     TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
+%     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+%     giy = gy^~ltk
+%     prk_4x3m = hkdfExtract(prk_3e2m, giy)
+%     K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+%     protected3 = $U // ID_CRED_U
+%     CRED_U = pkU
+%     extAad3 = <TH_3, CRED_U>
+%     assocData3 = <protected3, extAad3>
+%     MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+%     authU = MAC_3
+%     plainText3 = <$U, authU>
+%     extAad3Outer = TH_3
+%     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+%     m3 = <data_3, CIPHERTEXT_3>
+%     exp_sk = <gy^~xx>
+%     imp_sk = <exp_sk, giy>
+%   in
+%   [ StI1_STAT_SIG($U, ~ltk, $V, ~xx, m1, ~tid) 
+%   , !PK_SIG($V, pkV)
+%   , !PK_STAT($U, pkU)
+%   , In(m2) ]
+%   --[ ExpCommitI(~tid, $U, $V, exp_sk), CommitI(~tid, $U, $V, imp_sk)
+%     , I3(~tid, $U, $V, m1, m2, m3)
+%     , Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true) ]->
+%   [ Out(m3) ]
+% \end{lstlisting}
 Here is a crucial difference that follows from our last observation: we notice
 the addition of the semi-static Diffie-Hellman key to the term \mT{imp_sk}.
 This will be used later to check implicit authentication, as is reflected by the
 commit events.
 
-\begin{lstlisting}
-rule R4_STAT_SIG:
-  let
-    data_3 = 'emptyStr'
-    TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
-    K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
-    CRED_U = pkU
-    extAad3 = TH_3
-    plainText3 = <$U, authI>
-    CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
-    giy = CRED_U^~yy
-    prk_4x3m = hkdfExtract(prk_3e2m, giy)
-    K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
-    protected3 = $U // ID_CRED_U
-    extAad3 = <TH_3, CRED_U>
-    assocData3 = <protected3, extAad3>
-    MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
-    m3 = <data_3, CIPHERTEXT_3>
-    exp_sk = <gxy>
-    imp_sk = <exp_sk, giy>
-  in
-  [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
-  , !PK_STAT($U, pkU)
-  , !PK_SIG($V, pkV)
-  , In(m3) ]
-  --[ ExpCommitR(~tid, $U, $V, exp_sk)
-    , CommitR(~tid, $U, $V, imp_sk)
-    , R4(~tid, $U, $V, m1, m2, m3)
-    , Eq(authI, MAC_3) ]->
-  []
-\end{lstlisting}
+% \begin{lstlisting}
+% rule R4_STAT_SIG:
+%   let
+%     data_3 = 'emptyStr'
+%     TH_3 = h(<cHash0, TH_2, CIPHERTEXT_2, data_3>)
+%     K_3ae = hkdfExpand(<$cAEAD0, TH_2, 'K_3ae'>, prk_3e2m)
+%     CRED_U = pkU
+%     extAad3 = TH_3
+%     plainText3 = <$U, authI>
+%     CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+%     giy = CRED_U^~yy
+%     prk_4x3m = hkdfExtract(prk_3e2m, giy)
+%     K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+%     protected3 = $U // ID_CRED_U
+%     extAad3 = <TH_3, CRED_U>
+%     assocData3 = <protected3, extAad3>
+%     MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+%     m3 = <data_3, CIPHERTEXT_3>
+%     exp_sk = <gxy>
+%     imp_sk = <exp_sk, giy>
+%   in
+%   [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2) 
+%   , !PK_STAT($U, pkU)
+%   , !PK_SIG($V, pkV)
+%   , In(m3) ]
+%   --[ ExpCommitR(~tid, $U, $V, exp_sk)
+%     , CommitR(~tid, $U, $V, imp_sk)
+%     , R4(~tid, $U, $V, m1, m2, m3)
+%     , Eq(authI, MAC_3) ]->
+%   []
+% \end{lstlisting}
 
 On the same rule we can also see how \emph{implicit authentication}
 differs from explicit authentication for the Initiator running the
