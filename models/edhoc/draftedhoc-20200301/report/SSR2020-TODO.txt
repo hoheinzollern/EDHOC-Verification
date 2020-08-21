@@ -10,7 +10,8 @@ x means closed AP (Please tick off when you are done)
 Section 2 EDHOC Description:
 x Paper: [Karl] Cut down on detail in section 2 and describe things more abstractly
 x Paper: [Vaishnavi] Update key hierarchy figure
-- Paper: [Vaishnavi] Go through after Karl's updates on Tuesday
+x Paper: [Vaishnavi] Go through after Karl's updates on Tuesday
+- Paper: [Karl] Merge 2.1 and 1.3 into joint intro/related work
 
 Section 3 Model:
 - Paper: Cut down on detail in section 3 (remove some of the code?)
@@ -20,13 +21,13 @@ x Paper: [Vaishnavi] isolate PCS/KCI into one section, and identify all the refe
 - Paper: [Vaishnavi] Plan for what to write if we don't manage to prove PCS/KCI
 
 Section 4 Discussion:
-- Paper: [Karl] Go through after Vaishnavi's updates on Tuesday
+x Paper: [Karl] Go through after Vaishnavi's updates on Tuesday
 
 General:
 - Paper: [Karl] Fix upper-case letters where they are wrong in the references
 - Paper: [Karl] remove unused references and compact
-- Paper: [Karl] Check Discussion section
-- Paper: [Vaishnavi] check font issue on xetex
+x Paper: [Karl] Check Discussion section
+x Paper: [Vaishnavi] check font issue on xetex
 - Paper: Check "compliance": https://ssr2020.mozilla.org/docs/Springer_Guidelines.pdf
 
 

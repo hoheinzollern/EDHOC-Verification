@@ -97,31 +97,23 @@ based before providing details about the methods.
 \subsection{Relations to \mSigma, \mOptls{} and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
 \fillhack
-\mEdhoc{} uses existing protocols as cryptographic cores to
-establish the session key. In this section, we discuss the relationships between
-\mEdhoc{} and these protocols.
+\mEdhoc{} uses existing academic protocols as cryptographic cores to
+establish the session key.
 %
-We note that many key exchange protocols, e.g, \mSigma{}, have an explicit,
-generic mechanism to securely negotiate such parameters, which other protocols
-can easily extend.
-%
-However, they do not always specify exactly how messages and parameters are
-encoded, which is a requirement for an industrially-standardized protocol
-like \mEdhoc{}, which needs to negotiate parameters for establishing a
-complete \mOscore{} security context.
+Being designed as an industrial standard, \mEdhoc{} specifies more details
+on top of these cores, e.g., connection identifiers for message multiplexing,
+encoding and application specific parameters to be negotiated.
 %
 
 %-----------------------------------------------------------------------------
 \spacehack
 \subsubsection{\mSigma{}}
 \label{sec:sigma}
-The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigmaI{} variant
-of \mSigma{}~\cite{sigma}.
+The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigma{}
+variant that provides identity protection for the initiator~\cite{sigma}.
 %
-This variant provides identity protection for the initiator.
-%
-However, there are some differences, e.g., \mSigSig{} uses Mac-then-Sign like
-\mTls{} instead of Sign-then-Mac. 
+Some aspects differ though, e.g., \mSigSig{} uses Mac-then-Sign like
+\mTls{} instead of Sign-then-Mac.
 %
 
 %-----------------------------------------------------------------------------
@@ -132,43 +124,44 @@ The \mStat-based methods use challenge-respsonse signatures using static
 long-term DH keys, and proceed along the lines of
 \mOptls~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
-The challenge-response signature uses an ephemeral DH half-key as a challenge.
+The challenge-response signature works by one party sending a random challenge
+and an ephemeral DH half-key to a receiver.
 %
-The receiver of the challenge mixes this half-key with its secret static DH
-key to get a temporary key.
+The receiver mixes the DH half-key and the challenge with its secret static DH
+key to obtain a temporary key.
 %
 The temporary key is used to compute a MAC that is returned to the sender of the
 challenge.
 %
-This authenticates one party to the other, which is sufficient for \mOptls,
-in that it only aims for server authentication.
+This authenticates the receiver to the sender, which is sufficient for \mOptls,
+because it only considers server authentication.
 %
 The temporary key also affects the final session key.
 %
 
-In \mEdhoc, a party authenticating with with the \mStat{} authentication method
-essentially acts as an \mOptls{} client and the other party as an \mOptls{}
+In \mEdhoc, a party using the \mStat{} authentication method
+essentially acts as an \mOptls{} client and the peer act as an \mOptls{}
 server.
 %
 However, unlike \mOptls{}, \mEdhoc{} requires mutual
 authentication~\cite{ietf-lake-reqs-04}.
 %
 The \mStatStat{} method can be thought of as interleaving two \mOptls{}
-sessions, where the second \mEdhoc{} message carries both the response
-message of the first \mOptls{} session and the request message of the
-second \mOptls{} session.
+runs, one initiated by each party, and then combining the resulting session key
+material.
 %
-For the other \mStat{}-based methods, the party authenticating with with the
-\mStat{} authentication method essentially acts as an \mOptls{} client and the
-other party (using \mSig{}-based authentication) as an \mOptls{} server.
+% KARL: this comes in section 2 anyway:
+%For the other \mStat{}-based methods, the party using the
+%\mStat{} authentication method essentially acts as an \mOptls{} client and the
+%other party (using \mSig{}-based authentication) as an \mOptls{} server.
 %
 
-There are some differences between \mOptls{} and the \mStat{}-based methods.
+%There are differences between \mOptls{} and the \mStat{}-based methods.
 %
-For instance, \mEdhoc{} reuses the DH half-key as a challenge to save
-bandwidth, whereas \mOptls{} makes an explicit point to use distinct elements
-for the DH half-key and the challenge, following the principle of separation
-of concerns.
+\mOptls{} differs from how \mEdhoc{} uses its core, at least in that the
+ephemeral DH half-key and the challenge are distinct elements,
+following the separation of concerns principle, whereas \mEdhoc{} use the
+ephemeral DH half-key as challenge.
 %
 
 %------------------------------------------------------------------------- sub
@@ -177,34 +170,29 @@ of concerns.
 The \mStatStat{} and \mPskPsk{} methods aim to follow the \mNoise{}
 framework~\cite{perrin2016noise}.
 %
-This framework defines how to construct authenticated key exchange protocols,
+This framework defines how to construct AKE protocols,
 known as patterns, using static long-term DH keys or pre-shared
 keys as credentials.
 %
 Its goal is to harmonize among the many static long-term key DH
-based key exchange protocols, of which \mOptls{} is one.
+based AKE protocols, of which \mOptls{} is one.
 %
 \mNoise{} specifies how to derive keys, use transcript hashes to ensure
 authentication of the message flow among other things.
 %
-The closest \mNoise{} pattern to the \mStatStat{} method appears to be the
+The \mNoise{} pattern closest to the \mStatStat{} method appears to be the
 XX pattern.
 %
 
-\mEdhoc{} does not use all functions of \mNoise{} exactly as prescribed though.
+\mEdhoc{} does not use all functions of \mNoise{} exactly as prescribed, which
+prevents claiming that security properties of XX
+automatically carries over.
 %
-For example, \mNoise{} prescribes that the mixHash function, which corresponds
-to the transcript hash of \mEdhoc{}, is called on pre-message public keys
-during the initialization.
+For example, according to \mNoise{}, the mixHash function is called on
+pre-message public keys during the initialization.
 %
 This would correspond to \mEdhoc{} computing a first intermediate transcript
-hash for this, which is not the case.
-%
-Another example is that the optional application layer data sent along with
-the second message of XX.
-
-Because of these, and possibly other, discrepancies one cannot automatically
-claim that \mEdhoc{} enjoys the same properties as XX.
+hash over those keys, which \mEdhoc{} does not do.
 %
 
 %------------------------------------------------------------------------- sub
@@ -220,7 +208,6 @@ interfaces.
 %
 Thus, we omit details about \mCose{}.
 %
-
 All methods make use of a common key hierarchy, which we describe first.
 %
 
