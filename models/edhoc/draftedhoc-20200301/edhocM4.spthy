@@ -392,15 +392,15 @@ rule revealLTK_PSK:
 /* PCS interface */
 ifelse(ifelse(<!SIG!>, m4METHODI, 1, ifelse(<!SIG!>, m4METHODR, 1, 0)), 1,
 <!rule forge_SIG:
-    [!LTK_SIG($A, ~ltk), In(xx)] --[BrokenTEE($A)]-> [Out(sign(xx, ~ltk))]!>
+    [!LTK_SIG($A, ~ltk), In(xx)] --[TEE($A)]-> [Out(sign(xx, ~ltk))]!>
 )
 ifelse(ifelse(<!STAT!>, m4METHODI, 1, ifelse(<!STAT!>, m4METHODR, 1, 0)), 1,
 <!rule exp_STAT:
-    [!LTK_STAT($A, ~ltk), In('g'^x)] --[BrokenTEE($A)]-> [Out(('g'^x)^~ltk)]!>
+    [!LTK_STAT($A, ~ltk), In('g'^x)] --[TEE($A)]-> [Out(('g'^x)^~ltk)]!>
 )
 ifelse(<!PSK!>, m4METHODI,
 <!rule forge_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[BrokenTEE($A), BrokenTEE($B)]-> [Out(hkdfExtract(~ltk, xx))]!>
+    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[TEE($A), TEE($B)]-> [Out(hkdfExtract(~ltk, xx))]!>
 )
 
 /* Reveal session key for all methods.
@@ -459,17 +459,13 @@ lemma sanityExecutableToTheEnd:
 lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
-         (ExpCommitI(tidI, u, v, expSk)@i & 
-	      (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
-          (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)))
+         (ExpCommitI(tidI, u, v, expSk)@i
+	     & (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
+         & (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)))
           ==>
          ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
-                & not(#i = #i2)
-                )
-           )
-         | (Ex #j. LTKRev(v)@j & #j < #i))
-    "
+           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+         | (Ex #j. LTKRev(v)@j & #j < #i) )"
 
 /* This shows agreement on the full session key and both u and v.
  * Note that this holds both for the key material we call explicitly
@@ -481,18 +477,13 @@ lemma authInjAgreeGuaranteeForI:
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
-         (CommitR(tidR, u, v, sk)@i &
-	      (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) & 
-          (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. BrokenTEE(u)@k ==> k < j) & (All #k. BrokenTEE(v)@k ==> k < j)) )
+         (CommitR(tidR, u, v, sk)@i
+	     & (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
+         & (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)) )
          ==>
          ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, sk)@j & #j < #i)
-           & not( Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2
-                & not(#i = #i2)
-                )
-           )
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-	     )
-    "
+           & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2 & not(#i = #i2)) )
+         | (Ex #j. LTKRev(u)@j & #j < #i) )"
 
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
@@ -533,8 +524,8 @@ lemma authGIYImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. LTKRev(u)@k) | (Ex #k. BrokenTEE(u)@k)
-         | (Ex #k. LTKRev(v)@k) | (Ex #k. BrokenTEE(v)@k)
+         | (Ex #k. LTKRev(u)@k) | (Ex #k. TEE(u)@k)
+         | (Ex #k. LTKRev(v)@k) | (Ex #k. TEE(v)@k)
          )
     "
 
@@ -560,44 +551,44 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )"
     !>,
     // else: SIG_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. BrokenTEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
          )"
     !>
 )!>
@@ -636,7 +627,7 @@ lemma authKCIInjAgreeGuaranteeForI:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. BrokenTEE(v)@j)
+         | (Ex #j. TEE(v)@j)
          | (Ex #j. LTKRev(v)@j & #j < #i)
          )
     "
@@ -650,7 +641,7 @@ lemma authKCIInjAgreeGuaranteeForR:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. BrokenTEE(u)@j)
+         | (Ex #j. TEE(u)@j)
          | (Ex #j. LTKRev(u)@j & #j < #i)
 	     )
     "
@@ -674,7 +665,7 @@ lemma authKCIImpGIYImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. BrokenTEE(v)@k)
+         | (Ex #k. TEE(v)@k)
          | (Ex #k. LTKRev(v)@k & #k < #i)
          )
     "
