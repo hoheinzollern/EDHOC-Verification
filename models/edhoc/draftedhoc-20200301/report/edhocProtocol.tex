@@ -658,6 +658,17 @@ properties:
         and the responder against passive attacks, except for \mPskPsk{})
     \item Key Compromise Impersonation (\textbf{KCI}) resistance
     \item \textbf{protection against replay attacks} by the attacker (we {\color{red} VAISHNAVI: Incomplete sentence?}
+        {\color{red}KARL: It could be a left-over from the claim I did not
+            understand. The only claim of protection against reply in the draft
+            is on page 33 where EDHOC is compared to SIGMA. However, the given
+            argument is vague and the claim seems untrue: SIGMA allows for
+            including signed "additional information" and this is exactly what
+            EDHOC uses to protect algorithm choices. The spec also talks about
+            protecting previous messages, which may be referring to the
+            transcript hash, but I don't see what that has to do with replay
+            attacks. I propose we delete the item "protection against replay
+            attacks" from here or we write a sentence or two about
+        that it is unclear.}
     \item A single session of \mEdhoc{} enables the responder to verify
             that the selected cipher suite is the most preferred of the
             initiator which is supported by both parties, even though there is
