@@ -212,8 +212,7 @@ claim that \mEdhoc{} enjoys the same properties as XX.
 \subsection{Methods of \mEdhoc{}}
 \label{sec:methods}
 \fillhack
-We are now ready to dive into the various methods of \mEdhoc.
-
+%We are now ready to dive into the various methods of \mEdhoc.
 Although \mCbor{} and \mCose{}~\cite{rfc8152} are important building blocks of
 \mEdhoc{}, and we use their terminology in our model to better reflect the
 \mSpec{}, our model does not cover the details of encoding and \mCose{}
@@ -285,119 +284,121 @@ authentication.
 \knote{We have not mentioned the blue-boxed keys by name anywhere else in
 the text. The idea of mentioning them here in the caption was so we don't have to.}
 \caption{Joint key hierarchy for all methods.
-Diamond shapes denote inputs conditioned on the method $m$,
-with 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.}
+%Diamond shapes denote inputs conditioned on the method $m$,
+%with 0 = \mSigSig, 1 = \mSigStat, 2 = \mStatSig, 3 = \mStatStat.
+}
 \label{fig:kdfdiagram}
 \end{figure}
 
-We now describe the \mEdhoc{} methods.
+We now describe the \mEdhoc{} methods. Since the \mSigSig{} method has been analyzed earlier, we do not focus on it here. In the interests of space, we only describe the \mStat-based methods here. However, a detailed description of the \mPskPsk{} method can be found in the technical report at~\cite{edhocTamarinRepo}. 
 %
 
-\spacehack
-\subsubsection{\mPskPsk{}}
-In this method, the initiator and responder are assumed to share a pre-shared
-key (\mPsk) identified by \mIDPsk.
+%\spacehack
+%\subsubsection{\mPskPsk{}}
+%In this method, the initiator and responder are assumed to share a pre-shared
+%key (\mPsk) identified by \mIDPsk.
+%%
+%The message sequence is shown in Figure~\ref{fig:edhocpsk}.
+%%
+%The first message contains the \mIDPsk{} identifier.
+%%
+%The responder obtains the corresponding \mPsk{} and uses that to construct the
+%authentication data, i.e., the MAC in the \mAead{} transform), included in
+%the second message.
+%%
+%In the third message, the initiator uses this same technique to authenticate
+%to the responder.
+%%
 %
-The message sequence is shown in Figure~\ref{fig:edhocpsk}.
+%The transcript hash \mTH{} keeps track of the data sent in the messages.
+%%
+%One unconventional feature is that the transcript hash lags behind by one
+%message.
+%%
+%That is, the second transcript hash \mTHtwo{}, does not cover the content of
+%the second message (similarly for \mTHthree).
+%%
+%The reason for this is that \mTHtwo{} cannot cover the output of the
+%\mAead{} transform, since \mTHtwo{} is itself an input to it.
+%%
+%This is the same for all methods, but it does not cause any problems with
+%authentication, since the data not covered by the transcript hash is
+%instead MACed or signed.
+%%
 %
-The first message contains the \mIDPsk{} identifier.
-%
-The responder obtains the corresponding \mPsk{} and uses that to construct the
-authentication data, i.e., the MAC in the \mAead{} transform), included in
-the second message.
-%
-In the third message, the initiator uses this same technique to authenticate
-to the responder.
-%
-
-The transcript hash \mTH{} keeps track of the data sent in the messages.
-%
-One unconventional feature is that the transcript hash lags behind by one
-message.
-%
-That is, the second transcript hash \mTHtwo{}, does not cover the content of
-the second message (similarly for \mTHthree).
-%
-The reason for this is that \mTHtwo{} cannot cover the output of the
-\mAead{} transform, since \mTHtwo{} is itself an input to it.
-%
-This is the same for all methods, but it does not cause any problems with
-authentication, since the data not covered by the transcript hash is
-instead MACed or signed.
-%
-
-\begin{figure}
-\scalebox{.69}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-\begin{tikzpicture}
-    \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-10.1);
-    \draw [very thick] (11.5, -0.5) -- (11.5,-10.1);
-    \node[below=0.5em of ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
-    \node (res) at (11.5,0) {Responder};
-    \node[below=0.5em of res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
-    \action{3em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
-    \msg{6.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
-    \action{7em}{res}{$
-      \begin{array}{c}
-        \text{Generates } \mCr,\ $y$\\
-        \mGy = g^{y}\\
-        \mTHtwo = \mHash(\mMsgone, g^{y})\\
-        \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
-        \mKtwoae = \mHkdfExpand(\mPRKtwo, \mTHtwo)
-      \end{array}$};
-    \msg{15.5em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mAead(\mKtwoae; \mTHtwo, \mADtwo)}^{\mCipher}$};
-    \action{16.5em}{ini}{$
-      \begin{array}{c}
-       \mTHtwo = \mHash(\mMsgone, \mGy)\\
-       \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
-        \mKtwoae = \mHkdf(\mPRKtwo, \mTHtwo)\\
-        \mTHthree = \mHash(\mTHtwo, \mCipher)\\
-        \mPRKthree = \mPRKtwo \\
-        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
-      \end{array}$};
-    
-    \msg{25.5em}{ini}{res}{\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \mADthree)};
-    \action{26em}{res}{$
-    \begin{array}{c}
-    	\mPRKthree = \mPRKtwo \\
-        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
-    \end{array}$};
-    \draw [line width=1mm] (-2,-10.1) -- (2,-10.1);
-    \draw [line width=1mm] (9.5,-10.1) -- (13.5,-10.1);
-    \end{tikzpicture}}
-\caption{The \mPskPsk{} method. $\mAead(k; x; y)$ is used to denote
-\mAead{} encryption where $k$ is the key, $x$ is associated data to be integrity
-protected, and $y$ is the plaintext.}
-\label{fig:edhocpsk}
-\end{figure}
+%\begin{figure}
+%\scalebox{.69}{
+%\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+%\begin{tikzpicture}
+%    \node (ini) at (0, 0) {Initiator};
+%    \draw [very thick] (0, -0.5) -- (0,-10.1);
+%    \draw [very thick] (11.5, -0.5) -- (11.5,-10.1);
+%    \node[below=0.5em of ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
+%    \node (res) at (11.5,0) {Responder};
+%    \node[below=0.5em of res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
+%    \action{3em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
+%    \msg{6.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
+%    \action{7em}{res}{$
+%      \begin{array}{c}
+%        \text{Generates } \mCr,\ $y$\\
+%        \mGy = g^{y}\\
+%        \mTHtwo = \mHash(\mMsgone, g^{y})\\
+%        \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
+%        \mKtwoae = \mHkdfExpand(\mPRKtwo, \mTHtwo)
+%      \end{array}$};
+%    \msg{15.5em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mAead(\mKtwoae; \mTHtwo, \mADtwo)}^{\mCipher}$};
+%    \action{16.5em}{ini}{$
+%      \begin{array}{c}
+%       \mTHtwo = \mHash(\mMsgone, \mGy)\\
+%       \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
+%        \mKtwoae = \mHkdf(\mPRKtwo, \mTHtwo)\\
+%        \mTHthree = \mHash(\mTHtwo, \mCipher)\\
+%        \mPRKthree = \mPRKtwo \\
+%        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
+%      \end{array}$};
+%    
+%    \msg{25.5em}{ini}{res}{\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \mADthree)};
+%    \action{26em}{res}{$
+%    \begin{array}{c}
+%    	\mPRKthree = \mPRKtwo \\
+%        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
+%    \end{array}$};
+%    \draw [line width=1mm] (-2,-10.1) -- (2,-10.1);
+%    \draw [line width=1mm] (9.5,-10.1) -- (13.5,-10.1);
+%    \end{tikzpicture}}
+%\caption{The \mPskPsk{} method. $\mAead(k; x; y)$ is used to denote
+%\mAead{} encryption where $k$ is the key, $x$ is associated data to be integrity
+%protected, and $y$ is the plaintext.}
+%\label{fig:edhocpsk}
+%\end{figure}
 %------------------------------------------------------------------------- sub
-\spacehack
-\subsubsection{\mStat-based methods}
+%\spacehack
+%\subsubsection{\mStat-based methods}
 \mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and
 \mStatSig{}.
 %
 One or both of the initiator and responder authenticate to their peer using
 their secret static long-term DH key, \mLtki{} or \mLtkr{} respectively.
 %
-
 Authentication is achieved using challenge-response signatures that work as
 follows when the responder authenticates to the initiator.
 %
+Each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
+%
+
 The initiator sends the ephemeral DH half-key \mGx{} as a challenge to the
 responder in the first message.
 %
-To save bandwidth,  sent in the first message also serves as challenge.
+%To save bandwidth,  sent in the first message also serves as challenge.
 %
-Upon receiving \mGx{}, the responder exponentiates it by \mLtkr{}.
+Upon receiving \mGx{}, the responder raises it to \mLtkr{}.
 %
-Assuming the discrete logarithm problem is hard in the underlying DH group,
+Assuming the discrete log problem is hard in the underlying DH group,
 only the initiator and responder will be able to compute $\mGx{}^\mLtkr{}$,
 and this value is woven in to the key hierarchy as depicted in
 Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
 %
-The responder computes authentication data \mAuthr{} in the form of the MAC
-\mMactwo{} using the \mAead{} transform from \mSuites{} as proposed by the
+The responder computes authentication data \mAuthr{} in the form of \mMactwo{} using the \mAead{} transform from \mSuites{} as proposed by the
 initiator in the first message.
 %
 The responder then includes \mMactwo{} in the second message.
@@ -411,19 +412,17 @@ therefore considers the responder authenticated if the \mAead{} transform
 completes successfully.
 %
 When the initiator is authenticating to the responder, the roles are reversed,
-and \mGy{} takes the place of \mGx{}, \mLtki{} that of \mLtkr{}, and \mAuthi{}
-that of \mAuthr{}. \mAuthi{} is constructed from \mMacthree{}.
+and \mGy, \mLtki, and \mAuthi{} are used instead of \mGx, \mLtkr, and \mAuthr{} respectively. 
+%\mGy{} takes the place of \mGx{}, \mLtki{} that of \mLtkr{}, and \mAuthi{}
+%that of \mAuthr{}. 
+\mAuthi{} is constructed from \mMacthree{}.
 %
 
-Independently of whether one party uses \mStat{}-based authentication, the
-other party may use \mSig{}-based authentication.
-%
-In that case, the authentication data for that party is constructed
+Even if one party uses \mStat{}-based authentication, the
+other party may use \mSig{}-based authentication, where the authentication data is constructed
 using a regular signature.
 %
-In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party
-provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the
-credentials they use.
+%In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
 %
 
 %------------------------------------------------------------------------- sub
@@ -507,21 +506,6 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mStatStat}
-Both the initiator and the responder use the \mStat{}
-authentication method.
-%
-Both parties' secret static long-term DH keys feed into the key hierarchy.
-%
-The initiator computes authentication data using the \mAead{} transform
-and includes that in the third message for the responder to verify.
-%
-As expected, the initiator's behavior mirrors the \mStat{} authentication
-method used by the responder in \mSigStat{}.
-%
-
-%------------------------------------------------------------------------- sub
-\spacehack
 \subsubsection{\mStatSig}
 This method mirrors the \mSigStat{} method.
 %
@@ -593,28 +577,42 @@ must be signature keys.
 \label{fig:edhocstatsig}
 \end{figure}
 
+%------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mSigSig{}}
-Both parties run \mSig{} and authenticate with signatures.
+\subsubsection{\mStatStat}
+Both the initiator and the responder use the \mStat{}
+authentication method.
 %
-As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but
-there are some notable differences.
+Both parties' secret static long-term DH keys feed into the key hierarchy.
 %
-For example, \mEdhoc{} aims to provide some degree of identity protection for
-responders, and therefore uses the idea from \mSigmaI{} of encrypting the
-responder identifier \mIdcredr{} (and other items) in the second message.
+The initiator computes authentication data using the \mAead{} transform
+and includes that in the third message for the responder to verify.
 %
-The designers of \mEdhoc{} consider it wasteful adding a second MAC in addition
-to the already included \mMactwo{}, to limit bandwidth consumption.
+%As expected, the initiator's behavior mirrors the \mStat{} authentication method used by the responder in \mSigStat{}.
 %
-\mEdhoc{} applies XOR encryption, with \mHkdf{} being used to generate the
-key stream, whereas \mSigma{} assumes authenticated encryption for this
-purpose (see Section 5.2 of~\cite{sigma}).
-%
-Because \mSigSig{} has been analyzed in~\cite{DBLP:conf/secsr/BruniJPS18}, we
-do not focus on it here.
-%
-However, we model it and verify its properties as carefully as for the other methods.
+
+%\spacehack
+%\subsubsection{\mSigSig{}}
+%Both parties run \mSig{} and authenticate with signatures.
+%%
+%As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but
+%there are some notable differences.
+%%
+%For example, \mEdhoc{} aims to provide some degree of identity protection for
+%responders, and therefore uses the idea from \mSigmaI{} of encrypting the
+%responder identifier \mIdcredr{} (and other items) in the second message.
+%%
+%The designers of \mEdhoc{} consider it wasteful adding a second MAC in addition
+%to the already included \mMactwo{}, to limit bandwidth consumption.
+%%
+%\mEdhoc{} applies XOR encryption, with \mHkdf{} being used to generate the
+%key stream, whereas \mSigma{} assumes authenticated encryption for this
+%purpose (see Section 5.2 of~\cite{sigma}).
+%%
+%Because \mSigSig{} has been analyzed in~\cite{DBLP:conf/secsr/BruniJPS18}, we
+%do not focus on it here.
+%%
+%However, we model it and verify its properties as carefully as for the other methods.
 
 
 %KARL: we didn't verify anything about this after all. Propose to delete it.
@@ -632,8 +630,10 @@ However, we model it and verify its properties as carefully as for the other met
 \subsection{Expected security properties}
 \label{sec:claimedProperties}
 \fillhack
-We now list the security properties that the authors
+We present the security properties that the authors
 of the \mSpec{}~\cite{selander-lake-edhoc-01} claim \mEdhoc{} satisfies.
+%
+Many of the claims are imprecisely expressed.
 %
 We will revisit these claims when we discuss the formal modeling and
 verification of \mEdhoc{} in Section~\ref{sec:formalization} and in the
@@ -643,10 +643,10 @@ discussions in Section~\ref{sec:discussion}.
     Also refer back to here from the discussion session.
 }
 %
-Many of the claims are imprecisely expressed and some, like KCI, appear to be
-described more than once.
+ %and some, like KCI, appear to be
+%described more than once.
 %
-We elaborate on this in Section~\ref{sec:discussion}.
+%We elaborate on this in Section~\ref{sec:discussion}.
 %
 The following list contains our interpretation of the claimed security
 properties:
@@ -654,27 +654,27 @@ properties:
     \item Perfect Forward Secrecy (\textbf{PFS}) for the session key material
     \item Mutual authentication (this presumably refers to entity authentication
         because it is followed by claims of
-        \textbf{consistency} (defined in~\cite{sigma}, {\color{red} KARL: I
-            believe this definition is equivalent to mutual injective agreement
-            on session key, but please double check}
+        \textbf{consistency} (defined in~\cite{sigma}, %{\color{red} KARL: I
+            %believe this definition is equivalent to mutual injective agreement
+            %on session key, but please double check}
         \textbf{aliveness}, and
         \textbf{peer awareness} to the responder, but not to the initiator)
     \item \textbf{Identity protection} (the initiator against active attacks
         and the responder against passive attacks, except for \mPskPsk{})
     \item Key Compromise Impersonation (\textbf{KCI}) resistance
-    \item \textbf{protection against replay attacks} by the attacker (we
+    \item \textbf{protection against replay attacks} by the attacker (we {\color{red} VAISHNAVI: Incomplete sentence?}
     \item A single session of \mEdhoc{} enables the responder to verify
             that the selected cipher suite is the most preferred of the
             initiator which is supported by both parties, even though there is
-            no negotiation of cipher suites per se
+            no negotiation of cipher suites per se.
     \item Compromise of the \mHkdf{} input parameters (\mGxy{} shared
             secret and/or \mPsk) leads to all session keys derived from that
             shared secret being deemed compromised.
-            \knote{I don't know which property the above refers to.}
+            %\knote{I don't know which property the above refers to.}
         \item \textbf{Session key independence}
 \end{itemize}
 %
-In this paper, we verify {\color{red} secrecy, authentication, session independence,
-perfect forward secrecy, key-compromise impersonation, and some
-flavor of post-compromise security.}
+%In this paper, we verify {\color{red} secrecy, authentication, session independence,
+%perfect forward secrecy, key-compromise impersonation, and some
+%flavor of post-compromise security.}
 %
