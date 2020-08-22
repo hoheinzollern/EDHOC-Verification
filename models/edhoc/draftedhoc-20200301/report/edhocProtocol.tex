@@ -107,7 +107,7 @@ encoding and application specific parameters to be negotiated.
 
 %-----------------------------------------------------------------------------
 \spacehack
-\subsubsection{\mSigma{}}
+\subsubsection{\mSigma{}.}
 \label{sec:sigma}
 The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigma{}
 variant that provides identity protection for the initiator~\cite{sigma}.
@@ -118,7 +118,7 @@ Some aspects differ though, e.g., \mSigSig{} uses Mac-then-Sign like
 
 %-----------------------------------------------------------------------------
 \spacehack
-\subsubsection{\mOptls{}}
+\subsubsection{\mOptls{}.}
 \label{sec:optls}
 The \mStat-based methods use challenge-respsonse signatures using static
 long-term DH keys, and proceed along the lines of
@@ -166,7 +166,7 @@ ephemeral DH half-key as challenge.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mNoise{}}
+\subsubsection{\mNoise{}.}
 The \mStatStat{} and \mPskPsk{} methods aim to follow the \mNoise{}
 framework~\cite{perrin2016noise}.
 %
@@ -213,7 +213,7 @@ All methods make use of a common key hierarchy, which we describe first.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{Key Hierarchy}
+\subsubsection{Key Hierarchy.}
 \label{sec:keyHierarchy}
 
 Keys are derived in \mEdhoc{} using \mHkdf{}~\cite{rfc5869}.
@@ -289,7 +289,7 @@ We now describe the \mEdhoc{} methods. Since the \mSigSig{} method has been anal
 %
 
 %\spacehack
-%\subsubsection{\mPskPsk{}}
+%\subsubsection{\mPskPsk{}.}
 %In this method, the initiator and responder are assumed to share a pre-shared
 %key (\mPsk) identified by \mIDPsk.
 %%
@@ -368,7 +368,7 @@ We now describe the \mEdhoc{} methods. Since the \mSigSig{} method has been anal
 %\end{figure}
 %------------------------------------------------------------------------- sub
 %\spacehack
-%\subsubsection{\mStat-based Methods}
+%\subsubsection{\mStat-based Methods.}
 \mEdhoc{} provides three \mStat-based methods -- \mSigStat{}, \mStatStat{} and
 \mStatSig{}.
 %
@@ -422,7 +422,7 @@ using a regular signature.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mSigStat}
+\subsubsection{\mSigStat.}
 The initiator uses the \mSig{} method, authenticating with a signature,
 while the responder uses the \mStat{} method, authenticating with a
 challenge-response signature.
@@ -501,7 +501,7 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mStatSig}
+\subsubsection{\mStatSig.}
 This method mirrors the \mSigStat{} method.
 %
 The responder runs \mSig{} and creates \mAuthr{} as a signature over MAC,
@@ -574,7 +574,7 @@ must be signature keys.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsubsection{\mStatStat}
+\subsubsection{\mStatStat.}
 Both the initiator and the responder use the \mStat{}
 authentication method.
 %
@@ -587,7 +587,7 @@ and includes that in the third message for the responder to verify.
 %
 
 %\spacehack
-%\subsubsection{\mSigSig{}}
+%\subsubsection{\mSigSig{}.}
 %Both parties run \mSig{} and authenticate with signatures.
 %%
 %As mentioned earlier, \mSigSig{} is very closely modeled on \mSigmaI{}, but
