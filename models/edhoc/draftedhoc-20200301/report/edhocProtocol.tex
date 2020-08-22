@@ -277,13 +277,13 @@ authentication.
 \label{fig:kdfdiagram}
 \end{figure}
 
-{\color{red}I have a note here, but for some reason notes no longer appear in
-the PDF.}
-\knote{I really like the new text in the diamond shapes. Much clearer. The
-    numbering is however still used under the \mMactwo{} and \mMacthree{}
-    symbols. How about changing the text under \mMactwo{} to if R uses SIG and
-corresponding for \mMacthree{}?
-}
+%{\color{red}I have a note here, but for some reason notes no longer appear in
+%the PDF.}
+%\knote{I really like the new text in the diamond shapes. Much clearer. The
+%    numbering is however still used under the \mMactwo{} and \mMacthree{}
+%    symbols. How about changing the text under \mMactwo{} to if R uses SIG and
+%corresponding for \mMacthree{}?
+%}
 
 We now describe the \mEdhoc{} methods. Since the \mSigSig{} method has been analyzed earlier, we do not focus on it here. In the interests of space, we only describe the \mStat-based methods here. However, a detailed description of the \mPskPsk{} method can be found in the technical report at~\cite{edhocTamarinRepo}. 
 %
@@ -657,18 +657,18 @@ properties:
     \item \textbf{Identity protection} (the initiator against active attacks
         and the responder against passive attacks, except for \mPskPsk{})
     \item Key Compromise Impersonation (\textbf{KCI}) resistance
-    \item \textbf{protection against replay attacks} by the attacker (we {\color{red} VAISHNAVI: Incomplete sentence?}
-        {\color{red}KARL: It could be a left-over from the claim I did not
-            understand. The only claim of protection against reply in the draft
-            is on page 33 where EDHOC is compared to SIGMA. However, the given
-            argument is vague and the claim seems untrue: SIGMA allows for
-            including signed "additional information" and this is exactly what
-            EDHOC uses to protect algorithm choices. The spec also talks about
-            protecting previous messages, which may be referring to the
-            transcript hash, but I don't see what that has to do with replay
-            attacks. I propose we delete the item "protection against replay
-            attacks" from here or we write a sentence or two about
-        that it is unclear.}
+%    \item \textbf{protection against replay attacks} by the attacker (we {\color{red} VAISHNAVI: Incomplete sentence?}
+%        {\color{red}KARL: It could be a left-over from the claim I did not
+%            understand. The only claim of protection against reply in the draft
+%            is on page 33 where EDHOC is compared to SIGMA. However, the given
+%            argument is vague and the claim seems untrue: SIGMA allows for
+%            including signed "additional information" and this is exactly what
+%            EDHOC uses to protect algorithm choices. The spec also talks about
+%            protecting previous messages, which may be referring to the
+%            transcript hash, but I don't see what that has to do with replay
+%            attacks. I propose we delete the item "protection against replay
+%            attacks" from here or we write a sentence or two about
+%        that it is unclear.}
     \item A single session of \mEdhoc{} enables the responder to verify
             that the selected cipher suite is the most preferred of the
             initiator which is supported by both parties, even though there is

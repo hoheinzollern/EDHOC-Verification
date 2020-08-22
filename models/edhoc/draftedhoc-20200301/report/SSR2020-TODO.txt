@@ -29,7 +29,8 @@ General:
 x Paper: [Karl] Check Discussion section
 x Paper: [Vaishnavi] check font issue on xetex
 - Paper: Check "compliance": https://ssr2020.mozilla.org/docs/Springer_Guidelines.pdf
-
+- Paper: Add keywords
+- Create a new techrep with all the details and code snippets
 
 Model:
 - Tamarin: [Alessandro] Define and prove weak-PCS; Decide Thursday 9:00 whether

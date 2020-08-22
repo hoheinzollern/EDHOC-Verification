@@ -63,9 +63,9 @@ term/.style={rounded corners},
 \node [keyb, below=1cm of k2] (k2b) {\mKthreeae};
 
 \node [txt, left=1cm of k1.west] (t1) {Enc (XOR) in m2};
-\node [txt, left=1cm of k2.west] (t2) {\mMactwo\\ (signed if $m \in \{0,2\}$)};
+\node [txt, left=1cm of k2.west] (t2) {\mMactwo\\ (signed if R uses \mSig)};
 \node [txt, left=1cm of k2b.west] (t2b) {\mAead\ in m3};
-\node [txt, left=1cm of k3.west] (t3) {\mMacthree\\ (signed if $m \in \{0,1\}$)};
+\node [txt, left=1cm of k3.west] (t3) {\mMacthree\\ (signed if I uses \mSig)};
 
 \draw [->, norm] (k1.west) -- (t1.east);
 \draw [->, norm] (k2.west) -- (t2.east);
