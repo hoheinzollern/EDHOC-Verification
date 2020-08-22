@@ -296,6 +296,8 @@ The intention is the same for the other reused cryptographic
 cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
 progress, it is not yet written down (personal correspondence with the authors).
 %
+\knote{substitute \cite{personalCommunication} for
+"personal correspondance with the authors".}
 
 While it is good practice to reuse well-studied academic components in
 industrial standards, it is important to justify that changes made to these
@@ -460,66 +462,61 @@ designed to be provably secure in the CK model.
 \subsection{Session Key Material}
 \label{sec:sessionKeyMaterial}
 \fillhack
-\mEdhoc{} establishes session key material as output, from which session keys
-for \mOscore{} can be derived using the \mEdhoc{}-Exporter.
+\mEdhoc{} establishes session key material, from which session keys
+can be derived using the \mEdhoc{}-Exporter.
 %
-The session key material is always affected by \mGxy{}, and if a party uses the
-\mStat{} method, also that party's secret static long-term DH key.
+The session key material is affected by \mGxy{}, and if a party uses the
+\mStat{} method, also by that party's secret static long-term DH key.
 %
 As shown in Section~\ref{sec:formalization}, mutual injective agreement cannot
 be achieved for \mGiy{}.
 %
-If injective agreement is an important property for constrained IoT devices then
-\mGiy{} cannot be affecting the session key material.
-%
-Excluding \mGiy{} would deviate from \mOptls{}, which is the cryptographic core
-used for the \mStat-based methods, and security properties of \mOptls{} will not
-be inherited by \mEdhoc{}.
+If that property is important for constrained IoT devices, this is a problem.
 %
 
-We identified four options for handling the situation.
+We identified four alternatives for resolving the problem.
 %
-One option is to include a fourth message from responder to initiator
-carrying a message authentication code using a key derived from session key
+One alternative is to include a fourth message from responder to initiator,
+carrying a MAC based on a key derived from session key
 material including \mGiy{}.
 %
-This would give the initiator sufficient guarantees about the same \mGiy{}
-being used by the responder.
+Successful MAC verification guarantees
+to the initiator that the responder injectively agrees on \mGiy{}.
 %
-However, the cost is an additional message, and our understanding is that this
-is unacceptable (personal correspondence,~\cite{personalCommunication}.
+However, our understanding is that adding a message is
+unacceptable~\cite{personalCommunication}.
 %
 
-Another option is to include \mGi{}, or a hash of it, in the first and
-second message.
+Another alternative is to include \mGi{}, or a hash of it, in the first and
+second messages.
 %
 This would, however, increase message sizes, a grave concern for \mEdhoc{},
-and would also prevent initiator identity protection.
+and prevent initiator identity protection.
 %
-While identity protection is important in general, neither the \mSpec{} nor
-the requirements document give any rationale why the initiator needs stronger
-protection than the responder.
+Neither the \mSpec{} nor the requirements document give rationale for why the
+initiator needs stronger protection than the responder.
 %
 The \mSpec{} states that the initiator's identity is protected against active
 attacks and the responder's against passive attacks, but that the roles should
 be assigned to the \mCoap{} peers to protect the most sensitive identity the
 most (see Section~8~\cite{selander-lake-edhoc-01}).
 %
-Roles could hence be swapped, so identity protection is not a strong argument
-against this option.
+Roles could hence be swapped, so identity protection for the most sensitive
+identity can be maintained.
 %
 
-A third option is to exclude \mGiy{} and accept the deviation from \mOptls{}.
+A third alternative is to not derive the session key material from \mGiy{}.
 %
-Doing so would destroy the protection against compromise of the
-initiator's ephemeral DH key that \mOptls{} provides.
+Doing so would destroy the protection \mOptls{} provides against compromise
+of the initiator's ephemeral DH key.
 %
 
-The fourth option is to include \mGiy{} in the session key material and accept
-that \mEdhoc{}'s methods will provide very different security properties.
+The fourth alternative is to simply
+accept that \mEdhoc{}'s methods provide very different security properties.
 %
-We have shown mutual implicit agreement on all of \mGxy{}, \mGiy{} and \mGrx{},
-which holds for all methods.
+We have shown mutual implicit authentication on all of \mGxy{}, \mGiy{} and
+\mGrx{}, so there is a common, but weaker, security guarantee for all
+methods.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -558,7 +555,7 @@ session, this could be taken into account. On the other hand, caching the
 rejected cipher suite between meta-sessions would reduce the number of
 round-trips for subsequent runs, should the responder not have been updated.
 %
-This needs to be clearly specified. 
+This needs to be clearly specified.
 
 %-------------------------------------------------------------------------- sec
 \spacehack
@@ -568,7 +565,7 @@ This needs to be clearly specified.
 We have formally modeled all five
 methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
 %
-We formulated and verified several important security properties in this model. 
+We formulated and verified several important security properties in this model.
 %
 %We also identified security properties that do not hold for all methods.
 %
