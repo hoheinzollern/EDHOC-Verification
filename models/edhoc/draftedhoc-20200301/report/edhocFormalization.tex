@@ -54,6 +54,8 @@ concurrently or otherwise.
 \subsubsection{Authentication}
 To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
 of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
+\knote{Maybe we don't need to quote the definition and could paraphrase it in a
+shorter form to save space.}
 \begin{quote}
   ``We say that a protocol guarantees to an initiator $A$ [injective] agreement
   with a responder $B$ on a set of data items $ds$ if, whenever $A$ (acting as
@@ -405,6 +407,9 @@ This is achieved by the main disjunction in lines 5-10 on the right of
 the implication, requiring to reveal the long term keys (i.e. one of
 the three \mT{LtkRev} events must trigger) if the responder has
 not been running a matching session with the initiator.
+
+\knote{We can remove the line "all-traces" from all listings to save space.
+It is Tamarin's default. One only have to add "exists-trace" explicitly.}
 
 \begin{lstlisting}
 lemma authInjAgreeGuaranteeForI:
