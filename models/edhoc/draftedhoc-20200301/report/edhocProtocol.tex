@@ -622,7 +622,7 @@ and includes that in the third message for the responder to verify.
 
 %------------------------------------------------------------------------- sub
 \spacehack
-\subsection{Expected Security Properties}
+\subsection{Claimed Security Properties}
 \label{sec:claimedProperties}
 \fillhack
 We present the security properties that the authors
@@ -638,49 +638,26 @@ discussions in Section~\ref{sec:discussion}.
     Also refer back to here from the discussion session.
 }
 %
- %and some, like KCI, appear to be
-%described more than once.
-%
-%We elaborate on this in Section~\ref{sec:discussion}.
-%
-The following list contains our interpretation of the claimed security
-properties:
+These are our interpretations of the claimed security properties described in
+the \mSpec~\cite{selander-lake-edhoc-01}, Section 8.1:
 \begin{itemize}
     \item Perfect Forward Secrecy (\textbf{PFS}) for the session key material
     \item Mutual authentication (this presumably refers to entity authentication
         because it is followed by claims of
-        \textbf{consistency} (defined in~\cite{sigma}, %{\color{red} KARL: I
-            %believe this definition is equivalent to mutual injective agreement
-            %on session key, but please double check}
+        \textbf{consistency} (defined in~\cite{sigma}),
         \textbf{aliveness}, and
         \textbf{peer awareness} to the responder, but not to the initiator)
     \item \textbf{Identity protection} (the initiator against active attacks
         and the responder against passive attacks, except for \mPskPsk{})
     \item Key Compromise Impersonation (\textbf{KCI}) resistance
-%    \item \textbf{protection against replay attacks} by the attacker (we {\color{red} VAISHNAVI: Incomplete sentence?}
-%        {\color{red}KARL: It could be a left-over from the claim I did not
-%            understand. The only claim of protection against reply in the draft
-%            is on page 33 where EDHOC is compared to SIGMA. However, the given
-%            argument is vague and the claim seems untrue: SIGMA allows for
-%            including signed "additional information" and this is exactly what
-%            EDHOC uses to protect algorithm choices. The spec also talks about
-%            protecting previous messages, which may be referring to the
-%            transcript hash, but I don't see what that has to do with replay
-%            attacks. I propose we delete the item "protection against replay
-%            attacks" from here or we write a sentence or two about
-%        that it is unclear.}
     \item A single session of \mEdhoc{} enables the responder to verify
             that the selected cipher suite is the most preferred of the
             initiator which is supported by both parties, even though there is
             no negotiation of cipher suites per se.
-    \item Compromise of the \mHkdf{} input parameters (\mGxy{} shared
-            secret and/or \mPsk) leads to all session keys derived from that
-            shared secret being deemed compromised.
-            %\knote{I don't know which property the above refers to.}
-        \item \textbf{Session key independence}
+    %\item Compromise of the \mHkdf{} input parameters (\mGxy{} shared
+            %secret and/or \mPsk) leads to all session keys derived from that
+            %shared secret being deemed compromised.
+            %\knote{I don't know which property the above tries to capture.}
+    \item \textbf{Session key independence}
 \end{itemize}
-%
-%In this paper, we verify {\color{red} secrecy, authentication, session independence,
-%perfect forward secrecy, key-compromise impersonation, and some
-%flavor of post-compromise security.}
-%
+
