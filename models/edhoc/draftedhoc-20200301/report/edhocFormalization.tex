@@ -9,7 +9,7 @@ The next three subsections describe our threat model, briefly present the
 Finally, we present the properties that we proved in this effort.
 
 \spacehack
-\subsection{Threat model}\label{sec:threat-model}
+\subsection{Threat Model}\label{sec:threat-model}
 \fillhack
 We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
 modeling, we assume all cryptographic primitives to be ``perfect'', and hence
@@ -102,7 +102,7 @@ complete the protocol deriving the same session key, then $A$ believes she is
 talking to $B$ and $B$ believes he is talking to $A$.
 
 \spacehack
-\subsubsection{Session independence}
+\subsubsection{Session Independence}
 A protocol satisfies session independence if knowing a session key does
 not give the attacker any information about other sessions.  To model session
 key independence of \mEdhoc, we allow leakage of session keys, and additionally
@@ -110,20 +110,20 @@ check security only of those sessions for which the session keys have not been
 directly revealed to the attacker.
 
 \spacehack
-\subsubsection{Perfect forward secrecy} (PFS) A protocol satisfies perfect forward
+\subsubsection{Perfect Forward Secrecy} (PFS) A protocol satisfies perfect forward
 secrecy if, for any run of the protocol in which the initiator and the responder
 agree on a session key $sk$, the attacker does not learn $sk$, even when the
 long-term keys are revealed after the session is completed.
 
 \spacehack
-\subsubsection{Key-compromise impersonation} (KCI) This property takes the perspective of one
+\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
 of the endpoints of the protocol, say Alice running a session with Bob. A
 protocol is secure under KCI if Alice can still establish a secure session with
 Bob, even though Alice's keys are compromised at any time, and Bob's key
 material is not leaked until the end of the session.
 
 \spacehack
-\subsubsection{Post-compromise security} (PCS) A protocol that has
+\subsubsection{Post-Compromise Security} (PCS) A protocol that has
 \emph{post-compromise security} (following definitions in~\cite{cohn2016post})
 is capable of establishing a secure session even after one of the parties has
 been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
@@ -158,7 +158,7 @@ All operations on terms are defined under $E$, hence we omit the
 subscript from now on as the equational theory is fixed per model.
 
 \spacehack
-\subsubsection{Semantics and built-ins} \phantom{} \mTamarin{} states
+\subsubsection{Semantics and Built-ins} \phantom{} \mTamarin{} states
 $S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$
 occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
 that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
@@ -194,7 +194,7 @@ for the responder) as to avoid confusion with \mTamarin's builtin variable
 names \mT{x} and \mT{y}.}
 
 \spacehack
-\subsubsection{Protocol rules and equations}
+\subsubsection{Protocol Rules and Equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
 rules, which are added to the set of considered rules during verification.
@@ -241,7 +241,7 @@ theory of associativity, commutativity, distributivity of exponentiation with
 product, and inverse.
 
 \spacehack
-\subsubsection{Syntactic sugar} In the following presentation we use some syntactic
+\subsubsection{Syntactic Sugar} In the following presentation we use some syntactic
 sugar, which is necessary to understand to look at the concrete rules. First is
 the use of let bindings (\mT{let ... in}), which are series of
 definitions of patterns which are substituted in the rest of the rule. Another
@@ -274,7 +274,7 @@ appendix and the full code at the GitHub repository~\cite{edhocTamarinRepo}.
 % - Explain details of model, which properties we have modeled, how,
 % which trade-offs were made and why.
 \spacehack
-\subsubsection{General setup}
+\subsubsection{General Setup}
 \vnote{Section name doesn't appear here! Needs some text before the rule.}
 \begin{lstlisting}
 rule registerLTK_SIG:
@@ -319,7 +319,7 @@ and (weak) Post Compromise Security as defined in Section~\ref{sec:desired-prope
 by giving the attacker the ability to access to long term and session keys, or
 to the cryptographic interface, at the appropriate time.
 
-\subsubsection{Modeling choices}
+\subsubsection{Modeling Choices}
 
 We model each method of the protocol with four rules: \mT{I1}, \mT{R2}, \mT{I3}
 and \mT{R4} (with the current method suffixed to the rule name) represent each
@@ -398,7 +398,7 @@ Section~\ref{sec:desired-properties} for a full explanation of the properties
 that we check. Here we focus on their formalization into \mTamarin{} lemmas.
 
 \spacehack
-\subsubsection{Explicit authentication}
+\subsubsection{Explicit Authentication}
 
 We model explicit authentication between the initiator and the
 responder.
@@ -463,7 +463,7 @@ additional \mT{Exp} prefix to the running and commit events
 (\mT{CommitI} and \mT{CommitR} respectively).
 
 \spacehack
-\subsubsection{Implicit authentication}
+\subsubsection{Implicit Authentication}
 
 The following lemma proves implicit authentication:
 \begin{lstlisting}

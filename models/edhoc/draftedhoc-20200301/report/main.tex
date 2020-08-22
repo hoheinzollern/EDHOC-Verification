@@ -82,13 +82,18 @@ Our work has also led to improvements in the design and the specification of
 \end{abstract}
 %
 
+% KARL: appears there are no standard keywords like in ACM and previous years
+% SSR papers use very custom key words
+\keywords{Formal verification \and Security \and IETF Standardization \and
+          Key Establishment Protocols \and Tamarin}
+
 %-------------------------------------------------------------------------- sec
-\vspace{-2.5em}
+%\vspace{-2.5em}
 \section{Introduction}
 \label{sec:introduction}
 \fillhack
 %-------------------------------------------------------------------------- sub
-\subsection{Background and motivation}
+\subsection{Background and Motivation}
 \label{sec:motivation}
 \fillhack
 IoT security threats involving cars, web-cameras and similar devices
@@ -217,7 +222,7 @@ Our main contributions are as follows.
 
 %-------------------------------------------------------------------------- sub
 \spacehack
-\subsection{Related work}
+\subsection{Related Work}
 \label{sec:relatedWork}
 \fillhack
 The work closest to ours is Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18},
@@ -246,13 +251,13 @@ symbolized version of an extended Canetti-Krawzcyk model.
 
 %-------------------------------------------------------------------------- sec
 \spacehack
-\section{The \mEdhoc{} protocol}
+\section{The \mEdhoc{} Protocol}
 \label{sec:edhoc}
 \input{edhocProtocol}
 
 %-------------------------------------------------------------------------- sec
 \spacehack
-\section{Formalization and results}
+\section{Formalization and Results}
 \label{sec:formalization}
 \input{edhocFormalization}
 
@@ -261,13 +266,13 @@ symbolized version of an extended Canetti-Krawzcyk model.
 \section{Discussion}
 \label{sec:discussion}
 \fillhack
-There are a few instances where things are ill-specified in the \mSpec{},
+There are a few instances where the \mEdhoc{} and the \mSpec{} can be improved,
 which we found as part of this work. We discuss them below.
 %
 \spacehack
 
 %-------------------------------------------------------------------------- sub
-\subsection{Security claim justification}
+\subsection{Security Claim Justification}
 \label{sec:securityClaims}
 \fillhack
 The \mSpec{} makes detailed claims about security properties that \mEdhoc{}
@@ -291,11 +296,9 @@ Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and the
 present paper verifies more, but until some justification is provided, security
 claims may benefit from note of caution.
 \spacehack
-\knote{Specifically, our paper  shouldn't just point out that something is
-wrong. We should constructively propose solutions to problems.}
 
 %-------------------------------------------------------------------------- sub
-\subsection{Unclear intended use}
+\subsection{Unclear Intended Use}
 \label{sec:unclearProtocolUse}
 \fillhack
 Formal verification methodologies often clash with industrial standard
@@ -316,8 +319,8 @@ it is not clear whether these are important in the form they are listed.
 The abstract goal of \mEdhoc{} is simple: establish an \mOscore{} security
 context using few roundtrips and small messages.
 %
-Starting from there, the design of \mEdhoc{} is mainly driven by what
-can be achieved given certain technical restrictions.
+From that, the design of \mEdhoc{} is mainly driven by what
+can be achieved given the technical restrictions.
 %
 Focusing too much on what can be achieved within given restrictions, and paying
 too little attention to the use cases where the
@@ -356,7 +359,7 @@ In response, the authors of the \mSpec{} added a paragraph about which methods
 provided which types of (non)-repudiation~\cite{personalCommunication}.
 
 \spacehack
-\subsubsection{Unintended peer authentication}
+\subsubsection{Unintended Peer Authentication}
 Section 3.2 of the \mSpec{} states that parties must be configured
 with a policy restricting the set of peers they can run \mEdhoc{} with.
 %
@@ -386,7 +389,7 @@ how to resolve the issue.
 %
 
 %------------------------------------------------------------------------- sub
-\subsection{Unclear security model}
+\subsection{Unclear Security Model}
 When designing a security protocol, the attacker's capabilities must be
 considered so that it is possible to determine whether the protocol is
 sufficiently secure.
@@ -445,7 +448,7 @@ designed to be provably secure in the CK model.
 
 %-------------------------------------------------------------------------- sub
 \spacehack
-\subsection{Session key material}
+\subsection{Session Key Material}
 \label{sec:sessionKeyMaterial}
 \fillhack
 \mEdhoc{} establishes session key material as output, from which session keys
@@ -499,8 +502,8 @@ against this option.
 
 A third option is to exclude \mGiy{} and accept the deviation from \mOptls{}.
 %
-Doing so would would destroy \mOptls{}' protection against compromise of the
-initiator's ephemeral DH key.
+Doing so would destroy the protection against compromise of the
+initiator's ephemeral DH key that \mOptls{} provides.
 %
 
 The fourth option is to include \mGiy{} in the session key material and accept
@@ -512,7 +515,7 @@ which holds for all methods.
 
 %-------------------------------------------------------------------------- sub
 \spacehack
-\subsection{Cipher suite negotiation}
+\subsection{Cipher Suite Negotiation}
 \label{sec:ciphersuiteNegotiation}
 \fillhack
 \knote{If we are tight on space, we can consider removing this section since we
