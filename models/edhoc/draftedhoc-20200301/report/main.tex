@@ -84,9 +84,11 @@ In contrast to more powerful devices like web cameras and cars, which receive a
 lot of media attention, such devices operate under severe energy consumption
 and message size restrictions.
 %
-\mEdhoc{} was first formally analyzed in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+\mEdhoc{} was first formally analyzed in 2018 by
+Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
-Since then, the protocol has been significantly extended and now has three new key establishment methods.
+Since then, the protocol has been significantly extended and now has three new
+key establishment methods.
 %
 In this paper, we formally analyze all methods of \mEdhoc{} in a symbolic
 Dolev-Yao model, using the \mTamarin{} verification tool.
@@ -102,48 +104,157 @@ Our work has also led to improvements in the design and the specification of
 
 % KARL: appears there are no standard keywords like in ACM and previous years
 % SSR papers use very custom key words
-\keywords{Formal verification \and Security \and IETF Standardization \and
+\keywords{Formal verification \and Security \and IETF standardization \and
           Key establishment protocols \and Tamarin}
 
 %-------------------------------------------------------------------------- sec
 %\vspace{-2.5em}
 \section{Introduction}
 \label{sec:introduction}
- 
+
 %-------------------------------------------------------------------------- sub
 \subsection{Background and motivation}
 \label{sec:motivation}
- 
-IoT security threats involving computationally strong devices such as cars and web-cameras receive the most attention from media and academia. Securing communication between such devices can readily be done using existing protocols like \mDandTls. Constrained devices, on the other hand, which operate under severe bandwidth and energy consumption restrictions, have received much less attention. These devices may be simple sensors which only need to relay environment measurements to a server every hour, but need to function autonomously without maintenance for long periods of time. To keep energy consumption down, highly specialized radio links with small and heterogeneous frame sizes are sometimes used. IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data transport in such situations~\cite{rfc7252}. \mCoap{} does not include security protection on its own, and in some cases, \mDandTls{} messages are too large to fit into the radio frames. Thus, IETF standardized the Object Security for Constrained RESTful Environments (\mOscore{}) protocol to secure communications between constrained devices~\cite{rfc8613}.
+IoT security threats involving computationally strong devices such as cars
+and web-cameras receive the most attention from media and academia.
+%
+Securing communication between such devices can readily be done using existing
+protocols like \mDandTls.
+%
+Constrained devices, on the other hand, which operate under severe bandwidth
+and energy consumption restrictions, have received much less attention.
+%
+These devices may be simple sensors which only relay environment
+measurements to a server every hour, but need to function autonomously without
+maintenance for long periods of time.
+%
+To keep energy consumption down, highly specialized radio links with small
+and heterogeneous frame sizes are sometimes used.
+%
+IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data
+transport in such situations~\cite{rfc7252}.
+%
+\mCoap{} does not include security protection on its own, and in some cases,
+\mDandTls{} messages are too large to fit into the radio frames.
+%
+Thus, IETF standardized the Object Security for Constrained RESTful Environments
+(\mOscore{}) protocol to secure communications between constrained
+devices~\cite{rfc8613}.
+%
 
-The \mOscore{} protocol requires a pre-established security context. For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE) working group has been developing requirements and mechanisms for a key exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of establishing \mOscore{} security contexts. Naturally, \mEdhoc{} must work under the same constrained requirements as \mOscore{} itself. While use cases for \mEdhoc{} are not firmly set, the overall goal is to establish an \mOscore{} security context, under message size limitations. 
-
- 
-\subsection{Cryptographic cores and related work}
-\label{sec:relatedWork}
- 
-The \mEdhoc{} protocol has evolved significantly over time to involve smaller messages and handle more use cases. The first incarnation of \mEdhoc{} appeared in March 2016. It contained two different key establishment methods, one based on a
-pre-shared Diffie-Hellman (DH) cryptographic core and a second based on a variant of challenge-response signatures, in the style of the \mNoise{} framework~\cite{perrin2016noise}. (A ``cryptographic core'', or just ``core'', is an academic protocol, without encodings or application specific details required by an industrial protocol. A ``key establishment method'' refers to a core with such details added.) 
-
-The core based on challenge-repsonse signatures was replaced by \mSigma{} in May 2018. Now, variants using challenge-response signatures have been added again by integrating the cryptographic core of \mOptls{}. Additionally, mixed variants where one party uses a challenge-response signature and the other a regular signature have also been added. Consequently, there are now five methods in total, and formal analysis is required to verify security guarantees for \mEdhoc. This is especially important, since the \mSpec{} itself lacks a description of the intended security model and overall security goals. 
-
-All three cores have been analyzed in the computational model -- \mSigma{}~\cite{DBLP:conf/crypto/CanettiK02}, \mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}, and \mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}. However, there are significant departures from these cores in \mEdhoc, and these proofs do not carry over automatically (See Section~\ref{sec:relationsToOtherProtocols}). The work closest to ours is by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}, which formally analyzes the May 2018 variant of \mEdhoc{} (with two methods) in \mProverif~\cite{DBLP:conf/csfw/Blanchet01}.
-
-\vnote{I would like to move the next paragraph to Section 3, where we define Authentication. It fits in better with where we do talk about implicit/explicit authentication, rather than as a commentary on the work that has been done for Sigma etc. (Why should implicit-vs-explicit authentication matter for whether one can directly adopt those proofs of ``security'' or not?)}
-Computational models often rely on implicit session key authentication (see, for example, the definition of SK-security in the Canetti-Krawczyk model~\cite{DBLP:conf/crypto/CanettiK02}). Although symbolic models predominantly rely on correspondence properties in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where implicit session key authentication has been used. For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a symbolized version of an extended Canetti-Krawzcyk model.
-
+The \mOscore{} protocol requires a pre-established security context.
+%
+For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE)
+working group has been developing requirements and mechanisms for a key
+exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, for
+establishing \mOscore{} security contexts.
+%
+Naturally, \mEdhoc{} must work under the same constrained requirements as
+\mOscore{} itself.
+%
+While use cases for \mEdhoc{} are not firmly set, the overall goal is to
+establish an \mOscore{} security context, under message size limitations.
+%
 
 %-------------------------------------------------------------------------- sub
- 
+\subsection{Related Work}
+\label{sec:relatedWork}
+\knote{Vaishnavi, your text editor is again making every paragraph into a single
+    text-file line. Please change the setting if possible.
+}
+The \mEdhoc{} protocol has evolved significantly over time to involve smaller
+messages and handle more use cases.
+%
+The first incarnation of \mEdhoc{} appeared in March 2016.
+%
+It contained two different key establishment methods, one based on a
+pre-shared Diffie-Hellman (DH) cryptographic core and a second based on a
+variant of challenge-response signatures, in the style of the \mNoise{}
+framework~\cite{perrin2016noise}.
+%
+By a cryptographic core, or simply core, we mean an academic protocol, without
+encodings or application specific details required by an industrial protocol.
+%
+By a key establishment method we mean a core with such details added.
+%
+
+The core based on challenge-response signatures was replaced by \mSigma{}
+in May 2018.
+%
+Now, variants using challenge-response signatures have been added again by
+integrating the cryptographic core of \mOptls{}.
+%
+Additionally, mixed variants where one party uses a challenge-response
+signature and the other a regular signature have also been added.
+%
+Consequently, there are now five methods in total, and formal analysis is
+required to verify security guarantees for \mEdhoc.
+%
+This is especially important, since the \mSpec{} itself lacks a description
+of the intended security model and overall security goals.
+%
+
+Some of the cores have been analyzed in the computational model
+-- \mSigma{}~\cite{DBLP:conf/crypto/CanettiK02},
+\mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}, and
+\mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}.
+%
+However, there are significant departures from these cores in \mEdhoc, and
+these proofs do not carry over automatically
+(See Section~\ref{sec:relationsToOtherProtocols}).
+%
+The work closest to ours is Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18},
+formally analyzing the May 2018 version of \mEdhoc{} (with two methods) in
+\mProverif~\cite{DBLP:conf/csfw/Blanchet01}.
+%
+
+\vnote{I would like to move the next paragraph to Section 3, where we define Authentication.
+It fits in better with where we do talk about implicit/explicit authentication,
+rather than as a commentary on the work that has been done for Sigma etc.
+(Why should implicit-vs-explicit authentication matter for whether one can
+directly adopt those proofs of ``security'' or not?)}
+\knote{You could be right. What I tried to capture is that we are not the first
+    ones to use implicit authentication in the symbolic model, even though doing
+    so is unusual compared to using local-view injective-agreement style
+    authentication. So it felt right to point out related work in this area.
+}
+
+Computational models often rely on implicit session key authentication
+(see, for example, the definition of SK-security in the Canetti-Krawczyk
+model~\cite{DBLP:conf/crypto/CanettiK02}).
+%
+Although symbolic models predominantly rely on correspondence properties
+in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where
+implicit session key authentication has been used.
+%
+For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
+symbolized version of an extended Canetti-Krawzcyk model.
+%
+
+%-------------------------------------------------------------------------- sub
 \subsection{Contributions}
 \label{sec:contributions}
- 
-We formally analyze the \mEdhoc{} protocol in the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}. This work is presented in Section~\ref{sec:formalization}. The formal models and proven properties are based on the version as on 2020-03-01~\cite{selander-lake-edhoc-01}. We give an explicit security model for the protocol and verify essential properties, such as session key and entity authentication and perfect forward secrecy, for all five methods.
-     \knote{The above item should contain the most impressive properties. Revise when Section 3 is completed}
-We also discuss the relationship between proven properties and the claimed security properties, and the lack of a precise security model for \mEdhoc{}. In fact, the standard has already been improved based on observations we made during this work, which we discuss in Section~\ref{sec:discussion}.
-
-%-------------------------------------------------------------------------- sub
-
+We formally analyze the \mEdhoc{} protocol in the \mTamarin{}
+tool~\cite{DBLP:conf/cav/MeierSCB13}.
+%
+This work is presented in Section~\ref{sec:formalization}.
+%
+The formal models and proven properties are based on the version as on
+2020-03-01~\cite{selander-lake-edhoc-01}.
+%
+We give an explicit security model for the protocol and verify essential
+properties, such as session key and entity authentication and perfect forward
+secrecy, for all five methods.
+%
+\knote{The above item should contain the most impressive properties.
+Revise when Section 3 is completed}
+%
+We also discuss the relationship between proven properties and the claimed
+security properties, and the lack of a precise security model for \mEdhoc{}.
+%
+In fact, the standard has already been improved based on our analysis,
+which we discuss in Section~\ref{sec:discussion}.
+%
 
 %-------------------------------------------------------------------------- sub
 %\subsection{Background and Motivation}
@@ -303,31 +414,25 @@ We also discuss the relationship between proven properties and the claimed secur
 %%
 
 %-------------------------------------------------------------------------- sec
- 
 \section{The \mEdhoc{} Protocol}
 \label{sec:edhoc}
 \input{edhocProtocol}
 
 %-------------------------------------------------------------------------- sec
- 
 \section{Formalization and Results}
 \label{sec:formalization}
 \input{edhocFormalization}
 
 %-------------------------------------------------------------------------- sec
- 
 \section{Discussion}
 \label{sec:discussion}
- 
 There are a few instances where the \mEdhoc{} and the \mSpec{} can be improved,
 which we found as part of this work. We discuss them below.
 %
- 
 
 %-------------------------------------------------------------------------- sub
 \subsection{Security Claim Justification}
 \label{sec:securityClaims}
- 
 The \mSpec{} makes detailed claims about security properties that \mEdhoc{}
 enjoys, which the authors assume hold because they reuse cryptographic cores
 from existing academic protocols.
@@ -350,12 +455,10 @@ components preserve security properties.
 Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and the
 present paper verifies more, but until some justification is provided, security
 claims may benefit from note of caution.
- 
 
 %-------------------------------------------------------------------------- sub
 \subsection{Unclear Intended Use}
 \label{sec:unclearProtocolUse}
- 
 Formal verification methodologies often clash with industrial standard
 development practices; this is true also in our case.
 %
@@ -401,8 +504,10 @@ We informed \mEdhoc{} authors and they included these aspects the \mSpec{}.
 We now present a couple of examples.\\
 %
 
- 
 %\subsubsection{Non-repudiation.}
+\knote{Why are runhead used instead of subsubsection? I did not find guidelines
+    regarding that. The result seems to be the same.
+}
 \runhead{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
@@ -503,10 +608,8 @@ designed to be provably secure in the CK model.
 %
 
 %-------------------------------------------------------------------------- sub
- 
 \subsection{Session Key Material}
 \label{sec:sessionKeyMaterial}
- 
 \mEdhoc{} establishes session key material, from which session keys
 can be derived using the \mEdhoc{}-Exporter.
 %
@@ -538,16 +641,20 @@ second messages.
 This would, however, increase message sizes, a grave concern for \mEdhoc{},
 and prevent initiator identity protection.
 %
-Neither the \mSpec{} nor the requirements document give rationale for why the
-initiator needs stronger protection than the responder.
-%
-The \mSpec{} states that the initiator's identity is protected against active
-attacks and the responder's against passive attacks, but that the roles should
-be assigned to the \mCoap{} peers to protect the most sensitive identity (see Section~8~\cite{selander-lake-edhoc-01}).
-%
-Roles could hence be swapped, so identity protection for the most sensitive
-identity can be maintained.
-\vnote{I feel like we can remove this discussion about identity protection. It can be handled, so the only problem is the message size.}
+%Neither the \mSpec{} nor the requirements document give rationale for why the
+%initiator needs stronger protection than the responder.
+%%
+%The \mSpec{} states that the initiator's identity is protected against active
+%attacks and the responder's against passive attacks
+%%
+%However, it also states that the roles should be assigned to the \mCoap{}
+%peers to protect the most sensitive identity the most
+%(see Section~8~\cite{selander-lake-edhoc-01}).
+%%
+%Roles could hence be swapped, so identity protection for the most sensitive
+%identity can be maintained.
+\vnote{I feel like we can remove this discussion about identity protection.
+It can be handled, so the only problem is the message size.}
 %
 
 A third alternative is to not derive the session key material from \mGiy{}.
@@ -559,6 +666,12 @@ of the initiator's ephemeral DH key.
 The fourth alternative is to simply
 accept that \mEdhoc{}'s methods provide very different security properties.
 \vnote{This is if the ``problem'' identified above is not a problem at all! Can remove.}
+\knote{Not sure I understand. We are listing four alternative solutions, not
+    problems. One alternative is to make an informed decision to accept
+    the situation even though it is problematic/undesirable (which is very
+    different from ignoring it or not being aware of it).
+    So, I don't think we should remove this alternative.
+}
 %
 We have shown mutual implicit authentication on all of \mGxy{}, \mGiy{} and
 \mGrx{}, so there is a common, but weaker, security guarantee for all
@@ -566,10 +679,8 @@ methods.
 %
 
 %-------------------------------------------------------------------------- sub
- 
 \subsection{Cipher Suite Negotiation}
 \label{sec:ciphersuiteNegotiation}
- 
 \knote{If we are tight on space, we can consider removing this section since we
     don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
     with this though.
@@ -604,10 +715,8 @@ round-trips for subsequent runs, should the responder not have been updated.
 This needs to be clearly specified.
 
 %-------------------------------------------------------------------------- sec
- 
 \section{Conclusions}
 \label{sec:conclusions}
- 
 We have formally modeled all five
 methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
 %
@@ -628,7 +737,6 @@ enable easier verification.
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
- 
 \subsubsection*{Acknowledgments.} This work was partially supported by
 the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
 the Knut and Alice Wallenberg Foundation.
@@ -639,7 +747,6 @@ clarifications regarding the specification.
 
 \vnote{We need to fix the link for the code repository.}
 
- 
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{spmpsci}
 \bibliography{refv}
