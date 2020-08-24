@@ -162,6 +162,7 @@ establish an \mOscore{} security context, under message size limitations.
 \knote{Vaishnavi, your text editor is again making every paragraph into a single
     text-file line. Please change the setting if possible.
 }
+\vnote{There is no setting that inserts comment marks after every sentence! I can keep a setting which doesn't convert whatever you send, but I find it really tough to write like that myself. In any case, I'm not going to write anymore, I assume, so it should be okay?}
 The \mEdhoc{} protocol has evolved significantly over time to involve smaller
 messages and handle more use cases.
 %
@@ -194,10 +195,9 @@ This is especially important, since the \mSpec{} itself lacks a description
 of the intended security model and overall security goals.
 %
 
-Some of the cores have been analyzed in the computational model
--- \mSigma{}~\cite{DBLP:conf/crypto/CanettiK02},
+Three cores have been analyzed in the computational model (\mSigma{}~\cite{DBLP:conf/crypto/CanettiK02},
 \mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}, and
-\mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}.
+\mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}).
 %
 However, there are significant departures from these cores in \mEdhoc, and
 these proofs do not carry over automatically
@@ -218,6 +218,7 @@ directly adopt those proofs of ``security'' or not?)}
     so is unusual compared to using local-view injective-agreement style
     authentication. So it felt right to point out related work in this area.
 }
+\vnote{It's related only in the sense of the properties we verify, and I really feel like it only belongs as part of that discussion. There's going to be a lot of stuff that we cite as precedence, all of it doesn't need to show up in related work.}
 
 Computational models often rely on implicit session key authentication
 (see, for example, the definition of SK-security in the Canetti-Krawczyk
@@ -508,6 +509,7 @@ We now present a couple of examples.\\
 \knote{Why are runhead used instead of subsubsection? I did not find guidelines
     regarding that. The result seems to be the same.
 }
+\vnote{The vertical space used by runhead seems to be lesser. There is no guideline that says you can't do this. }
 \runhead{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
@@ -653,8 +655,7 @@ and prevent initiator identity protection.
 %%
 %Roles could hence be swapped, so identity protection for the most sensitive
 %identity can be maintained.
-\vnote{I feel like we can remove this discussion about identity protection.
-It can be handled, so the only problem is the message size.}
+%\vnote{I feel like we can remove this discussion about identity protection. It can be handled, so the only problem is the message size.}
 %
 
 A third alternative is to not derive the session key material from \mGiy{}.
@@ -672,6 +673,7 @@ accept that \mEdhoc{}'s methods provide very different security properties.
     different from ignoring it or not being aware of it).
     So, I don't think we should remove this alternative.
 }
+\vnote{It says maybe the security problem being talked about isn't really a problem, because we choose to see things differently. Need to reword  to add this before we give potential solutions to the problem of \mGiy.}
 %
 We have shown mutual implicit authentication on all of \mGxy{}, \mGiy{} and
 \mGrx{}, so there is a common, but weaker, security guarantee for all

@@ -154,6 +154,7 @@ The temporary key also affects the final session key.
 %
 \knote{We need the last sentence above. That is what gives the implicit
     authenticity guarantee of the session key.}
+\vnote{Ok.}
 
 In \mEdhoc, a party using the \mStat{} authentication method
 essentially acts as an \mOptls{} client and the peer as an \mOptls{}
@@ -174,6 +175,7 @@ are distinct elements, following the separation of concerns principle,
     the change \mEdhoc{} made cannot improve security, only weaken it, so
     verification is needed to show everything is still OK.
 }
+\vnote{But they are separate elements, which is enough to convince anyone that the guarantees cannot be borrowed directly. Why they are kept separate is immaterial, and actually distracting to someone like me who does not offhand know what ``separation of concerns principle'' means.}
 while \mEdhoc{} uses the ephemeral DH half-key itself as challenge.
 %
 \\
@@ -187,16 +189,18 @@ framework~\cite{perrin2016noise}.
 \mNoise{} defines how to construct AKE protocols, using static long-term DH
 keys or pre-shared keys as credentials.
 %
-Its goal is to use so called patterns to harmonize the many static long-term
+Its goal is to use so-called patterns to harmonize the many static long-term
 key DH-based AKE protocols, of which \mOptls{} is one.
 \knote{I'm consistently removing quotation marks as you have noticed. To me
     quotation marks signal unclarity. For example here if we write
     ``patterns'', I would wonder if they are not really patterns, only similar
     to patterns.
 }
+\vnote{The quotation marks are there to signify that this is a notation used in Noise, and not some generally known notation. It's fine if you think they shouldn't be used.}
 %
 \mNoise{} specifies how to derive keys, use transcript hashes to ensure
-authentication of the message flow among other things.
+authentication of the message flow etc.
+%among other things.
 %
 The \mNoise{} pattern closest to the \mStatStat{} method is called XX.
 %
@@ -210,6 +214,7 @@ prescribed, and thus cannot automatically inherit the properties enjoyed by XX.
     to me that it is impossible that \mEdhoc{} is equal to \mNoise{} in the
     parts that are relevant for automatic inheritance (whatever that means).
 }
+\vnote{An ``automatic'' inheritance means nothing needs to be verified to see that the two protocols are equal. Here obviously that is not the case. We can rewrite that if you want.}
 %
 For example, according to \mNoise{}, the mixHash function is called on
 pre-message public keys during the initialization.
@@ -409,6 +414,8 @@ Upon receiving \mGx{}, the responder raises it to \mLtkr{}.
     the description of challenge-response signatures to save space.
     Todo.
 }
+\vnote{Actually all of what is described here and in the following paragraph has already been captured in your new introduction paragraph to section 2. We could just refer back (``As mentioned earlier...'')}
+
 %
 Assuming the discrete log problem is hard in the underlying DH group,
 only the initiator and responder will be able to compute $\mGx{}^\mLtkr{}$,
@@ -424,6 +431,7 @@ The responder then includes \mMactwo{} in the second message.
 Knowing the secret ephemeral DH half-key corresponding to \mGx{}, and the public
 static long-term half-key of the responder, the initiator can also
 compute $\mGx{}^\mLtkr{}$.
+
 %
 The initiator assumes that only the responder knows $\mGx{}^\mLtkr{}$, and
 therefore considers the responder authenticated if the \mAead{} transform
