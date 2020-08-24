@@ -10,10 +10,10 @@ To establish an authenticated security context for \mOscore,
 shown in Figure~\ref{fig:edhocFramework}.
 %
 In the first message \mMsgone{}, the initiator ($I$) sends to the responder ($R$) an
-ephemeral DH half-key \mGx{} and, in the \mMethod{} element, suggests
+ephemeral DH half-key \mGx{}, an ordered list of supported cipher suites, and, in the \mMethod{} element, suggests
 authentication methods to be used.
 %
-$R$ may reject the choice of authentication methods.
+$R$ may reject the choice of cipher suite, leading to a negotiation across multiple \mEdhoc{} sessions (see Section~\ref{sec:ciphersuiteNegotiation}), or that of the authentication methods.
 %
 In the second message \mMsgtwo{}, $R$ provides its ephemeral
 DH half-key \mGy{} and authenticates itself to $I$ by
@@ -34,6 +34,7 @@ identifiers \mCi{} and \mCr{}.
 Optionally, messages may also include application layer data \mAD{}, which
 enjoys differing levels of protection depending on which message it is part of.
 %
+We do not include \mCi, \mCr, and \mAD{} in our modelling here.
 %As will be described below, 
 When authentication is based on
 a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not
