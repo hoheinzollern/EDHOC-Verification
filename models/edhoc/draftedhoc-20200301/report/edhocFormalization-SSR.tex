@@ -8,7 +8,7 @@ Next we describe our approach towards formalizing the \mEdhoc{} protocol and lis
 %Finally, we present the properties that we proved in this effort.
 
  
-\subsection{Threat Model}\label{sec:threat-model}
+%\subsection{Threat Model}\label{sec:threat-model}
 We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
 modeling, we assume all cryptographic primitives to be ``perfect''. Encrypted messages can only be decrypted with the key, and no hash collisions exist. The attacker controls the
 %, and hence
@@ -28,11 +28,101 @@ long-term key or session key material.
 An important point is to define what the key material is.
     \mEdhoc{} does not result in an explicit session key, but a cryptographic
     state from which keys for \mOscore{} can be derived using \mHkdf.
-    As will be seen below, depending on how the key material is defined, the
+    As will be seen later, depending on how the key material is defined, the
     different methods will have different authentication properties.
-    In particular, all methods except those where the initiator uses the
-    \mStat{} method provide a stronger form of authentication (injective
-    agreement) for the initiator.
+    %In particular, all methods except those where the initiator uses the
+    %\mStat{} method provide a stronger form of authentication (injective
+    %agreement) for the initiator.
+
+\subsection{\mTamarin{}}
+\label{sec:tamarin}
+ 
+We chose \mTamarin{} to model and verify \mEdhoc{} in the symbolic model.
+%
+\mTamarin{} is an interactive verification tool based on multi-set rewriting rules
+with event annotations, which allow the user to check Linear Temporal Logic
+(LTL) formulas on these models.
+%
+Multi-set rewrite rules with events look like $ l \ifarrow[e] r $,
+where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
+Facts are $n$-ary predicates over a term algebra, which defines a set of function
+symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. \mTamarin{}
+checks equality of these terms under an equational theory $E$. For example,
+one can write $ dec(enc(x,y),y) =_E x $
+to denote that symmetric decryption reverses the encryption operation under this theory.
+The equational theory $E$ is fixed per model, and hence we omit the subscript.
+
+In the presentation of the model we use some syntactic
+sugar, namely
+the use of let bindings (\mT{let ... in}). This is a series of
+definitions of patterns which are substituted in the rest of the rule. \\
+
+%\runhead{Semantics and Built-ins}
+%%\subsubsection{Semantics and Built-ins} \phantom{} 
+%\mTamarin{} states
+%$S$, $S'$ are multisets of facts, and a semantic transition of the form $S \semarrow[E] S'$
+%occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
+%that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
+%and $E = \sigma(e)$.
+%
+%There are a few more details, such as persistent facts which are denoted by a $!$
+%and are never removed from the state.
+%%
+%The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
+%constants and public values known to the attacker respectively, and are both
+%sub-sorts of a base sort.
+%%
+%Finally, \mTamarin{} has some built-in predicates ($\mIn,
+%\mOut$ to represent input and output of messages with the attacker,
+%and
+%$\mFr$ to denote a fresh constant created in the current rule, among
+%others), rules and equations that represent the attacker's knowledge
+%and standard equational theories in the symbolic model,
+%which we present later.
+
+%\anote{This can go, I make a shorter note later:\\
+%{Notational conventions} In the remainder of this section we present
+%\mTamarin{} code as it appears in the models that we verify, in the style of
+%literate programming.  Whenever possible we match the style of the protocol
+%diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
+%\mSpec~\cite{selander-lake-edhoc-01}, so that each element of the model is
+%traceable to the standard.  There are a few exceptions to this, most notably
+%some variable names that we introduce for the sake of the \mTamarin{} model and are
+%not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
+%the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
+%We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
+%for the responder) as to avoid confusion with \mTamarin's builtin variable
+%names \mT{x} and \mT{y}.}
+
+\runhead{Protocol rules and equations} 
+%\subsubsection{Protocol Rules and Equations}
+\mTamarin{} allows users to define new function symbols and equational theories.
+These user defined objects are then translated by \mTamarin{} into rewrite
+rules, which are added to the set of considered rules during verification.
+For example, in our model we have a symbol to denote authenticated encryption, for which \mTamarin{} produces the following rule:
+%
+\begin{lstlisting}
+[!KU(k), !KU(m), !KU(ad), !KU(al)] --> [!KU(aeadEncrypt(k, m, ad, al))]
+\end{lstlisting}
+%
+to denote that if the attacker knows a key \mT{k}, a message \mT{m}, the
+authenticated data \mT{ad}, and an algorithm \mT{al}, then they can construct
+the encryption using these parameters, and thus get to know the message
+\lstinline{aeadEncrypt(k, m, ad, al)}.
+
+In our model we make use of
+the built-in theories of exclusive-or and DH operations, as in~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}.
+%
+%The XOR theory introduces the symbol \mT{XOR}, plus the necessary equational theory including associativity, commutativity, and inverse.
+%
+%The Diffie-Hellman theory introduces exponentiation \mT{g^y} and product of exponents \mT{x * y} as built-in symbols in the language, plus the necessary equational theory of associativity, commutativity, distributivity of exponentiation with product, and inverse.
+For \mAead{} operations, we add the following equations:
+\begin{lstlisting}
+aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
+decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
+\end{lstlisting}
+Both the above equations govern decryption. The first rule checks to see if the authenticated data is as expected, while the second rule skips this check.
+
 
  
 \subsection{Verified Properties}
@@ -155,95 +245,6 @@ long-term keys are revealed after completing the session.
 %keys).
 
  
-\subsection{\mTamarin{}}
-\label{sec:tamarin}
- 
-We chose \mTamarin{} to model and verify \mEdhoc{} in the symbolic model.
-%
-\mTamarin{} is an interactive verification tool based on multi-set rewriting rules
-with event annotations, which allow the user to check Linear Temporal Logic
-(LTL) formulas on these models.
-%
-Multi-set rewrite rules with events look like $ l \ifarrow[e] r $,
-where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
-Facts are $n$-ary predicates over a term algebra, which defines a set of function
-symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. \mTamarin{}
-checks equality of these terms under an equational theory $E$. For example,
-one can write $ dec(enc(x,y),y) =_E x $
-to denote that symmetric decryption reverses the encryption operation under this theory.
-The equational theory $E$ is fixed per model, and hence we omit the subscript.
-
-In the presentation of the model we use some syntactic
-sugar, namely
-the use of let bindings (\mT{let ... in}). This is a series of
-definitions of patterns which are substituted in the rest of the rule. \\
-
-%\runhead{Semantics and Built-ins}
-%%\subsubsection{Semantics and Built-ins} \phantom{} 
-%\mTamarin{} states
-%$S$, $S'$ are multisets of facts, and a semantic transition of the form $S \semarrow[E] S'$
-%occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
-%that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
-%and $E = \sigma(e)$.
-%
-%There are a few more details, such as persistent facts which are denoted by a $!$
-%and are never removed from the state.
-%%
-%The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
-%constants and public values known to the attacker respectively, and are both
-%sub-sorts of a base sort.
-%%
-%Finally, \mTamarin{} has some built-in predicates ($\mIn,
-%\mOut$ to represent input and output of messages with the attacker,
-%and
-%$\mFr$ to denote a fresh constant created in the current rule, among
-%others), rules and equations that represent the attacker's knowledge
-%and standard equational theories in the symbolic model,
-%which we present later.
-
-%\anote{This can go, I make a shorter note later:\\
-%{Notational conventions} In the remainder of this section we present
-%\mTamarin{} code as it appears in the models that we verify, in the style of
-%literate programming.  Whenever possible we match the style of the protocol
-%diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
-%\mSpec~\cite{selander-lake-edhoc-01}, so that each element of the model is
-%traceable to the standard.  There are a few exceptions to this, most notably
-%some variable names that we introduce for the sake of the \mTamarin{} model and are
-%not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
-%the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
-%We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
-%for the responder) as to avoid confusion with \mTamarin's builtin variable
-%names \mT{x} and \mT{y}.}
-
-\runhead{Protocol rules and equations} 
-%\subsubsection{Protocol Rules and Equations}
-\mTamarin{} allows users to define new function symbols and equational theories.
-These user defined objects are then translated by \mTamarin{} into rewrite
-rules, which are added to the set of considered rules during verification.
-For example, in our model we have a symbol to denote authenticated encryption, for which \mTamarin{} produces the following rule:
-%
-\begin{lstlisting}
-[!KU(k), !KU(m), !KU(ad), !KU(al)] --> [!KU(aeadEncrypt(k, m, ad, al))]
-\end{lstlisting}
-%
-to denote that if the attacker knows a key \mT{k}, a message \mT{m}, the
-authenticated data \mT{ad}, and an algorithm \mT{al}, then they can construct
-the encryption using these parameters, and thus get to know the message
-\lstinline{aeadEncrypt(k, m, ad, al)}.
-
-In our model we make use of
-the built-in theories of exclusive-or and DH operations, as in~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}.
-%
-%The XOR theory introduces the symbol \mT{XOR}, plus the necessary equational theory including associativity, commutativity, and inverse.
-%
-%The Diffie-Hellman theory introduces exponentiation \mT{g^y} and product of exponents \mT{x * y} as built-in symbols in the language, plus the necessary equational theory of associativity, commutativity, distributivity of exponentiation with product, and inverse.
-
-\mAead{} operations require the following equations:
-\begin{lstlisting}
-aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
-decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
-\end{lstlisting}
-Both the above equations govern decryption. The first rule checks to see if the authenticated data is as expected, while the second rule skips this check.
 %With the first rule we allow the protocol to decrypt the message \mT{m} if the encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the same algorithm \mT{al}.
 %
 %The second rule allows the attacker to decrypt the message \mT{m} with the key
