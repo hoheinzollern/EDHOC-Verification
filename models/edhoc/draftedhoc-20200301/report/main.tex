@@ -17,13 +17,13 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage[nospace]{cite}
-\hypersetup{
-    final, % Uncomment to remove all links (useful for printing in black and white)
-    colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
-    urlcolor=blue, linkcolor=black, citecolor=green, % Link colors
-    pdfkeywords={}, % PDF Keywords
-    pdfcreator={PdfLaTeX}, % PDF Creator
-  }
+%\hypersetup{
+%    final, % Uncomment to remove all links (useful for printing in black and white)
+%    colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
+%    urlcolor=blue, linkcolor=black, citecolor=green, % Link colors
+%    pdfkeywords={}, % PDF Keywords
+%    pdfcreator={PdfLaTeX}, % PDF Creator
+%  }
 
 
 \input{macros}
@@ -159,12 +159,6 @@ establish an \mOscore{} security context, under message size limitations.
 %-------------------------------------------------------------------------- sub
 \subsection{Related Work}
 \label{sec:relatedWork}
-\knote{Vaishnavi, your text editor is again making every paragraph into a single
-    text-file line. Please change the setting if possible.
-}
-\vnote{There is no setting that inserts comment marks after every sentence! I can keep a setting which doesn't convert whatever you send, but I find it really tough to write like that myself. In any case, I'm not going to write anymore, I assume, so it should be okay?}
-The \mEdhoc{} protocol has evolved significantly over time to involve smaller
-messages and handle more use cases.
 %
 The first incarnation of \mEdhoc{} appeared in March 2016.
 %
@@ -208,17 +202,7 @@ formally analyzing the May 2018 version of \mEdhoc{} (with two methods) in
 \mProverif~\cite{DBLP:conf/csfw/Blanchet01}.
 %
 
-\vnote{I would like to move the next paragraph to Section 3, where we define Authentication.
-It fits in better with where we do talk about implicit/explicit authentication,
-rather than as a commentary on the work that has been done for Sigma etc.
-(Why should implicit-vs-explicit authentication matter for whether one can
-directly adopt those proofs of ``security'' or not?)}
-\knote{You could be right. What I tried to capture is that we are not the first
-    ones to use implicit authentication in the symbolic model, even though doing
-    so is unusual compared to using local-view injective-agreement style
-    authentication. So it felt right to point out related work in this area.
-}
-\vnote{It's related only in the sense of the properties we verify, and I really feel like it only belongs as part of that discussion. There's going to be a lot of stuff that we cite as precedence, all of it doesn't need to show up in related work.}
+\knote{should be moved to section 3}
 
 Computational models often rely on implicit session key authentication
 (see, for example, the definition of SK-security in the Canetti-Krawczyk
@@ -247,172 +231,12 @@ We give an explicit security model for the protocol and verify essential
 properties, such as session key and entity authentication and perfect forward
 secrecy, for all five methods.
 %
-\knote{The above item should contain the most impressive properties.
-Revise when Section 3 is completed}
-%
 We also discuss the relationship between proven properties and the claimed
 security properties, and the lack of a precise security model for \mEdhoc{}.
 %
 In fact, the standard has already been improved based on our analysis,
 which we discuss in Section~\ref{sec:discussion}.
 %
-
-%-------------------------------------------------------------------------- sub
-%\subsection{Background and Motivation}
-%\label{sec:motivation}
-% 
-%IoT security threats involving cars, web-cameras and similar devices
-%receive the most attention from media and academia.
-%%
-%These devices are computationally strong with no severe bandwidth or energy
-%consumption restrictions.
-%%
-%Securing the communication between such devices can readily be done using
-%existing protocols like \mDandTls.
-%%
-%Constrained devices, on the other hand, on which bandwidth and
-%energy consumption restrictions are common, have received much less attention.
-%%
-%These devices may be simple sensors with the only task of relaying
-%measurements of their physical environment to a server every hour, but doing so
-%autonomously for a decade without maintenance.
-%%
-%To keep energy consumption down, highly specialized radio links with small
-%and heterogeneous frame sizes are sometimes used.
-%%
-%IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data
-%transport in such situations~\cite{rfc7252}.
-%%
-%\mCoap{} does not include security protection on its own, and in some cases,
-%\mDandTls{} messages are too large to fit into the radio frames.
-%%
-%This is one of the reasons, IETF standardized the Object Security for
-%Constrained RESTful Environments (\mOscore{}) protocol to secure
-%communications between constrained devices, as a complement for when
-%\mDandTls{} is too heavyweight~\cite{rfc8613}.
-%%
-%
-%The \mOscore{} protocol requires a pre-established security context.
-%%
-%For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE)
-%working group has been developing requirements and mechanisms for a key
-%exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, capable of
-%establishing \mOscore{} security contexts.
-%%
-%Naturally, \mEdhoc{} must work under the same constrained requirements as
-%\mOscore{} itself.
-%%
-%
-%While use cases for \mEdhoc{} are not firmly set, the overall goal of \mEdhoc{}
-%is to establish an \mOscore{} security context, with message size limitations
-%driving the design.
-%%
-%Discussions on the LAKE working group mailing list explored whether
-%\mCtls~\cite{ietf-tls-ctls-00}, a compressed version of \mTls, would suffice
-%for the same situations that the combination of \mOscore{} and \mEdhoc{} aim
-%for.
-%%
-%The resulting consensus was to develop \mEdhoc{} in parallel with the
-%development of \mCtls{} by the \mTls{} working groups.
-%%
-%
-%The \mEdhoc{} protocol has evolved significantly over time to cater for smaller
-%messages and more use cases.
-%%
-%The first incarnation of \mEdhoc{} appeared in March 2016.
-%%
-%It contained two different key establishment methods, one based on a
-%pre-shared Diffie-Hellman (DH) cryptographic core and a second based on a
-%variant of challenge-response signatures, in the style of the \mNoise{}
-%framework~\cite{perrin2016noise}.
-%%
-%By cryptographic core, or just core, we mean an academic cryptographic protocol,
-%lacking the encodings and application specific details required by an industrial
-%protocol.
-%%
-%By key establishment method, we mean a cryptographic core with those details
-%added.
-%%
-%The core based on challenge-repsonse signatures was then replaced by \mSigma{}
-%in May 2018, and this version was formally analyzed by
-%Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
-%%
-%Now, variants using challenge-response signatures have been added again by
-%integrating the cryptographic core of \mOptls{}.
-%%
-%Additionally, mixed variants where one party uses a challenge-response
-%signature and the other a regular signature have also been added.
-%%
-%Consequently, there are now five methods in total, and formal analysis is
-%required to verify security guarantees for \mEdhoc.
-%%
-%This is especially important, since the \mSpec{} itself lacks a description
-%of the intended security model and overall security goals.
-%%
-%Discussing how this gap can be filled, and how to identify what the expected
-%security goals should be, is an important part of this paper (see
-%Section~\ref{sec:discussion}.
-%%
-%
-%%-------------------------------------------------------------------------- sub
-% 
-%\subsection{Contributions}
-%\label{sec:contributions}
-% 
-%We formally analyze the \mEdhoc{} protocol, which has continuously evolved,
-%at times based on our feedback.
-%%
-%%The analysis spanned roughly five months, but t
-%The formal models and proven properties are based on the version as on 2020-03-01~\cite{selander-lake-edhoc-01}.
-%%x
-%Our main contributions are as follows.
-%\begin{itemize}
-%    %\item We formally analyze all five methods of \mEdhoc{} using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
-%    \item We give an explicit security model for the protocol and verify
-%        essential security properties, such as session key and entity
-%        authentication, as well as Perfect Forward Secrecy (PFS), within that
-%        model, for all five methods of \mEdhoc.
-%        \knote{The above item should contain the most impressive properties.
-%               Revise when Section 3 is completed}
-%        The formal analysis is done using \mTamarin~\cite{DBLP:conf/cav/MeierSCB13}.
-%    \item We discuss the relation between proven properties, potentially missing
-%        properties and the lack of clear design goals and security model for
-%        \mEdhoc{}.
-%        Based on this we give recommendations for future standards development.
-%    \item Our discussions with participants of the IETF LAKE working group have
-%        already lead to improvements and clarifications of the standard
-%        based on observations we made during the construction of our
-%        formal model.  We discuss these in Section~\ref{sec:discussion}.
-%\end{itemize}
-%
-%%-------------------------------------------------------------------------- sub
-% 
-%\subsection{Related Work}
-%\label{sec:relatedWork}
-% 
-%The work closest to ours is Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18},
-%which used \mProverif~\cite{DBLP:conf/csfw/Blanchet01} to analyze an earlier
-%version of \mEdhoc{} with only two methods.
-%%
-%We consider our work to follow the same trajectory as that, performing a
-%similar kind of analysis of the most recent fiver-method version of \mEdhoc{}.
-%%
-%Some of the cryptographic cores that \mEdhoc{} uses have been analyzed in the
-%computational model, e.g., \mSigma{}~\cite{DBLP:conf/crypto/CanettiK02},
-%\mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}, and
-%\mNoise{}~\cite{DBLP:conf/eurosp/KobeissiNB19}.
-%%
-%Computational models often rely on implicit session key authentication
-%(see, for example, the definition of SK-security in the Canetti-Krawczyk
-%model~\cite{DBLP:conf/crypto/CanettiK02}).
-%%
-%Although symbolic models predominantly rely on correspondence properties
-%in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a},
-%there are examples where implicit session key authentication has been used.
-%%
-%For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
-%symbolized version of an extended Canetti-Krawzcyk model.
-%%
 
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} Protocol}
@@ -422,7 +246,7 @@ which we discuss in Section~\ref{sec:discussion}.
 %-------------------------------------------------------------------------- sec
 \section{Formalization and Results}
 \label{sec:formalization}
-\input{edhocFormalization}
+\input{edhocFormalization-SSR}
 
 %-------------------------------------------------------------------------- sec
 \section{Discussion}
@@ -506,10 +330,6 @@ We now present a couple of examples.\\
 %
 
 %\subsubsection{Non-repudiation.}
-\knote{Why are runhead used instead of subsubsection? I did not find guidelines
-    regarding that. The result seems to be the same.
-}
-\vnote{The vertical space used by runhead seems to be lesser. There is no guideline that says you can't do this. }
 \runhead{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
@@ -666,15 +486,10 @@ of the initiator's ephemeral DH key.
 
 The fourth alternative is to simply
 accept that \mEdhoc{}'s methods provide very different security properties.
-\vnote{This is if the ``problem'' identified above is not a problem at all! Can remove.}
-\knote{Not sure I understand. We are listing four alternative solutions, not
-    problems. One alternative is to make an informed decision to accept
-    the situation even though it is problematic/undesirable (which is very
-    different from ignoring it or not being aware of it).
-    So, I don't think we should remove this alternative.
-}
-\vnote{It says maybe the security problem being talked about isn't really a problem, because we choose to see things differently. Need to reword  to add this before we give potential solutions to the problem of \mGiy.}
 %
+\knote{Change text to either we accept it or we have three alternatives for a
+solution...}
+
 We have shown mutual implicit authentication on all of \mGxy{}, \mGiy{} and
 \mGrx{}, so there is a common, but weaker, security guarantee for all
 methods.
@@ -736,6 +551,8 @@ intended, and proposed a simple mitigation.
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
 %
+\knote{Mention future work: some PCI/KCI stuff done and some work on negotiation
+done.}
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class

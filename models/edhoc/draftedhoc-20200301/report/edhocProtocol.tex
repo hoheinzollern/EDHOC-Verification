@@ -99,9 +99,6 @@ method.
  
 \subsection{Relation to \mSigma, \mOptls{}, and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
- 
-%\vnote{I realize that we use subsubsection a lot both in this subsection and the next one, which eats up enormous amounts of vertical space before the heading. Given that we do not refer to these sections in the text, it might be better to make them running heads in bold, rather than subsubsection.}
-
 We now present how \mEdhoc{} uses \mSigma, \mOptls{}, and \mNoise{} as cryptographic cores for various methods, and the ways in which it differs from them. \\
 
 %\mEdhoc{} uses existing academic protocols as cryptographic cores to
@@ -152,9 +149,6 @@ and the client as $A$.
 %
 The temporary key also affects the final session key.
 %
-\knote{We need the last sentence above. That is what gives the implicit
-    authenticity guarantee of the session key.}
-\vnote{Ok.}
 
 In \mEdhoc, a party using the \mStat{} authentication method
 essentially acts as an \mOptls{} client and the peer as an \mOptls{}
@@ -169,15 +163,16 @@ material.
 %
 Also, in \mOptls{}, 
 $e$ and $r$
+%
 are distinct elements, following the separation of concerns principle,
 \knote{I think the point on separation of concerns is useful in that it
     explains why this is the case and motivates the need for our work:
     the change \mEdhoc{} made cannot improve security, only weaken it, so
     verification is needed to show everything is still OK.
 }
-\vnote{But they are separate elements, which is enough to convince anyone that the guarantees cannot be borrowed directly. Why they are kept separate is immaterial, and actually distracting to someone like me who does not offhand know what ``separation of concerns principle'' means.}
-while \mEdhoc{} uses the ephemeral DH half-key itself as challenge.
-%
+\knote{change separation of concerns to explanation of the concept instead (see
+previous note.}
+
 \\
 %------------------------------------------------------------------------- sub
  
@@ -191,12 +186,6 @@ keys or pre-shared keys as credentials.
 %
 Its goal is to use so-called patterns to harmonize the many static long-term
 key DH-based AKE protocols, of which \mOptls{} is one.
-\knote{I'm consistently removing quotation marks as you have noticed. To me
-    quotation marks signal unclarity. For example here if we write
-    ``patterns'', I would wonder if they are not really patterns, only similar
-    to patterns.
-}
-\vnote{The quotation marks are there to signify that this is a notation used in Noise, and not some generally known notation. It's fine if you think they shouldn't be used.}
 %
 \mNoise{} specifies how to derive keys, use transcript hashes to ensure
 authentication of the message flow etc.
@@ -216,6 +205,8 @@ prescribed, and thus cannot automatically inherit the properties enjoyed by XX.
 }
 \vnote{An ``automatic'' inheritance means nothing needs to be verified to see that the two protocols are equal. Here obviously that is not the case. We can rewrite that if you want.}
 %
+\knote{change to that it is not obvious that it inherits.}
+
 For example, according to \mNoise{}, the mixHash function is called on
 pre-message public keys during the initialization.
 %
@@ -415,7 +406,8 @@ Upon receiving \mGx{}, the responder raises it to \mLtkr{}.
     Todo.
 }
 \vnote{Actually all of what is described here and in the following paragraph has already been captured in your new introduction paragraph to section 2. We could just refer back (``As mentioned earlier...'')}
-
+\knote{refer back to beginning of section 2 + description of challenge-response
+signs}
 %
 Assuming the discrete log problem is hard in the underlying DH group,
 only the initiator and responder will be able to compute $\mGx{}^\mLtkr{}$,
@@ -686,10 +678,6 @@ the \mSpec~\cite{selander-lake-edhoc-01}, Section 8.1:
             that the selected cipher suite is the most preferred of the
             initiator which is supported by both parties, even though there is
             no negotiation of cipher suites per se.
-    %\item Compromise of the \mHkdf{} input parameters (\mGxy{} shared
-            %secret and/or \mPsk) leads to all session keys derived from that
-            %shared secret being deemed compromised.
-            %\knote{I don't know which property the above tries to capture.}
     \item \textbf{Session key independence}
 \end{itemize}
 
