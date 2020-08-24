@@ -260,15 +260,19 @@ Formal verification methodologies often clash with industrial standard
 development practices; this is true also in our case.
 %
 The most important reason for the clash is that formal verification aims to
-verify whether well-specified security goals are met, whereas industrial
-standards are developed with a clear abstract goal,
+verify whether well-specified and detailed security goals are met, whereas
+industrial standards are developed with a clear abstract goal,
 but one that lacks specificity.
+%
+Instead the goals are there typically made more specific by listing resistance
+to attacks as these are discovered throughout the work.
 %
 Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
 several specific security goals.%, e.g., KCI and identity protection.
 %
 However, without knowing how the protocol is to be used,
-it is not clear whether these are important in the form they are listed.
+it is not clear whether these are the most important goals for constrained IoT
+devices.
 %
 
 The abstract goal of \mEdhoc{} is simple: establish an \mOscore{} security
