@@ -65,7 +65,7 @@ Instead, a single identifier for the pre-shared key is transmitted in \mMsgone{}
 a party may use for authentication -- certificates, private keys
 and static long-term DH keys.
 %
-Depending on the types used, the authentication methods may differ,
+Depending on the types used, the authentication methods differ,
 and \mAuthi{} and \mAuthr{} need to be constructed accordingly.
 %
 The three authentication methods are based on digital signatures (\mSig),
@@ -78,7 +78,8 @@ While any combination of the \mSig{} and \mStat{} methods is possible,
 when \mPsk{} is used, both parties must use \mPsk{}.
 %
 We refer to these \emph{combinations} of authentication methods as
-\emph{methods} to follow the terminology in the \mSpec{}.
+\emph{methods} to follow the terminology in the
+\mSpec{}~\cite{selander-lake-edhoc-01}.
 %
 Thus, we have five methods: \mSigSig, \mSigStat, \mStatStat, \mStatSig{} and
 \mPskPsk.
@@ -280,7 +281,7 @@ We now describe the \mEdhoc{} methods.
 Since the \mSigSig{} method has been analyzed earlier, we do not focus on
 it here.
 %
-For brevity, we only describe the \mStat-based methods here.
+For brevity, we only describe the \mStat-based methods.
 %
 However, a detailed description of the \mPskPsk{} method can be found in the
 technical report at~\cite{edhocTamarinRepo}. 
@@ -606,10 +607,6 @@ Many of the claims are imprecisely expressed.
 We will revisit these claims when we discuss the formal modeling and
 verification of \mEdhoc{} in Section~\ref{sec:formalization} and in the
 discussions in Section~\ref{sec:discussion}.
-\knote{Remember to refer back to this section from formalization section and
-    describe which of the properties we model and which we don't (and why?).
-    Also refer back to here from the discussion session.
-}
 %
 These are our interpretations of the claimed security properties described in
 the \mSpec~\cite{selander-lake-edhoc-01}, Section 8.1:

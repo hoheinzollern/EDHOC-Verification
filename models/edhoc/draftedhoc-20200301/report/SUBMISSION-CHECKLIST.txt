@@ -2,18 +2,15 @@
  - Disable all knote/vnote/anote in macro file
  - Hide acknowledgements
  - Check that link to git-repo and tech report is to dropbox
- - Check that annex is hidden
- - Overflow causing black-box at right margin
+ - Check for overflow causing black-box at right margin
+ - In documentclass in main.tex draft mode -- should be removed
  - Grep for names
  - Add reference to dropbox
- - In documentclass in main.tex draft mode -- should be removed
 
  - Create techrep
  - Dropbox: upload techrep + model
 
 
-Vaishnavi: 3.1, 3.2, 3.3, Future work, move macros from main.tex to macros.tex [DONE]
-Karl: 3.4 and 3.5 and cleanup 1 and 2.  Ping when done. Before 14:00 CET.
 
-Use edhocM4.spthy from July 21.
+Use edhocM4.spthy from July 22.
 

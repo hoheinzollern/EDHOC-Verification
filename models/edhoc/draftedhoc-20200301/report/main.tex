@@ -1,6 +1,7 @@
 % !TEX TS-program = pdflatexmk
 
-\documentclass[runningheads, envcountsame, a4paper, draft, x11names]{llncs}
+%\documentclass[runningheads, envcountsame, hidelinks, a4paper, draft, x11names]{llncs}
+\documentclass[runningheads, envcountsame, hidelinks, a4paper, x11names]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
 %\usepackage{enumitem}       % compacts lists and stuff
@@ -270,7 +271,7 @@ Instead the goals are there typically made more specific by listing resistance
 to attacks as these are discovered throughout the work.
 %
 Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
-several specific security goals.%, e.g., KCI and identity protection.
+several specific security goals.
 %
 However, without knowing how the protocol is to be used,
 it is not clear whether these are the most important goals for constrained IoT
@@ -467,7 +468,7 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %}
 %
 
-Cipher suite negotiation in \mEdhoc{} spans two or more executions of the
+Cipher suite negotiation in \mEdhoc{} spans one or more executions of the
 protocol.
 %
 As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
@@ -501,11 +502,13 @@ This needs to be clearly specified, and we have conveyed this to the authors of 
 \section{Conclusions and future work}
 \label{sec:conclusions}
 We formally modeled all five
-methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool, and 
-%.
-%
-%We 
-formulated and verified several important security properties in this model.
+methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool, and
+formulated and verified several important security properties in this model --
+PFS; session key material independence; mutual injective agreement on roles, identities and session key material
+(except for when the initiator uses the \mStat{} method); implicit
+authentication on on the same parameters for all methods; consitency, aliveness
+and peer awareness (the last two when mutual injective agreement holds);
+entity authentication (also when mutual injective agreement holds).
 %
 %We also identified security properties that do not hold for all methods.
 %
@@ -519,13 +522,11 @@ intended, and proposed a simple mitigation.
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
 %
-%\knote{Mention future work: some PCI/KCI stuff done and some work on negotiation
-%done.}
-
 There is some work that was done as part of this effort which has not been mentioned in this paper. These lines of enquiry form the basis for future work.
 %For more details, see~\cite{edhocTamarinRepo}.
 
-We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods. However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
+We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
+However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
 
 We also tried to incorporate the parameters \mCi, \mCr, and \mAD{} into our model. This too resulted in non-termination for some of the methods, and further study is required to obtain conclusive results along these lines. 
 
