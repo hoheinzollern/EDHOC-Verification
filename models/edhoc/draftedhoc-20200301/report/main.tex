@@ -455,29 +455,29 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %-------------------------------------------------------------------------- sub
 \subsection{Cipher Suite Negotiation}
 \label{sec:ciphersuiteNegotiation}
-\knote{If we are tight on space, we can consider removing this section since we
-    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
-    with this though.
-}
+%\knote{If we are tight on space, we can consider removing this section since we
+%    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
+%    with this though.
+%}
 %
 Cipher suite negotiation in \mEdhoc{} spans two or more executions of the
 protocol.
 %
 If a run terminates due to the proposed cipher suites being rejected by the
 responder, the initiator maintains state and initiates a new run, proposing
-an updated set of cipher suites (see Section~\ref{sec:edhoc}).
+an updated set of cipher suites.
 %
-Our model does not cover this, and we leave it for future work.
-
-Maintaining state between protocol runs implicitly creates a long-lived
+%Our model does not cover this, and we leave it for future work.
+%Maintaining state between protocol runs 
+This implicitly creates a long-lived
 meta-session covering multiple \mEdhoc{} sessions.
 %
-Such a meta-session is presumably controlled by the underlying application.
-%
-However, the \mSpec{} does not specify the time for which the initiator should
-remember a rejected cipher suite for a given responder.
+%Such a meta-session is presumably controlled by the underlying application.
 %
 
+However, the time for which the initiator should
+remember a rejected cipher suite for a given responder is not specified.
+%
 From a security perspective, remembering the rejected cipher suite for the
 next \mEdhoc{} run in the same meta-session would be sufficient.
 %
@@ -486,7 +486,7 @@ session, this could be taken into account. On the other hand, caching the
 rejected cipher suite between meta-sessions would reduce the number of
 round-trips for subsequent runs, should the responder not have been updated.
 %
-This needs to be clearly specified.
+This needs to be clearly specified, and we have conveyed this to the authors of the \mSpec.
 
 %-------------------------------------------------------------------------- sec
 \section{Conclusions and future work}
@@ -520,7 +520,7 @@ We considered two more properties, namely key-compromise impersonation (KCI) res
 
 We also tried to incorporate the parameters \mCi, \mCr, and \mAD{} into our model. This too resulted in non-termination for some of the methods, and further study is required to obtain conclusive results along these lines. 
 
-Another potential extension of the current model is to incorporate the cipher suite negotiation process into the model.\\ 
+Another potential extension is to incorporate the cipher suite negotiation process into the formal modeling.\\ 
 %
 
 
