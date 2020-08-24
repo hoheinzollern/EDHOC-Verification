@@ -19,13 +19,6 @@
 \usepackage[nospace]{cite}
 
 \input{macros}
-%%%%%% HACKY COMMAND FOR VSPACE, REMOVE AT END %%%%%
-
-\addtolength{\textfloatsep}{-0.2in}
-%\newcommand{ }{\vspace{-1em}}
-%\newcommand{ }{\vspace{-0.5em}}
-
-\newcommand{\runhead}[1]{\noindent\textbf{#1. }}
 
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
@@ -233,8 +226,8 @@ which we discuss in Section~\ref{sec:discussion}.
 %-------------------------------------------------------------------------- sec
 \section{Discussion}
 \label{sec:discussion}
-There are a few instances where the \mEdhoc{} and the \mSpec{} can be improved,
-which we found as part of this work. We discuss them below.
+There are a few instances where \mEdhoc{} can be improved,
+which we found during this work and communicated to the authors. We discuss them below.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -257,9 +250,8 @@ While it is good practice to reuse well-studied academic components in
 industrial standards, it is important to justify that changes made to these
 components preserve security properties.
 %
-Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and the
-present paper verifies more, but until some justification is provided, security
-claims may benefit from note of caution.
+Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and this paper verifies more, but until some justification is provided, security
+claims may benefit from a note of caution.
 
 %-------------------------------------------------------------------------- sub
 \subsection{Unclear Intended Use}
@@ -273,9 +265,9 @@ standards are developed with a clear abstract goal,
 but one that lacks specificity.
 %
 Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
-several specific security goals, e.g., KCI and identity protection.
+several specific security goals.%, e.g., KCI and identity protection.
 %
-However, without knowing how the protocol is to be used
+However, without knowing how the protocol is to be used,
 it is not clear whether these are important in the form they are listed.
 %
 
@@ -295,7 +287,7 @@ sub-optimal trade-offs and design decisions.
 difficult to predict today.
 %
 Just because it is difficult to predict these use cases, does not
-prevent collecting a \emph{typical} use cases and user stories
+prevent one from collecting \emph{typical} use cases and user stories
 to identify more specific security goals that will be important in most cases.
 %
 
@@ -304,9 +296,9 @@ security properties of interest.
 %
 Several of these revealed undefined aspects of \mEdhoc{}.
 %
-We informed \mEdhoc{} authors and they included these aspects the \mSpec{}.
+We informed the \mEdhoc{} authors, who then included these aspects the \mSpec{}.
 %
-We now present a couple of examples.\\
+We present a couple of examples here.\\
 %
 
 %\subsubsection{Non-repudiation.}
@@ -347,7 +339,7 @@ intended $C$.
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity provided by the application.
 %
-We have communicated this situation to the \mEdhoc{} authors and they consider
+We have communicated this situation to the \mEdhoc{} authors and they are considering
 how to resolve the issue.
 %
 
@@ -362,13 +354,13 @@ secure needs to be defined at least on a high level.
 %
 We argue that the \mSpec{} gives too little information about what capabilities
 an attacker is assumed to have, and that this leads to unclear design goals and
-possibly a sub-optimal design.
+potentially sub-optimal design.
 %
-Let us explore this via an example.
+%Let us explore this via an example.
 %
 
 It is conceivable that IoT devices deployed in a hostile environments can be
-hardened by equipping them with a TEE, but \mEdhoc{} is not intentionally
+hardened by equipping them with a TEE, but \mEdhoc{} is not %intentionally
 designed to take advantage of this.
 %
 Even though \mEdhoc{} incorporates cryptographic cores from different academic
@@ -379,7 +371,7 @@ For example, \mOptls{} is designed to be secure in the CK
 model~\cite{DBLP:conf/crypto/CanettiK02}.
 %
 The CK security model explicitly separates the secure storage of long-term
-credentials from storage of session state and ephemeral keys to model
+credentials from storage of session state and ephemeral keys to model the 
 use of TEEs.
 %
 
@@ -390,7 +382,7 @@ from compromised long-term keys~\cite{personalCommunication}.
 The rationale is that \mSigma{} cannot protect against compromised ephemeral
 keys.
 %
-That rationale is presumably based on that the \mSigSig{} method is
+That rationale is presumably based on the fact that the \mSigSig{} method is
 closely modeled on \mSigmaI{} and that it would be preferable to obtain a
 homogeneous security level among the \mEdhoc{}
 methods\cite{personalCommunication}.
@@ -407,6 +399,7 @@ re-used cryptographic cores.
 %
 For example, coming back to \mOptls{}, which was intentionally
 designed to be provably secure in the CK model.
+\vnote{Incomplete sentence?}
 %
 
 %-------------------------------------------------------------------------- sub
@@ -421,16 +414,16 @@ The session key material is affected by \mGxy{}, and if a party uses the
 As shown in Section~\ref{sec:formalization}, mutual injective agreement cannot
 be achieved for \mGiy{}.
 %
-If that property is not important for constrained IoT devices that cannot use
+If this property is not important for constrained IoT devices which cannot use
 any of the other methods, then one can simply accept that the methods have
 different authentication strengths.
 %
-However, if it is important this is a problem.
+However, if it is important, this is a problem.
 %
 
-We identified three alternatives for resolving the problem.
+We identified three alternatives for resolving this.
 %
-One alternative is to include a fourth message from responder to initiator,
+One is to include a fourth message from responder to initiator,
 carrying a MAC based on a key derived from session key
 material including \mGiy{}.
 %
@@ -441,11 +434,11 @@ However, our understanding is that adding an extra message is
 unacceptable~\cite{personalCommunication}.
 %
 
-Another alternative is to include \mGi{}, or a hash of it, in the first and
+Another possibility is to include \mGi{}, or its hash, in the first and
 second messages.
 %
-This would, however, increase message sizes, a grave concern for \mEdhoc{},
-and prevent initiator identity protection.
+This would, however, increase message sizes, a grave concern for \mEdhoc{}.
+%and prevent initiator identity protection.
 %
 
 A third alternative is to not derive the session key material from \mGiy{}.
