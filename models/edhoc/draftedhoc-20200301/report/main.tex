@@ -14,7 +14,6 @@
 \usetikzlibrary{trees,snakes,arrows}
 \usetikzlibrary{shapes,chains}
 \usetikzlibrary{positioning}
-\usepackage{url}
 \usepackage{hyperref}
 \usepackage[nospace]{cite}
 
@@ -394,12 +393,12 @@ TEEs provide value in other ways, for example, by allowing contractions with
 weak PCS guarantees.
 %
 It would be wasteful to not consider TEEs for long-term key storage as part of
-the security, since it would otherwise make use of many good properties of the
-re-used cryptographic cores.
+the security, since it could otherwise make use of many good properties of the
+re-used cryptographic cores, like \mOptls.
 %
-For example, coming back to \mOptls{}, which was intentionally
-designed to be provably secure in the CK model.
-\vnote{Incomplete sentence?}
+%For example, coming back to \mOptls{}, which was intentionally
+%designed to be provably secure in the CK model.
+%\vnote{Incomplete sentence?}
 %
 
 %-------------------------------------------------------------------------- sub
@@ -460,8 +459,11 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %    with this though.
 %}
 %
+
 Cipher suite negotiation in \mEdhoc{} spans two or more executions of the
 protocol.
+%
+As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
 %
 If a run terminates due to the proposed cipher suites being rejected by the
 responder, the initiator maintains state and initiates a new run, proposing
@@ -523,50 +525,6 @@ We also tried to incorporate the parameters \mCi, \mCr, and \mAD{} into our mode
 Another potential extension is to incorporate the cipher suite negotiation process into the formal modeling.\\ 
 %
 
-
-
-
-%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
-%of the endpoints of the protocol, say Alice running a session with Bob. A
-%protocol is secure under KCI if Alice can still establish a secure session with
-%Bob, even though Alice's keys are compromised at any time, and Bob's key
-%material is not leaked until the end of the session.
-%
-% 
-%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
-%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
-%is capable of establishing a secure session even after one of the parties has
-%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
-%PCS, namely weak and strong PCS: here we focus on the latter.
-%%
-%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
-%between the initiator and the responder, even if the run of the protocol that
-%established $sk$ happens after a \emph{limited compromise}, where the key
-%material is not leaked, but the attacker is capable of impersonating both
-%parties (i.e. has the ability to perform all cryptographic operations using the
-%initiator's and responder's long term keys, but has not access to the long term
-%keys).%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
-%of the endpoints of the protocol, say Alice running a session with Bob. A
-%protocol is secure under KCI if Alice can still establish a secure session with
-%Bob, even though Alice's keys are compromised at any time, and Bob's key
-%material is not leaked until the end of the session.
-%
-% 
-%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
-%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
-%is capable of establishing a secure session even after one of the parties has
-%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
-%PCS, namely weak and strong PCS: here we focus on the latter.
-%%
-%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
-%between the initiator and the responder, even if the run of the protocol that
-%established $sk$ happens after a \emph{limited compromise}, where the key
-%material is not leaked, but the attacker is capable of impersonating both
-%parties (i.e. has the ability to perform all cryptographic operations using the
-%initiator's and responder's long term keys, but has not access to the long term
-%keys).
-
-
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
 \runhead{Acknowledgments} This work was partially supported by
@@ -577,7 +535,7 @@ We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
 clarifications regarding the specification.
 %
 
-\vnote{We need to fix the link for the code repository.}
+%\vnote{We need to fix the link for the code repository.}
 
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{spmpsci}
