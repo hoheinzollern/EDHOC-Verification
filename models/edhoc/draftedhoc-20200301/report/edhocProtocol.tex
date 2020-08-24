@@ -1,5 +1,5 @@
 % !TEX root =  main.tex
- 
+
 %The high-level goal of \mEdhoc{} is to establish an authenticated security
 %context for the \mOscore{} security protocol.
 %
@@ -109,10 +109,11 @@ cryptographic cores for various methods, and the ways in which it differs from t
 %on top of these cores, e.g., connection identifiers for message multiplexing,
 %encoding and application specific parameters to be negotiated.
 %
+
 %-----------------------------------------------------------------------------
-\runhead{\mSigma{}.}
+\runhead{\mSigma{}}
 %\subsubsection{\mSigma{}.}
-%\label{sec:sigma}
+\label{sec:sigma}
 The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigma{}
 variant that provides identity protection for the initiator~\cite{sigma}.
 %
@@ -120,10 +121,11 @@ Some aspects differ though, e.g., \mSigSig{} uses Mac-then-Sign like
 \mTls{} instead of Sign-then-Mac. 
 %
 \\
+
 %----------------------------------------------------------------------------- 
 %\subsubsection{\mOptls{}.}
-%\label{sec:optls}
 \runhead{\mOptls{}}
+\label{sec:optls}
 The \mStat-based methods use challenge-response signatures based on static
 long-term DH keys, and proceed along the lines of
 \mOptls~\cite{DBLP:conf/eurosp/KrawczykW16}.
@@ -136,8 +138,8 @@ Party $A$ sends a random challenge $r$
 and an ephemeral DH half-key $e$ to a party $B$.
 %
 %The receiver mixes the DH half-key and the challenge with its secret static DH
-$B$ mixes $e$ and $r$ with its secret static DH
-key $s$ to obtain a temporary key, which
+$B$ mixes $e$ and $r$ with its secret static
+long-term DH key $s$ to obtain a temporary key, which
 %
 is used to compute a MAC that is returned to 
 %the sender of the challenge.
@@ -187,19 +189,11 @@ authentication of the message flow etc.
 The \mNoise{} pattern closest to the \mStatStat{} method is called XX.
 %
 However, \mEdhoc{} does not use the functions of \mNoise{} exactly as
-prescribed, and thus cannot automatically inherit the properties enjoyed by XX.
-%prevents claiming that security properties of XX
-%automatically carries over. 
-\knote{Is the above sentence correct now?  It depends on what it means to
-    automatically inherit something. It is clear that one cannot \emph{claim}
-    automatically inheriting the properties without checking. But: it is not clear
-    to me that it is impossible that \mEdhoc{} is equal to \mNoise{} in the
-    parts that are relevant for automatic inheritance (whatever that means).
-}
-\vnote{An ``automatic'' inheritance means nothing needs to be verified to see that the two protocols are equal. Here obviously that is not the case. We can rewrite that if you want.}
+prescribed.
 %
-\knote{change to that it is not obvious that it inherits.}
-
+It is thus not obvious that \mEdhoc{} automatically inherits
+the properties enjoyed by XX.
+%
 For example, according to \mNoise{}, the mixHash function is called on
 pre-message public keys during the initialization.
 %
@@ -208,11 +202,8 @@ hash over those keys, which \mEdhoc{} does not do.
 %
 
 %------------------------------------------------------------------------- sub
- 
 \subsection{Methods of \mEdhoc{}}
 \label{sec:methods}
- 
-%We are now ready to dive into the various methods of \mEdhoc.
 Although \mCbor{} and \mCose{}~\cite{rfc8152} are important building blocks of
 \mEdhoc{}, and we use their terminology in our \mTamarin{} model to better
 reflect the \mSpec{}, our model does not cover the details of encoding and
@@ -226,8 +217,8 @@ All methods make use of a common key hierarchy, which we describe first.
 
 %------------------------------------------------------------------------- sub
 %\subsubsection{Key Hierarchy.}
-%\label{sec:keyHierarchy}
 \runhead{Key Hierarchy}
+\label{sec:keyHierarchy}
 \mEdhoc{} derives keys using \mHkdf{}~\cite{rfc5869}.
 %
 The \mHkdf{} interface provides two functions -- \mHkdfExtract{}, which
@@ -379,60 +370,24 @@ technical report at~\cite{edhocTamarinRepo}.
 One or both of the initiator and responder authenticate to their peer using
 their secret static long-term DH key, \mLtki{} or \mLtkr{} respectively.
 %
-Authentication is achieved using challenge-response signatures that work as
-follows when the responder authenticates to the initiator.
+Authentication of the party using the \mStat{} method follows the
+challenge-response signature pattern from \mOptls.
 %
-Each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively,
-for the credentials they use.
-%
-
-The initiator sends the ephemeral DH half-key \mGx{} as a challenge to the
-responder in the first message.
-%
-%To save bandwidth,  sent in the first message also serves as challenge.
-%
-Upon receiving \mGx{}, the responder raises it to \mLtkr{}.
-\knote{What is described here seems to be
-    \mSigStat{}, not a general description of all the \mEdhoc{} (or even all the
-    \mStat{}-based methods). Something needs fixing here. We could refer back to
-    the description of challenge-response signatures to save space.
-    Todo.
-}
-\vnote{Actually all of what is described here and in the following paragraph has already been captured in your new introduction paragraph to section 2. We could just refer back (``As mentioned earlier...'')}
-\knote{refer back to beginning of section 2 + description of challenge-response
-signs}
+In the same terms as Section~\ref{sec:optls}, the ephemeral DH half-key of the
+peer takes the place of both $r$ and $e$, i.e., $r=e$, and $s$ is the secret
+static long-term DH key of the party to be authenticated.
 %
 Assuming the discrete log problem is hard in the underlying DH group,
-only the initiator and responder will be able to compute $\mGx{}^\mLtkr{}$,
-and this value is woven in to the key hierarchy as depicted in
+only the initiator and responder will be able to compute $e^s$.
+%
+That value is then affecting the computation of \mAuthr{} or \mAuthi{}
+(depending on who is the authenticator), and it is also
+woven in to the key hierarchy, see
 Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
 %
-The responder computes authentication data \mAuthr{} in the form of \mMactwo{}
-using the \mAead{} transform from \mSuites{} as proposed by the
-initiator in the first message.
-%
-The responder then includes \mMactwo{} in the second message.
-%
-Knowing the secret ephemeral DH half-key corresponding to \mGx{}, and the public
-static long-term half-key of the responder, the initiator can also
-compute $\mGx{}^\mLtkr{}$.
-
-%
-The initiator assumes that only the responder knows $\mGx{}^\mLtkr{}$, and
-therefore considers the responder authenticated if the \mAead{} transform
-completes successfully.
-%
-When the initiator is authenticating to the responder, the roles are reversed,
-and \mGy, \mLtki, and \mAuthi{} are used instead of \mGx, \mLtkr, and \mAuthr{}
-respectively. 
-%\mGy{} takes the place of \mGx{}, \mLtki{} that of \mLtkr{}, and \mAuthi{}
-%that of \mAuthr{}. 
-\mAuthi{} is constructed from \mMacthree{}.
-%
-
-Even if one party uses \mStat{}-based authentication, the
-other party may use \mSig{}-based authentication, where the authentication data
-is constructed using a regular signature. \\
+The receiver of \mAuthi{}/\mAuthr{} assumes that only the responder knows
+the corresponding $e^s$, and therefore considers the peer authenticated if
+the \mAead{} transform completes successfully.
 %
 %In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
 %
