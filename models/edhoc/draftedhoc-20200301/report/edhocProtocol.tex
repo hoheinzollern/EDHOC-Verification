@@ -99,8 +99,9 @@ method.
  
 \subsection{Relation to \mSigma, \mOptls{}, and \mNoise{}}
 \label{sec:relationsToOtherProtocols}
-We now present how \mEdhoc{} uses \mSigma, \mOptls{}, and \mNoise{} as cryptographic cores for various methods, and the ways in which it differs from them. \\
-
+We now present how \mEdhoc{} uses \mSigma, \mOptls{}, and \mNoise{} as
+cryptographic cores for various methods, and the ways in which it differs from them.
+\\
 %\mEdhoc{} uses existing academic protocols as cryptographic cores to
 %establish the session key.
 %
@@ -109,7 +110,7 @@ We now present how \mEdhoc{} uses \mSigma, \mOptls{}, and \mNoise{} as cryptogra
 %encoding and application specific parameters to be negotiated.
 %
 %-----------------------------------------------------------------------------
-\runhead{\mSigma{}}
+\runhead{\mSigma{}.}
 %\subsubsection{\mSigma{}.}
 %\label{sec:sigma}
 The \mSigSig{} method of \mEdhoc{} is closely modeled on the \mSigma{}
@@ -161,21 +162,13 @@ authentication~\cite{ietf-lake-reqs-04}.
 runs, one initiated by each party, and then combining the resulting session key
 material.
 %
-Also, in \mOptls{}, 
-$e$ and $r$
+Also, \mOptls{} uses the conservative security approach where $e$ and $r$
+are distinct elements, whereas \mEdhoc{} reuses the $e$ as the challenge $r$.
 %
-are distinct elements, following the separation of concerns principle,
-\knote{I think the point on separation of concerns is useful in that it
-    explains why this is the case and motivates the need for our work:
-    the change \mEdhoc{} made cannot improve security, only weaken it, so
-    verification is needed to show everything is still OK.
-}
-\knote{change separation of concerns to explanation of the concept instead (see
-previous note.}
+The latter can only weaken security.\\
+%
 
-\\
 %------------------------------------------------------------------------- sub
- 
 %\subsubsection{\mNoise{}.}
 \runhead{\mNoise{}}
 The \mStatStat{} and \mPskPsk{} methods follow the \mNoise{}
