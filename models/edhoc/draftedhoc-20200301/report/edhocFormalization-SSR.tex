@@ -125,13 +125,6 @@ Both the above equations govern decryption. The first rule checks to see if the 
  
 \subsection{Verified Properties}
 \label{sec:desired-properties}
- 
-%Here we list the properties that will be considered during verification.\\
-%\knote{The title should be "verified properties" or "considered properties" or
-%    similar. "desired" requires us to specify who think they are desired and
-%    give rationale for why the are desired.  Also, one of the points of the
-%    paper is that without more specific goals for EDHOC, it is not clear what
-%constitutes desirable.}
 
  
 %\subsubsection{Secrecy}
@@ -394,54 +387,61 @@ We then XOR each term in the plaintext with its own key-stream term.
 This models the \mSpec{} closer than if we would have XORed \mT{K_2e}, as a
 single term, onto the plaintext tuple.
 %
-
+The XOR encryption can be seen in on line 16-19 in the listing of
+\mT{R2_STAT_SIG} below.
+%
 \begin{lstlisting}
 rule R2_STAT_SIG:
- 47     let
- 48          data_2 = <'g'^~yy>
- 49 m1 = <'STAT', 'SIG', $cSUITE0, gx>
- 50          TH_2 = h(<$cHash0, m1, data_2>)
- 51          prk_2e = hkdfExtract('emptyStr', gx^~yy)
- 52          prk_3e2m = prk_2e
-
- 54          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
- 55          protected2 = $V // ID_CRED_V
- 56          CRED_V = pkV
- 57          extAad2 = <TH_2, CRED_V>
- 58          assocData2 = <protected2, extAad2>
- 59          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
- 60          authV = sign(<assocData2, MAC_2>, ~ltk)
- 61          plainText2 = <$V, authV>
- 62          K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
- 63          /* K_2e is split in two parts to allow attacker to attack them
- 64           * individually
- 65           */
- 66          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
- 67          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
- 68          CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
-
- 71          m2 = <data_2, CIPHERTEXT_2>
-
-
- 74 /* Def of session key exp_sk we can get explicit auth (agreement) on */
- 75 /* I.e., exp_sk does not include G_IY */
- 76 exp_sk = <gx^~yy>
+    let
+          data_2 = <'g'^~yy>
+          m1 = <'STAT', 'SIG', $cSUITE0, gx>
+          TH_2 = h(<$cHash0, m1, data_2>)
+          prk_2e = hkdfExtract('emptyStr', gx^~yy)
+          prk_3e2m = prk_2e
+          K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+          protected2 = $V // ID_CRED_V
+          CRED_V = pkV
+          extAad2 = <TH_2, CRED_V>
+          assocData2 = <protected2, extAad2>
+          MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+          authV = sign(<assocData2, MAC_2>, ~ltk)
+          plainText2 = <$V, authV>
+          K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+          K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+          K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+          CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
+          m2 = <data_2, CIPHERTEXT_2>
+          exp_sk = <gx^~yy>
+   in
+          [ !LTK_SIG($V, ~ltk)
+          , !PK_SIG($V, pkV)
+          , In(m1)
+          , Fr(~yy)
+          , Fr(~tid)
+          ]
+          --[ ExpRunningR(~tid, $V, exp_sk)
+           , R2(~tid, $V, m1, m2)
+            ]->
+          [ StR2_STAT_SIG($V, ~ltk, ~yy, prk_3e2m, TH_2,
+                          CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+          , Out(m2)
+          ]
 \end{lstlisting}
-\knote{Please ignore listing above. It is WIP.}
-\knote{@Vaishnavi: I promised to commit what I have at 18:00 CET. Section 3.3
-    is done except for weaving in the listing above. I have not really started
-    on Section 3.4 yet.
-}
 
 We use conventional state facts to save the internal state of a party between
 executions of their rules.
 %
-For instance, the fact \mbox{\mT{StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid)}}
-stores the initiator's internal state after executing the first step of the
-\mPskPsk{} method.
+%For instance, the fact \mbox{\mT{StI1_PSK_PSK($U, ~ltk, $V, ~xx, m1, ~tid)}}
+%stores the initiator's internal state after executing the first step of the
+%\mPskPsk{} method.
+For instance, the fact
+\mT{StR2_STAT_SIG} on lines 32 and 33
+in the listing above stores the responder's internal state after executing the
+second step of the \mStatSig{} method.
 %
 
-We mark some steps of the protocol with \mT{Running} action facts.
+We mark some steps of the protocol with \mT{Running} action facts, e.g., line 29
+above.
 %
 These facts represent that the party consider itself running the
 protocol using certain parameters.
@@ -451,8 +451,8 @@ We mark other steps with \mT{Commit} action facts.
 These facts represent that the party consider itself having
 completed the protocol using a certain set of parameters.
 %
-For example, the fact \mT{ExpRunningR(~tid, \$V, exp_sk)}
-represent that a party is running a session they currently believe
+For example, the fact \mT{ExpRunningR(~tid, \$V, exp_sk)} (line 29 above)
+represent that a party is running a session and that they believe
 they are doing so in the repsonder role, that their own identity is \mT{V}
 and that \mT{exp_sk} is the session key.
 %
@@ -485,15 +485,13 @@ The reason for this is that, when sending the second message \mMsgtwo{}, the
 responder does not yet know the identity of the initiator and can hence not
 indicate knowledge of \mGiy{} to the initiator.
 %
-We are using the pre-specified peer model~\cite{sigma}, so \emph{in our model}
-the responder knows \mGiy{} for all initiators, but in reality, the repsonder
-does not have this information when sending \mMsgtwo.
+Because we want to verify strong properties such as explicit authentication
+when possible, we collect those items in the key material referred to as
+\mT{exp_k}.
 %
-Because of this, we specify our lemmas to match the keying material which is
-available in reality.
-%
-Specifically, \mT{imp_sk} excludes key material which it is even theoretically
-impossible to get explicit authentication on.
+When not possible we prove weaker properties for \mT{imp_sk}, which excludes
+key material which it is even theoretically impossible to get explicit
+authentication on.
 %
 
 What happens after \mEdhoc{} completes is beyond the scope of our study, hence
