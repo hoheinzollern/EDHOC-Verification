@@ -1,0 +1,8 @@
+ - Hide author names
+ - Disable all knote/vnote/anote in macro file
+ - Hide acknowledgements
+ - Check that link to git-repo and tech report is to dropbox
+ - Check that annex is hidden
+ - Overflow causing black-box at right margin
+ - Grep for names
+
