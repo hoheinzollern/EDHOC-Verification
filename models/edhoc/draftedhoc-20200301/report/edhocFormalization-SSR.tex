@@ -1,207 +1,226 @@
 % !TEX root =  main.tex
  
-Next we describe our approach towards formalizing the \mEdhoc{} protocol. We use the
-symbolic (Dolev-Yao) model for verification, with \mTamarin{} for tool support.
+Next we describe our approach towards formalizing the \mEdhoc{} protocol and list the properties we verify. %We used the
+%symbolic (Dolev-Yao) model for verification, with \mTamarin{} for tool support.
 %
-The next three subsections describe our threat model, briefly present the
-\mTamarin{} tool, and our modeling choices.
+%The next three subsections describe our threat model, briefly present the \mTamarin{} tool, and our modeling choices.
 %
-Finally, we present the properties that we proved in this effort.
+%Finally, we present the properties that we proved in this effort.
 
  
 \subsection{Threat Model}\label{sec:threat-model}
- 
 We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
-modeling, we assume all cryptographic primitives to be ``perfect'', and hence
-only allow the attacker to encrypt and decrypt messages when they know the key,
-and exclude hash collisions, for example; the attacker is in control of the
-communication channel, and can interact with unbounded sessions of the protocol,
+modeling, we assume all cryptographic primitives to be ``perfect''. Encrypted messages can only be decrypted with the key, and no hash collisions exist. The attacker controls the
+%, and hence
+%only allow the attacker to encrypt and decrypt messages when they know the key,
+%and exclude hash collisions, for example; the attacker is in control of the
+ communication channel, and can interact with unbounded sessions of the protocol,
 dropping, injecting and modifying messages at their liking.
 
 One important point of the modeling is that we allow the attacker to impersonate
 dishonest and/or compromised endpoints, by revealing their long-term and session
 key material at any given point.
 %
-Conversely, we say that a party is honest if they never reveal their
+%Conversely, 
+We say that a party is honest if they never reveal their
 long-term key or session key material.
 
-Another important point is to define what the key material is.
+An important point is to define what the key material is.
     \mEdhoc{} does not result in an explicit session key, but a cryptographic
     state from which keys for \mOscore{} can be derived using \mHkdf.
     As will be seen below, depending on how the key material is defined, the
     different methods will have different authentication properties.
     In particular, all methods except those where the initiator uses the
     \mStat{} method provide a stronger form of authentication (injective
-    agreement) for the initator.
+    agreement) for the initiator.
 
  
-\subsection{Desired Properties}
+\subsection{Verified Properties}
 \label{sec:desired-properties}
  
-Next we list the properties that will be considered during verification.
-\knote{The title should be "verified properties" or "considered properties" or
-    similar. "desired" requires us to specify who think they are desired and
-    give rationale for why the are desired.  Also, one of the points of the
-    paper is that without more specific goals for EDHOC, it is not clear what
-constitutes desirable.}
+%Here we list the properties that will be considered during verification.\\
+%\knote{The title should be "verified properties" or "considered properties" or
+%    similar. "desired" requires us to specify who think they are desired and
+%    give rationale for why the are desired.  Also, one of the points of the
+%    paper is that without more specific goals for EDHOC, it is not clear what
+%constitutes desirable.}
 
  
-\subsubsection{Secrecy}
-\knote{Please add a dot at the end of all subsubsections and paragraphs (llncs
-guidelines)}
+%\subsubsection{Secrecy}
+\runhead{Secrecy}
+%\knote{Please add a dot at the end of all subsubsections and paragraphs (llncs
+%guidelines)}
 We say that \mEdhoc{} satisfies secrecy of the established session key $sk$
-between two honest parties $A$ and $B$ if, for any run of the protocol $A$ and
-$B$, the attacker does not get to know $sk$.
+between two honest parties $I$ and $R$ if, for any run of the protocol between $I$ and
+$R$, the attacker does not get to know $sk$.\\
 %
-The attacker may passively observe---and actively interfere with---the
-communication, and run any number of sessions with $A$ and $B$, in either role,
-concurrently or otherwise.
+%The attacker may passively observe---and actively interfere with---the
+%communication, and run any number of sessions with $A$ and $B$, in either role,
+%concurrently or otherwise.
 
  
-\subsubsection{Authentication}
-To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
-of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
-\knote{Maybe we don't need to quote the definition and could paraphrase it in a
-shorter form to save space.}
-\begin{quote}
-  ``We say that a protocol guarantees to an initiator $A$ [injective] agreement
-  with a responder $B$ on a set of data items $ds$ if, whenever $A$ (acting as
-  initiator) completes a run of the protocol, apparently with responder $B$,
-  then $B$ has previously been running the protocol, apparently with $A$, and
-  $B$ was acting as responder in his run, and the two agents agreed on the data
-  values corresponding to all the variables in $ds$, and each such run of $A$
-  corresponds to a unique run of $B$.''
-\end{quote}
+%\subsubsection{Authentication}
+\runhead{Authentication}
+Following~\cite{DBLP:conf/csfw/Lowe97a}, we say that a protocol guarantees to an initiator $I$ injective agreement with a responder $R$ if, whenever $I$ believes they have completed a run of the protocol with $R$, then $R$ has previously been running the protocol with $I$ in these particular roles, and each such run of $I$ corresponds to a unique run of $R$.
+
+%To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
+%of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
+%\knote{Maybe we don't need to quote the definition and could paraphrase it in a
+%shorter form to save space.}
+%\begin{quote}
+%  ``We say that a protocol guarantees to an initiator $A$ [injective] agreement
+%  with a responder $B$ on a set of data items $ds$ if, whenever $A$ (acting as
+%  initiator) completes a run of the protocol, apparently with responder $B$,
+%  then $B$ has previously been running the protocol, apparently with $A$, and
+%  $B$ was acting as responder in his run, and the two agents agreed on the data
+%  values corresponding to all the variables in $ds$, and each such run of $A$
+%  corresponds to a unique run of $B$.''
+%\end{quote}
 %
 We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
-the initiator $A$ with a responder $B$, if injective agreement holds for $A$
-with $B$ on the session key $sk$, when running method $m$.
+the initiator $I$ with a responder $R$, if injective agreement holds for $I$
+with $R$ on the session key $sk$, when running method $m$.
 %
 The corresponding definition for the responder is analogous.
 %
 If both parties obtain explicit authentication we refer to it as mutual explicit
-authentication or simply explicit authentication when it is clear from the
-context.
+authentication (or simply explicit authentication).
 
-A party obtains the explicit authentication guarantee when both parties agree
-on the session key (and other parameters), when the party completes the protocol
+A party $A$ is guaranteed explicit authentication when both parties agree
+on the session key (and other parameters), when $A$ completes the protocol
 run.
 %
-It turned out, however, that explicit authentication does not hold for all
-\mEdhoc{} methods, in which cases we prove \emph{implicit authentication} as
-defined in~\cite{DBLP:journals/iacr/GuilhemFW19}.
+As we discuss later, it turned out that explicit authentication does not hold for all
+\mEdhoc{} methods, in which cases we prove \emph{implicit authentication}.
+
+Computational models often rely on implicit session key authentication
+(see, for example, the definition of SK-security in the Canetti-Krawczyk
+model~\cite{DBLP:conf/crypto/CanettiK02}).
 %
-In a nutshell, a protocol satisfies \emph{implicit authentication} if the
-initiator and responder agree on the session key \emph{only after} a successful
+Although symbolic models predominantly rely on correspondence properties
+in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where
+implicit session key authentication has been used.
+%
+For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
+symbolized version of an extended Canetti-Krawzcyk model.
+
+%
+We say that a protocol satisfies \emph{implicit authentication} if the
+initiator and responder agree on the session key only after a successful
 execution of the protocol.
 %
-That is, authentication happens only implicitly, as there is no confirmation to
-the initiator that the responder has computed the same session key.
+That is, authentication is implicit, as the
+initiator receives no confirmation that the responder has computed the same session key.
 %
 More precisely, we adapt the definition of~\cite{DBLP:journals/iacr/GuilhemFW19}
-to the symbolic model, and we prove that if an initiator $A$ and a responder $B$
-complete the protocol deriving the same session key, then $A$ believes she is
-talking to $B$ and $B$ believes he is talking to $A$.
+to the symbolic model, and we prove that if an initiator $I$ and a responder $R$
+complete the protocol deriving the same session key, then $I$ believes they are
+talking to $R$ and vice versa.\\
 
- 
-\subsubsection{Session Independence}
-A protocol satisfies session independence if knowing a session key does
+\runhead{Session independence} 
+%\subsubsection{Session Independence}
+Session independence holds if knowing one session key does
 not give the attacker any information about other sessions.  To model session
-key independence of \mEdhoc, we allow leakage of session keys, and additionally
-check security only of those sessions for which the session keys have not been
-directly revealed to the attacker.
+key independence of \mEdhoc, we allow leakage of session keys, and 
+check security only of those sessions for which the keys have not been
+directly revealed to the attacker.\\
 
- 
-\subsubsection{Perfect Forward Secrecy} (PFS) A protocol satisfies perfect forward
-secrecy if, for any run of the protocol in which the initiator and the responder
+\runhead{Perfect forward secrecy (PFS)}
+%\subsubsection{Perfect Forward Secrecy} 
+Perfect forward
+secrecy holds if, for any run in which the initiator and the responder
 agree on a session key $sk$, the attacker does not learn $sk$, even when the
-long-term keys are revealed after the session is completed.
+long-term keys are revealed after completing the session.
 
  
-\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
-of the endpoints of the protocol, say Alice running a session with Bob. A
-protocol is secure under KCI if Alice can still establish a secure session with
-Bob, even though Alice's keys are compromised at any time, and Bob's key
-material is not leaked until the end of the session.
-
- 
-\subsubsection{Post-Compromise Security} (PCS) A protocol that has
-\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
-is capable of establishing a secure session even after one of the parties has
-been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
-PCS, namely weak and strong PCS: here we focus on the latter.
+%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
+%of the endpoints of the protocol, say Alice running a session with Bob. A
+%protocol is secure under KCI if Alice can still establish a secure session with
+%Bob, even though Alice's keys are compromised at any time, and Bob's key
+%material is not leaked until the end of the session.
 %
-A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
-between the initiator and the responder, even if the run of the protocol that
-established $sk$ happens after a \emph{limited compromise}, where the key
-material is not leaked, but the attacker is capable of impersonating both
-parties (i.e. has the ability to perform all cryptographic operations using the
-initiator's and responder's long term keys, but has not access to the long term
-keys).
+% 
+%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
+%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
+%is capable of establishing a secure session even after one of the parties has
+%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
+%PCS, namely weak and strong PCS: here we focus on the latter.
+%%
+%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
+%between the initiator and the responder, even if the run of the protocol that
+%established $sk$ happens after a \emph{limited compromise}, where the key
+%material is not leaked, but the attacker is capable of impersonating both
+%parties (i.e. has the ability to perform all cryptographic operations using the
+%initiator's and responder's long term keys, but has not access to the long term
+%keys).
 
  
 \subsection{\mTamarin{}}
 \label{sec:tamarin}
  
-We chose \mTamarin{} to model and verify \mEdhoc{} in the Symbolic model.
+We chose \mTamarin{} to model and verify \mEdhoc{} in the symbolic model.
 %
 \mTamarin{} is an interactive verification tool based on multi-set rewriting rules
-with event annotations, which allows the user to check Linear Temporal Logic
+with event annotations, which allow the user to check Linear Temporal Logic
 (LTL) formulas on these models.
 %
-Multi-set rewrite rules with events take the form $ l \ifarrow[e] r $,
+Multi-set rewrite rules with events look like $ l \ifarrow[e] r $,
 where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of events.
 Facts are $n$-ary predicates over a term algebra, which defines a set of function
 symbols $\mathcal F$, variables $\mathcal V$ and names $\mathcal N$. \mTamarin{}
 checks equality of these terms under an equational theory $E$. For example,
 one can write $ dec(enc(x,y),y) =_E x $
 to denote that symmetric decryption reverses the encryption operation under this theory.
-All operations on terms are defined under $E$, hence we omit the
-subscript from now on as the equational theory is fixed per model.
+The equational theory $E$ is fixed per model, and hence we omit the subscript.
 
- 
-\subsubsection{Semantics and Built-ins} \phantom{} \mTamarin{} states
-$S$, $S'$ are multisets of facts, and a semantic transition $S \semarrow[E] S'$
-occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
-that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
-and $E = \sigma(e)$.
+In the presentation of the model we use some syntactic
+sugar, namely
+the use of let bindings (\mT{let ... in}). This is a series of
+definitions of patterns which are substituted in the rest of the rule. \\
 
-There are a few more details, such as persistent facts that are denoted by a $!$
-and are never removed from the state.
+%\runhead{Semantics and Built-ins}
+%%\subsubsection{Semantics and Built-ins} \phantom{} 
+%\mTamarin{} states
+%$S$, $S'$ are multisets of facts, and a semantic transition of the form $S \semarrow[E] S'$
+%occurs if there is a rule $l \ifarrow[e] r$ and a substitution $\sigma$ such
+%that $S \supseteq \sigma(l)$ and $S' = S \setminus \sigma(l) \uplus \sigma(r)$
+%and $E = \sigma(e)$.
 %
-The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
-constants and public values known to the attacker respectively, and are both
-sub-sorts of a base sort.
-%
-Finally, \mTamarin{} has some built-in predicates ($\mIn,
-\mOut$ to represent input and output of messages with the attacker,
-and
-$\mFr$ to denote a fresh constant created in the current rule, among
-others), rules and equations that represent the attacker's knowledge
-and standard equational theories in the symbolic model,
-which we present later.
+%There are a few more details, such as persistent facts which are denoted by a $!$
+%and are never removed from the state.
+%%
+%The sorts fresh (denoted by $\sim$) and public (denoted by $\$$) denote fresh
+%constants and public values known to the attacker respectively, and are both
+%sub-sorts of a base sort.
+%%
+%Finally, \mTamarin{} has some built-in predicates ($\mIn,
+%\mOut$ to represent input and output of messages with the attacker,
+%and
+%$\mFr$ to denote a fresh constant created in the current rule, among
+%others), rules and equations that represent the attacker's knowledge
+%and standard equational theories in the symbolic model,
+%which we present later.
 
-\anote{This can go, I make a shorter note later:\\
-{Notational conventions} In the remainder of this section we present
-\mTamarin{} code as it appears in the models that we verify, in the style of
-literate programming.  Whenever possible we match the style of the protocol
-diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
-\mSpec~\cite{selander-lake-edhoc-01}, so that each element of the model is
-traceable to the standard.  There are a few exceptions to this, most notably
-some variable names that we introduce for the sake of the \mTamarin{} model and are
-not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
-the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
-We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
-for the responder) as to avoid confusion with \mTamarin's builtin variable
-names \mT{x} and \mT{y}.}
+%\anote{This can go, I make a shorter note later:\\
+%{Notational conventions} In the remainder of this section we present
+%\mTamarin{} code as it appears in the models that we verify, in the style of
+%literate programming.  Whenever possible we match the style of the protocol
+%diagrams in Section~\ref{sec:edhoc} and the naming convention of the \mEdhoc{}
+%\mSpec~\cite{selander-lake-edhoc-01}, so that each element of the model is
+%traceable to the standard.  There are a few exceptions to this, most notably
+%some variable names that we introduce for the sake of the \mTamarin{} model and are
+%not present in the original \mSpec{}, which will appear in \mT{camelCase}, and
+%the syntax for Diffie-Hellman exponentiation which is specific to \mTamarin{}.
+%We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
+%for the responder) as to avoid confusion with \mTamarin's builtin variable
+%names \mT{x} and \mT{y}.}
 
- 
-\subsubsection{Protocol Rules and Equations}
+\runhead{Protocol rules and equations} 
+%\subsubsection{Protocol Rules and Equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
 rules, which are added to the set of considered rules during verification.
-For example, in our model we have a symbol to denote authenticated encryption and
-hence \mTamarin{} produces the rule:
+For example, in our model we have a symbol to denote authenticated encryption, for which \mTamarin{} produces the following rule:
 %
 \begin{lstlisting}
 [!KU(k), !KU(m), !KU(ad), !KU(al)] --> [!KU(aeadEncrypt(k, m, ad, al))]
@@ -209,46 +228,40 @@ hence \mTamarin{} produces the rule:
 %
 to denote that if the attacker knows a key \mT{k}, a message \mT{m}, the
 authenticated data \mT{ad}, and an algorithm \mT{al}, then they can construct
-the encryption using these parameters, hence get to know the message
+the encryption using these parameters, and thus get to know the message
 \lstinline{aeadEncrypt(k, m, ad, al)}.
 
-In our model we introduce a theory for authenticated encryption, and make use of
-the built-in theories of exclusive-or and Diffie-Hellman operations.
+In our model we make use of
+the built-in theories of exclusive-or and DH operations, as in~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}.
 %
-Authenticated encryption, which is encryption with authentication data as
-detailed in~\cite{aead}, has the following two equations:
+%The XOR theory introduces the symbol \mT{XOR}, plus the necessary equational theory including associativity, commutativity, and inverse.
+%
+%The Diffie-Hellman theory introduces exponentiation \mT{g^y} and product of exponents \mT{x * y} as built-in symbols in the language, plus the necessary equational theory of associativity, commutativity, distributivity of exponentiation with product, and inverse.
+
+\mAead{} operations require the following equations:
 \begin{lstlisting}
 aeadDecrypt(k, aeadEncrypt(k, m, ad, al), ad, al) = m
 decrypt(k, aeadEncrypt(k, m, ad, al), al) = m
 \end{lstlisting}
-With the first rule we allow the protocol to decrypt the message \mT{m} if the
-encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the
-same algorithm \mT{al}.
+Both the above equations govern decryption. The first rule checks to see if the authenticated data is as expected, while the second rule skips this check.
+%With the first rule we allow the protocol to decrypt the message \mT{m} if the encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the same algorithm \mT{al}.
 %
-The second rule allows the attacker to decrypt the message \mT{m} with the key
-\mT{k} and without the authenticated data \mT{ad}, and hence skip the check.
+%The second rule allows the attacker to decrypt the message \mT{m} with the key
+%\mT{k} and without the authenticated data \mT{ad}, and hence skip the check.
 
-The built-in theories for XOR and Diffie-Hellman are a fair bit more complex
-than authenticated encryption, hence we refer to the original
-papers~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}
-for a full reference.
+%The built-in theories for XOR and Diffie-Hellman are a fair bit more complex
+%than authenticated encryption, hence we refer to the original
+%papers~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}
+%for a full reference.
 %
-Suffices to say that the XOR theory introduces the symbol \mT{XOR}, for
-expressing XOR operations \mT{x} $\oplus$ \mT{y}, plus the necessary equational theory
-including associativity, commutativity, and inverse.
-%
-The theory for Diffie-Hellman introduces exponentiation \mT{g^y} and product of
-exponents \mT{x * y} as a built-in symbols in the language, plus the necessary equational
-theory of associativity, commutativity, distributivity of exponentiation with
-product, and inverse.
 
  
-\subsubsection{Syntactic Sugar} In the following presentation we use some syntactic
-sugar, which is necessary to understand to look at the concrete rules. First is
-the use of let bindings (\mT{let ... in}), which are series of
-definitions of patterns which are substituted in the rest of the rule. Another
-prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
-built-in concept in \mTamarin.
+%\subsubsection{Syntactic Sugar} In the following presentation we use some syntactic
+%sugar, namely
+%the use of let bindings (\mT{let ... in}), which are series of
+%definitions of patterns which are substituted in the rest of the rule. %Another
+%prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
+%built-in concept in \mTamarin.
 
  
 \subsection{Modeling \mEdhoc{}}
