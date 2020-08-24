@@ -17,14 +17,6 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage[nospace]{cite}
-%\hypersetup{
-%    final, % Uncomment to remove all links (useful for printing in black and white)
-%    colorlinks=true, breaklinks=true, bookmarks=false,bookmarksnumbered,
-%    urlcolor=blue, linkcolor=black, citecolor=green, % Link colors
-%    pdfkeywords={}, % PDF Keywords
-%    pdfcreator={PdfLaTeX}, % PDF Creator
-%  }
-
 
 \input{macros}
 %%%%%% HACKY COMMAND FOR VSPACE, REMOVE AT END %%%%%
@@ -36,17 +28,7 @@
 \newcommand{\runhead}[1]{\noindent\textbf{#1. }}
 
 \begin{document}
-\title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices
-    % This was suggested by *another* Springer lncs guideline. Correct according
-    % to the lncs guideline linked by SSR is to use a section with run-in heding
-    %\thanks{This work was partially supported by the Wallenberg AI, Autonomous
-        %Systems and Software Program (WASP) funded by the Knut and Alice
-        %Wallenberg Foundation.
-        %%
-        %We are grateful to G\"oran Selander, John Mattsson and
-        %Francesca Palombini for clarifications regarding the specification.
-    %}
-}
+\title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
 %
 \author{Karl Norrman\inst{1,2}\textsuperscript{(\Letter)}\orcidID{0000-0003-0164-1478}
 \and
@@ -268,10 +250,8 @@ SIGMA-I''.
 %
 The intention is the same for the other reused cryptographic
 cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
-progress, it is not yet written down (personal correspondence with the authors).
+progress, it is not yet written down~\cite{personalCommunication}.
 %
-\knote{substitute \cite{personalCommunication} for
-"personal correspondance with the authors".}
 
 While it is good practice to reuse well-studied academic components in
 industrial standards, it is important to justify that changes made to these
@@ -441,10 +421,14 @@ The session key material is affected by \mGxy{}, and if a party uses the
 As shown in Section~\ref{sec:formalization}, mutual injective agreement cannot
 be achieved for \mGiy{}.
 %
-If that property is important for constrained IoT devices, this is a problem.
+If that property is not important for constrained IoT devices that cannot use
+any of the other methods, then one can simply accept that the methods have
+different authentication strengths.
+%
+However, if it is important this is a problem.
 %
 
-We identified four alternatives for resolving the problem.
+We identified three alternatives for resolving the problem.
 %
 One alternative is to include a fourth message from responder to initiator,
 carrying a MAC based on a key derived from session key
@@ -463,20 +447,6 @@ second messages.
 This would, however, increase message sizes, a grave concern for \mEdhoc{},
 and prevent initiator identity protection.
 %
-%Neither the \mSpec{} nor the requirements document give rationale for why the
-%initiator needs stronger protection than the responder.
-%%
-%The \mSpec{} states that the initiator's identity is protected against active
-%attacks and the responder's against passive attacks
-%%
-%However, it also states that the roles should be assigned to the \mCoap{}
-%peers to protect the most sensitive identity the most
-%(see Section~8~\cite{selander-lake-edhoc-01}).
-%%
-%Roles could hence be swapped, so identity protection for the most sensitive
-%identity can be maintained.
-%\vnote{I feel like we can remove this discussion about identity protection. It can be handled, so the only problem is the message size.}
-%
 
 A third alternative is to not derive the session key material from \mGiy{}.
 %
@@ -484,15 +454,9 @@ Doing so would destroy the protection \mOptls{} provides against compromise
 of the initiator's ephemeral DH key.
 %
 
-The fourth alternative is to simply
-accept that \mEdhoc{}'s methods provide very different security properties.
-%
-\knote{Change text to either we accept it or we have three alternatives for a
-solution...}
-
-We have shown mutual implicit authentication on all of \mGxy{}, \mGiy{} and
-\mGrx{}, so there is a common, but weaker, security guarantee for all
-methods.
+Regardless of how this problem is handled, we have verified that all methods
+share a common, but weaker, security property: mutual implicit authentication
+on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %
 
 %-------------------------------------------------------------------------- sub
