@@ -271,23 +271,23 @@ using the M4 macro language to derive all valid combinations: \mPskPsk,
 Whenever possible we adhere with the variable names present in the \mSpec{} and
 in Section~\ref{sec:edhoc}.
 %
-There are a few exceptions: we use \mT{camelCase} for those names the modeling
-introduces, and we use \mT{xx} and
+There are a few exceptions: we use \mT{camelCase} for names introduced in the modeling, and we use \mT{xx} and
 \mT{yy} for the ephemeral keys, to avoid name clashes.
 %
 To keep the presentation brief, we only present the \mStatSig{} mode, as it
 shows both asymmetric authentication methods at the same time.
 %
-More details on the \mPskPsk{} method and all \mTamarin{} models can be
-found through this link~\cite{edhocTamarinRepo}.
+%More details on the \mPskPsk{} method and 
+All \mTamarin{} models can be
+found at~\cite{edhocTamarinRepo}.
 \\
-\anote{Fix: give a dropbox link instead of the repo}
+%\anote{Fix: give a dropbox link instead of the repo}
 %
 
 %\subsubsection{General Setup}
 \runhead{General Setup}
 The following rules express the registering of the long term keys for the
-\mSig{}- and \mStat{}-methods, respectively.
+\mSig{}- and \mStat{}-based methods, respectively.
 %
 \begin{lstlisting}
 rule registerLTK_SIG:
@@ -299,13 +299,13 @@ rule registerLTK_STAT:
 \end{lstlisting}
 %
 The rules \mT{registerLTK_SIG} and \mT{registerLTK_STAT} register a public key
-(for signing and static DH exchange, respectively) that are tied to the
+(for signing and static DH exchange, respectively) which is tied to the
 identity of an agent \mbox{\mT{A}.}
 %
 A similar rule \mT{registerLTK_PSK} registers pre-shared symmetric keys for
 pairs of agents.
 %
-The event \mT{UniqLTK} together with a corresponding restriction models that
+The event \mT{UniqLTK} together with a corresponding restriction models the fact that
 the long-term key is unique for each agent.
 % or pair of agents, as enforced by the following restriction:
 % \begin{lstlisting}
@@ -319,7 +319,7 @@ It also models that the attacker cannot register new public keys for an
 existing identity.
 %
 
-In our model we introduce rules to give the attacker access to
+We also introduce rules to give the attacker access to
 long-term keys and session keys.
 %and the cryptographic interface of the device.
 %
@@ -358,14 +358,14 @@ elements, representing the method for the initiator and the responder; this
 does not reduce the attacker potential.
 %
 To make the model manageable we omit the connection identifiers \mCi{} and
-\mCr{}, and represent the selected ciphersuite by the public variable
+\mCr{}, and represent the selected cipher suite by the public variable
 \mT{\$cSUITES0}, known to the attacker.
 %
 We plan to introduce the connection identifiers in our ongoing verification
 effort.
 %
 The way we model the selected cipher suite implies that our model does not
-capture the possibility for the responder to reject the initiator's offer.
+capture the possibility for the responder to reject the initiator's offer. 
 %
 
 %We model the XOR encryption of \mT{CIPHERTEXT_2} with the key \mT{K_2e} as to
@@ -439,21 +439,22 @@ For instance, the fact
 in the listing above stores the responder's internal state after executing the
 second step of the \mStatSig{} method.
 %
+\vnote{Is there any way to make these tildes in textsf show up ``normally''? Right now they're almost superscripted and it looks odd. Not high priority though.}
 
 We mark some steps of the protocol with \mT{Running} action facts, e.g., line 29
 above.
 %
-These facts represent that the party consider itself running the
+These facts represent that the party considers itself running the
 protocol using certain parameters.
 %
 We mark other steps with \mT{Commit} action facts.
 %
-These facts represent that the party consider itself having
+These facts represent that the party considers itself having
 completed the protocol using a certain set of parameters.
 %
 For example, the fact \mT{ExpRunningR(~tid, \$V, exp_sk)} (line 29 above)
 represent that a party is running a session and that they believe
-they are doing so in the repsonder role, that their own identity is \mT{V}
+they are playing the repsonder role, that their own identity is \mT{V}
 and that \mT{exp_sk} is the session key.
 %
 Other facts like \mT{ExpCommitI(~tid, \$U, \$V, exp_sk)}
@@ -474,7 +475,7 @@ are the same, but there will be a crucial difference when the initiator runs
 the \mStat{} method.
 %
 
-We model the session key material differently for Implicit authentication and
+We model the session key material differently for implicit authentication and
 explicit authentication.
 %
 Specifically, when the initiator uses the \mStat{} authentication method,
@@ -482,7 +483,7 @@ Specifically, when the initiator uses the \mStat{} authentication method,
 include it.
 %
 The reason for this is that, when sending the second message \mMsgtwo{}, the
-responder does not yet know the identity of the initiator and can hence not
+responder does not yet know the identity of the initiator and hence cannot
 indicate knowledge of \mGiy{} to the initiator.
 %
 Because we want to verify strong properties such as explicit authentication
@@ -496,8 +497,9 @@ authentication on.
 
 What happens after \mEdhoc{} completes is beyond the scope of our study, hence
 we have left this part out of the modeling and only focus on the key material
-that is the bases for the \mOscore{} security context.
+that forms the basis for the \mOscore{} security context.
 %
+\vnote{Went through this section. Looks good so far!}
 
 %-------------------------------------------------------------------------- sub
 \subsection{Property Formalization}

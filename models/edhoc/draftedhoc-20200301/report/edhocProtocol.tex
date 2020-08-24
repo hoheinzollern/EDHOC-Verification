@@ -9,18 +9,18 @@ To establish an authenticated security context for \mOscore,
 %in the style of the \mNoise{} framework, outlined in
 shown in Figure~\ref{fig:edhocFramework}.
 %
-In the first message \mMsgone{}, the initiator ($I$) sends to the responder ($R$) an
+In the first message \mMsgone{}, the initiator (\mT{I}) sends to the responder (\mT{R}) an
 ephemeral DH half-key \mGx{}, an ordered list of supported cipher suites, and, in the \mMethod{} element, suggests
 authentication methods to be used.
 %
-$R$ may reject the choice of cipher suite, leading to a negotiation across multiple \mEdhoc{} sessions (see Section~\ref{sec:ciphersuiteNegotiation}), or that of the authentication methods.
+\mT{R} may reject the choice of cipher suite, leading to a negotiation across multiple \mEdhoc{} sessions (see Section~\ref{sec:ciphersuiteNegotiation}), or that of the authentication methods.
 %
-In the second message \mMsgtwo{}, $R$ provides its ephemeral
-DH half-key \mGy{} and authenticates itself to $I$ by
+In the second message \mMsgtwo{}, \mT{R} provides its ephemeral
+DH half-key \mGy{} and authenticates itself to \mT{I} by
 providing authentication data \mAuthr{}.
 %
-Finally, in the third message \mMsgthree{}, $I$ authenticates itself
-to $R$ by providing authentication data \mAuthi{}.
+Finally, in the third message \mMsgthree{}, \mT{I} authenticates itself
+to \mT{R} by providing authentication data \mAuthi{}.
 %
 The authentication data consists of a MAC for all authentication methods.
 %
@@ -46,10 +46,10 @@ Instead, a single identifier for the pre-shared key is transmitted in \mMsgone{}
 \centering
 \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
-    \node (ini) at (0, 0) {Initiator ($I$)};
+    \node (ini) at (0, 0) {Initiator (\mT{I})};
     \draw [very thick] (0, -0.25) -- (0,-2.2);
     \draw [very thick] (7, -0.25) -- (7,-2.2);
-    \node (res) at (7,0) {Responder ($R$)};
+    \node (res) at (7,0) {Responder (\mT{R})};
     \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
 \msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
     \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
@@ -388,7 +388,7 @@ Figures~\ref{fig:kdfdiagram} and \ref{fig:edhocsigstat}.
 %
 The receiver of \mAuthi{}/\mAuthr{} assumes that only the responder knows
 the corresponding $e^s$, and therefore considers the peer authenticated if
-the \mAead{} transform completes successfully.
+the \mAead{} transform completes successfully.\\
 %
 %In contrast to the \mPskPsk{} method, in \mStat{}-based methods, each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
 %
@@ -403,7 +403,7 @@ challenge-response signature.
 The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 %
 \mCredi{} and \mLtki{} must be signature keys since the initiator is using the
-\mSig{} method.
+\mSig{} method. \\
 %
 
 \begin{figure}[h]
@@ -481,7 +481,7 @@ The responder runs \mSig{} and creates \mAuthr{} as a signature over MAC,
 while the initiator runs \mStat{}.
 %
 This is illustrated in Figure~\ref{fig:edhocstatsig}. \mCredr{} and \mLtkr{}
-must be signature keys.
+must be signature keys.\\
 %
 
 \begin{figure}[h]
