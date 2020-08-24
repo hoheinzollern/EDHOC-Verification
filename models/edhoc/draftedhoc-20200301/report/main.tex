@@ -1,3 +1,5 @@
+% !TEX TS-program = pdflatexmk
+
 \documentclass[runningheads, envcountsame, a4paper, draft, x11names]{llncs}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
@@ -530,12 +532,14 @@ round-trips for subsequent runs, should the responder not have been updated.
 This needs to be clearly specified.
 
 %-------------------------------------------------------------------------- sec
-\section{Conclusions}
+\section{Conclusions and future work}
 \label{sec:conclusions}
-We have formally modeled all five
-methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool.
+We formally modeled all five
+methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool, and 
+%.
 %
-We formulated and verified several important security properties in this model.
+%We 
+formulated and verified several important security properties in this model.
 %
 %We also identified security properties that do not hold for all methods.
 %
@@ -549,12 +553,66 @@ intended, and proposed a simple mitigation.
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
 %
-\knote{Mention future work: some PCI/KCI stuff done and some work on negotiation
-done.}
+%\knote{Mention future work: some PCI/KCI stuff done and some work on negotiation
+%done.}
+
+There is some work that was done as part of this effort which has not been mentioned in this paper. These lines of enquiry form the basis for future work.
+%For more details, see~\cite{edhocTamarinRepo}.
+
+We considered two more properties, namely key-compromise impersonation (KCI) and weak post-compromise security (PCS). A protocol is said to have security against KCI if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI security and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods. However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
+
+We also tried to incorporate the parameters \mCi, \mCr, and \mAD{} into our model. This too resulted in non-termination for some of the methods, and further study is required to obtain conclusive results along these lines. 
+
+An additional extension of the current model, which we could not try for lack of time, is to incorporate the cipher suite negotiation process into the model.\\ 
+%
+
+
+
+
+%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
+%of the endpoints of the protocol, say Alice running a session with Bob. A
+%protocol is secure under KCI if Alice can still establish a secure session with
+%Bob, even though Alice's keys are compromised at any time, and Bob's key
+%material is not leaked until the end of the session.
+%
+% 
+%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
+%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
+%is capable of establishing a secure session even after one of the parties has
+%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
+%PCS, namely weak and strong PCS: here we focus on the latter.
+%%
+%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
+%between the initiator and the responder, even if the run of the protocol that
+%established $sk$ happens after a \emph{limited compromise}, where the key
+%material is not leaked, but the attacker is capable of impersonating both
+%parties (i.e. has the ability to perform all cryptographic operations using the
+%initiator's and responder's long term keys, but has not access to the long term
+%keys).%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
+%of the endpoints of the protocol, say Alice running a session with Bob. A
+%protocol is secure under KCI if Alice can still establish a secure session with
+%Bob, even though Alice's keys are compromised at any time, and Bob's key
+%material is not leaked until the end of the session.
+%
+% 
+%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
+%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
+%is capable of establishing a secure session even after one of the parties has
+%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
+%PCS, namely weak and strong PCS: here we focus on the latter.
+%%
+%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
+%between the initiator and the responder, even if the run of the protocol that
+%established $sk$ happens after a \emph{limited compromise}, where the key
+%material is not leaked, but the attacker is capable of impersonating both
+%parties (i.e. has the ability to perform all cryptographic operations using the
+%initiator's and responder's long term keys, but has not access to the long term
+%keys).
+
 
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
-\subsubsection*{Acknowledgments.} This work was partially supported by
+\runhead{Acknowledgments} This work was partially supported by
 the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
 the Knut and Alice Wallenberg Foundation.
 %
