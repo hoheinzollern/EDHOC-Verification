@@ -222,14 +222,14 @@ We therefore consider them equal in terms of intent for the purpose of this
 paper.
 %
 Aliveness is, according to \mSigma{}~\cite{sigma}, guaranteed to a party $A$ if
-after running the protocol with $B$, then $A$ knows that $B$ was alive during
+after running the protocol with $B$, $A$ knows that $B$ was alive during
 the execution, e.g., by verifying that $B$ signed a challenge.
 %
 For \mEdhoc{} this means that if we can prove mutual injective agreement, i.e.,
 explicit authentication, on \mGxy{}, then mutual aliveness follows.
 %
-Peer awareness is informally defined by \mSigma{}~\cite{sigma} as the guarantee
-to $A$ that if $A$ completes a protocol run with $B$, then not only does $A$
+Peer awareness is informally defined in~\cite{sigma} as the guarantee
+that if $A$ completes a protocol run with $B$, then not only does $A$
 know that $B$ is alive, but also that $B$ has initiated a corresponding session
 with $A$.
 \\
