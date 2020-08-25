@@ -141,11 +141,13 @@ $R$, the attacker does not get to know $sk$.\\
 %\subsubsection{Authentication}
 \runhead{Authentication}
 \label{sec:authenticationDef}
-Following~\cite{DBLP:conf/csfw/Lowe97a}, we say that a protocol guarantees to an
+Following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, we say that a protocol guarantees to an
 initiator $I$ injective agreement with a responder $R$ if, whenever $I$ believes
 they have completed a run of the protocol with $R$, then $R$ has previously been
 running the protocol with $I$ in these particular roles, and each such run of
 $I$ corresponds to a unique run of $R$.
+
+We model this slightly differently, as we show in Section~\ref{sec:propertyFormalization} later. In the lemma for guaranteeing injective agreement to $I$ with $R$, we enforce that for any session key $sk$, there can only be at most one run of $I$ involving it, and this run must map to at least one run of $R$ involving $sk$. The lemma for assuring injective agreement for $R$ with $I$ is formulated as the dual of this. This formulation uniquely guarantees one run of the initiator involving $sk$, but allows us to have potentially multiple runs of $R$ involving $sk$, and vice versa. However, because we prove injective agreement for both $I$ and $R$, this becomes equivalent to the Lowe formulation, and guarantees a unique map.
 
 %To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
 %of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
@@ -491,7 +493,7 @@ completed the protocol using a certain set of parameters.
 %
 For example, the fact \mT{ExpRunningR(~tid, \$V, expSk)} (line 29 above)
 represent that a party is running a session and that they believe
-they are playing the repsonder role, that their own identity is \mT{V}
+they are playing the responder role, that their own identity is \mT{V}
 and that \mT{expSk} is the session key.
 %
 Other facts like \mT{ExpCommitI(~tid, \$U, \$V, expSk)}
@@ -532,7 +534,7 @@ key material which it is even theoretically impossible to get explicit
 authentication on.
 %
 
-What happens after \mEdhoc{} completes is beyond the scope of our study, hence
+What happens after a run of \mEdhoc{} completes is beyond the scope of our study, hence
 we have left this part out of the modeling and focus on the key material
 that forms the basis for the \mOscore{} security context.
 %
@@ -540,8 +542,8 @@ that forms the basis for the \mOscore{} security context.
 %-------------------------------------------------------------------------- sub
 \subsection{Property Formalization}
 \label{sec:propertyFormalization}
-In this section we present our formalization of the security properties into\\
-\mTamarin{} lemmas.
+In this section we present our formalization of the security properties. %into\\
+%\mTamarin{} lemmas.
 %
 We refer to Section~\ref{sec:desired-properties} for a full explanation of the
 properties.
@@ -550,9 +552,9 @@ properties.
 \runhead{Explicit Authentication}
 We model explicit authentication between the initiator and the
 responder in the form of mutual injective agreement on the session key material,
-the roles and identities of the two parties.
+and on the roles and identities of the two parties.
 %
-We split the property in two lemmas, one for authenticating the responder to the
+We split the property into two lemmas, one for authenticating the responder to the
 initiator, and one for the other direction.
 %
 For the first case, we use the action facts \mT{ExpCommitI} and
@@ -560,12 +562,12 @@ For the first case, we use the action facts \mT{ExpCommitI} and
 between the two action facts on the parameters identities \mT{U} and \mT{V},
 their respective roles,  and the session key material \mT{expSk}.
 %
-The key material differ between \mEdhoc{} methods.
+The key material differs between \mEdhoc{} methods.
 %
 
 Additionally, we require that injective agreement must hold only when
 no long-term key material for the two parties has been revealed before
-the initator completes the protocol run.
+the initiator completes the protocol run.
 %
 This is covered by the main disjunction in lines 10-12 on the right of
 the implication.
@@ -607,7 +609,7 @@ lemma authInjAgreeGuaranteeForI:
     unique, but not that the responder is.
 }
 
-Note that this property \emph{does not hold when} the initiator is
+Note that this property \emph{does not hold} when the initiator is
 running the \mStat{} method, because the key material would then cover \mGiy{},
 and as discussed above that is not possible.
 %
@@ -661,7 +663,7 @@ authentication guarantees, for the entire session key material.
 %
 Consequently, we do not need to differentiate the explicit session key from the
 implicit session key in this case and can ignore the \mT{Exp} prefix for the
-running and commit action facts (\mT{CommitI} and \mT{CommitR} respectively).
+running and commit action facts (\mT{RunningI} and \mT{CommitR} respectively).
 %
 \\
 
@@ -718,11 +720,11 @@ lemma authGIYImplicitAuthGuaranteeForI:
          )
     "
 \end{lstlisting}
-As opposed to lemma \mT{authInjAgreeGuaranteeForI}, we here prove that the two
-parties implicitly authenticate on the keys \mT{impSk}.
+As opposed to lemma \mT{authInjAgreeGuaranteeForI}, here we prove that the two
+parties implicitly authenticate on the key \mT{impSk}.
 %
-In this lemma we show that if any two parties (\mT{u} and \mT{v2} here) both
-has completed a run of the protocol, and \mT{u} believes she is talking to
+In this lemma we show that if any two parties (\mT{u} and \mT{v2} here) 
+have completed a run of the protocol, and \mT{u} believes she is talking to
  \mT{v} and \mT{v2} believes he is talking to \mT{u2}, then their beliefs
 match, i.e., \mT{u} = \mT{u2} and \mT{v} = \mT{v2}).
 %
@@ -748,7 +750,6 @@ allowing the attacker to reveal session key material.
 Despite these additional attacker capabilities, it still holds that the session
 key material is secret for all the other runs of the protocol.
 %
-
 The lemma is as follows:
 \begin{lstlisting}
 lemma secrecyPFSGIYSessionKey:
