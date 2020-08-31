@@ -55,7 +55,7 @@
 
 \begin{abstract}
 %\hl{250 words}
-IETF is standardizing an authenticated key establishment (AKE) protocol
+The IETF is standardizing an authenticated key establishment (AKE) protocol
 named \mEdhoc{} for constrained IoT devices~\cite{selander-lake-edhoc-01}.
 %
 In contrast to more powerful devices like web cameras and cars, which receive a
@@ -99,8 +99,9 @@ and web-cameras receive the most attention from media and academia.
 Securing communication between such devices can readily be done using existing
 protocols like \mDandTls.
 %
-Constrained devices, on the other hand, which operate under severe bandwidth
-and energy consumption restrictions, have received much less attention.
+Constrained devices and networks, on the other hand, which operate under severe
+bandwidth and energy consumption restrictions, have received much less
+attention.
 %
 These devices may be simple sensors which only relay environment
 measurements to a server every hour, but need to function autonomously without
@@ -109,29 +110,34 @@ maintenance for long periods of time.
 To keep energy consumption down, highly specialized radio links with small
 and heterogeneous frame sizes are sometimes used.
 %
-IETF defined the Constrained Application Protocol (\mCoap{}) protocol for data
-transport in such situations~\cite{rfc7252}.
+The IETF defined the Constrained Application Protocol (\mCoap{}) protocol for
+data transmission in such situations~\cite{rfc7252}.
 %
 \mCoap{} does not include security protection on its own, and in some cases,
-\mDandTls{} messages are too large to fit into the radio frames.
+\mDandTls{} messages are too large to fit into the radio frames, or is
+unsuitable to handle proxy operations with change of underlying transport
+protocol.
 %
-Thus, IETF standardized the Object Security for Constrained RESTful Environments
+These are some of the reasons the IETF standardized the Object Security for
+Constrained RESTful Environments
 (\mOscore{}) protocol to secure communications between constrained
 devices~\cite{rfc8613}.
 %
 
 The \mOscore{} protocol requires a pre-established security context.
 %
-For a couple of years, the IETF Lightweight Authenticated Key Exchange (LAKE)
-working group has been developing requirements and mechanisms for a key
+For a couple of years, requirements and mechanisms for a key
 exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, for
-establishing \mOscore{} security contexts.
+establishing \mOscore{} security contexts have been discussed in the IETF.
 %
 Naturally, \mEdhoc{} must work under the same constrained requirements as
 \mOscore{} itself.
 %
-While use cases for \mEdhoc{} are not firmly set, the overall goal is to
+While not all use cases for \mEdhoc{} are firmly set, the overall goal is to
 establish an \mOscore{} security context, under message size limitations.
+%
+The work is now being done in the IETF Lightweight Authenticated Key Exchange
+(LAKE) working group.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -242,7 +248,7 @@ from existing academic protocols.
 %
 Specifically, in Section~8.1 of~\cite{selander-lake-edhoc-01}, the authors
 claim that ``EDHOC inherits its security properties from the theoretical
-SIGMA-I''.
+\mbox{SIGMA-I}''.
 %
 The intention is the same for the other reused cryptographic
 cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
@@ -318,11 +324,11 @@ Via this simple thought experiment, we realized that the \mSpec{} did not
 consider non-repudiation.
 %
 In response, the authors of the \mSpec{} added a paragraph about which methods
-provided which types of (non)-repudiation~\cite{personalCommunication}. \\
+provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}. \\
 
 %\subsubsection{Unintended Peer Authentication.}
 \runhead{Unintended Peer Authentication}
-Section 3.2 of the \mSpec{} states that parties must be configured
+Section~3.2 of the \mSpec{} states that parties must be configured
 with a policy restricting the set of peers they can run \mEdhoc{} with.
 %
 However, the initiator is not required to verify that the \mIdcredr{} received
@@ -384,15 +390,15 @@ use of TEEs.
 
 The \mEdhoc{} authors indicated to us that it was
 not necessary to consider compromised ephemeral session keys separately from
-from compromised long-term keys~\cite{personalCommunication}.
+from compromised long-term keys.
 %
 The rationale is that \mSigma{} cannot protect against compromised ephemeral
-keys.
+keys~\cite{personalCommunication}.
 %
 That rationale is presumably based on the fact that the \mSigSig{} method is
 closely modeled on \mSigmaI{} and that it would be preferable to obtain a
 homogeneous security level among the \mEdhoc{}
-methods\cite{personalCommunication}.
+methods.
 %
 That rationale is only true, however, if one restricts attention to session key
 confidentiality of an ongoing session.
@@ -515,6 +521,10 @@ entity authentication (also when mutual injective agreement holds).
 Most importantly, we found that injective agreement on \mGiy{} does not hold for
 initiators when they use the \mStat{} method.
 %
+We verified each method in isolation, and leave as future work to verify whether
+the methods are secure under composition.
+%
+
 Further, we identified a situation where initiators may establish an \mOscore{}
 security context with a different party than the application using \mEdhoc{}
 intended, and proposed a simple mitigation.
