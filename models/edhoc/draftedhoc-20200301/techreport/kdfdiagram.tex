@@ -1,9 +1,10 @@
 % !TEX root =  edhocProtocol.tex
+
 % Start the picture
 \begin{tikzpicture}[%
     >=latex,              % Nice arrows; your taste may be different
     start chain=going below,    % General flow is top-to-bottom
-    node distance=10mm and 60mm, % Global setup of box spacing
+    node distance=6mm and 60mm, % Global setup of box spacing
     every join/.style={norm},   % Default linetype for connecting boxes
     ]
 % ------------------------------------------------- 
@@ -14,27 +15,43 @@
 terminput/.style={rounded corners, text width=6em},
 term/.style={rounded corners},
   base/.style={draw, thick, on chain, on grid, align=center, minimum height=6ex},
-  prk/.style={base, draw=Red3, fill=Red3!25, rectangle, text width=4em},
+  dhkbox/.style={draw=Goldenrod1, fill=Goldenrod1!25, rectangle},
+  dhk/.style={base, dhkbox},
+  prkbox/.style={draw=Red3, fill=Red3!25, rectangle},
+  prk/.style={base, prkbox},
   %hkdfext/.style={base, draw=Green3, fill=Green3!25, isosceles triangle, isosceles triangle apex angle=60, anchor=base, shape border rotate=-90, text width=6em},
-  hkdfext/.style={base, draw=Green3, fill=Green3!25, rectangle, text width=8em},
+  hkdfext/.style={base, draw=Green3, fill=Green3!25, rectangle},
   %hkdfexp/.style={base, draw=orange, fill=orange!50, isosceles triangle, isosceles triangle apex angle=60, anchor=base, shape border rotate=-90, text width=6em},
   hkdfexp/.style={base, draw=orange, fill=orange!50, rectangle, text width=8em},
-  keyb/.style={base, draw=Blue3, fill=Blue3!25, rectangle, text width=4em},
+  keybbox/.style={draw=Blue3, fill=Blue3!25, rectangle},
+  keyb/.style={base, keybbox, text width=4em},
   % -------------------------------------------------
   norm/.style={->, draw, Blue3},
-}
+  cond/.style={base, draw=black, fill=white, diamond},
+  txt/.style={base, draw=none, fill=none}
+  }
 % -------------------------------------------------
 % Start by placing the nodes
-\node [prk] (p0) {$g^{xy}$};
-\node [hkdfext, join] (h1) {\mHkdfExtract};
+\node [dhk] (p0) {$\mGxy$};
+%\node [hkdfext, join] (h1) {\mHkdfExtract};
+\node [hkdfext, right=2.2cm of p0, join] (h1) {\mHkdfExtract};
 \node [prk, join] (p2) {\mPRKtwo};
-\node [hkdfext, join] (h3) {\mHkdfExtract};
-\node [prk, join] (p3) {\mPRKthree};
-\node [hkdfext, join] (h5) {\mHkdfExtract};
-\node [prk, join] (p4) {\mPRKfour};
+\node [cond, join] (c1) {R uses \\ \mStat};
+
+\node [prk, below=8mm of c1.south] (p3) {\mPRKthree};
+\draw [->, norm] (c1.south) -- (p3.north) node[midway, above right] {N};
+
+\node [cond, join, below=10mm of p3.south] (c2) {I uses \\ \mStat};
+\node [prk, below=8mm of c2.south] (p4) {\mPRKfour};
+\draw [->, norm] (c2.south) -- (p4.north) node[midway, above right] {N};
+
+\node [hkdfext, right=3cm of c1] (h3) {\mHkdfExtract};
+\node [hkdfext, right=3cm of c2] (h5) {\mHkdfExtract};
 
 \node [hkdfexp, shape border rotate=180, left= 3cm of p4] (h6) {\mHkdfExpand};
 \node [keyb, join, left=3cm of h6] (k3) {\mKthreem};
+\node [hkdfexp, shape border rotate=180, below= 1cm of h6] (h9) {\mHkdfExpand};
+\node [txt, join, left=1cm of h9.west] (t4) {EDHOC-Exporter()};
 
 \node [hkdfexp, shape border rotate=180, left= 3cm of p3] (h4) {\mHkdfExpand};
 \node [keyb, join, left=3cm of h4] (k2) {\mKtwom};
@@ -44,44 +61,60 @@ term/.style={rounded corners},
 
 \node [hkdfexp, shape border rotate=180, below= 1cm of h4] (h8) {\mHkdfExpand};
 \node [keyb, below=1cm of k2] (k2b) {\mKthreeae};
-%\node [draw=none, fill=none, below=0.5cm of h4] (dummy) {};
 
-\draw [->, norm] (p3.south) -- ++(0,-0.58) -- (h8);
+\node [txt, left=1cm of k1.west] (t1) {Enc (XOR) in m2};
+\node [txt, left=1cm of k2.west] (t2) {\mMactwo\\ (signed if R uses \mSig)};
+\node [txt, left=1cm of k2b.west] (t2b) {\mAead\ in m3};
+\node [txt, left=1cm of k3.west] (t3) {\mMacthree\\ (signed if I uses \mSig)};
+
+\draw [->, norm] (k1.west) -- (t1.east);
+\draw [->, norm] (k2.west) -- (t2.east);
+\draw [->, norm] (k2b.west) -- (t2b.east);
+\draw [->, norm] (k3.west) -- (t3.east);
+
+\draw [->, norm] (p3.south) ++(0,-0.58) -- (h8);
 \draw [->, norm] (h8) -- (k2b);
 \draw [->, norm] (p2) -- (h2); 
+\draw [->, norm] (c1) -- (h3) node[midway,above left] {Y};
+%\draw [->, norm] (h3.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (h3.south) -- ++(0,-1.8) -- (p3.east);
 \draw [->, norm] (p3) -- (h4); 
+\draw [->, norm] (c2) -- (h5) node[midway,above left] {Y};
+%\draw [->, norm] (h5.south) -- ++(0,-1) -- ++(-3,0);
+\draw [->, norm] (h5.south) -- ++(0,-1.75) -- (p4.east);
 \draw [->, norm] (p4) -- (h6);
-%\node [term, fill=Green3!25, below = -1.3cm of h1] (h1name) {\mHkdfExtract};
-%\node [term, left = 1cm of h1name] (u1) {H1};
-%\draw [->, dotted, shorten >=1mm] (u1) -- (h1name);
-\node [terminput, right = 1cm of h1] (u1) {Initial salt};
+\draw [->, norm] (p4.west) ++(-0.25,-0) -- ++(0,-1) -- (h9.east);
+
+\node [terminput, right = 1cm of h1] (u1) {Seed};
 \draw [->, dotted, shorten >=1mm] (u1) -- (h1);
 
-%\node [term, fill=Green3!25, below = -1.3cm of h3] (h3name) {\mHkdfExtract};
-%\node [term, left = 1cm of h3name] (u2) {H2};
-%\draw [->, dotted, shorten >=1mm] (u2) -- (h3name);
-\node [terminput, right = 1cm of h3] (u2) {Additional input};
-\draw [->, dotted, shorten >=1mm] (u2) -- (h3);
 
-\node [terminput, right = 1cm of h5] (u3) {Additional input};
-\draw [->, dotted, shorten >=1mm] (u3) -- (h5);
+\node [dhk, above = 1.5cm of h3] (u2) {$\mGrx$};
+\draw [->, norm] (u2.south) -- (h3.north);
+
+\node [dhk, above = 1.5cm of h5] (u3) {$\mGiy$};
+\draw [->, norm] (u3.south) -- (h5.north);
 
 
-%\node [term, fill=orange!50, below = -0.9cm of h2] (h2name) {\mHkdfExpand};
-%\node [term, above = 1cm of h2name] (u3) {H3};
-%\draw [->, dotted, shorten >=1mm] (u3) -- (h2);
-\node [term, above = 1cm of h2] (u4) {\mTHtwo};
-\draw [->, dotted, shorten >=1mm] (u4) -- (h2);
-
-%\node [term, fill=orange!50, below = -0.9cm of h4] (h4name) {\mHkdfExpand};
-%\node [term, above = 1cm of h4name] (u5) {H5};
-%\draw [->, dotted, shorten >=1mm] (u5) -- (h4);
-\node [term, above = 1cm of h4] (u5) {\mTHtwo};
+\node [term, above = 1.4cm of h4] (u5) {\mTHtwo};
 \draw [->, dotted, shorten >=1mm] (u5) -- (h4);
+\draw [->, dotted, shorten >=1mm] (u5) -- (h2);
 
-\node [term, above = 0.7cm of h6] (u6) {\mTHthree};
+\node [term, above = 1.2cm of h6] (u6) {\mTHthree};
 \draw [->, dotted, shorten >=1mm] (u6) -- (h6);
 \draw [->, dotted, shorten >=1mm] (u6) -- (h8);
+
+%\node [term, below= 1cm of h9] (u7) {\mTHfour};
+\node [term, below=0.5cm of p4] (u7) {\mTHfour};
+%\draw [->, dotted, shorten >=1mm] (u7) -- (h9.south);
+\draw [-> , dotted ] (u7.west) -- ([yshift=-0.4em] h9.east);
+
+\matrix [draw, ultra thick, double, below=3.5em of t1.east] {
+  \node [dhkbox, semithick, label=right:DH key] {}; \\
+  \node [prkbox, semithick, label=right:Intermediate key material] {}; \\
+  \node [keybbox, semithick, label=right:Key for \mAead{} or \mXor] {}; \\
+};
+
 %
 % ------------------------------------------------- 
 % 
@@ -89,22 +122,6 @@ term/.style={rounded corners},
 %  \draw [o->,lccong] (h2.east) -- (p8);
 %\path (p3.east) to node [yshift=-1em] {$k \leq 0$} (c4r); 
 %  \draw [o->,lcnorm] (p3.east) -- (p9);
-% -------------------------------------------------
-% 
-%\path (h1.east) to node [near start, yshift=1em] {$n$} (c1); 
-%  \draw [o->,lcfree] (h1.east) -- (c1) |- (p4);
-%\path (h3.east) -| node [very near start, yshift=1em] {$n$} (c1); 
-%  \draw [o->,lcfree] (h3.east) -| (c1);
-%\path (p3.west) to node [yshift=-1em] {$k>0$} (c4); 
-%  \draw [*->,lcnorm] (p3.west) -- (c4) |- (p3);
-%\path (h4.east) -| node [very near start, yshift=1em] {$n$} (c6); 
-%  \draw [o->,lcfree] (h4.east) -| (c6); 
-%\path (h5.east) to node [near start, yshift=1em] {$n$} (c6); 
-%  \draw [o->,lcfree] (h5.east) -| (c7); 
-%\path (p4.east) to node [yshift=-1em] {$k \leq 0$} (c7); 
-%  \draw [o->,lcfree] (p4.east) -- (c7)  |- (p9);
-%\path (p4.west) to node [yshift=-1em] {$k>0$} (c5); 
-%  \draw [*->,lcfree] (p4.west) -- (c5) |- (p5);
 % -------------------------------------------------
 % A last flourish which breaks all the rules
 %\draw [->,MediumPurple4, dotted, thick, shorten >=1mm]
