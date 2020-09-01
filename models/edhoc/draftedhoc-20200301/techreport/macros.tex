@@ -1,0 +1,193 @@
+\usepackage{ifthen}
+
+% -- Editorial macros
+% http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
+%\usepackage{todonotes}
+%\newcommand{\knote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Karl:} #1}}}
+%\newcommand{\anote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Alessandro:} #1}}}
+%\newcommand{\vnote}[1]{\todo[inline,
+%                             color=orange,
+%                             size=\footnotesize
+%                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
+% \newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
+% \newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
+%\newcommand{\knote}[1]{}
+%\newcommand{\vnote}[1]{}
+%\newcommand{\anote}[1]{}
+%\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
+%\newcommand{\mcneed}{\textbf{Citation needed}}
+%\newcommand{\mcfix}{\textbf{Fix citation}}
+
+
+% -- Fonts and styles for names
+\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+\newcommand{\mFunStyle}[1]{\text{\textup{\textsf{#1}}}}
+\newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
+\newcommand{\mVarStyle}[1]{\mathit{#1}}
+\newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
+\DeclareRobustCommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
+\DeclareRobustCommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
+
+% -- Macros for consistent wording
+\newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
+
+
+% -- Domain specific macros
+\newcommand{\mArxiv}{\texttt{arXiv}}
+\newcommand{\mTamarin}{\mProtocolStyle{Tamarin}}
+\newcommand{\mProverif}{\mProtocolStyle{ProVerif}}
+\newcommand{\mEdhoc}{\mProtocolStyle{EDHOC}}
+\newcommand{\mOscore}{\mProtocolStyle{OSCORE}}
+\newcommand{\mSigma}{\mProtocolStyle{SIGMA}}
+\newcommand{\mSigmaI}{\mProtocolStyle{SIGMA\nobreakdash-I}}
+\newcommand{\mCbor}{\mProtocolStyle{CBOR}}
+\newcommand{\mCose}{\mProtocolStyle{COSE}}
+\newcommand{\mCoseEncrypt}{\mProtocolStyle{COSE\_Encrypt0}}
+\newcommand{\mCoseSign}{\mProtocolStyle{Cose\_Sign1}}
+\newcommand{\mHkdf}{\mProtocolStyle{HKDF}}
+\newcommand{\mHkdfExtract}{\mProtocolStyle{HKDF\nobreakdash-extract}}
+\newcommand{\mHkdfExpand}{\mProtocolStyle{HKDF\nobreakdash-expand}}
+\newcommand{\mHmac}{\mProtocolStyle{HMAC}}
+\newcommand{\mAead}{\mProtocolStyle{AEAD}}
+\newcommand{\mAeadDecrypt}{\mProtocolStyle{AEAD\nobreakdash-decrypt}}
+\newcommand{\mDecrypt}{\mProtocolStyle{decrypt}}
+\newcommand{\mOptls}{\mProtocolStyle{OPTLS}}
+\newcommand{\mNoise}{\mProtocolStyle{Noise}}
+\newcommand{\mTls}{\mProtocolStyle{TLS}}
+\newcommand{\mDandTls}{\mProtocolStyle{(D)TLS}}
+\newcommand{\mCtls}{\mProtocolStyle{cTLS}}
+\newcommand{\mCoap}{\mProtocolStyle{CoAP}}
+
+\newcommand{\mStat}{\mMethodStyle{STAT}}
+\newcommand{\mSig}{\mMethodStyle{SIG}}
+\newcommand{\mPsk}{\mMethodStyle{PSK}}
+\newcommand{\mStatStat}{\mMethodStyle{STAT-STAT}}
+\newcommand{\mStatSig}{\mMethodStyle{STAT-SIG}}
+\newcommand{\mSigStat}{\mMethodStyle{SIG-STAT}}
+\newcommand{\mSigSig}{\mMethodStyle{SIG-SIG}}
+\newcommand{\mPskPsk}{\mMethodStyle{PSK-PSK}}
+
+\newcommand{\mSid}{\mConstStyle{sid}}    % session id = (u, v, s-key)
+
+\newcommand{\mXor}{\mConstStyle{XOR}}
+\newcommand{\mSuites}{\mConstStyle{Suites\_I}}
+\newcommand{\mMethod}{\mConstStyle{Method}}
+\newcommand{\mCi}{\mConstStyle{C\_I}}
+\newcommand{\mCr}{\mConstStyle{C\_R}}
+\newcommand{\mGi}{\mConstStyle{G\_I}}
+\newcommand{\mGr}{\mConstStyle{G\_R}}
+\newcommand{\mGiy}{\mConstStyle{G\_IY}}
+\newcommand{\mGrx}{\mConstStyle{G\_RX}}
+\newcommand{\mGx}{\mConstStyle{G\_X}}
+\newcommand{\mGy}{\mConstStyle{G\_Y}}
+\newcommand{\mGxy}{\mConstStyle{G\_XY}}
+\newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}}
+\newcommand{\mTHtwo}{\mConstStyle{TH\_2}}
+\newcommand{\mKtwoe}{\mConstStyle{K\_2e}}
+\newcommand{\mKtwom}{\mConstStyle{K\_2m}}
+\newcommand{\mKtwoae}{\mConstStyle{K\_2ae}}
+\newcommand{\mSign}{\mConstStyle{sign}}
+
+\newcommand{\mKthreeae}{\mConstStyle{K\_3ae}}
+\newcommand{\mKthreem}{\mConstStyle{K\_3m}}
+
+\newcommand{\mTHthree}{\mConstStyle{TH\_3}}
+\newcommand{\mhplain}{\mConstStyle{h''}}
+\newcommand{\mCredi}{\mConstStyle{CRED\_I}}
+\newcommand{\mCredr}{\mConstStyle{CRED\_R}}
+\newcommand{\mHash}{\mConstStyle{H}}
+
+\newcommand{\mMactwo}{\mConstStyle{MAC\_2}}
+\newcommand{\mMacthree}{\mConstStyle{MAC\_3}}
+
+\newcommand{\mSigtwo}{\mConstStyle{Sig\_2}}
+\newcommand{\mSigthree}{\mConstStyle{Sig\_3}}
+
+\newcommand{\mMsgone}{\mConstStyle{m1}}
+\newcommand{\mMsgtwo}{\mConstStyle{m2}}
+\newcommand{\mMsgthree}{\mConstStyle{m3}}
+
+\newcommand{\mCipher}{\mConstStyle{cipher\_2}}
+
+\newcommand{\mADone}{\mConstStyle{AD\_1}}
+\newcommand{\mADtwo}{\mConstStyle{AD\_2}}
+\newcommand{\mADthree}{\mConstStyle{AD\_3}}
+
+\newcommand{\mPRK}{\mConstStyle{PRK}}
+\newcommand{\mPRKtwo}{\mConstStyle{PRK\_2e}}
+\newcommand{\mPRKthree}{\mConstStyle{PRK\_3e2m}}
+\newcommand{\mPRKfour}{\mConstStyle{PRK\_4x3m}}
+
+\newcommand{\mIdcredi}{\mConstStyle{ID\_CRED\_I}}
+\newcommand{\mIdcredr}{\mConstStyle{ID\_CRED\_R}}
+\newcommand{\mLtki}{\mConstStyle{ltk\_I}}
+\newcommand{\mLtkr}{\mConstStyle{ltk\_R}}
+
+% TIKZ messages and actions
+\newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
+\newcommand{\action}[3]{\node[draw,thick,align=center,below={#1} of {#2}]{#3}}
+
+% Tamarin symbols
+\newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-3pt}[{#1}]\hspace{-3pt}\rightarrow}}
+\newcommand{\semarrow}[1][]{\ifthenelse{\equal{#1}{}}{\Rightarrow}{=\hspace{-3pt}[{#1}]\hspace{-3pt}\Rightarrow}}
+\newcommand{\mIn}{\mathsf{In}}
+\newcommand{\mOut}{\mathsf{Out}}
+\newcommand{\mFr}{\mathsf{Fr}}
+\newcommand{\mKD}{\mathsf{KD}}
+\newcommand{\mKU}{\mathsf{KU}}
+\newcommand{\mT}[1]{\lstinline[basicstyle=\sffamily\normalsize]{#1}} % Tamarin code inline
+\usepackage[final]{listings}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=,   
+    commentstyle=\color{Green},
+    identifierstyle=\color{black},
+    keywordstyle=\color{ForestGreen},
+    numberstyle=\color{Gray},
+    stringstyle=,
+    basicstyle=\sffamily\small,
+    keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=false,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    morecomment=[l]{//},
+    literate=
+    {=}{$=$}{1}
+    {[}{$[$}{1}%
+    {]}{$]$}{1}%
+    {<}{$\langle$}{1}%
+    {>}{$\rangle$}{1}%
+    {(}{$($}{1}%
+    {)}{$)$}{1}%
+    {&}{$\wedge$}{1}
+    {|}{$\vee$}{1}
+    {$}{\$}{1}
+    {<\ \#}{$<$\ \ \#}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
+    {--[}{$\mbox{-\hspace{-3pt}[}$}{2}%
+    {]->}{$\mbox{]\hspace{-3pt}\rightarrow}$}{2}%
+    {==>}{$\Rightarrow$}{1}
+    {XOR}{$\oplus$}{1}%
+    {aeadEncrypt}{\mAead{}}{6}%
+    {decrypt}{\mDecrypt}{7}
+    {aeadDecrypt}{\mAeadDecrypt}{14}
+    {hkdfExtract}{\mHkdfExtract}{14}
+    {hkdfExpand}{\mHkdfExpand}{14}
+    {All\ }{$\forall$\ }{3}
+    {Ex\ }{$\exists$\ }{3}
+    {h(}{H$($}{2}
+    }
+\lstset{style=mystyle}
