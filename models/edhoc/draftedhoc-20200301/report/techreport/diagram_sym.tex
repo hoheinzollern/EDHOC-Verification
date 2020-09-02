@@ -1,0 +1,27 @@
+\scalebox{.7}{\begin{tikzpicture}[people/.style={minimum width=1em}]
+    \node[people, alice] (ini) {Initiator ($U$)};
+    \node[below of=ini] () {Knows $g, PSK, APP_1, APP_3$};
+    \node[people, bob, right=13cm of ini] (res) {Responder ($V$)};
+    \node[below of=res] () {Knows $g, PSK, APP_2$};
+    
+    \action{3em}{ini}{Generates $S_U,\ N_U,\ x$\\$E_U = g^{x}$};
+    
+    \msg{7em}{ini}{res}{$msg_1: 4,\ S_U,\ N_U,\ E_U,\ ALG_1,\ KID,\ APP_1$};
+    \action{8em}{res}{$
+      \begin{array}{c}
+        \text{Generates }S_V,\ N_V,\ y\\
+        E_V = g^{y}\\
+        aad_2 = H(msg_1, data_2)\\
+        K_2 = HKDF({E_U}^{y},\ aad_2,\ PSK)
+      \end{array}$};
+    \msg{16em}{res}{ini}{$msg_2: \overbrace{5,\ S_U,\ S_V,\ N_V,\ E_V,\ ALG_2}^{data_2},\ enc_{K_2}^{aad_2}(APP_2)$};
+    \action{17em}{ini}{$
+      \begin{array}{c}
+        K_2 = HKDF({E_V}^{x},\ aad_2,\ PSK)\\
+        aad_3 = H(H(msg_1, msg_2), data_3)\\
+        K_3 = HKDF({E_V}^{x},\ aad_3,\ PSK)
+      \end{array}$};
+    
+    \msg{24em}{ini}{res}{$msg_3: \overbrace{6,\ S_V}^{data_3}, aead_{K_3}^{aad_3}(APP_3)$};
+    \action{25em}{res}{$K_3 = HKDF({E_U}^{y},\ aad_3,\ PSK)$};
+    \end{tikzpicture}}
