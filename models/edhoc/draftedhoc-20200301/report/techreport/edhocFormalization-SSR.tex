@@ -9,9 +9,7 @@ Finally, we present the properties that we proved in this effort.
 %
 \subsection{Threat Model}\label{sec:threat-model}
 We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
-modeling, we assume all cryptographic primitives to be \emph{perfect}. The meaning
-of \emph{perfect} is the usual one. 
-For example, encrypted messages can only be decrypted with the key, and no hash collisions exist.
+modeling, we assume all cryptographic primitives to be \emph{perfect}. For example, encrypted messages can only be decrypted with the key, and no hash collisions exist.
 The attacker controls the communication channel, and can interact with unbounded sessions of the protocol,
 dropping, injecting and modifying messages at their liking.
 
@@ -52,9 +50,9 @@ The equational theory $E$ is fixed per model, and hence we omit the subscript.
 In the presentation of the model we use some syntactic
 sugar, namely
 the use of let bindings (\mT{let ... in}). This is a series of
-definitions of patterns which are substituted in the rest of the rule. \\
+definitions of patterns which are substituted in the rest of the rule.
 
-\runhead{Semantics and Built-ins}
+\subsubsection{Semantics and Built-ins}
 %%\subsubsection{Semantics and Built-ins} \phantom{} 
 \mTamarin{} states
 $S$, $S'$ are multisets of facts, and a semantic transition of the form $S \semarrow{E} S'$
@@ -91,8 +89,8 @@ We also use \mT{xx} to name the ephemeral key for the initiator (resp. \mT{yy}
 for the responder) as to avoid confusion with \mTamarin's builtin variable
 names \mT{x} and \mT{y}.
 
-\runhead{Protocol rules and equations}
-%\subsubsection{Protocol Rules and Equations}
+%\runhead{Protocol rules and equations}
+\subsubsection{Protocol rules and equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
 rules, which are added to the set of considered rules during verification.
@@ -126,19 +124,19 @@ Both the above equations govern decryption. The first rule checks to see if the 
 \label{sec:desired-properties}
 
  
-%\subsubsection{Secrecy}
-\runhead{Secrecy}
+\subsubsection{Secrecy}
+%\runhead{Secrecy}
 We say that \mEdhoc{} satisfies secrecy of the established session key $sk$
 between two honest parties $I$ and $R$ if, for any run of the protocol between $I$ and
 $R$, the attacker does not get to know $sk$.
 %
 The attacker may passively observe -- and actively interfere with -- the
 communication, and run any number of sessions with $A$ and $B$, in either role,
-concurrently or otherwise.\\
+concurrently or otherwise.
 
  
-%\subsubsection{Authentication}
-\runhead{Authentication}
+\subsubsection{Authentication}
+%\runhead{Authentication}
 \label{sec:authenticationDef}
 Following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, we say that a protocol guarantees to an
 initiator $I$ injective agreement with a responder $R$ if, whenever $I$ believes
@@ -217,10 +215,9 @@ Peer awareness is informally defined in~\cite{sigma} as the guarantee
 that if $A$ completes a protocol run with $B$, then not only does $A$
 know that $B$ is alive, but also that $B$ has initiated a corresponding session
 with $A$.
-\\
 
-\runhead{Session Key Material Independence}
-%\subsubsection{Session Key Material Independence}
+%\runhead{Session Key Material Independence}
+\subsubsection{Session Key Material Independence}
 Session key material independence holds if knowing the key material for one
 session does not give the attacker any information about the key material from
 other sessions.  To model session
@@ -229,10 +226,10 @@ after the protocol run, and verify secrecy for those sessions where the
 session key material has not directly revealed to the attacker.
 Would the attacker be able to break secrecy for one of those sessions after
 learning session key material from another session, the key material would not 
-be independent.\\
+be independent.
 
-\runhead{Perfect Forward Secrecy (PFS)}
-%\subsubsection{Perfect Forward Secrecy} 
+%\runhead{Perfect Forward Secrecy (PFS)}
+\subsubsection{Perfect Forward Secrecy (PFS)} 
 Perfect forward
 secrecy holds if, for any run in which the initiator and the responder
 agree on a session key $sk$ and any of their long-term keys are revealed after
@@ -282,10 +279,9 @@ shows both asymmetric authentication methods at the same time.
 %More details on the \mPskPsk{} method and 
 All \mTamarin{} models can be
 found at~\cite{edhocTamarinRepo}.
-\\
 
-%\subsubsection{General Setup}
-\runhead{General Setup}
+\subsubsection{General Setup}
+%\runhead{General Setup}
 The following rules express the registering of the long term keys for the
 \mSig{}- and \mStat{}-based methods, respectively.
 %
@@ -328,14 +324,13 @@ rule revealSessionKeyR: [CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
 %rule exp_STAT: [!LTK_STAT($A, ~ltk), In('g'^x)] --[TEE($A)]-> [Out(('g'^x)^~ltk)]
 %
 These are used to model long-term key compromise and session key secrecy.
-\\
 %These rules allow to check Perfect Forward Secrecy, Key Compromise Impersonation
 %and (weak) Post Compromise Security as defined in Section~\ref{sec:desired-properties},
 %by giving the attacker the ability to access to long term and session keys, or
 %to the cryptographic interface, at the appropriate time.
 
-%\subsubsection{Modeling Choices}
-\runhead{Modeling Choices}
+\subsubsection{Modeling Choices}
+%\runhead{Modeling Choices}
 We model each method of the protocol with four rules: \mT{I1}, \mT{R2}, \mT{I3}
 and \mT{R4} (with the current method suffixed to the rule name).
 %
@@ -491,9 +486,8 @@ In this section we present our formalization of the security properties.
 %
 We refer to Section~\ref{sec:desired-properties} for a full explanation of the
 properties.
-\\
 
-\runhead{Explicit Authentication}
+\subsubsection{Explicit Authentication}
 We model explicit authentication between the initiator and the
 responder in the form of mutual injective agreement on the session key material,
 and on the roles and identities of the two parties.
@@ -608,10 +602,9 @@ Consequently, we do not need to differentiate the explicit session key from the
 implicit session key in this case and can ignore the \mT{Exp} prefix for the
 running and commit action facts (\mT{RunningI} and \mT{CommitR} respectively).
 %
-\\
 
-%\subsubsection{Implicit Authentication}
-\runhead{Implicit Authentication}
+\subsubsection{Implicit Authentication}
+%\runhead{Implicit Authentication}
 The following lemma proves implicit authentication:
 % \begin{lstlisting}
 % lemma authGIYImplicitAuthGuaranteeForI:
@@ -675,10 +668,9 @@ Furthermore there is an injective correspondence
 between the \mT{CommitI} and \mT{CommitR} events, and the attacker does not
 learn the session key material.
 %
-\\
 
-%\subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
-\runhead{Secrecy, Forward Secrecy and Session Key Independence}
+\subsubsection{Secrecy, Forward Secrecy and Session Key Independence}
+%\runhead{Secrecy, Forward Secrecy and Session Key Independence}
 Finally, we prove secrecy of session key material, perfect forward secrecy
 (PFS) and session key material independence.
 %

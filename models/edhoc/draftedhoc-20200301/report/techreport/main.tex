@@ -1,7 +1,8 @@
 % !TEX TS-program = pdflatexmk
 
 %\documentclass[runningheads, envcountsame, hidelinks, a4paper, draft, x11names]{llncs}
-\documentclass[runningheads, envcountsame, hidelinks, a4paper, x11names]{llncs}
+\documentclass[runningheads, envcountsame, hidelinks, a4paper, x11names]{article}
+\usepackage{fullpage}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
 \usepackage[misc,geometry]{ifsym} % for letter symbol
@@ -17,8 +18,14 @@
 
 \input{macros}
 
+\renewcommand{\baselinestretch}{1.1}
+
+
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
+
+\date{}
+
 %
 %\author{Karl Norrman\inst{1,2}\textsuperscript{(\Letter)}\orcidID{0000-0003-0164-1478}
 %\and
@@ -31,7 +38,7 @@
 % Suggestion for shortened title in running heads:
 %    Formal Analysis of EDHOC Key Establishment
 %
-\authorrunning{}
+%\authorrunning{}
 %\authorrunning{K. Norrman et al.}
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
@@ -45,7 +52,7 @@
 %    IT University of Copenhagen, Copenhagen, Denmark,\\
 %    \email{brun@itu.dk}
 %}
-\institute{}
+%\institute{}
 %
 \maketitle
 %
@@ -79,8 +86,8 @@ Our work has also led to improvements in the design and the specification of
 
 % KARL: appears there are no standard keywords like in ACM and previous years
 % SSR papers use very custom key words
-\keywords{Formal verification \and Security \and IETF standardization \and
-          Key establishment protocols \and Tamarin}
+%\keywords{Formal verification \and Security \and IETF standardization \and
+%  Key establishment protocols \and Tamarin}
 
 %-------------------------------------------------------------------------- sec
 %\vspace{-2.5em}
@@ -294,11 +301,11 @@ Several of these revealed undefined aspects of \mEdhoc{}.
 %
 We informed the \mEdhoc{} authors, who then included these aspects the \mSpec{}.
 %
-We present a couple of examples here.\\
+We present a couple of examples here.
 %
 
-%\subsubsection{Non-repudiation.}
-\runhead{Non-repudiation}
+\subsubsection{Non-repudiation}
+%\runhead{Non-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
 machine to log a list of users along with their coffee preferences.
@@ -307,10 +314,10 @@ Via this simple thought experiment, we realized that the \mSpec{} did not
 consider non-repudiation.
 %
 In response, the authors of the \mSpec{} added a paragraph about which methods
-provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}. \\
+provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}. 
 
-%\subsubsection{Unintended Peer Authentication.}
-\runhead{Unintended Peer Authentication}
+\subsubsection{Unintended Peer Authentication}
+%\runhead{Unintended Peer Authentication}
 Section~3.2 of the \mSpec{} states that parties must be configured
 with a policy restricting the set of peers they can run \mEdhoc{} with.
 %
@@ -448,7 +455,7 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %-------------------------------------------------------------------------- sub
 \subsection{Cipher Suite Negotiation}
 \label{sec:ciphersuiteNegotiation}
-Cipher suite negotiation in \mEdhoc{} spans one or more executions of the
+As described in Section~\ref{sec:ciphersuite}, cipher suite negotiation in \mEdhoc{} spans one or more executions of the
 protocol.
 %
 As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
