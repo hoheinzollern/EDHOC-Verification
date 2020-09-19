@@ -268,8 +268,7 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
           ]->
-        [ ExpCompletedI(~tid, $U, $V, exp_sk)  // standard running/commit
-        , CompletedI(~tid, $U, $V, imp_sk)  // Requires R to complete
+        [ CompletedI(~tid, $U, $V, imp_sk)  // Requires R to complete
         , Out(m3)
         ]
 
@@ -404,17 +403,6 @@ rule revealLTK_PSK:
  * sk = <gxy, giy> for STAT_SIG method
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
-
-/* ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <! */
-/* rule revealSessionKeyPSK: */
-/*     [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* !>, <! */
-/* rule revealSessionKeyI: */
-/*     [CommpitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* rule revealSessionKeyR: */
-/*     [CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* !>) */
-
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <!
 rule revealSessionKeyPSK:
     [CompletedI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
@@ -432,21 +420,21 @@ rule revealSessionKeyR:
 /*
  * Sanity - Correct exectution trace exists
  */
-/* lemma sanityExecutableToTheEnd: */
-/*     exists-trace */
-/*     "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l. */
-/*        I1(tidI, u, v, m1)@i */
-/*      & R2(tidR, v, m1, m2)@j & #i < #j */
-/*      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k */
-/*      & CommitI(tidI, u, v, sk)@k */
-/*      & ExpCommitI(tidI, u, v, sk2)@k */
-/*      & RunningI(tidI, u, v, sk)@k */
-/*      & ExpRunningI(tidI, u, v, sk2)@k */
-/*      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l */
-/*      & CommitR(tidR, u, v, sk)@l */
-/*      & ExpCommitR(tidR, u, v, sk2)@l */
-/*      ) */
-/*     " */
+lemma sanityExecutableToTheEnd:
+    exists-trace
+    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
+       I1(tidI, u, v, m1)@i
+     & R2(tidR, v, m1, m2)@j & #i < #j
+     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
+     & CommitI(tidI, u, v, sk)@k
+     & ExpCommitI(tidI, u, v, sk2)@k
+     & RunningI(tidI, u, v, sk)@k
+     & ExpRunningI(tidI, u, v, sk2)@k
+     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
+     & CommitR(tidR, u, v, sk)@l
+     & ExpCommitR(tidR, u, v, sk2)@l
+     )
+    "
 
 /*
  * Sanity - Adversary model
