@@ -268,7 +268,7 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
           ]->
-        [ CompletedI(~tid, $U, $V, imp_sk)  // Requires R to complete
+        [ Completed(imp_sk)  // Requires R to complete
         , Out(m3)
         ]
 
@@ -358,26 +358,68 @@ ifelse(<!SIG!>, m4METHODI,
          )!>
 )
           ]->
-        [ CompletedR(~tid, $U, $V, imp_sk) ]
+        [ Completed(imp_sk) ]
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
  */
-/* Register LTK for SIG key based authentication */
-rule registerLTK_SIG:
-    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
-                                        !PK_SIG($A, pk(~ltk)),
-                                        Out(<!<$A, pk(~ltk)>!>)]
+/* /1* Register LTK for SIG key based authentication *1/ */
+/* rule registerLTK_SIG: */
+/*     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk), */
+/*                                         !PK_SIG($A, pk(~ltk)), */
+/*                                         Out(<!<$A, pk(~ltk)>!>)] */
 
-/* Register LTK for STAT key based authentication */
-rule registerLTK_STAT:
-    [Fr(~ltk)]
-    --[UniqLTK($A, 'g'^~ltk)]->
-    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+/* /1* Register LTK for STAT key based authentication *1/ */
+/* rule registerLTK_STAT: */
+/*     [Fr(~ltk)] */
+/*     --[UniqLTK($A, 'g'^~ltk)]-> */
+/*     [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)] */
 
-/* Register LTK for PSK key based authentication */
-rule registerLTK_PSK:
-    [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+/* /1* Register LTK for PSK key based authentication *1/ */
+/* rule registerLTK_PSK: */
+/*     [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)] */
+
+
+/* Don't register LTKs that are not used */
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+    <!rule registerLTK_PSK:
+        [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+!>,
+)
+ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
+    <!rule registerLTK_SIG:
+        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                            !PK_SIG($A, pk(~ltk)),
+                                            Out(<!<$A, pk(~ltk)>!>)]
+      rule registerLTK_STAT:
+          [Fr(~ltk)]
+          --[UniqLTK($A, 'g'^~ltk)]->
+          [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+!>,)
+ifelse(<!SIG_SIG!>, m4METHODI<!_!>m4METHODR,
+    <!rule registerLTK_SIG:
+        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                            !PK_SIG($A, pk(~ltk)),
+                                            Out(<!<$A, pk(~ltk)>!>)]
+!>,)
+ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
+    <!rule registerLTK_SIG:
+        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                            !PK_SIG($A, pk(~ltk)),
+                                            Out(<!<$A, pk(~ltk)>!>)]
+      rule registerLTK_STAT:
+          [Fr(~ltk)]
+          --[UniqLTK($A, 'g'^~ltk)]->
+          [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+!>,)
+ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
+    <!rule registerLTK_STAT:
+        [Fr(~ltk)]
+        --[UniqLTK($A, 'g'^~ltk)]->
+        [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+!>,)
+
+
 
 /* Assume binding between identities and their credentials */
 restriction uniqLTKs:
@@ -403,15 +445,21 @@ rule revealLTK_PSK:
  * sk = <gxy, giy> for STAT_SIG method
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <!
-rule revealSessionKeyPSK:
-    [CompletedI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-!>, <!
-rule revealSessionKeyI:
-    [CompletedI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-rule revealSessionKeyR:
-    [CompletedR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
-!>)
+/* ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <! */
+/* rule revealSessionKeyPSK: */
+/*     [CompletedI(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
+/* !>, <! */
+/* rule revealSessionKeyI: */
+/*     [CompletedI(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
+/* rule revealSessionKeyR: */
+/*     [CompletedR(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
+/* !>) */
+
+/* Because we don't model KCI yet, we don't make use of which party leaks the
+ * session key. Then one rule is sufficient for both parties in the session.
+ */
+rule revealSessionKey:
+     [Completed(sk)] --[SKRev(sk)]-> [Out(sk)]
 
 /*
  * Invariants - Helper lemmas

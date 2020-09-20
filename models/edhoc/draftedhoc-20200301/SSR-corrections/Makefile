@@ -124,5 +124,6 @@ pfs: genModels
 all: sense alotofsense auth authimplicit pfs
 
 clean:
-	rm ./TMP_*
+	rm ./TMP_*.spthy
+	rm ./proofs/*.spthy
 
