@@ -57,9 +57,13 @@ def genPrios(goalLines, lemma):
         elif "sanity" in lemma:
             if DEBUG:
                 print("MATCHING Sanity LEMMA: {}".format(lemma))
-            if re.match(".*KU\( sign.*", line) or\
+            if re.match(".*SKRev.*", line) or\
+               re.match(".*Completed.*", line):
+                    prioritize(goal, 90, line)
+            elif re.match(".*KU\( sign.*", line) or\
                re.match(".*KU\( hkdfExtract.*", line) or\
-               re.match(".*KU\( hkdfExpand.*", line):
+               re.match(".*KU\( hkdfExpand.*", line) or\
+               re.match(".*KU\( h\(.*", line):
                     prioritize(goal, 80, line)
             elif re.match(".*StI.*", line) or\
                re.match(".*StR.*", line) or\
@@ -168,7 +172,7 @@ if __name__ == "__main__":
     # We want 0 to be lowest prio, so reverse all level-lists and the list itself
     prios = [(p[0], p[1][::-1]) for p in prios][::-1]
 
-    #outputPrios(goalLines, lemma)
+    outputPrios(goalLines, lemma)
     #dumpPrios(goalLines, lemma)
 
 
