@@ -362,28 +362,15 @@ ifelse(<!SIG!>, m4METHODI,
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
+ * Rules for registering and revealing the long-term keys that are revelavnt
+ * for each method.
+ * Don't register or reveal LTKs that are not used for a given method.
  */
-/* /1* Register LTK for SIG key based authentication *1/ */
-/* rule registerLTK_SIG: */
-/*     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk), */
-/*                                         !PK_SIG($A, pk(~ltk)), */
-/*                                         Out(<!<$A, pk(~ltk)>!>)] */
-
-/* /1* Register LTK for STAT key based authentication *1/ */
-/* rule registerLTK_STAT: */
-/*     [Fr(~ltk)] */
-/*     --[UniqLTK($A, 'g'^~ltk)]-> */
-/*     [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)] */
-
-/* /1* Register LTK for PSK key based authentication *1/ */
-/* rule registerLTK_PSK: */
-/*     [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)] */
-
-
-/* Don't register LTKs that are not used */
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!rule registerLTK_PSK:
         [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+      rule revealLTK_PSK:
+        [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
 !>,
 )
 ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
@@ -395,12 +382,18 @@ ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
           [Fr(~ltk)]
           --[UniqLTK($A, 'g'^~ltk)]->
           [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+      rule revealLTK_SIG:
+          [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+      rule revealLTK_STAT:
+          [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 !>,)
 ifelse(<!SIG_SIG!>, m4METHODI<!_!>m4METHODR,
     <!rule registerLTK_SIG:
         [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
                                             !PK_SIG($A, pk(~ltk)),
                                             Out(<!<$A, pk(~ltk)>!>)]
+      rule revealLTK_SIG:
+        [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 !>,)
 ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
     <!rule registerLTK_SIG:
@@ -408,15 +401,21 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
                                             !PK_SIG($A, pk(~ltk)),
                                             Out(<!<$A, pk(~ltk)>!>)]
       rule registerLTK_STAT:
-          [Fr(~ltk)]
-          --[UniqLTK($A, 'g'^~ltk)]->
-          [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+        [Fr(~ltk)]
+        --[UniqLTK($A, 'g'^~ltk)]->
+        [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+      rule revealLTK_SIG:
+        [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+      rule revealLTK_STAT:
+        [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 !>,)
 ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
     <!rule registerLTK_STAT:
         [Fr(~ltk)]
         --[UniqLTK($A, 'g'^~ltk)]->
         [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+      rule revealLTK_STAT:
+        [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 !>,)
 
 
@@ -425,13 +424,6 @@ ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
 restriction uniqLTKs:
     "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
 
-/* Reveal LTK for all methods */
-rule revealLTK_SIG:
-    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-rule revealLTK_STAT:
-    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-rule revealLTK_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
 
 /* Reveal session key for all methods.
  * Explicit authentication possible for:
