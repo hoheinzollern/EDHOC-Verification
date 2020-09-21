@@ -475,17 +475,14 @@ lemma sanityExecutableToTheEnd:
      & CommitR(tidR, u, v, sk)@l
      & ExpCommitR(tidR, u, v, sk2)@l
      )
-     &
-     (Ex sk #i. SKRev(sk)@i // Sanity: attacker can reveal session keys
-     )
     "
 
 /*
  * Sanity - Adversary model     ---  incorporated in Executable lemma above
  */
-/* lemma sanitySKRev: */
-/*     exists-trace */
-/*     "Ex sk #i. SKRev(sk)@i" */
+lemma sanitySKRev:
+    exists-trace
+    "Ex sk #i. SKRev(sk)@i"
 
 
 /* Note that this only shows agreement on a reduced session key from R to I
