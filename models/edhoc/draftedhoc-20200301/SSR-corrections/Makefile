@@ -77,7 +77,8 @@ genModels:
 
 # This target is useful for viewing the GUI
 interactive: genModels
-	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+	#${TAMARIN_CLEAN} interactive ./ -b=1 --quit-on-warning --heuristic=O --oraclename=oracle.py
+	${TAMARIN_CLEAN} interactive ./ -b=3 --quit-on-warning
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -88,7 +89,7 @@ sense: genModels
 
 # This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	#$(foreach meth,${SIGSTAT},)
+	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,sanity,${TIME_PROVE_AND_LOG})\

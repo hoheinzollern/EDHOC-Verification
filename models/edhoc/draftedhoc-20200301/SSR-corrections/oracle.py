@@ -63,6 +63,13 @@ def genPrios(goalLines, lemma):
             elif re.match(".*StR.*", line) or\
                re.match(".*StI.*", line):
                     prioritize(goal, 80, line)
+            elif re.match(".*KU\( 'g'\^~xx \).*", line) or\
+               re.match(".*KU\( 'g'\^~yy \).*", line) or\
+               re.match(".*KU\( ~xx.*", line) or\
+               re.match(".*KU\( ~yy.*", line):
+                    prioritize(goal, 70, line)
+            if re.match(".*LTK_.*", line):
+                    prioritize(goal, 67, line)
             elif re.match(".*aeadEncrypt.*", line) or\
                re.match(".*xorEncrypt.*", line):
                     prioritize(goal, 65, line)
@@ -79,7 +86,9 @@ def genPrios(goalLines, lemma):
                 print("MATCHING Auth LEMMA: {}".format(lemma))
             if re.match(".*KU\( ~ltk.*", line) or\
                re.match(".*KU\( ~xx.*", line) or\
-               re.match(".*KU\( ~yy.*", line):
+               re.match(".*KU\( ~yy.*", line) or\
+               re.match(".*Running.*", line) or\
+               re.match(".*Commit.*", line):
                     prioritize(goal, 97, line)
             elif re.match(".*KU\( 'g'\^~ltk.*\).*", line) or\
                  re.match(".*KU\( 'g'\^\(~ltk.*\).*", line):

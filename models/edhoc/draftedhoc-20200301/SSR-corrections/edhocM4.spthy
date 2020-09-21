@@ -51,6 +51,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
     let
          tid = ~yy
+         gx = 'g'^~xx
          data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
@@ -139,6 +140,7 @@ ifelse(<!STAT!>, m4METHODR,
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
          tid = ~xx
+         gy = 'g'^~yy
          data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
