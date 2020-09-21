@@ -60,16 +60,18 @@ def genPrios(goalLines, lemma):
             if re.match(".*SKRev.*", line) or\
                re.match(".*Completed.*", line):
                     prioritize(goal, 90, line)
+            elif re.match(".*StR.*", line) or\
+               re.match(".*StI.*", line):
+                    prioritize(goal, 80, line)
+            elif re.match(".*aeadEncrypt.*", line) or\
+               re.match(".*xorEncrypt.*", line):
+                    prioritize(goal, 65, line)
             elif re.match(".*KU\( sign.*", line) or\
                re.match(".*KU\( hkdfExtract.*", line) or\
-               re.match(".*KU\( hkdfExpand.*", line) or\
-               re.match(".*KU\( h\(.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*StI.*", line) or\
-               re.match(".*StR.*", line) or\
-               re.match(".*aeadEncrypt.*", line) or\
-               re.match(".*xorEncrypt.*", line):
-                    prioritize(goal, 80, line)
+               re.match(".*KU\( hkdfExpand.*", line):
+                    prioritize(goal, 60, line)
+            elif re.match(".*KU\( h\(.*", line):
+                    prioritize(goal, 55, line)
             else:
                 prioritize(goal, 50, line)
         elif "auth" in lemma:

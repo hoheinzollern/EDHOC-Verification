@@ -28,6 +28,7 @@ restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
+        tid = ~xx
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
          m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>!>,
@@ -39,19 +40,17 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
 )
         , Fr(~xx)
-        , Fr(~tid)  /* Thread ID */
+        //, Fr(~tid)  /* Thread ID = ~xx */
         ]
-        --[ I1(~tid, $U, $V, m1)
+        --[ I1(tid, $U, $V, m1)
           ]->
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
-)
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
         , Out(m1)
         ]
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
     let
+         tid = ~yy
          data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
@@ -116,21 +115,21 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m1)
         , Fr(~yy)
-        , Fr(~tid)
+        // , Fr(~tid)   /* tid = yy */
         ]
-        --[ ExpRunningR(~tid, $V, exp_sk)
-          , R2(~tid, $V, m1, m2)
+        --[ ExpRunningR(tid, $V, exp_sk)
+          , R2(tid, $V, m1, m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
-          <!!> //<!, R2Mac(~tid, MAC_2, gx, 'g'^~yy, gx^~yy, K_2m)!>
+          <!!> //<!, R2Mac(tid, MAC_2, gx, 'g'^~yy, gx^~yy, K_2m)!>
 )
           ]->
 ifelse(<!STAT!>, m4METHODR,
-        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2)
         ,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2),
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2)
         )!>
 )
         , Out(m2)
@@ -139,6 +138,7 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
+         tid = ~xx
          data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
@@ -240,9 +240,9 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
         ,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
@@ -251,14 +251,14 @@ ifdef(<!m4AD3!>,
         <!, Fr(~AD_3)!>
 )
         ]
-        --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
-          , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-          , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
-          , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
-          , I3(~tid, $U, $V, m1, m2, m3)
+        --[ ExpCommitI(tid, $U, $V, exp_sk)  // standard running/commit
+          , CommitI(tid, $U, $V, imp_sk)  // Requires R to complete
+          , ExpRunningI(tid, $U, $V, exp_sk)  // Sugar for standard running/commit
+          , RunningI(tid, $U, $V, imp_sk)  // Sugar for standard running/commit
+          , I3(tid, $U, $V, m1, m2, m3)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
-          <!!> //<!, I3Mac(~tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
+          <!!> //<!, I3Mac(tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
 )
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
@@ -274,6 +274,7 @@ ifelse(<!SIG!>, m4METHODR,
 
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
+        tid = ~yy
         data_3 = 'emptyStr' //~C_R
         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
@@ -333,10 +334,10 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!STAT!>, m4METHODR,
-        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>,
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>
         )!>
 )
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -347,9 +348,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m3)
         ]
-        --[ ExpCommitR(~tid, $U, $V, exp_sk)
-          , CommitR(~tid, $U, $V, imp_sk)
-          , R4(~tid, $U, $V, m1, m2, m3)
+        --[ ExpCommitR(tid, $U, $V, exp_sk)
+          , CommitR(tid, $U, $V, imp_sk)
+          , R4(tid, $U, $V, m1, m2, m3)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
