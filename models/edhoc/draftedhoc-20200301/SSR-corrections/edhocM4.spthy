@@ -28,7 +28,6 @@ restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
-        tid = ~xx
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
          m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>!>,
@@ -40,17 +39,19 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
 )
         , Fr(~xx)
-        //, Fr(~tid)  /* Thread ID = ~xx */
+        , Fr(~tid)  /* Thread ID */
         ]
-        --[ I1(tid, $U, $V, m1)
+        --[ I1(~tid, $U, $V, m1)
           ]->
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+)
         , Out(m1)
         ]
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
     let
-         tid = ~yy
          gx = 'g'^~xx
          data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -116,21 +117,21 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m1)
         , Fr(~yy)
-        // , Fr(~tid)   /* tid = yy */
+        , Fr(~tid)
         ]
-        --[ ExpRunningR(tid, $V, exp_sk)
-          , R2(tid, $V, m1, m2)
+        --[ ExpRunningR(~tid, $V, exp_sk)
+          , R2(~tid, $V, m1, m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
-          <!!> //<!, R2Mac(tid, MAC_2, gx, 'g'^~yy, gx^~yy, K_2m)!>
+          <!!> //<!, R2Mac(~tid, MAC_2, gx, 'g'^~yy, gx^~yy, K_2m)!>
 )
           ]->
 ifelse(<!STAT!>, m4METHODR,
-        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2)
+        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         ,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2),
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, m1, m2)
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
+            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         )!>
 )
         , Out(m2)
@@ -139,7 +140,6 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-         tid = ~xx
          gy = 'g'^~yy
          data_2 = <gy>
     /* Message 2 handling */
@@ -242,9 +242,9 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         ,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1)
+        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
@@ -253,14 +253,14 @@ ifdef(<!m4AD3!>,
         <!, Fr(~AD_3)!>
 )
         ]
-        --[ ExpCommitI(tid, $U, $V, exp_sk)  // standard running/commit
-          , CommitI(tid, $U, $V, imp_sk)  // Requires R to complete
-          , ExpRunningI(tid, $U, $V, exp_sk)  // Sugar for standard running/commit
-          , RunningI(tid, $U, $V, imp_sk)  // Sugar for standard running/commit
-          , I3(tid, $U, $V, m1, m2, m3)
+        --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
+          , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
+          , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
+          , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
+          , I3(~tid, $U, $V, m1, m2, m3)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
-          <!!> //<!, I3Mac(tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
+          <!!> //<!, I3Mac(~tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
 )
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
@@ -270,13 +270,12 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
           ]->
-        [ Completed(imp_sk)  // Requires R to complete
+        [ Completed(imp_sk)
         , Out(m3)
         ]
 
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-        tid = ~yy
         data_3 = 'emptyStr' //~C_R
         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
@@ -336,10 +335,10 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!STAT!>, m4METHODR,
-        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>,
+        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
         <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, m1, m2)!>
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
         )!>
 )
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -350,9 +349,9 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 )
         , In(m3)
         ]
-        --[ ExpCommitR(tid, $U, $V, exp_sk)
-          , CommitR(tid, $U, $V, imp_sk)
-          , R4(tid, $U, $V, m1, m2, m3)
+        --[ ExpCommitR(~tid, $U, $V, exp_sk)
+          , CommitR(~tid, $U, $V, imp_sk)
+          , R4(~tid, $U, $V, m1, m2, m3)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -365,68 +364,34 @@ ifelse(<!SIG!>, m4METHODI,
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
- * Rules for registering and revealing the long-term keys that are revelavnt
- * for each method.
- * Don't register or reveal LTKs that are not used for a given method.
  */
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-    <!rule registerLTK_PSK:
-        [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
-      rule revealLTK_PSK:
-        [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
-!>,
-)
-ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
-    <!rule registerLTK_SIG:
-        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
-                                            !PK_SIG($A, pk(~ltk)),
-                                            Out(<!<$A, pk(~ltk)>!>)]
-      rule registerLTK_STAT:
-          [Fr(~ltk)]
-          --[UniqLTK($A, 'g'^~ltk)]->
-          [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
-      rule revealLTK_SIG:
-          [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-      rule revealLTK_STAT:
-          [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-!>,)
-ifelse(<!SIG_SIG!>, m4METHODI<!_!>m4METHODR,
-    <!rule registerLTK_SIG:
-        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
-                                            !PK_SIG($A, pk(~ltk)),
-                                            Out(<!<$A, pk(~ltk)>!>)]
-      rule revealLTK_SIG:
-        [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-!>,)
-ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
-    <!rule registerLTK_SIG:
-        [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
-                                            !PK_SIG($A, pk(~ltk)),
-                                            Out(<!<$A, pk(~ltk)>!>)]
-      rule registerLTK_STAT:
-        [Fr(~ltk)]
-        --[UniqLTK($A, 'g'^~ltk)]->
-        [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
-      rule revealLTK_SIG:
-        [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-      rule revealLTK_STAT:
-        [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-!>,)
-ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
-    <!rule registerLTK_STAT:
-        [Fr(~ltk)]
-        --[UniqLTK($A, 'g'^~ltk)]->
-        [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
-      rule revealLTK_STAT:
-        [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
-!>,)
+/* Register LTK for SIG key based authentication */
+rule registerLTK_SIG:
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                        !PK_SIG($A, pk(~ltk)),
+                                        Out(<!<$A, pk(~ltk)>!>)]
 
+/* Register LTK for STAT key based authentication */
+rule registerLTK_STAT:
+    [Fr(~ltk)]
+    --[UniqLTK($A, 'g'^~ltk)]->
+    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
 
+/* Register LTK for PSK key based authentication */
+rule registerLTK_PSK:
+    [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 
 /* Assume binding between identities and their credentials */
 restriction uniqLTKs:
     "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
 
+/* Reveal LTK for all methods */
+rule revealLTK_SIG:
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_STAT:
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_PSK:
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
 
 /* Reveal session key for all methods.
  * Explicit authentication possible for:
@@ -440,21 +405,21 @@ restriction uniqLTKs:
  * sk = <gxy, giy> for STAT_SIG method
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
-/* ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <! */
-/* rule revealSessionKeyPSK: */
-/*     [CompletedI(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* !>, <! */
-/* rule revealSessionKeyI: */
-/*     [CompletedI(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* rule revealSessionKeyR: */
-/*     [CompletedR(tid, sk)] --[SKRev(sk)]-> [Out(sk)] */
-/* !>) */
+/*
+ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR, <!
+rule revealSessionKeyPSK:
+    [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+!>, <!
+rule revealSessionKeyI:
+    [CommitI(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+rule revealSessionKeyR:
+    [CommitR(tid, u, v, sk)] --[SKRev(sk)]-> [Out(sk)]
+!>)
+*/
 
-/* Because we don't model KCI yet, we don't make use of which party leaks the
- * session key. Then one rule is sufficient for both parties in the session.
- */
 rule revealSessionKey:
-     [Completed(sk)] --[SKRev(sk)]-> [Out(sk)]
+    [Completed(sk)] --[SKRev(sk)]-> [Out(sk)]
+
 
 /*
  * Invariants - Helper lemmas
@@ -485,7 +450,6 @@ lemma sanityExecutableToTheEnd:
 lemma sanitySKRev:
     exists-trace
     "Ex sk #i. SKRev(sk)@i"
-
 
 /* Note that this only shows agreement on a reduced session key from R to I
  * since Responder does not know GIY when sending message 2, i.e., when Initiator
