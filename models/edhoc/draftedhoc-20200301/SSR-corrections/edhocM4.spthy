@@ -524,8 +524,8 @@ lemma authGIYImplicitAuthGuaranteeForI:
          ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
                 (u = u2  &  v = v2)
              )
-           &
-             (not Ex #k. K(impSk)@k)
+           //&
+             //(not Ex #k. K(impSk)@k)
            &
              (not( Ex tidR u v #j tidR2 u2 v2 #j2.
                       ( CommitR(tidR,  u,  v,  impSk)@j
@@ -538,6 +538,7 @@ lemma authGIYImplicitAuthGuaranteeForI:
          | (Ex #k. LTKRev(u)@k)
          | (Ex #k. LTKRev(v)@k)
          | (Ex #k. LTKRev(<u, v>)@k)
+         | (Ex #k. SKRev(impSk)@k)
          )
     "
 
@@ -548,10 +549,12 @@ lemma authGIYImplicitAuthGuaranteeForI2:
          ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
              (u = u2 & v = v2 & All tidR2 u3 v3 #j2.
 	        CommitR(tidR2, u3, v3, impSk)@j2 ==> #j = #j2)
-           & (not Ex #k. K(impSk)@k) )
+           //& (not Ex #k. SKRev(impSk)@k) 
+           )
          | (Ex #k. LTKRev(u)@k)
          | (Ex #k. LTKRev(v)@k)
          | (Ex #k. LTKRev(<u, v>)@k)
+         | (Ex #k. SKRev(impSk)@k)
          )
     "
 
