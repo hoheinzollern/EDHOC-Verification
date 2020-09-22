@@ -14,15 +14,15 @@ builtins: diffie-hellman, xor, signing, hashing
  *
  */
 functions:
-    aeadEncrypt/4,  // Input: Key, plain-text, aad, cAEADx (AEAD algo ID)
-    aeadDecrypt/4,  // Input: Key, cipher-text, aad, cAEADx (AEAD algo ID)
-    decrypt/3,      // Input: Key, cipher-text, cAEADx (AEAD algo ID);
+    aeadEncrypt/4,  // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
+    aeadDecrypt/4,  // Input: Cipher-text, key, aad, cAEADx (AEAD algo ID)
+    decrypt/3,      // Input: Cipher-text, key, cAEADx (AEAD algo ID);
     hkdfExtract/2,  // Input: Salt, random source
     hkdfExpand/2    // Input: Salt, uniform random source
 
 equations:
-    aeadDecrypt(key, aeadEncrypt(key, pt, aad, algoId), aad, algoId) = pt,
-    decrypt(key, aeadEncrypt(key, pt, aad, algoID), algoId) = pt
+    aeadDecrypt(aeadEncrypt(pt, key, aad, algoId), key, aad, algoId) = pt,
+    decrypt(aeadEncrypt(pt, key, aad, algoID), key, algoId) = pt
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
@@ -42,6 +42,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
+          , Consistent(~tid, <~xx, gx, $U, $V>)
           ]->
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
@@ -120,6 +121,8 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)
         ]
         --[ ExpRunningR(~tid, $V, exp_sk)
+          , XorKDFHelper(prk_2e)
+          , DHHelper(~xx, ~yy, gx^~yy)
           , R2(~tid, $V, m1, m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
@@ -140,6 +143,7 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
+         gx = 'g'^~xx
          gy = 'g'^~yy
          data_2 = <gy>
     /* Message 2 handling */
@@ -258,6 +262,8 @@ ifdef(<!m4AD3!>,
           , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
           , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
+          , ConsistentSecond(~tid, <~xx, gx, $U, $V>)
+          , DHHelper(~xx, ~yy, gy^~xx)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
           <!!> //<!, I3Mac(~tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
@@ -517,6 +523,27 @@ lemma authInjAgreeGuaranteeForR:
  * level that users can expect from all methods.
  *
  */
+/* lemma authGIYImplicitAuthGuaranteeForIHelper3 [reuse]: */
+/*     all-traces */
+/*     "All tid params params2 #i #j. ((Consistent(tid, params)@i & */
+/*                                      Consistent(tid, params2)@j) */
+/*                                          ==> params = params2) */
+/*     " */
+
+lemma authGIYImplicitAuthGuaranteeForIHelper [reuse, use_induction]:
+    all-traces
+    "(All pt slt src aad alg #i. ((KU(aeadEncrypt(pt, hkdfExpand(slt, src), aad, alg))@i & KU(pt)@i) ==> ((Ex #j. KU(src)@j & #j < #i) | (Ex #j. XorKDFHelper(src)@j & #j < #i))))
+     &
+     (All salt src #i. (KU(hkdfExpand(salt, src))@i ==> ((Ex #j. KU(src)@j & #j < #i) | (Ex #j. XorKDFHelper(src)@j & #j < #i))))
+     &
+     (All salt src #i. (KU(hkdfExtract(salt, src))@i ==> (Ex #j. KU(src)@j & #j < #i)))
+    "
+
+lemma authGIYImplicitAuthGuaranteeForIHelper2 [reuse, use_induction]:
+    all-traces
+    "All xx yy gxy #i #j. ((KU(gxy)@i & DHHelper(xx, yy, gxy)@j) ==> ((Ex #k. KU(xx)@k & #k < #i) | (Ex #k. KU(yy)@k & #k < #i)))"
+
+
 lemma authGIYImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v impSk #i.
