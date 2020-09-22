@@ -106,11 +106,12 @@ def genPrios(goalLines, lemma):
                  re.match(".*sign.*", line) or\
                  re.match(".*StI.*", line) or\
                  re.match(".*StR.*", line) or\
-                 re.match(".*aeadEncrypt.*", line) or\
-                 re.match(".*xorEncrypt.*", line):
+                 re.match(".*aeadEncrypt.*", line):
                     prioritize(goal, 70, line)
             elif re.match(".*KU\( h\(.*", line):
                     prioritize(goal, 60, line)
+            elif re.match(".*xorEncrypt.*", line):
+                    prioritize(goal, 40, line)
             else:
                  prioritize(goal, 50, line)
         elif "secrecy" in lemma or "Secrecy" in lemma:
