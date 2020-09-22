@@ -67,6 +67,9 @@ TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LE
 check:
 	grep --color=auto -E "verified|falsified|(user.*m.*s)" ${PROOFS}/*
 
+checksub:
+	grep --color=auto -E "verified|falsified|(user.*m.*s)" ${PROOFS}-at-submission/*
+
 genModels:
 	mkdir -p proofs
 	m4 ${MFLAGS} ${MSIGSTAT} ${SRC} > ${TSIGSTAT}
