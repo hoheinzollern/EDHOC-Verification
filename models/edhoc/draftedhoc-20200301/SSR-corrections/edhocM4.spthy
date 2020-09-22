@@ -541,7 +541,7 @@ lemma authGIYImplicitAuthGuaranteeForIHelper [reuse, use_induction]:
 
 lemma authGIYImplicitAuthGuaranteeForIHelper2 [reuse, use_induction]:
     all-traces
-    "All xx yy gxy #i #j. ((KU(gxy)@i & DHHelper(xx, yy, gxy)@j) ==> ((Ex #k. KU(xx)@k & #k < #i) | (Ex #k. KU(yy)@k & #k < #i)))"
+    "All xx yy gxy #i #j. ((KU(gxy)@i & DHHelper(xx, yy, gxy)@j) ==> ((Ex #k. KU(xx)@k & #k < #i) | (Ex #k. KU(yy)@k & #k < #i) | (Ex sk #k. SKRev(sk)@k)))"
 
 
 lemma authGIYImplicitAuthGuaranteeForI:
