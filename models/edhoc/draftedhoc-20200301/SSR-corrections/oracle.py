@@ -156,11 +156,26 @@ def genPrios(goalLines, lemma):
             else:
                  prioritize(goal, 50, line)
         elif "secrecyPFSSTATSIG" in lemma:
-            print("YESSSSSS!")
             if DEBUG:
                 print("MATCHING PFS STATSIG LEMMA: {}".format(lemma))
-            if re.match(".*!KU\( 'g'\^\(~ltk\*~yy\).*", line) or\
-               re.match(".*!KU\( 'g'\^\(~ltk\*~xx\).*", line):
+            if re.match(".*: !KU\( 'g'\^\(~ltk\*~yy\).*", line) or\
+               re.match(".*: !KU\( ~ltk \).*", line):
+                      prioritize(goal, 95, line)
+            elif re.match(".*: !KU\( 'g'\^\(~xx\*~yy\).*", line) or\
+                 re.match(".*: !KU\( 'g'\^\(~yy\*~xx\).*", line) or\
+                 re.match(".*: !KU\( ~xx \).*", line) or\
+                 re.match(".*: !KU\( ~yy \).*", line):
+                      prioritize(goal, 93, line)
+            elif re.match(".*: !KU\( \(\$V⊕  *hkdfExpand\(<\$cAEAD0, h\(<\$cHash0, m1, 'g'\^~yy>\).*", line) or\
+                 re.match(".*: !KU\( ~xx \).*", line):
+                      prioritize(goal, 91, line)
+            elif re.match(".*: !KU\( ~xx \).*", line):
+                      prioritize(goal, 90, line)
+            elif re.match(".*KU\( hkdfExtract.*", line) or\
+                 re.match(".*KU\( hkdfExpand.*", line) or\
+                 re.match(".*sign.*", line) or\
+                 re.match(".*KU\( aeadEncrypt.*", line):
+                    prioritize(goal, 80, line)
             else:
                  prioritize(goal, 50, line)
         elif "secrecy" in lemma or "Secrecy" in lemma:

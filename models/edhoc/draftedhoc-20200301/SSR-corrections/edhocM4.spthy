@@ -145,6 +145,18 @@ rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
          gx = 'g'^~xx
          gy = 'g'^~yy
+ifelse(<!STAT!>, m4METHODI,
+         pkU = 'g'^~ltk
+)
+ifelse(<!STAT!>, m4METHODR,
+         pkV = 'g'^~ltkpeer
+)
+ifelse(<!SIG!>, m4METHODI,
+         pkU = pk(~ltk)
+)
+ifelse(<!SIG!>, m4METHODR,
+         pkV = pk(~ltkpeer)
+)
          data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
@@ -283,6 +295,18 @@ ifelse(<!SIG!>, m4METHODR,
 
 rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
     let
+ifelse(<!STAT!>, m4METHODI,
+         pkU = 'g'^~ltkpeer
+)
+ifelse(<!STAT!>, m4METHODR,
+         pkV = 'g'^~ltk
+)
+ifelse(<!SIG!>, m4METHODI,
+         pkU = pk(~ltkpeer)
+)
+ifelse(<!SIG!>, m4METHODR,
+         pkV = pk(~ltk)
+)
         data_3 = 'emptyStr' //~C_R
         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
@@ -747,7 +771,7 @@ lemma secrecyPFSSTATGIYSessionKey:
     !>,
 <!ifelse(<!STAT!>, m4METHODI,   // STAT_SIG
     <!
-lemma secrecyPFSSTATSIGHelper5 [reuse]:
+lemma secrecyPFSSTATSIGHelper [reuse]:
     all-traces
     "All xx yy gxy sk #i #j. ((KU(sk)@i & GxyPartOfSkHelper(sk, gxy)@j & DHHelper(xx, yy, gxy)@j) ==> ((Ex #k. KU(xx)@k & #k < #i) | (Ex #k. KU(yy)@k & #k < #i) | (Ex #k. SKRev(sk, gxy)@k)))"
 
