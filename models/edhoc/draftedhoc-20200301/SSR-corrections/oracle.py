@@ -177,7 +177,7 @@ def genPrios(goalLines, lemma):
                  re.match(".*KU\( aeadEncrypt.*", line):
                     prioritize(goal, 80, line)
             else:
-                 prioritize(goal, 50, line)
+                prioritize(goal, 50, line)
         elif "secrecy" in lemma or "Secrecy" in lemma:
             if DEBUG:
                 print("MATCHING Secrecy LEMMA: {}".format(lemma))
