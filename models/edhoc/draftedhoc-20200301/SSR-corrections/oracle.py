@@ -161,8 +161,9 @@ def genPrios(goalLines, lemma):
                 print("MATCHING PFS STATSIG LEMMA: {}".format(lemma))
             if re.match(".*!KU\( 'g'\^\(~ltk\*~yy\).*", line) or\
                re.match(".*!KU\( 'g'\^\(~ltk\*~xx\).*", line):
+               prioritize(goal, 90, line)
             else:
-                 prioritize(goal, 50, line)
+                prioritize(goal, 50, line)
         elif "secrecy" in lemma or "Secrecy" in lemma:
             if DEBUG:
                 print("MATCHING Secrecy LEMMA: {}".format(lemma))
