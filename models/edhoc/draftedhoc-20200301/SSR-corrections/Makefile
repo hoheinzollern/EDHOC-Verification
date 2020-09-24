@@ -80,8 +80,7 @@ genModels:
 
 # This target is useful for viewing the GUI
 interactive: genModels
-	#${TAMARIN_CLEAN} interactive ./ -b=1 --quit-on-warning --heuristic=O --oraclename=oracle.py
-	${TAMARIN_CLEAN} interactive ./ -b=3 --quit-on-warning
+	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -110,7 +109,7 @@ auth: genModels
 	 )
 
 authimplicit: genModels
-	#$(foreach meth,${PSKPSK},)
+	#$(foreach meth,${SIGSTAT},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,authGIYImplicit,${TIME_PROVE_AND_LOG})\
@@ -120,6 +119,20 @@ authimplicit: genModels
 pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,secrecyPFS,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+pfsstatsig: genModels
+	$(foreach meth,${STATSIG},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,secrecyPFSSTATSIG,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+pfsstatstat: genModels
+	$(foreach meth,${STATSTAT},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,secrecyPFS,${TIME_PROVE_AND_LOG})\
 		 )\
