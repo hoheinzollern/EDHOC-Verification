@@ -29,6 +29,8 @@ equations:
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
+
+
 rule <!I1_!>m4METHODI<!_!>m4METHODR:
     let gx = 'g'^~xx
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
@@ -45,6 +47,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
+          , ITypeO1(m1)
           ]->
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
@@ -55,6 +58,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
     let
+         gx = 'g'^~xx       // This removes partial deconstructions
          data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
@@ -123,6 +127,8 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ]
         --[ ExpRunningR(~tid, $V, exp_sk)
           , R2(~tid, $V, m1, m2)
+          , RTypeI1(gx, m1)
+          , RTypeO2(m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
           <!!>
@@ -142,6 +148,7 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
+         gy = 'g'^~yy       // This removes partial deconstructions
          data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
@@ -259,9 +266,10 @@ ifdef(<!m4AD3!>,
           , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
           , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
+          , ITypeI3(gy, m2)
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
-          <!!> //<!, I3Mac(~tid, MAC_2, 'g'^~xx, gy, gy^~xx, K_2m)!>
+          <!!>
 )
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
@@ -366,33 +374,73 @@ ifelse(<!SIG!>, m4METHODI,
 /*
  * Environment and adversary model additions to standard Dolev-Yao
  */
-/* Register LTK for SIG key based authentication */
+/* Assume binding between identities and their credentials */
+restriction uniqLTKs:
+    "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
+
+
+/* LTK Registration and LTK-reveal per */
+ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,                   // STAT_SIG
+    <!
 rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
                                         !PK_SIG($A, pk(~ltk)),
                                         Out(<!<$A, pk(~ltk)>!>)]
-
-/* Register LTK for STAT key based authentication */
 rule registerLTK_STAT:
     [Fr(~ltk)]
     --[UniqLTK($A, 'g'^~ltk)]->
     [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
 
-/* Register LTK for PSK key based authentication */
-rule registerLTK_PSK:
-    [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
-
-/* Assume binding between identities and their credentials */
-restriction uniqLTKs:
-    "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
-
-/* Reveal LTK for all methods */
 rule revealLTK_SIG:
     [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+    !>,
+    <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,             // SIG_STAT
+        <!
+rule registerLTK_SIG:
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                        !PK_SIG($A, pk(~ltk)),
+                                        Out(<!<$A, pk(~ltk)>!>)]
+rule registerLTK_STAT:
+    [Fr(~ltk)]
+    --[UniqLTK($A, 'g'^~ltk)]->
+    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+
+rule revealLTK_SIG:
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_STAT:
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+        !>,
+        <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,       // STAT_STAT
+            <!
+rule registerLTK_STAT:
+    [Fr(~ltk)]
+    --[UniqLTK($A, 'g'^~ltk)]->
+    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+
+rule revealLTK_STAT:
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+            !>,
+            <!ifelse(<!SIG_SIG!>, m4METHODI<!_!>m4METHODR,     // SIG_SIG
+            <!
+rule registerLTK_SIG:
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                        !PK_SIG($A, pk(~ltk)),
+                                        Out(<!<$A, pk(~ltk)>!>)]
+rule revealLTK_SIG:
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+            !>,
+            <!                                                 // PSK_PSK
+rule registerLTK_PSK:
+    [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 rule revealLTK_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev($A), LTKRev($B)]-> [Out(~ltk)]
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev(<$A, $B>)]-> [Out(~ltk)]
+            !>
+            )!>
+        )!>
+    )!>
+)
 
 /* PCS interface */
 ifelse(ifelse(<!SIG!>, m4METHODI, 1, ifelse(<!SIG!>, m4METHODR, 1, 0)), 1,
@@ -426,6 +474,19 @@ rule revealSessionKey:
 /*
  * Invariants - Helper lemmas
  */
+/*  This lemma should do the trick to avoid having explicit matching
+    on g^xx and g^yy, but for some reason it doesn not. Why?
+lemma typing [sources]:
+    all-traces
+    "(All gx m1 #i. RTypeI1(gx, m1)@i ==>
+        ((Ex #j. KU(gx)@j & #j < #i) | (Ex #j. ITypeO1(m1)@j))
+     )
+     &
+     (All gy m2 #i. ITypeI3(gy, m2)@i ==>
+        ((Ex #j. KU(gy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j))
+     )
+    "
+*/
 
 /*
  * Sanity - Correct exectution trace exists
@@ -445,6 +506,14 @@ lemma sanityExecutableToTheEnd:
      & ExpCommitR(tidR, u, v, sk2)@l
      )
     "
+
+lemma sanitySKRev:
+    exists-trace
+    "Ex sk #i. SKRev(sk)@i"
+
+lemma sanityLTKRev:
+    exists-trace
+    "Ex u #i. LTKRev(u)@i"
 
 
 /* Note that this only shows agreement on a reduced session key from R to I
@@ -549,44 +618,44 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )"
     !>,
     // else: SIG_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l) | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
          )"
     !>
 )!>
