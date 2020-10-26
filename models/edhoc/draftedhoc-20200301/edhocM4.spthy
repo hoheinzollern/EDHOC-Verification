@@ -48,6 +48,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ]
         --[ I1(~tid, $U, $V, m1)
           , ITypeO1(m1)
+          , ILTKinv($U, ~ltk, inv(~ltk), ~xx, inv(~xx))
           ]->
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
@@ -58,7 +59,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 rule <!R2_!>m4METHODI<!_!>m4METHODR:
     let
-         gx = 'g'^~xx       // This removes partial deconstructions
+         //gx = 'g'^~xx       // This removes partial deconstructions
          data_2 = <'g'^~yy>
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         <!ID_PSK = <$U, $V>
@@ -129,6 +130,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           , R2(~tid, $V, m1, m2)
           , RTypeI1(gx, m1)
           , RTypeO2(m2)
+          , RLTKinv($V, ~ltk, inv(~ltk), ~yy, inv(~yy))
 ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
           <!!>,
           <!!>
@@ -148,7 +150,7 @@ ifelse(<!STAT!>, m4METHODR,
 
 rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
     let
-         gy = 'g'^~yy       // This removes partial deconstructions
+         //gy = 'g'^~yy       // This removes partial deconstructions
          data_2 = <gy>
     /* Message 2 handling */
          TH_2 = h(<$cHash0, m1, data_2>)
@@ -443,6 +445,7 @@ rule revealLTK_PSK:
 )
 
 /* PCS interface */
+/*
 ifelse(ifelse(<!SIG!>, m4METHODI, 1, ifelse(<!SIG!>, m4METHODR, 1, 0)), 1,
 <!rule forge_SIG:
     [!LTK_SIG($A, ~ltk), In(xx)] --[TEE($A)]-> [Out(sign(xx, ~ltk))]!>
@@ -455,6 +458,7 @@ ifelse(<!PSK!>, m4METHODI,
 <!rule forge_PSK:
     [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[TEE($A), TEE($B)]-> [Out(hkdfExtract(~ltk, xx))]!>
 )
+*/
 
 /* Reveal session key for all methods.
  * Explicit authentication possible for:
@@ -475,18 +479,39 @@ rule revealSessionKey:
  * Invariants - Helper lemmas
  */
 /*  This lemma should do the trick to avoid having explicit matching
-    on g^xx and g^yy, but for some reason it doesn not. Why?
-lemma typing [sources]:
-    all-traces
-    "(All gx m1 #i. RTypeI1(gx, m1)@i ==>
-        ((Ex #j. KU(gx)@j & #j < #i) | (Ex #j. ITypeO1(m1)@j))
-     )
-     &
-     (All gy m2 #i. ITypeI3(gy, m2)@i ==>
-        ((Ex #j. KU(gy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j))
-     )
-    "
+    on g^xx and g^yy to avoid partial deconstructions, but runs out of memory.
 */
+lemma typingGx [sources]:
+    all-traces
+    "All gx m1 #i. RTypeI1(gx, m1)@i ==>
+        ((Ex #j. KU(gx)@j & #j < #i) | (Ex #j. ITypeO1(m1)@j & #j < #i))
+    "
+
+lemma typingGy [sources]:
+    all-traces
+    "All gy m2 #i. ITypeI3(gy, m2)@i ==>
+        ((Ex #j. KU(gy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
+    "
+
+
+//lemma invEphTyping [sources]:
+lemma invEphTyping [reuse, use_induction]:
+    all-traces
+    "(All r ltk ltkInv e eInv #i.
+         (ILTKinv(r, ltk, ltkInv, e, eInv)@i ==> (not(Ex #j. KU(eInv)@j))))
+     & (All r ltk ltkInv e eInv #i.
+         (RLTKinv(r, ltk, ltkInv, e, eInv)@i ==> (not(Ex #j. KU(eInv)@j))))
+    "
+
+//lemma invLtk [sources]:
+lemma invLtk [reuse, use_induction]:
+    all-traces
+    "(All r ltk ltkInv e eInv #i.
+         (ILTKinv(r, ltk, ltkInv, e, eInv)@i ==> (All #j. KU(ltkInv)@j ==> (Ex #k. LTKRev(r)@k))))
+     & (All r ltk ltkInv e eInv #i.
+         (RLTKinv(r, ltk, ltkInv, e, eInv)@i ==> (All #j. KU(ltkInv)@j ==> (Ex #k. LTKRev(r)@k))))
+    "
+
 
 /*
  * Sanity - Correct exectution trace exists
@@ -523,6 +548,7 @@ lemma sanityLTKRev:
  * Also: Initiator gets no guarantee that R knows u (that should in fact
  * not be possible due to identity protection).
  */
+/*
 lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
@@ -533,6 +559,7 @@ lemma authInjAgreeGuaranteeForI:
          ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
            & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
          | (Ex #j. LTKRev(v)@j & #j < #i) )"
+*/
 
 /* This shows agreement on the full session key and both u and v.
  * Note that this holds both for the key material we call explicitly
@@ -541,6 +568,7 @@ lemma authInjAgreeGuaranteeForI:
  * The name "implicit" comes from that I can only get impilicit agreement on
  * it even though R can get explicit dito.
  */
+/*
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
@@ -551,6 +579,7 @@ lemma authInjAgreeGuaranteeForR:
          ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, sk)@j & #j < #i)
            & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2 & not(#i = #i2)) )
          | (Ex #j. LTKRev(u)@j & #j < #i) )"
+*/
 
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
@@ -573,6 +602,7 @@ lemma authInjAgreeGuaranteeForR:
  * level that users can expect from all methods.
  *
  */
+/*
 lemma authGIYImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v impSk #i.
@@ -595,7 +625,7 @@ lemma authGIYImplicitAuthGuaranteeForI:
          | (Ex #k. LTKRev(v)@k) | (Ex #k. TEE(v)@k)
          )
     "
-
+*/
 /*
 lemma authGIYImplicitAuthGuaranteeForI2:
     all-traces
@@ -685,6 +715,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
  */
 
 /* KCI - for SIGSIG it is ridicuolus, but we show it anyway */
+/*
 lemma authKCIInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
@@ -736,4 +767,5 @@ lemma authKCIImpGIYImplicitAuthGuaranteeForI:
          | (Ex #k. LTKRev(v)@k & #k < #i)
          )
     "
+*/
 end
