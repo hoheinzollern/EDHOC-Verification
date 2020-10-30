@@ -77,7 +77,31 @@ genModels:
 
 # This target is useful for viewing the GUI
 interactive: genModels
-	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --auto-sources --heuristic=O --oraclename=oracle.py
+
+interstatsig: genModels
+	mkdir -p ./tmp
+	cp TMP_edhoc_STAT_SIG.spthy tmp/
+	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+
+interpsk: genModels
+	mkdir -p ./tmp
+	cp TMP_edhoc_PSK_PSK.spthy tmp/
+	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+
+pfssigsig: genModels
+	$(foreach meth,${SIGSIG},\
+		$(subst METH,${meth},\
+			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+pfsstatsig: genModels
+	$(foreach meth,${STATSIG},\
+		$(subst METH,${meth},\
+			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -151,7 +175,10 @@ kci: kcisig kcistat
 all: sense alotofsense auth authimplicit pfs
 
 clean:
-	rm ./TMP_*
+	rm ./TMP_*.spthy
+
+cleanproofs:
+	rm ./proofs/*.spthy
 
 proverifAll:
 	proverif ${LOADLIB} ${MODEL}

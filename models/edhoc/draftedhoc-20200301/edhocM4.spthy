@@ -1,4 +1,15 @@
 changequote(`<!', `!>') ifelse(m4ATTACKER, PASSIVE, <!define(Out, Msg($1)) define(In, Msg($1))!>, ) theory <!edhoc_!>m4METHODI<!_!>m4METHODR<!_!>m4ATTACKER
+define(m4METHODIR, m4METHODI<!_!>m4METHODR)
+/* We tag the names in case we want to merge all methods in one model */
+define(m4RULEI1, <!I1_!>m4METHODIR)
+define(m4RULER2, <!R2_!>m4METHODIR)
+define(m4RULEI3, <!I3_!>m4METHODIR)
+define(m4RULER4, <!R4_!>m4METHODIR)
+define(m4STATEI1, <!StI1_!>m4METHODIR)
+define(m4STATER2, <!StR2_!>m4METHODIR)
+/* Shorthands */
+define(m4EMPTYSTR, <!'e'!>)
+
 begin
 builtins: diffie-hellman, xor, signing, hashing
 
@@ -14,32 +25,34 @@ builtins: diffie-hellman, xor, signing, hashing
  *
  */
 
-/* Swapped order of key and plain-text for aeadEncrypt to match usage in model.
+/* Swapped order of key and plain-text for aead to match usage in model.
  */
 functions:
-    aeadEncrypt/4,  // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
+    aead/4,         // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
     aeadDecrypt/4,  // Input: Cipher-text, key, aad, cAEADx (AEAD algo ID)
     decrypt/3,      // Input: Cipher-text, key, cAEADx (AEAD algo ID);
-    hkdfExtract/2,  // Input: Salt, random source
-    hkdfExpand/2    // Input: Salt, uniform random source
+    extr/2,  // Input: Salt, random source
+    expa/2    // Input: Salt, uniform random source
 
 equations:
-    aeadDecrypt(aeadEncrypt(pt, key, aad, algoId), key, aad, algoId) = pt,
-    decrypt(aeadEncrypt(pt, key, aad, algoID), key, algoId) = pt
+    aeadDecrypt(aead(pt, key, aad, algoId), key, aad, algoId) = pt,
+    decrypt(aead(pt, key, aad, algoID), key, algoId) = pt
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
+/* The attack where the attacker uses yy=1 works, so Initiater must check that
+ * it is not the case. Same shoud be true for xx */
+restriction VerifyGEs: "All ge #i. VerifyGE(ge)@i ==> not(ge ='g')"
 
-
-rule <!I1_!>m4METHODI<!_!>m4METHODR:
+rule m4RULEI1<!!>:
     let gx = 'g'^~xx
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODIR,
         <!ID_PSK = <$U, $V>
-         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>!>,
-        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx>!>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx, ID_PSK>!>,
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx>!>
 )
     in
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODIR,
         [ !<!LTK_!>m4METHODI<!!>(<$U, $V>, ~ltk),
         [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
 )
@@ -47,56 +60,51 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
-          , ITypeO1(m1)
-          , ILTKinv($U, ~ltk, inv(~ltk), ~xx, inv(~xx))
           ]->
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid),
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
-)
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         , Out(m1)
         ]
 
-rule <!R2_!>m4METHODI<!_!>m4METHODR:
+rule m4RULER2<!!>:
     let
-         //gx = 'g'^~xx       // This removes partial deconstructions
+         gx = 'g'^xx       // This removes partial deconstructions
          data_2 = <'g'^~yy>
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODIR,
         <!ID_PSK = <$U, $V>
-         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx, ID_PSK>
-         TH_2 = h(<$cHash0, m1, data_2>)
-         prk_2e = hkdfExtract(~ltk, gx^~yy)
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx, ID_PSK>
+         TH_2 = h(<$H0, m1, data_2>)
+         prk_2e = extr(~ltk, gx^~yy)
          prk_3e2m = prk_2e
          extAad2 = TH_2
-         plainText2 = 'emptyStr' //~AD_2
-         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
-         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0)
+         plainText2 = m4EMPTYSTR //~AD_2
+         K_2ae = expa(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aead(plainText2, K_2ae, extAad2, $cAEAD0)
         !>,
-        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $cSUITE0, gx>
-         TH_2 = h(<$cHash0, m1, data_2>)
-         prk_2e = hkdfExtract('emptyStr', gx^~yy)
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx>
+         TH_2 = h(<$H0, m1, data_2>)
+         prk_2e = extr(m4EMPTYSTR, gx^~yy)
          ifelse(<!STAT!>, m4METHODR,
                  <!grx = gx^~ltk
-                  prk_3e2m = hkdfExtract(prk_2e, grx)!>,
+                  prk_3e2m = extr(prk_2e, grx)!>,
                  <!prk_3e2m = prk_2e!>
          )
-         K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         K_2m = expa(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
          protected2 = $V // ID_CRED_V
          CRED_V = pkV
          extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
-         MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+         MAC_2 = aead(m4EMPTYSTR, K_2m, assocData2, $cAEAD0)
          ifelse(<!SIG!>, m4METHODR,
             <!authV = sign(<assocData2, MAC_2>, ~ltk)!>,
             <!authV = MAC_2!>
          )
          plainText2 = <$V, authV>
-         K_2e = hkdfExpand(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+         K_2e = expa(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
          /* K_2e is split in two parts to allow attacker to attack them
           * individually
           */
-         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         K_2e_1 = expa(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = expa(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
          CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
         !>
 )
@@ -105,11 +113,11 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 /* Def of session key exp_sk we can get explicit auth (agreement) on */
 /* I.e., exp_sk does not include G_IY */
-ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!STAT_SIG!>, m4METHODIR,
     <!exp_sk = <gx^~yy>!>,  // Responder does not know G_IY when sending m2
-    <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
         <!exp_sk = <gx^~yy, grx>!>,
-        <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
             <!exp_sk = <gx^~yy, grx>!>, // Responder does not know G_IY when sending m2
             <!exp_sk = <gx^~yy>!> // SIG_SIG or PSK_PSK
         )!>
@@ -117,9 +125,9 @@ ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
 )
 
     in
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!!LTK_!>m4METHODR<!(<$U, $V>, ~ltk)!>,
-        [ <!!LTK_!>m4METHODR<!($V, ~ltk)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        [ !<!LTK_!>m4METHODR<!!>(<$U, $V>, ~ltk),
+        [ !<!LTK_!>m4METHODR<!($V, ~ltk)
         ,  !PK_!>m4METHODR<!($V, pkV)!>
 )
         , In(m1)
@@ -128,85 +136,86 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
         ]
         --[ ExpRunningR(~tid, $V, exp_sk)
           , R2(~tid, $V, m1, m2)
-          , RTypeI1(gx, m1)
-          , RTypeO2(m2)
-          , RLTKinv($V, ~ltk, inv(~ltk), ~yy, inv(~yy))
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+          , VerifyGE(gx)
+          //, RTypeI1(gx, m1)
+          //, RTypeO2(m2)
+          //, RLTKinv($V, ~ltk, inv(~ltk), ~yy, inv(~yy))
+ifelse(<!PSK_PSK!>, m4METHODIR,
           <!!>,
           <!!>
 )
           ]->
 ifelse(<!STAT!>, m4METHODR,
-        [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+        [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         ,
-        <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
-            [ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk,     ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+        <!ifelse(<!PSK_PSK!>, m4METHODIR,
+            [ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
+            [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
         )!>
 )
         , Out(m2)
         ]
 
 
-rule <!I3_!>m4METHODI<!_!>m4METHODR<!!>:
+rule m4RULEI3<!!>:
     let
-         //gy = 'g'^~yy       // This removes partial deconstructions
+         gy = 'g'^yy       // This removes partial deconstructions
          data_2 = <gy>
     /* Message 2 handling */
-         TH_2 = h(<$cHash0, m1, data_2>)
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        <!prk_2e = hkdfExtract(~ltk, gy^~xx)
+         TH_2 = h(<$H0, m1, data_2>)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!prk_2e = extr(~ltk, gy^~xx)
          prk_3e2m = prk_2e
-         plainText2 = 'emptyStr' //~AD_2
+         plainText2 = m4EMPTYSTR //~AD_2
          extAad2 = TH_2     // KARL: Why is not AD_2 covered in PSK case? Not necesssary, but it is included for the ASYM cases
-         K_2ae = hkdfExpand(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
-         CIPHERTEXT_2 = aeadEncrypt(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
+         K_2ae = expa(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aead(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
          m2 = <data_2, CIPHERTEXT_2>
         !>,
          /* STAT and SIG methods */
-        <!prk_2e = hkdfExtract('emptyStr', gy^~xx)
+        <!prk_2e = extr(m4EMPTYSTR, gy^~xx)
          plainText2 = <$V, authR>
          CRED_V = pkV
          ifelse(<!STAT!>, m4METHODR,
             <!grx = CRED_V^~xx
-             prk_3e2m = hkdfExtract(prk_2e, grx)!>
+             prk_3e2m = extr(prk_2e, grx)!>
              ,
             <!prk_3e2m = prk_2e!>
          )
          /* K_2e is split in two parts to allow attacker to attack them
           * individually
           */
-         K_2e_1 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
-         K_2e_2 = hkdfExpand(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         K_2e_1 = expa(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = expa(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
          CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2>
          m2 = <data_2, CIPHERTEXT_2>
 
-         K_2m = hkdfExpand(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         K_2m = expa(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
          protected2 = $V // ID_CRED_V
          extAad2 = <TH_2, CRED_V>
          assocData2 = <protected2, extAad2>
-         MAC_2 = aeadEncrypt('emptyStr', K_2m, assocData2, $cAEAD0)
+         MAC_2 = aead(m4EMPTYSTR, K_2m, assocData2, $cAEAD0)
         !>
 )
 
     /* Message 3 handling */
-         data_3 = 'emptyStr' //~C_R
-         TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-         K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+         data_3 = m4EMPTYSTR //~C_R
+         TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
+         K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
+ifelse(<!PSK_PSK!>, m4METHODIR,
         <!extAad3 = TH_3
 ifdef(<!m4AD3!>,
          <!plainText3 = ~AD_3!>,
-         <!plainText3 = 'emptyStr'!>
+         <!plainText3 = m4EMPTYSTR!>
 )
-         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0)!>,
+         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3, $cAEAD0)!>,
          /* STAT and SIG methods */
         <!ifelse(<!STAT!>, m4METHODI,
             <!giy = gy^~ltk
-             prk_4x3m = hkdfExtract(prk_3e2m, giy)!>,
+             prk_4x3m = extr(prk_3e2m, giy)!>,
             <!prk_4x3m = prk_3e2m!>
          )
-         K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+         K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
          protected3 = $U // ID_CRED_U
          CRED_U = pkU
 ifdef(<!m4AD3!>,
@@ -214,7 +223,7 @@ ifdef(<!m4AD3!>,
          <!extAad3 = <TH_3, CRED_U>!>
 )
          assocData3 = <protected3, extAad3>
-         MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+         MAC_3 = aead(m4EMPTYSTR, K_3m, assocData3, $cAEAD0)
          ifelse(<!SIG!>, m4METHODI,
             <!authU = sign(<assocData3, MAC_3>, ~ltk)!>,
             <!authU = MAC_3!>
@@ -224,17 +233,17 @@ ifdef(<!m4AD3!>,
          <!plainText3 = <$U, authU>!>
 )
          extAad3Outer = TH_3
-         CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0)
          !>
 )
          m3 = <data_3, CIPHERTEXT_3>
 
 /* Def of session key exp_sk we can get explicit auth (agreement) on */
-ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!STAT_SIG!>, m4METHODIR,
     <!exp_sk = <gy^~xx>!>,  // Responder does not know G_IY when sending m2
-    <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
         <!exp_sk = <gy^~xx, grx>!>,
-        <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
             <!exp_sk = <gy^~xx, grx>!>, // Responder does not know G_IY when sending m2
             <!exp_sk = <gy^~xx>!> // SIG_SIG or PSK_PSK
         )!>
@@ -251,10 +260,10 @@ ifelse(<!STAT!>, m4METHODI,
 )
 
     in
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         ,
-        [ <!StI1_!>m4METHODI<!_!>m4METHODR<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
@@ -268,8 +277,10 @@ ifdef(<!m4AD3!>,
           , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
           , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
-          , ITypeI3(gy, m2)
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+          , VerifyGE(gy)
+          //, ITypeI3('g', 'g'^~xx, gy, giy, ~xx, m2)
+          //, ITypeGxy(~xx, gy, 'g'^inv(~xx), m2)
+ifelse(<!PSK_PSK!>, m4METHODIR,
           <!!>,
           <!!>
 )
@@ -285,18 +296,18 @@ ifelse(<!SIG!>, m4METHODR,
         , Out(m3)
         ]
 
-rule <!R4_!>m4METHODI<!_!>m4METHODR<!!>:
+rule m4RULER4:
     let
-        data_3 = 'emptyStr' //~C_R
-        TH_3 = h(<$cHash0, TH_2, CIPHERTEXT_2, data_3>)
-        K_3ae = hkdfExpand(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+        data_3 = m4EMPTYSTR //~C_R
+        TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
+        K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
+ifelse(<!PSK_PSK!>, m4METHODIR,
        <!extAad3 = TH_3
 ifdef(<!m4AD3!>,
         <!plainText3 = ~AD_3!>,
-        <!plainText3 = 'emptyStr'!>
+        <!plainText3 = m4EMPTYSTR!>
 )
-        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
+        CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
        !>,
         /* STAT and SIG methods */
        <!CRED_U = pkU
@@ -305,30 +316,30 @@ ifdef(<!m4AD3!>,
         <!plainText3 = <$U, authI, ~AD_3>!>,
         <!plainText3 = <$U, authI>!>
 )
-        CIPHERTEXT_3 = aeadEncrypt(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
+        CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
         ifelse(<!STAT!>, m4METHODI,
            <!giy = CRED_U^~yy
-            prk_4x3m = hkdfExtract(prk_3e2m, giy)!>,
+            prk_4x3m = extr(prk_3e2m, giy)!>,
            <!prk_4x3m = prk_3e2m!>
         )
-        K_3m = hkdfExpand(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+        K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
         protected3 = $U // ID_CRED_U
 ifdef(<!m4AD3!>,
         <!extAad3 = <TH_3, CRED_U, ~AD_3>!>,
         <!extAad3 = <TH_3, CRED_U>!>
 )
         assocData3 = <protected3, extAad3>
-        MAC_3 = aeadEncrypt('emptyStr', K_3m, assocData3, $cAEAD0)
+        MAC_3 = aead(m4EMPTYSTR, K_3m, assocData3, $cAEAD0)
        !>
 )
         m3 = <data_3, CIPHERTEXT_3>
 
 /* Def of session key exp_sk we can get explicit auth (agreement) on */
-ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!STAT_SIG!>, m4METHODIR,
     <!exp_sk = <gxy>!>,  // Responder does not know G_IY when sending m2
-    <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
         <!exp_sk = <gxy, grx>!>,
-        <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
             <!exp_sk = <gxy, grx>!>, // Responder does not know G_IY when sending m2
             <!exp_sk = <gxy>!> // SIG_SIG or PSK_PSK
         )!>
@@ -346,13 +357,13 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!STAT!>, m4METHODR,
-        <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
-        <!ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
-            <![ <!StR2_!>m4METHODI<!_!>m4METHODR<!!>($V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
+        <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+        <!ifelse(<!PSK_PSK!>, m4METHODIR,
+            <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+            <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
         )!>
 )
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODIR,
         <!!> /* NOTHING */
         , /* All other methods */
         <!, !PK_!>m4METHODI<!!>($U, pkU)
@@ -382,7 +393,7 @@ restriction uniqLTKs:
 
 
 /* LTK Registration and LTK-reveal per */
-ifelse(<!STAT_SIG!>, m4METHODI<!_!>m4METHODR,                   // STAT_SIG
+ifelse(<!STAT_SIG!>, m4METHODIR,                   // STAT_SIG
     <!
 rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
@@ -398,7 +409,7 @@ rule revealLTK_SIG:
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
     !>,
-    <!ifelse(<!SIG_STAT!>, m4METHODI<!_!>m4METHODR,             // SIG_STAT
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,             // SIG_STAT
         <!
 rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
@@ -414,7 +425,7 @@ rule revealLTK_SIG:
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
         !>,
-        <!ifelse(<!STAT_STAT!>, m4METHODI<!_!>m4METHODR,       // STAT_STAT
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,       // STAT_STAT
             <!
 rule registerLTK_STAT:
     [Fr(~ltk)]
@@ -424,7 +435,7 @@ rule registerLTK_STAT:
 rule revealLTK_STAT:
     [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
             !>,
-            <!ifelse(<!SIG_SIG!>, m4METHODI<!_!>m4METHODR,     // SIG_SIG
+            <!ifelse(<!SIG_SIG!>, m4METHODIR,     // SIG_SIG
             <!
 rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
@@ -456,7 +467,7 @@ ifelse(ifelse(<!STAT!>, m4METHODI, 1, ifelse(<!STAT!>, m4METHODR, 1, 0)), 1,
 )
 ifelse(<!PSK!>, m4METHODI,
 <!rule forge_PSK:
-    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[TEE($A), TEE($B)]-> [Out(hkdfExtract(~ltk, xx))]!>
+    [!LTK_PSK(<$A, $B>, ~ltk), In(xx)] --[TEE($A), TEE($B)]-> [Out(extr(~ltk, xx))]!>
 )
 */
 
@@ -478,40 +489,15 @@ rule revealSessionKey:
 /*
  * Invariants - Helper lemmas
  */
-/*  This lemma should do the trick to avoid having explicit matching
-    on g^xx and g^yy to avoid partial deconstructions, but runs out of memory.
+ /* --> Reduces partial deconstructions from 481 to 273 when g^xx and g^yy
+    are not explicitly matched by the ruels.
+
+lemma typingGiy [sources]:
+    all-traces
+    "All g gx gy giy xx m2 #i. ITypeI3(g, gx, gy, giy, xx, m2)@i ==>
+        ((Ex #j. KU(giy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
+    "
 */
-lemma typingGx [sources]:
-    all-traces
-    "All gx m1 #i. RTypeI1(gx, m1)@i ==>
-        ((Ex #j. KU(gx)@j & #j < #i) | (Ex #j. ITypeO1(m1)@j & #j < #i))
-    "
-
-lemma typingGy [sources]:
-    all-traces
-    "All gy m2 #i. ITypeI3(gy, m2)@i ==>
-        ((Ex #j. KU(gy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
-    "
-
-
-//lemma invEphTyping [sources]:
-lemma invEphTyping [reuse, use_induction]:
-    all-traces
-    "(All r ltk ltkInv e eInv #i.
-         (ILTKinv(r, ltk, ltkInv, e, eInv)@i ==> (not(Ex #j. KU(eInv)@j))))
-     & (All r ltk ltkInv e eInv #i.
-         (RLTKinv(r, ltk, ltkInv, e, eInv)@i ==> (not(Ex #j. KU(eInv)@j))))
-    "
-
-//lemma invLtk [sources]:
-lemma invLtk [reuse, use_induction]:
-    all-traces
-    "(All r ltk ltkInv e eInv #i.
-         (ILTKinv(r, ltk, ltkInv, e, eInv)@i ==> (All #j. KU(ltkInv)@j ==> (Ex #k. LTKRev(r)@k))))
-     & (All r ltk ltkInv e eInv #i.
-         (RLTKinv(r, ltk, ltkInv, e, eInv)@i ==> (All #j. KU(ltkInv)@j ==> (Ex #k. LTKRev(r)@k))))
-    "
-
 
 /*
  * Sanity - Correct exectution trace exists
@@ -548,17 +534,32 @@ lemma sanityLTKRev:
  * Also: Initiator gets no guarantee that R knows u (that should in fact
  * not be possible due to identity protection).
  */
-/*
 lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
          (ExpCommitI(tidI, u, v, expSk)@i
-	     & (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
-         & (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)))
           ==>
          ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
            & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
-         | (Ex #j. LTKRev(v)@j & #j < #i) )"
+ifelse(<!PSK_PSK!>, m4METHODIR,
+          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
+          <! | (Ex #j. LTKRev(u)@j & #j < #i)
+             | (Ex #j. LTKRev(v)@j & #j < #i)!>
+)
+         ))"
+/* PCS version
+lemma authInjAgreeGuaranteeForI:
+    all-traces
+    "All tidI u v expSk #i.
+         ((ExpCommitI(tidI, u, v, expSk)@i
+	        & (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
+            & (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
+         )
+          ==>
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+         | (Ex #j. LTKRev(v)@j & #j < #i) )
+         )"
 */
 
 /* This shows agreement on the full session key and both u and v.
@@ -568,18 +569,34 @@ lemma authInjAgreeGuaranteeForI:
  * The name "implicit" comes from that I can only get impilicit agreement on
  * it even though R can get explicit dito.
  */
-/*
+lemma authInjAgreeGuaranteeForR:
+    all-traces
+    "All tidR u v expSk #i.
+         (ExpCommitR(tidR, u, v, expSk)@i
+          ==>
+         ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk)@j & #j < #i)
+           & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+ifelse(<!PSK_PSK!>, m4METHODIR,
+          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
+          <! | (Ex #j. LTKRev(u)@j & #j < #i)
+             | (Ex #j. LTKRev(v)@j & #j < #i)!>
+)
+         ))"
+/* PCS version
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
-         (CommitR(tidR, u, v, sk)@i
-	     & (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
-         & (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)) )
+         ((CommitR(tidR, u, v, sk)@i
+	        & (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
+            & (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)) )
+         )
          ==>
          ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, sk)@j & #j < #i)
            & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2 & not(#i = #i2)) )
-         | (Ex #j. LTKRev(u)@j & #j < #i) )"
+         | (Ex #j. LTKRev(u)@j & #j < #i) )
+         )"
 */
+
 
 /* If we include G_IY in the session key material, we will not get (injective)
  * agreement on the session key material from the responder to the initator.
@@ -602,7 +619,6 @@ lemma authInjAgreeGuaranteeForR:
  * level that users can expect from all methods.
  *
  */
-/*
 lemma authGIYImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v impSk #i.
@@ -621,12 +637,12 @@ lemma authGIYImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. LTKRev(u)@k) | (Ex #k. TEE(u)@k)
-         | (Ex #k. LTKRev(v)@k) | (Ex #k. TEE(v)@k)
+         | (Ex #k. LTKRev(u)@k) //| (Ex #k. TEE(u)@k)
+         | (Ex #k. LTKRev(v)@k) //| (Ex #k. TEE(v)@k)
          )
     "
-*/
-/*
+
+/* KARL: should we delete this commented out version now?  I think we should
 lemma authGIYImplicitAuthGuaranteeForI2:
     all-traces
     "All tidI u v impSk #i.
@@ -644,48 +660,48 @@ lemma authGIYImplicitAuthGuaranteeForI2:
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
-ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
+ifelse(<!PSK_PSK!>, m4METHODIR,
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )"
     !>,
-<!ifelse(<!STAT!>, m4METHODR,  // STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
+<!ifelse(<!STAT!>, m4METHODR,  // REALLY? --> STAT_STAT or SIG_STAT -- THIS SHOULD FAIL!
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )"
     !>,
 <!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )"
     !>,
     // else: SIG_SIG
     <!lemma secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )
          &
          (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
+            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. SKRev(sk)@l))// | (Ex w #l. TEE(w)@l))
          )"
     !>
 )!>
@@ -716,6 +732,7 @@ ifelse(<!PSK_PSK!>, m4METHODI<!_!>m4METHODR,
 
 /* KCI - for SIGSIG it is ridicuolus, but we show it anyway */
 /*
+
 lemma authKCIInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
@@ -725,7 +742,7 @@ lemma authKCIInjAgreeGuaranteeForI:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. TEE(v)@j)
+         //| (Ex #j. TEE(v)@j)
          | (Ex #j. LTKRev(v)@j & #j < #i)
          )
     "
@@ -739,7 +756,7 @@ lemma authKCIInjAgreeGuaranteeForR:
                 & not(#i = #i2)
                 )
            )
-         | (Ex #j. TEE(u)@j)
+         //| (Ex #j. TEE(u)@j)
          | (Ex #j. LTKRev(u)@j & #j < #i)
 	     )
     "
@@ -763,7 +780,7 @@ lemma authKCIImpGIYImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. TEE(v)@k)
+         //| (Ex #k. TEE(v)@k)
          | (Ex #k. LTKRev(v)@k & #k < #i)
          )
     "
