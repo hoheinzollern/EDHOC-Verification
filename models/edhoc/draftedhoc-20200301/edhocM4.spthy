@@ -295,7 +295,7 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
           ]->
-        [ Completed(imp_sk)
+        [ Completed(imp_sk, ~xx)
         , Out(m3)
         ]
 
@@ -385,7 +385,7 @@ ifelse(<!SIG!>, m4METHODI,
          )!>
 )
           ]->
-        [ Completed(imp_sk) ]
+        [ Completed(imp_sk, ~yy) ]
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
@@ -487,7 +487,7 @@ ifelse(<!PSK!>, m4METHODI,
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
 rule revealSessionKey:
-    [Completed(sk)] --[SKRev(sk)]-> [Out(sk)]
+    [Completed(sk, ~xx)] --[SKRev(sk)]-> [Out(~xx)]
 
 /*
  * Invariants - Helper lemmas
@@ -502,7 +502,7 @@ lemma typingGiy [sources]:
     "
 */
 
-ifelse(<!PSK_PSK!>, m4METHODIR,
+/*ifelse(<!PSK_PSK!>, m4METHODIR,
 <!
 lemma gxySplitter [reuse]:
     all-traces
@@ -546,7 +546,7 @@ lemma giySplitter3 [reuse]:
             ( (Ex #i. KU(b*inva)@i & #i < #t1))
          )"
 !>,<!!>
-)
+)*/
 
 /*
  * Sanity - Correct exectution trace exists
