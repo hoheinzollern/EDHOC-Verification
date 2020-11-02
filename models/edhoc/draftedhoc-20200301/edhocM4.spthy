@@ -42,7 +42,7 @@ restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
 /* The attack where the attacker uses yy=1 works, so Initiater must check that
  * it is not the case. Same should be true for xx */
-restriction VerifyGEs: "All ge #i. VerifyGE(ge)@i ==> not(ge ='g')"
+/*restriction VerifyGEs: "All ge #i. VerifyGE(ge)@i ==> not(ge ='g')"*/
 
 rule m4RULEI1<!!>:
     let gx = 'g'^~xx
