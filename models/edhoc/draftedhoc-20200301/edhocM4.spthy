@@ -610,7 +610,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
           <! | (Ex #j. LTKRev(u)@j & #j < #i)
              | (Ex #j. LTKRev(v)@j & #j < #i)!>
 )
-         )"
+         ))"
 
 
 /* This shows agreement on the full session key and both u and v.
