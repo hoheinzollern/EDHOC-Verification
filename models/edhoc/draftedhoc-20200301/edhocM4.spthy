@@ -41,7 +41,7 @@ equations:
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
 
 /* The attack where the attacker uses yy=1 works, so Initiater must check that
- * it is not the case. Same shoud be true for xx */
+ * it is not the case. Same should be true for xx */
 restriction VerifyGEs: "All ge #i. VerifyGE(ge)@i ==> not(ge ='g')"
 
 rule m4RULEI1<!!>:
@@ -137,8 +137,9 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         --[ ExpRunningR(~tid, $V, exp_sk)
           , R2(~tid, $V, m1, m2)
           , VerifyGE(gx)
+          , DH('g'^(~yy * xx), ~yy, xx, inv(~yy))
           //, RTypeI1(gx, m1)
-          //, RTypeO2(m2)
+          , RTypeO2(m2)
           //, RLTKinv($V, ~ltk, inv(~ltk), ~yy, inv(~yy))
 ifelse(<!PSK_PSK!>, m4METHODIR,
           <!!>,
@@ -278,8 +279,10 @@ ifdef(<!m4AD3!>,
           , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
           , VerifyGE(gy)
-          //, ITypeI3('g', 'g'^~xx, gy, giy, ~xx, m2)
-          //, ITypeGxy(~xx, gy, 'g'^inv(~xx), m2)
+          , DH('g'^(~ltk*yy), ~ltk, yy, inv(~ltk))
+ifelse(<!STAT!>, m4METHODI,
+          <!, ITypeI3('g', 'g'^~xx, gy, giy, ~xx, m2)!>, <!!>)
+          , ITypeGxy(gy^~xx, ~xx, gy, 'g'^inv(~xx), m2)
 ifelse(<!PSK_PSK!>, m4METHODIR,
           <!!>,
           <!!>
@@ -498,6 +501,52 @@ lemma typingGiy [sources]:
         ((Ex #j. KU(giy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
     "
 */
+
+ifelse(<!PSK_PSK!>, m4METHODIR,
+<!
+lemma gxySplitter [reuse]:
+    all-traces
+    "All gxy x gy gyinvx m2 #i. ITypeGxy(gxy, x, gy, gyinvx, m2)@i ==>
+        ((Ex #j. KU(gxy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
+    "
+lemma gxySplitter2 [reuse]:
+    all-traces
+    "All gxy x gy gyinvx m2 #i #j.
+        ((ITypeGxy(gxy, x, gy, gyinvx, m2)@i & KU(gxy)@j & #j < #i) ==>
+         (Ex #k. SKRev(gxy)@k & #k < #j))
+    "
+!>,<!!>
+)
+ifelse(<!STAT!>, m4METHODI,
+<!
+lemma giyTyping [reuse]:
+    all-traces
+    "All g gx gy giy xx m2 #i. ITypeI3(g, gx, gy, giy, xx, m2)@i ==>
+        ((Ex #j. KU(giy)@j & #j < #i) | (Ex #j. RTypeO2(m2)@j & #j < #i))
+    "
+lemma giySplitter [reuse]:
+    "All gab a b inva #i #j.
+         ((DH(gab, a, b, inva)@i & KU(a*b*inva)@j) ==>
+            ( (Ex #k. KU(a)@k & #k < #j)
+            | (Ex #k. KU(b*inva)@k & #k < #j)
+            )
+         )"
+lemma giySplitter2 [reuse]:
+    "All gab a b inva #t0 #t1 #t2 #t3.
+         //((DH(gab, a, b, inva)@t0 & KU(a*b*inva)@t1 & KU(a)@t2 & KU(b*inva)@t3)
+         ((DH(gab, a, b, inva)@t0 & KU(b*inva)@t3)
+             ==>
+            ( (Ex #i. KU(b)@i & #i < #t1)
+            | (Ex #i. KU(inva)@i & #i < #t1)
+            )
+         )"
+lemma giySplitter3 [reuse]:
+    "All gab a b inva #t0 #t1 #t2 #t3.
+         ((DH(gab, a, b, inva)@t0 & KU(gab)@t1) ==>
+            ( (Ex #i. KU(b*inva)@i & #i < #t1))
+         )"
+!>,<!!>
+)
 
 /*
  * Sanity - Correct exectution trace exists

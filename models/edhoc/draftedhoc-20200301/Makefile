@@ -81,11 +81,13 @@ interactive: genModels
 
 interstatsig: genModels
 	mkdir -p ./tmp
+	rm ./tmp/TMP_*.spthy
 	cp TMP_edhoc_STAT_SIG.spthy tmp/
 	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
 interpsk: genModels
 	mkdir -p ./tmp
+	rm ./tmp/TMP_*.spthy
 	cp TMP_edhoc_PSK_PSK.spthy tmp/
 	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 

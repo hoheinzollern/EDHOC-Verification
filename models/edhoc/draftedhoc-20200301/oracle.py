@@ -41,16 +41,9 @@ def genPrios(goalLines, lemma):
 
     for line in goalLines:
         goal = line.split(':')[0]
-        if "inv" in lemma:
+        if "splitter" in lemma:
             if DEBUG:
-                print("MATCHING Invariant LEMMA: {}".format(lemma))
-            if re.match(".*KU\( extr.*", line) or\
-               re.match(".*KU\( expa.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*StI.*", line) or\
-                 re.match(".*StR.*", line) or\
-                 re.match(".*aead.*", line):
-                    prioritize(goal, 70, line)
+                print("MATCHING splitter LEMMA: {}".format(lemma))
             else:
                 prioritize(goal, 50, line)
         elif "sanity" in lemma:
