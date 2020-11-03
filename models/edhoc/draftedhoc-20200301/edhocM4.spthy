@@ -585,10 +585,7 @@ lemma authInjAgreeGuaranteeForI:
           ==>
          ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
            & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
-ifelse(<!PSK_PSK!>, m4METHODIR,
-          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
-          <! | (Ex #j. LTKRev(v)@j & #j < #i)!>
-)
+           | (Ex #j. LTKRev(v)@j & #j < #i)
          ))"
 /* PCS version */
 /*
@@ -621,14 +618,12 @@ lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v expSk #i.
          (ExpCommitR(tidR, u, v, expSk)@i
-          ==>
-         ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk)@j & #j < #i)
-           & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
-ifelse(<!PSK_PSK!>, m4METHODIR,
-          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
-          <! | (Ex #j. LTKRev(u)@j & #j < #i) !>
-)
-         ))"
+         ==>
+           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk)@j & #j < #i)
+             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+           | (Ex #j. LTKRev(u)@j & #j < #i)
+           )
+         )"
 /* PCS version */
 /*
 lemma authInjAgreeGuaranteeForR:

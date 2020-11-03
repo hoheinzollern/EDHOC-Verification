@@ -2,7 +2,6 @@ MODEL=edhoc_model_draft20200301.pv
 TEST=libTest.pv
 LIB=edhoc_common.pvl
 
-TSTPASS=grep --color=auto -E "verified|falsified|analysis incomplete"
 SRC=edhocM4.spthy
 TAMARIN_CLEAN=tamarin-prover
 TAMARIN=${TAMARIN_CLEAN} --quit-on-warning --heuristic=O --oraclename=oracle.py
@@ -65,7 +64,7 @@ TIME=/usr/bin/time -f ${TIMEFMT}
 TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
 
 check:
-	grep --color=auto -E "verified|falsified|(user.*m.*s)" ${PROOFS}/*
+	grep --color=auto -E "verified|falsified|Killed|(user.*m.*s)" ${PROOFS}/*
 
 genModels:
 	mkdir -p proofs
@@ -83,7 +82,8 @@ interstatsig: genModels
 	mkdir -p ./tmp
 	rm -f ./tmp/TMP_*.spthy
 	cp TMP_edhoc_STAT_SIG.spthy tmp/
-	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning
+	#${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
 interpsk: genModels
 	mkdir -p ./tmp
@@ -114,10 +114,10 @@ sense: genModels
 
 # This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	#$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},)
-	$(foreach meth,${SIGSTAT},\
+	#$(foreach meth,${SIGSTAT},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,sanity,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,sanity*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -127,7 +127,7 @@ authpsksig: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authInj,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authInj*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -135,7 +135,7 @@ authstat: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authInj,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authInj*,${TIME_PROVE_AND_LOG})\
 		 )\
 	)
 
@@ -145,22 +145,28 @@ authimplicit: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authGIYImplicit,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authGIYImplicit*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
+pfspsk: genModels
+	$(foreach meth,${PSKPSK},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
 pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,secrecyPFS,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,secrecyPFS*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
 kcisigsig: genModels
 	$(foreach meth,${SIGSIG},\
 		$(subst METH,${meth},\
-			$(subst LEMMAPREFIX,authKCIInj,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authKCIInj*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -168,7 +174,7 @@ kcistat: genModels
 	#$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},)
 	$(foreach meth,${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authKCIImp,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authKCIImp*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
