@@ -41,12 +41,7 @@ def genPrios(goalLines, lemma):
 
     for line in goalLines:
         goal = line.split(':')[0]
-        if "splitter" in lemma:
-            if DEBUG:
-                print("MATCHING splitter LEMMA: {}".format(lemma))
-            else:
-                prioritize(goal, 50, line)
-        elif "sanity" in lemma:
+        if "sanity" in lemma:
             if DEBUG:
                 print("MATCHING Sanity LEMMA: {}".format(lemma))
             if re.match(".*SKRev.*", line) or\
@@ -76,7 +71,7 @@ def genPrios(goalLines, lemma):
                     prioritize(goal, 55, line)
             else:
                 prioritize(goal, 50, line)
-        elif "authGIYImplicitAuthGuarantee" in lemma:   # Special for imp agree
+        elif "authImplicit" in lemma: #"authGIYImplicitAuthGuarantee" in lemma:   # Special for imp agree
             if DEBUG:
                 print("MATCHING Auth LEMMA: {}".format(lemma))
             if re.match(".*: !KU\( ~xx \).*", line) or\
@@ -216,7 +211,7 @@ def genPrios(goalLines, lemma):
                     prioritize(goal, 65, line)
             else:
                 prioritize(goal, 50, line)
-        elif "secrecy" in lemma or "Secrecy" in lemma:
+        elif "secrecy" in lemma: # or "Secrecy" in lemma:
             if DEBUG:
                print("MATCHING Secrecy LEMMA: {}".format(lemma))
             if re.match(".*KU\( ~ltk.*", line) or\

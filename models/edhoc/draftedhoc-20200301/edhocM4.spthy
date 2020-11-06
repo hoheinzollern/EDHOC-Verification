@@ -463,6 +463,26 @@ lemma sanityLTKRev:
  * not be possible due to identity protection).
  */
 
+lemma authInjAgree: // For both I and R
+    all-traces
+    "All tidI u v expSk #i.
+         (ExpCommitI(tidI, u, v, expSk)@i
+          ==>
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
+           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+           | (Ex #j. LTKRev(v)@j & #j < #i)
+         ))
+    &
+    All tidR u v expSk #i.
+         (ExpCommitR(tidR, u, v, expSk)@i
+         ==>
+           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk)@j & #j < #i)
+             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+           | (Ex #j. LTKRev(u)@j & #j < #i)
+           )
+         )
+    "
+/*
 lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk #i.
@@ -472,6 +492,9 @@ lemma authInjAgreeGuaranteeForI:
            & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
            | (Ex #j. LTKRev(v)@j & #j < #i)
          ))"
+*/
+
+
 /* PCS version */
 /*
 lemma authInjAgreeGuaranteeForI:
@@ -499,6 +522,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  * The name "implicit" comes from that I can only get impilicit agreement on
  * it even though R can get explicit dito.
  */
+/*
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v expSk #i.
@@ -509,6 +533,7 @@ lemma authInjAgreeGuaranteeForR:
            | (Ex #j. LTKRev(u)@j & #j < #i)
            )
          )"
+*/
 /* PCS version */
 /*
 lemma authInjAgreeGuaranteeForR:
@@ -550,7 +575,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  * level that users can expect from all methods.
  *
  */
-lemma authGIYImplicitAuthGuaranteeForI:
+lemma authImplicit: //authGIYImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v sk #i.
          CommitI(tidI, u, v, sk)@i ==>
@@ -577,7 +602,7 @@ lemma authGIYImplicitAuthGuaranteeForI:
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
 ifelse(<!PSK_PSK!>, m4METHODIR,
-    <!lemma secrecyPFSGIYSessionKey:
+    <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
            ( (Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j)
@@ -594,7 +619,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
          )"
     !>,
     /* All other methods */
-    <!lemma secrecyPFSGIYSessionKey:
+    <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
         all-traces
         "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
             ( (Ex #l. LTKRev(u)@l & #l < #j)

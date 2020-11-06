@@ -84,13 +84,6 @@ interpsk: genModels
 	cp TMP_edhoc_PSK_PSK.spthy tmp/
 	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
-pfsstatsig: genModels
-	$(foreach meth,${STATSIG},\
-		$(subst METH,${meth},\
-			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
-
 pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
@@ -139,7 +132,7 @@ authimplicit: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authGIYImplicit*,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
