@@ -145,9 +145,21 @@ authimplicit: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authGIYImplicit*,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
+
+injstat:
+	$(foreach meth,${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authInjAgreeGuaranteeForI*,${TIME_PROVE_AND_LOG})\
+		 )\
+	)
+interstat: genModels
+	mkdir -p ./tmp
+	rm -f ./tmp/TMP_*.spthy
+	cp TMP_edhoc_STAT_STAT.spthy tmp/
+	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
 pfspsk: genModels
 	$(foreach meth,${PSKPSK},\
