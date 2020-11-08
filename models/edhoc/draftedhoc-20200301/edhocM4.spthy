@@ -570,7 +570,6 @@ lemma authImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. LTKRev(u)@k) //| (Ex #k. TEE(u)@k)
          | (Ex #k. LTKRev(v)@k) //| (Ex #k. TEE(v)@k)
         /*  If we allow EphKeyRev queries for the adversary after
          *  completion, the following attack is possible:
@@ -590,6 +589,26 @@ lemma authImplicitAuthGuaranteeForI:
          *  B doesn't know the initiator's identity until after receiving
          *  message 3 (identity protection).
          */
+         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
+         )
+    "
+lemma authImplicitAuthGuaranteeForR:
+    all-traces
+    "All tidR u v sk #i.
+         CommitR(tidR, u, v, sk)@i ==>
+         ( ( (All tidI u2 v2 #j. CommitI(tidI, u2, v2, sk)@j ==>
+                (u = u2  &  v = v2)
+             )
+           &
+             (not( Ex tidI u v #j tidI2 u2 v2 #j2.
+                      ( CommitI(tidI,  u,  v,  sk)@j
+                      & CommitI(tidI2, u2, v2, sk)@j2
+                      & not(#j = #j2)
+                      )
+                 )
+             )
+           )
+         | (Ex #k. LTKRev(u)@k) //| (Ex #k. TEE(u)@k)
          | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
          )
     "
