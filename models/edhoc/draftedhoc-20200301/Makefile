@@ -78,32 +78,6 @@ genModels:
 interactive: genModels
 	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --auto-sources --heuristic=O --oraclename=oracle.py
 
-interstatsig: genModels
-	mkdir -p ./tmp
-	rm -f ./tmp/TMP_*.spthy
-	cp TMP_edhoc_STAT_SIG.spthy tmp/
-	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning
-	#${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
-
-interpsk: genModels
-	mkdir -p ./tmp
-	rm -f ./tmp/TMP_*.spthy
-	cp TMP_edhoc_PSK_PSK.spthy tmp/
-	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
-
-pfssigsig: genModels
-	$(foreach meth,${SIGSIG},\
-		$(subst METH,${meth},\
-			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
-
-pfsstatsig: genModels
-	$(foreach meth,${STATSIG},\
-		$(subst METH,${meth},\
-			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -155,18 +129,7 @@ injstat:
 			$(subst LEMMAPREFIX,authInjAgreeGuaranteeForI*,${TIME_PROVE_AND_LOG})\
 		 )\
 	)
-interstat: genModels
-	mkdir -p ./tmp
-	rm -f ./tmp/TMP_*.spthy
-	cp TMP_edhoc_STAT_STAT.spthy tmp/
-	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
-pfspsk: genModels
-	$(foreach meth,${PSKPSK},\
-		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,secrecyPFSGIYSessionKey,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
 pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
@@ -189,8 +152,6 @@ kcistat: genModels
 			$(subst LEMMAPREFIX,authKCIImp*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
-
-kci: kcisig kcistat
 
 all: sense alotofsense auth authimplicit pfs
 

@@ -31,18 +31,14 @@ functions:
     aead/4,         // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
     aeadDecrypt/4,  // Input: Cipher-text, key, aad, cAEADx (AEAD algo ID)
     decrypt/3,      // Input: Cipher-text, key, cAEADx (AEAD algo ID);
-    extr/2,  // Input: Salt, random source
-    expa/2    // Input: Salt, uniform random source
+    extr/2,         // Input: Salt, random source
+    expa/2          // Input: Salt, uniform random source
 
 equations:
     aeadDecrypt(aead(pt, key, aad, algoId), key, aad, algoId) = pt,
     decrypt(aead(pt, key, aad, algoID), key, algoId) = pt
 
 restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
-
-/* The attack where the attacker uses yy=1 works, so Initiater must check that
- * it is not the case. Same should be true for xx */
-/*restriction VerifyGEs: "All ge #i. VerifyGE(ge)@i ==> not(ge ='g')"*/
 
 rule m4RULEI1<!!>:
     let gx = 'g'^~xx
@@ -359,6 +355,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         --[ ExpCommitR(~tid, $U, $V, exp_sk)
           , CommitR(~tid, $U, $V, imp_sk)
           , R4(~tid, $U, $V, m1, m2, m3)
+          , EPH($V, ~tid, ~yy)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -381,12 +378,13 @@ restriction uniqLTKs:
 rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
                                         !PK_SIG($A, pk(~ltk)),
-                                        Out(<!<$A, pk(~ltk)>!>)]
+                                         Out(<!<$A, pk(~ltk)>!>)]
 // KARL: Note: STAT puts public key in trace, not private key as in SIG-case
 // Security-wise it doesn't matter, but it should be symmetric, no?
 rule registerLTK_STAT:
-    [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]->
-    [!LTK_STAT($A, ~ltk), !PK_STAT($A, 'g'^~ltk), Out(<!<$A, 'g'^~ltk>!>)]
+    [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]-> [!LTK_STAT($A, ~ltk),
+                                            !PK_STAT($A, 'g'^~ltk),
+                                             Out(<!<$A, 'g'^~ltk>!>)]
 rule registerLTK_PSK:
     [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 rule revealLTK_SIG:
@@ -425,11 +423,12 @@ ifelse(<!PSK!>, m4METHODI,
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
 rule revealEphKey:
-    [Completed(sk, ~eph)] --[EphRev(sk)]-> [Out(~eph)]
+    [Completed(sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
 
 /*
  * Invariants - Helper lemmas
  */
+
 /*
  * Sanity - Correct exectution trace exists
  */
@@ -449,9 +448,9 @@ lemma sanityExecutableToTheEnd:
      )
     "
 
-lemma sanityEphRev:
+lemma sanityEphKeyRev:
     exists-trace
-    "Ex sk #i. EphRev(sk)@i"
+    "Ex sk #i. EphKeyRev(sk)@i"
 
 lemma sanityLTKRev:
     exists-trace
@@ -475,6 +474,8 @@ lemma authInjAgreeGuaranteeForI:
            & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
            | (Ex #j. LTKRev(v)@j & #j < #i)
          ))"
+
+
 /* PCS version */
 /*
 lemma authInjAgreeGuaranteeForI:
@@ -571,58 +572,66 @@ lemma authImplicitAuthGuaranteeForI:
            )
          | (Ex #k. LTKRev(u)@k) //| (Ex #k. TEE(u)@k)
          | (Ex #k. LTKRev(v)@k) //| (Ex #k. TEE(v)@k)
-         | (Ex #k. EphRev(sk)@k) //| (Ex #k. TEE(v)@k)
+        /*  If we allow EphKeyRev queries for the adversary after
+         *  completion, the following attack is possible:
+         *  A->B:  g^x
+         *  B->A:  g^y, sign(B, g^xy)
+         *  A: CommitI(A, B, g^xy)
+         *  Attacker: EphKeyRev(A) = x
+         *  Attacker: LTKRev(A')
+         *  Attacker->B: sign(A' g^xy)
+         *  B: CommitR(A', B, g^xy)
+         *
+         *  Therefore, there is a party B, which can compute g^xy,
+         *  but who does not agree on the identity of the Inititor.
+         *  De Saint Guilhem et al. say they work in the pre-specified
+         *  peer model "where each session knows its intended partner's
+         *  identity from the start", but that is the problem here:
+         *  B doesn't know the initiator's identity until after receiving
+         *  message 3 (identity protection).
+         */
+         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
          )
     "
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
 ifelse(<!PSK_PSK!>, m4METHODIR,
-    <!lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )
-         &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )"
-    !>,
-<!ifelse(<!STAT!>, m4METHODR,
-    <!lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )
-         &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )"
-    !>,
-<!ifelse(<!STAT!>, m4METHODI,  // STAT_SIG
-    <!lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )
-         &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )"
-    !>,
-    // else: SIG_SIG
-    <!lemma secrecyPFSGIYSessionKey:
-        all-traces
-        "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )
-         &
-         (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-            ((Ex #l. LTKRev(u)@l & #l < #j) | (Ex #l. LTKRev(v)@l & #l < #j) | (Ex #l. EphRev(sk)@l)) // | (Ex w #l. TEE(w)@l))
-         )"
-    !>
-)!>
-)!>
+       <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
+           all-traces
+           "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+              ( (Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j)
+              | (Ex #l. EphKeyRev(sk)@l)
+              //| (Ex w #l. TEE(w)@l)
+              )
+            )
+            &
+            (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+               ( (Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j)
+               | (Ex #l. EphKeyRev(sk)@l)
+               // | (Ex w #l. TEE(w)@l)
+               )
+            )"
+       !>,
+       /* All other methods */
+       <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
+           all-traces
+           "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
+               ( (Ex #l. LTKRev(u)@l & #l < #j)
+               | (Ex #l. LTKRev(v)@l & #l < #j)
+               | (Ex #l. EphKeyRev(sk)@l)
+               // | (Ex w #l. TEE(w)@l)
+               )
+            )
+            &
+            (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
+               ( (Ex #l. LTKRev(u)@l & #l < #j)
+               | (Ex #l. LTKRev(v)@l & #l < #j)
+               | (Ex #l. EphKeyRev(sk)@l)
+               // | (Ex w #l. TEE(w)@l)
+               )
+            )"
+        !>
 )
 
 /* Because G_IY only exists when Initator uses STAT method, we only verify
