@@ -263,6 +263,7 @@ ifdef(<!m4AD3!>,
           , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
           , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
+          , CompletedRun($U, $V, imp_sk)
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
          <!ifelse(<!STAT!>, m4METHODR,
@@ -271,7 +272,7 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
           ]->
-        [ Completed(imp_sk, ~xx)
+        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~xx)
         , Out(m3)
         ]
 
@@ -354,6 +355,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
           , CommitR(~tid, $U, $V, imp_sk)
           , R4(~tid, $U, $V, m1, m2, m3)
           , EPH($V, ~tid, ~yy)
+          , CompletedRun($U, $V, imp_sk)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -362,7 +364,7 @@ ifelse(<!SIG!>, m4METHODI,
          )!>
 )
           ]->
-        [ Completed(imp_sk, ~yy) ]
+        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~yy) ]
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
@@ -419,7 +421,7 @@ ifelse(<!PSK!>, m4METHODI,
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
 rule revealEphKey:
-    [Completed(sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
+    [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
 
 /*
  * Invariants - Helper lemmas
@@ -611,43 +613,22 @@ lemma authImplicitAuthGuaranteeForR:
 
 /* PFS (implying regular secrecy) of session key (**including G_IY**).
  */
-ifelse(<!PSK_PSK!>, m4METHODIR,
-       <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
-           all-traces
-           "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-              ( (Ex #l. LTKRev(u)@l & LTKRev(v)@l & #l < #j)
-              | (Ex #l. EphKeyRev(sk)@l)
-              //| (Ex w #l. TEE(w)@l)
-              )
-            )
-            &
-            (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-               ( (Ex #l. LTKRev(u)@l & LTKRev(v)@l  & #l < #j)
-               | (Ex #l. EphKeyRev(sk)@l)
-               // | (Ex w #l. TEE(w)@l)
-               )
-            )"
-       !>,
-       /* All other methods */
-       <!lemma secrecyPFS: //secrecyPFSGIYSessionKey:
-           all-traces
-           "(All tid u v sk #i #j. (K(sk)@i & CommitI(tid, u, v, sk)@j) ==>
-               ( (Ex #l. LTKRev(u)@l & #l < #j)
-               | (Ex #l. LTKRev(v)@l & #l < #j)
-               | (Ex #l. EphKeyRev(sk)@l)
-               // | (Ex w #l. TEE(w)@l)
-               )
-            )
-            &
-            (All tid u v sk #i #j. (K(sk)@i & CommitR(tid, u, v, sk)@j) ==>
-               ( (Ex #l. LTKRev(u)@l & #l < #j)
-               | (Ex #l. LTKRev(v)@l & #l < #j)
-               | (Ex #l. EphKeyRev(sk)@l)
-               // | (Ex w #l. TEE(w)@l)
-               )
-            )"
-        !>
-)
+/* KARL: More compact and cleaner description of PFS:
+ *   - Because of "new" definition of LTKRev for PSK, we have only one case
+ *   - Reviewer seemed to confuse authentication property with the use of
+ *     the CommitI and CommitR actions, so we change it to use a CompletedRun
+ *     fact instead for clarity.  -- A side effect of this is that we don't
+ *     need to state one clause for each role (I/R), so the lemma is shortened.
+ */
+lemma secrecyPFS: //secrecyPFSGIYSessionKey:
+   all-traces
+   "All u v sk #i #j. (K(sk)@i & CompletedRun(u, v, sk)@j) ==>
+       ( (Ex #l. LTKRev(u)@l & #l < #j)
+       | (Ex #l. LTKRev(v)@l & #l < #j)
+       | (Ex #l. EphKeyRev(sk)@l)
+       // | (Ex w #l. TEE(w)@l)
+       )
+    "
 
 /* Because G_IY only exists when Initator uses STAT method, we only verify
  * the lemmas for those two cases.  All other cases are covered by the
