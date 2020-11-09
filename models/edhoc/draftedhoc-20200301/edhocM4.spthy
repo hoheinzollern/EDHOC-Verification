@@ -382,7 +382,7 @@ rule registerLTK_SIG:
 // KARL: Note: STAT puts public key in trace, not private key as in SIG-case
 // Security-wise it doesn't matter, but it should be symmetric, no?
 rule registerLTK_STAT:
-    [Fr(~ltk)] --[UniqLTK($A, 'g'^~ltk)]-> [!LTK_STAT($A, ~ltk),
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_STAT($A, ~ltk),
                                             !PK_STAT($A, 'g'^~ltk),
                                              Out(<!<$A, 'g'^~ltk>!>)]
 rule registerLTK_PSK:
