@@ -25,8 +25,6 @@ builtins: diffie-hellman, xor, signing, hashing
  *
  */
 
-/* Swapped order of key and plain-text for aead to match usage in model.
- */
 functions:
     aead/4,         // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
     aeadDecrypt/4,  // Input: Cipher-text, key, aad, cAEADx (AEAD algo ID)
@@ -379,8 +377,6 @@ rule registerLTK_SIG:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
                                         !PK_SIG($A, pk(~ltk)),
                                          Out(<!<$A, pk(~ltk)>!>)]
-// KARL: Note: STAT puts public key in trace, not private key as in SIG-case
-// Security-wise it doesn't matter, but it should be symmetric, no?
 rule registerLTK_STAT:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_STAT($A, ~ltk),
                                             !PK_STAT($A, 'g'^~ltk),
