@@ -354,7 +354,6 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         --[ ExpCommitR(~tid, $U, $V, exp_sk)
           , CommitR(~tid, $U, $V, imp_sk)
           , R4(~tid, $U, $V, m1, m2, m3)
-          , EPH($V, ~tid, ~yy)
           , CompletedRun($U, $V, imp_sk)
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
