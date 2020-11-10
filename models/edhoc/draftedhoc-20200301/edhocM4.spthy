@@ -42,8 +42,8 @@ rule m4RULEI1<!!>:
     let gx = 'g'^~xx
 ifelse(<!PSK_PSK!>, m4METHODIR,
         <!ID_PSK = <$U, $V>
-         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx, ID_PSK>!>,
-        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx>!>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', ~CS0, ~CI, gx, ID_PSK>!>,
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', ~CS0, ~CI, gx>!>
 )
     in
 ifelse(<!PSK_PSK!>, m4METHODIR,
@@ -51,21 +51,24 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
 )
         , Fr(~xx)
+        , Fr(~CI)
+        , Fr(~CS0)
         , Fr(~tid)  /* Thread ID */
         ]
         --[ I1(~tid, $U, $V, m1)
           ]->
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
         , Out(m1)
         ]
 
 rule m4RULER2<!!>:
     let
+         agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
          gx = 'g'^xx       // This removes partial deconstructions
-         data_2 = <'g'^~yy>
+         data_2 = <'g'^~yy, CI, ~CR>
 ifelse(<!PSK_PSK!>, m4METHODIR,
         <!ID_PSK = <$U, $V>
-         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx, ID_PSK>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', CS0, CI, gx, ID_PSK>
          TH_2 = h(<$H0, m1, data_2>)
          prk_2e = extr(~ltk, gx^~yy)
          prk_3e2m = prk_2e
@@ -74,7 +77,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
          K_2ae = expa(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
          CIPHERTEXT_2 = aead(plainText2, K_2ae, extAad2, $cAEAD0)
         !>,
-        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', $CS0, gx>
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', CS0, CI, gx>
          TH_2 = h(<$H0, m1, data_2>)
          prk_2e = extr(m4EMPTYSTR, gx^~yy)
          ifelse(<!STAT!>, m4METHODR,
@@ -125,18 +128,19 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         ,  !PK_!>m4METHODR<!($V, pkV)!>
 )
         , In(m1)
+        , Fr(~CR)
         , Fr(~yy)
         , Fr(~tid)
         ]
-        --[ ExpRunningR(~tid, $V, exp_sk)
+        --[ ExpRunningR(~tid, $V, exp_sk, agreed)
           , R2(~tid, $V, m1, m2)
           ]->
 ifelse(<!STAT!>, m4METHODR,
-        [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+        [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
         ,
         <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            [ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2),
-            [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2)
+            [ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed),
+            [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
         )!>
 )
         , Out(m2)
@@ -146,7 +150,8 @@ ifelse(<!STAT!>, m4METHODR,
 rule m4RULEI3<!!>:
     let
          gy = 'g'^yy       // This removes partial deconstructions
-         data_2 = <gy>
+         agreed = <~CS0, ~CI, CR> // Data to agree on in addition to session key
+         data_2 = <gy, ~CI, CR>
     /* Message 2 handling */
          TH_2 = h(<$H0, m1, data_2>)
 ifelse(<!PSK_PSK!>, m4METHODIR,
@@ -185,7 +190,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
 )
 
     /* Message 3 handling */
-         data_3 = m4EMPTYSTR //~C_R
+         data_3 = CR //m4EMPTYSTR //~C_R
          TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
          K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODIR,
@@ -247,9 +252,9 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!PSK_PSK!>, m4METHODIR,
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
         ,
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid)
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
@@ -258,12 +263,12 @@ ifdef(<!m4AD3!>,
         <!, Fr(~AD_3)!>
 )
         ]
-        --[ ExpCommitI(~tid, $U, $V, exp_sk)  // standard running/commit
-          , CommitI(~tid, $U, $V, imp_sk)  // Requires R to complete
-          , ExpRunningI(~tid, $U, $V, exp_sk)  // Sugar for standard running/commit
-          , RunningI(~tid, $U, $V, imp_sk)  // Sugar for standard running/commit
+        --[ ExpCommitI(~tid, $U, $V, exp_sk, agreed)  // standard running/commit
+          , CommitI(~tid, $U, $V, imp_sk, agreed)  // Requires R to complete
+          , ExpRunningI(~tid, $U, $V, exp_sk, agreed)  // Sugar for standard running/commit
+          , RunningI(~tid, $U, $V, imp_sk, agreed)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
-          , CompletedRun($U, $V, imp_sk)
+          , CompletedRun($U, $V, imp_sk)    // for clearer statement of PFS - secrecy only
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
          <!ifelse(<!STAT!>, m4METHODR,
@@ -278,7 +283,8 @@ ifelse(<!SIG!>, m4METHODR,
 
 rule m4RULER4:
     let
-        data_3 = m4EMPTYSTR //~C_R
+        agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
+        data_3 = ~CR //m4EMPTYSTR //~C_R
         TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
         K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
 ifelse(<!PSK_PSK!>, m4METHODIR,
@@ -337,10 +343,10 @@ ifelse(<!STAT!>, m4METHODI,
 
     in
 ifelse(<!STAT!>, m4METHODR,
-        <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
+        <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
         <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>,
-            <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2)!>
+            <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
+            <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>
         )!>
 )
 ifelse(<!PSK_PSK!>, m4METHODIR,
@@ -351,10 +357,10 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
 )
         , In(m3)
         ]
-        --[ ExpCommitR(~tid, $U, $V, exp_sk)
-          , CommitR(~tid, $U, $V, imp_sk)
+        --[ ExpCommitR(~tid, $U, $V, exp_sk, agreed)
+          , CommitR(~tid, $U, $V, imp_sk, agreed)
           , R4(~tid, $U, $V, m1, m2, m3)
-          , CompletedRun($U, $V, imp_sk)
+          , CompletedRun($U, $V, imp_sk) // For clearer statement of PFS -- secrecy only
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -380,8 +386,8 @@ rule registerLTK_SIG:
                                          Out(<!<$A, pk(~ltk)>!>)]
 rule registerLTK_STAT:
     [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_STAT($A, ~ltk),
-                                            !PK_STAT($A, 'g'^~ltk),
-                                             Out(<!<$A, 'g'^~ltk>!>)]
+                                        !PK_STAT($A, 'g'^~ltk),
+                                         Out(<!<$A, 'g'^~ltk>!>)]
 rule registerLTK_PSK:
     [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
 rule revealLTK_SIG:
@@ -431,17 +437,17 @@ rule revealEphKey:
  */
 lemma sanityExecutableToTheEnd:
     exists-trace
-    "(Ex tidI tidR u v m1 m2 m3 sk sk2 #i #j #k #l.
+    "(Ex tidI tidR u v m1 m2 m3 sk sk2 agreed #i #j #k #l.
        I1(tidI, u, v, m1)@i
      & R2(tidR, v, m1, m2)@j & #i < #j
      & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
-     & CommitI(tidI, u, v, sk)@k
-     & ExpCommitI(tidI, u, v, sk2)@k
-     & RunningI(tidI, u, v, sk)@k
-     & ExpRunningI(tidI, u, v, sk2)@k
+     & CommitI(tidI, u, v, sk, agreed)@k
+     & ExpCommitI(tidI, u, v, sk2, agreed)@k
+     & RunningI(tidI, u, v, sk, agreed)@k
+     & ExpRunningI(tidI, u, v, sk2, agreed)@k
      & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
-     & CommitR(tidR, u, v, sk)@l
-     & ExpCommitR(tidR, u, v, sk2)@l
+     & CommitR(tidR, u, v, sk, agreed)@l
+     & ExpCommitR(tidR, u, v, sk2, agreed)@l
      )
     "
 
@@ -464,11 +470,11 @@ lemma sanityLTKRev:
 
 lemma authInjAgreeGuaranteeForI:
     all-traces
-    "All tidI u v expSk #i.
-         (ExpCommitI(tidI, u, v, expSk)@i
+    "All tidI u v expSk agreed #i.
+         (ExpCommitI(tidI, u, v, expSk, agreed)@i
           ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, agreed)@j & #j < #i)
+           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
            | (Ex #j. LTKRev(v)@j & #j < #i)
          ))"
 
@@ -502,11 +508,11 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  */
 lemma authInjAgreeGuaranteeForR:
     all-traces
-    "All tidR u v expSk #i.
-         (ExpCommitR(tidR, u, v, expSk)@i
+    "All tidR u v expSk agreed #i.
+         (ExpCommitR(tidR, u, v, expSk, agreed)@i
          ==>
-           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk)@j & #j < #i)
-             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
+           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk, agreed)@j & #j < #i)
+             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
            | (Ex #j. LTKRev(u)@j & #j < #i)
            )
          )"
@@ -553,15 +559,15 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  */
 lemma authImplicitAuthGuaranteeForI:
     all-traces
-    "All tidI u v sk #i.
-         CommitI(tidI, u, v, sk)@i ==>
-         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, sk)@j ==>
+    "All tidI u v sk agreed #i.
+         CommitI(tidI, u, v, sk, agreed)@i ==>
+         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, sk, agreed)@j ==>
                 (u = u2  &  v = v2)
              )
            &
              (not( Ex tidR u v #j tidR2 u2 v2 #j2.
-                      ( CommitR(tidR,  u,  v,  sk)@j
-                      & CommitR(tidR2, u2, v2, sk)@j2
+                      ( CommitR(tidR,  u,  v,  sk, agreed)@j
+                      & CommitR(tidR2, u2, v2, sk, agreed)@j2
                       & not(#j = #j2)
                       )
                  )
@@ -591,15 +597,15 @@ lemma authImplicitAuthGuaranteeForI:
     "
 lemma authImplicitAuthGuaranteeForR:
     all-traces
-    "All tidR u v sk #i.
-         CommitR(tidR, u, v, sk)@i ==>
-         ( ( (All tidI u2 v2 #j. CommitI(tidI, u2, v2, sk)@j ==>
+    "All tidR u v sk agreed #i.
+         CommitR(tidR, u, v, sk, agreed)@i ==>
+         ( ( (All tidI u2 v2 #j. CommitI(tidI, u2, v2, sk, agreed)@j ==>
                 (u = u2  &  v = v2)
              )
            &
              (not( Ex tidI u v #j tidI2 u2 v2 #j2.
-                      ( CommitI(tidI,  u,  v,  sk)@j
-                      & CommitI(tidI2, u2, v2, sk)@j2
+                      ( CommitI(tidI,  u,  v,  sk, agreed)@j
+                      & CommitI(tidI2, u2, v2, sk, agreed)@j2
                       & not(#j = #j2)
                       )
                  )
