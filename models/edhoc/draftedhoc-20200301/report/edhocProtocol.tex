@@ -10,7 +10,7 @@ Here, we provide a quick introduction to the \mEdhoc{} protocol. For more detail
 shown in Figure~\ref{fig:edhocFramework}.
 %
 In the first message \mMsgone{}, the initiator (\mT{I}) sends to the responder (\mT{R}) an
-ephemeral DH half-key \mGx{}, along with some parameters to establish an \mOscore{} security context (supported authentication method \mMethod, supported cipher suites \mSuites, and connection identifier \mCi).\footnote{We will ignore these parameters in our formal modelling, in Section~\ref{sec:formalization}.} \mT{R} may reject the choice of the authentication method or cipher suites, leading to a negotiation across multiple \mEdhoc{} sessions.
+ephemeral DH half-key \mGx{}, along with some parameters to establish an \mOscore{} security context (supported authentication method \mMethod, supported cipher suites \mSuites, and connection identifier \mCi).\footnote{While we present these parameters here while describing \mEdhoc, we will ignore them in our formal modelling, in Section~\ref{sec:formalization}.} \mT{R} may reject the choice of the authentication method or cipher suites, leading to a negotiation across multiple \mEdhoc{} sessions.
 %an ordered list of supported cipher suites, and, in the \mMethod{} element, suggests
 %authentication methods to be used.
 %%
@@ -406,6 +406,7 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 %
 \mCredi{} and \mLtki{} must be signature keys since the initiator is using the
 \mSig{} method.
+
 \begin{figure}[ht]
 \centering
 %\includegraphics[scale=0.3]{Images/asym.png}
@@ -418,14 +419,14 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
     \node[below=0.5em of ini,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredi,\ \mLtki,\ \mIdcredi,\
-    \mIdcredr, \mADone,\ \mADthree
+    \mIdcredr,\ \mADone,\ \mADthree
     \end{array}
     $};
     \node (res) at (9,0) {Responder};
     \node[below=0.5em of res,fill=white] {$
     \begin{array}{c}
     \text{Knows}\ $g$,\ \mCredr,\ \mLtkr, \ \mIdcredr,\
-    \mIdcredi, \mADtwo
+    \mIdcredi,\ \mADtwo
     \end{array}$};
     \action{3.5em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
     \msg{8em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
@@ -453,7 +454,7 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
         \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
         \mKthreem = \mHkdfExpand(\mPRKfour, \mTHthree) \\
         \mMacthree = \mAead(\mKthreem; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle; \textrm{``\phantom{}''}) \\
-        \mSigthree = \mSign(\mLtki; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle, \mMacthree \rangle)
+        \mSigthree = \mSign(\langle \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle, \mMacthree \rangle, \mLtki)
       \end{array}$};
     \msg{34.5em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mSigthree, \mADthree \rangle$)};
     \action{35em}{res}{$

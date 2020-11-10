@@ -228,43 +228,44 @@ which we found during this work and communicated to the authors. We discuss them
 %
 
 %-------------------------------------------------------------------------- sub
-\subsection{Security Claim Justification}
-\label{sec:securityClaims}
-The \mSpec{} makes detailed claims about security properties that \mEdhoc{}
-enjoys, which the authors assume hold because they reuse cryptographic cores
-from existing academic protocols.
+%\subsection{Security Claim Justification}
+%\label{sec:securityClaims}
+%The \mSpec{} makes detailed claims about security properties that \mEdhoc{}
+%enjoys, which the authors assume hold because they reuse cryptographic cores
+%from existing academic protocols.
+%%
+%Specifically, in Section~8.1 of~\cite{selander-lake-edhoc-01}, the authors
+%claim that ``EDHOC inherits its security properties from the theoretical
+%\mbox{SIGMA-I}''.
+%%
+%The intention is the same for the other reused cryptographic
+%cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
+%progress, it is not yet written down~\cite{personalCommunication}.
+%%
 %
-Specifically, in Section~8.1 of~\cite{selander-lake-edhoc-01}, the authors
-claim that ``EDHOC inherits its security properties from the theoretical
-\mbox{SIGMA-I}''.
-%
-The intention is the same for the other reused cryptographic
-cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
-progress, it is not yet written down~\cite{personalCommunication}.
-%
-
-While it is good practice to reuse well-studied academic components in
-industrial standards, it is important to justify that changes made to these
-components preserve security properties.
-%
-Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and this paper verifies more, but until some justification is provided, security
-claims may benefit from a note of caution.
+%While it is good practice to reuse well-studied academic components in
+%industrial standards, it is important to justify that changes made to these
+%components preserve security properties.
+%%
+%Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and this paper verifies more, but until some justification is provided, security
+%claims may benefit from a note of caution.
 
 %-------------------------------------------------------------------------- sub
 \subsection{Unclear Intended Use}
 \label{sec:unclearProtocolUse}
-Formal verification methodologies often clash with industrial standard
-development practices; this is true also in our case.
+%Formal verification methodologies often clash with industrial standard
+%development practices; this is true also in our case.
+%%
+%The most important reason for the clash is that formal verification aims to
+%verify whether well-specified and detailed security goals are met, whereas
+%industrial standards are developed with a clear abstract goal,
+%but one that lacks specificity.
+%%
+%Instead the goals are there typically made more specific by listing resistance
+%to attacks as these are discovered throughout the work.
 %
-The most important reason for the clash is that formal verification aims to
-verify whether well-specified and detailed security goals are met, whereas
-industrial standards are developed with a clear abstract goal,
-but one that lacks specificity.
-%
-Instead the goals are there typically made more specific by listing resistance
-to attacks as these are discovered throughout the work.
-%
-Granted, as discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
+%Granted, 
+As discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
 several specific security goals.
 %
 However, without knowing how the protocol is to be used,
@@ -284,12 +285,12 @@ protocol is to be used and their specific goals, risks resulting in
 sub-optimal trade-offs and design decisions.
 %
 
-\mEdhoc{} is intended to cover a variety of use cases, many of which are
-difficult to predict today.
-%
-Just because it is difficult to predict these use cases, does not
-prevent one from collecting \emph{typical} use cases and user stories
-to identify more specific security goals that will be important in most cases.
+%\mEdhoc{} is intended to cover a variety of use cases, many of which are
+%difficult to predict today.
+%%
+%Just because it is difficult to predict these use cases, does not
+%prevent one from collecting \emph{typical} use cases and user stories
+%to identify more specific security goals that will be important in most cases.
 %
 
 While constructing our model, we came up with simple user stories to identify
@@ -299,7 +300,7 @@ Several of these revealed undefined aspects of \mEdhoc{}.
 %
 We informed the \mEdhoc{} authors, who then included these aspects the \mSpec{}.
 %
-We present a couple of examples here.\\
+%We present a couple of examples here.\\
 %
 
 %\subsubsection{Non-repudiation.}
@@ -312,7 +313,7 @@ Via this simple thought experiment, we realized that the \mSpec{} did not
 consider non-repudiation.
 %
 In response, the authors of the \mSpec{} added a paragraph about which methods
-provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}. \\
+provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}.
 
 %\subsubsection{Unintended Peer Authentication.}
 \runhead{Unintended Peer Authentication}
@@ -435,14 +436,12 @@ However, our understanding is that adding an extra message is
 undesirable, since~\cite{selander-lake-edhoc-01} requests as few messages as
 possible.
 %
-
 Another possibility is to include \mGi{}, or its hash, in the first and
 second messages.
 %
 This would, however, increase message sizes, a grave concern for \mEdhoc{}.
 %and prevent initiator identity protection.
 %
-
 A third alternative is to not derive the session key material from \mGiy{}.
 %
 Doing so would destroy the protection \mOptls{} provides against compromise
@@ -455,43 +454,43 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %
 
 %-------------------------------------------------------------------------- sub
-\subsection{Cipher Suite Negotiation}
-\label{sec:ciphersuiteNegotiation}
-%\knote{If we are tight on space, we can consider removing this section since we
-%    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
-%    with this though.
-%}
+%\subsection{Cipher Suite Negotiation}
+%\label{sec:ciphersuiteNegotiation}
+%%\knote{If we are tight on space, we can consider removing this section since we
+%%    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
+%%    with this though.
+%%}
+%%
 %
-
-Cipher suite negotiation in \mEdhoc{} spans one or more executions of the
-protocol.
+%Cipher suite negotiation in \mEdhoc{} spans one or more executions of the
+%protocol.
+%%
+%As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
+%%
+%If a run terminates due to the proposed cipher suites being rejected by the
+%responder, the initiator maintains state and initiates a new run, proposing
+%an updated set of cipher suites.
+%%
+%%Our model does not cover this, and we leave it for future work.
+%%Maintaining state between protocol runs 
+%This implicitly creates a long-lived
+%meta-session covering multiple \mEdhoc{} sessions.
+%%
+%%Such a meta-session is presumably controlled by the underlying application.
+%%
 %
-As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
-%
-If a run terminates due to the proposed cipher suites being rejected by the
-responder, the initiator maintains state and initiates a new run, proposing
-an updated set of cipher suites.
-%
-%Our model does not cover this, and we leave it for future work.
-%Maintaining state between protocol runs 
-This implicitly creates a long-lived
-meta-session covering multiple \mEdhoc{} sessions.
-%
-%Such a meta-session is presumably controlled by the underlying application.
-%
-
-However, the time for which the initiator should
-remember a rejected cipher suite for a given responder is not specified.
-%
-From a security perspective, remembering the rejected cipher suite for the
-next \mEdhoc{} run in the same meta-session would be sufficient.
-%
-If the responder is updated with a new cipher suite before the next such
-session, this could be taken into account. On the other hand, caching the
-rejected cipher suite between meta-sessions would reduce the number of
-round-trips for subsequent runs, should the responder not have been updated.
-%
-This needs to be clearly specified, and we have conveyed this to the authors of the \mSpec.
+%However, the time for which the initiator should
+%remember a rejected cipher suite for a given responder is not specified.
+%%
+%From a security perspective, remembering the rejected cipher suite for the
+%next \mEdhoc{} run in the same meta-session would be sufficient.
+%%
+%If the responder is updated with a new cipher suite before the next such
+%session, this could be taken into account. On the other hand, caching the
+%rejected cipher suite between meta-sessions would reduce the number of
+%round-trips for subsequent runs, should the responder not have been updated.
+%%
+%This needs to be clearly specified, and we have conveyed this to the authors of the \mSpec.
 
 %-------------------------------------------------------------------------- sec
 \section{Conclusions and future work}
@@ -514,21 +513,21 @@ We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 %
 
-\begin{table}[h!]
-    \begin{center}
-        \caption{Summary of verified properties.}
-        \label{tab:props}
-        \begin{tabular}{|l|c|c|c|c|}
-                \hline
-                \textbf{Property} & \textbf{Verified} & \textbf{Steps} & \textbf{time} \\
-                \hline
-                Injective agreement & & &\\
-                Implicit agreement & & &\\
-                PFS & & & \\
-                \hline
-        \end{tabular}
-    \end{center}
-\end{table}
+%\begin{table}[h!]
+%    \begin{center}
+%        \caption{Summary of verified properties.}
+%        \label{tab:props}
+%        \begin{tabular}{|l|c|c|c|c|}
+%                \hline
+%                \textbf{Property} & \textbf{Verified} & \textbf{Steps} & \textbf{time} \\
+%                \hline
+%                Injective agreement & & &\\
+%                Implicit agreement & & &\\
+%                PFS & & & \\
+%                \hline
+%        \end{tabular}
+%    \end{center}
+%\end{table}
 
 Further, we identified a situation where initiators may establish an \mOscore{}
 security context with a different party than the application using \mEdhoc{}
@@ -599,7 +598,7 @@ Another potential extension is to incorporate the cipher suite negotiation proce
         \mPRKthree = \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, g^{xy}) \\
         \mKtwom = \mHkdfExpand(\mPRKthree, \mTHtwo) \\
         \mMactwo = \mAead(\mKtwom; \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle; \textrm{``\phantom{}''}) \\
-        \mSigtwo = \mSign(\mLtkr; \langle \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle, \mMactwo \rangle)\\
+        \mSigtwo = \mSign(\langle \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle, \mMactwo \rangle, \mLtkr)\\
         \mKtwoe = \mHkdfExpand(\mPRKtwo, \mTHtwo)
       \end{array}$};
     \msg{20.7em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mSigtwo, \mADtwo \rangle}^{\mCipher}$};
