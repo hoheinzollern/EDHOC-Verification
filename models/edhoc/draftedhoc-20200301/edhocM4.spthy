@@ -276,6 +276,9 @@ ifelse(<!SIG!>, m4METHODR,
              <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK */
          )!>
 )
+ifdef(<!m4AD3!>,
+        <!, Send($U, $V, imp_sk, ~AD_3)!>
+)
           ]->
         [ CompletedRevEph(~tid, $U, $V, imp_sk, ~xx)
         , Out(m3)
@@ -290,7 +293,7 @@ rule m4RULER4:
 ifelse(<!PSK_PSK!>, m4METHODIR,
        <!extAad3 = TH_3
 ifdef(<!m4AD3!>,
-        <!plainText3 = ~AD_3!>,
+        <!plainText3 = AD_3!>,
         <!plainText3 = m4EMPTYSTR!>
 )
         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
@@ -299,7 +302,7 @@ ifdef(<!m4AD3!>,
        <!CRED_U = pkU
         extAad3 = TH_3
 ifdef(<!m4AD3!>,
-        <!plainText3 = <$U, authI, ~AD_3>!>,
+        <!plainText3 = <$U, authI, AD_3>!>,
         <!plainText3 = <$U, authI>!>
 )
         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
@@ -311,7 +314,7 @@ ifdef(<!m4AD3!>,
         K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
         protected3 = $U // ID_CRED_U
 ifdef(<!m4AD3!>,
-        <!extAad3 = <TH_3, CRED_U, ~AD_3>!>,
+        <!extAad3 = <TH_3, CRED_U, AD_3>!>,
         <!extAad3 = <TH_3, CRED_U>!>
 )
         assocData3 = <protected3, extAad3>
@@ -367,6 +370,9 @@ ifelse(<!SIG!>, m4METHODI,
              <!, Eq(authI, MAC_3)!>,
              <!!>  /* nothing */
          )!>
+)
+ifdef(<!m4AD3!>,
+        <!, Recv($U, $V, imp_sk, AD_3)!>
 )
           ]->
         [ CompletedRevEph(~tid, $U, $V, imp_sk, ~yy) ]
@@ -456,6 +462,13 @@ lemma sanityEphKeyRev:
     "Ex sk #i. EphKeyRev(sk)@i"
 
 lemma sanityLTKRev:
+    exists-trace
+    "Ex u #i. LTKRev(u)@i"
+
+/*
+ * Additional validation lemmas
+ */
+lemma validLTKRev:
     exists-trace
     "Ex u #i. LTKRev(u)@i"
 
@@ -625,7 +638,7 @@ lemma authImplicitAuthGuaranteeForR:
  *     fact instead for clarity.  -- A side effect of this is that we don't
  *     need to state one clause for each role (I/R), so the lemma is shortened.
  */
-lemma secrecyPFS: //secrecyPFSGIYSessionKey:
+lemma secrecyPFS:
    all-traces
    "All u v sk #i #j. (K(sk)@i & CompletedRun(u, v, sk)@j) ==>
        ( (Ex #l. LTKRev(u)@l & #l < #j)
@@ -635,81 +648,25 @@ lemma secrecyPFS: //secrecyPFSGIYSessionKey:
        )
     "
 
-/* Because G_IY only exists when Initator uses STAT method, we only verify
- * the lemmas for those two cases.  All other cases are covered by the
- * regular injective agreement lemma.
- *
- * We cannot model that the injective agreement guarantee fails for
- * the initator, because that would require adding a Running event including
- * G_IY in rule R2, which it does not have at that point.
- *
- * Because we use the pre-specified peer setting, we could cheat in the model
- * and add such an event.  This would result in that R2 "guesses" the initiator's
- * identity and emmits a Eunning event based on the guess.
- * Since there wil be one run of R for each G_IY, R will try all identities for
- * I, but at least one of them will fail.
- * This seems a useless and contrived we to "prove" that there is no agreement
- * on G_IY, so we won't do it.  Maybe something to describe in the paper.
- *
- * A more accurate model would be to use the post-specified peer setting,
- * in which R learns the identity of I during the protocol run.
- * Likely that setting would result in even more complex task for Tamarin
- * to handle.
- */
-
-/* KCI - for SIGSIG it is ridicuolus, but we show it anyway */
-/*
-
-lemma authKCIInjAgreeGuaranteeForI:
-    all-traces
-    "All tidI u v expSk #i.
-         ExpCommitI(tidI, u, v, expSk)@i ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not( Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2
-                & not(#i = #i2)
-                )
+ifdef(<!m4AD3!>,
+<!lemma secrecyAD_3AEAD:
+   all-traces
+   "(All ad3 u v sk #i #j. (K(ad3)@i & Send(u, v, sk, ad3)@j) ==>
+       ( (Ex #l. LTKRev(u)@l & #l < #j)
+       | (Ex #l. LTKRev(v)@l & #l < #j)
+       | (Ex #l. EphKeyRev(sk)@l)
+       )
+    )
+    &
+    (All ad3 u v sk #i.
+       (Recv(u, v, sk, ad3)@i ==>
+           ( (Ex #j. Send(u, v, sk, ad3)@j & #j < #i)
+           | (Ex #j. LTKRev(u)@j & #j < #i)
+           | (Ex #j. LTKRev(v)@j & #j < #i)
+           | (Ex #j. EphKeyRev(sk)@j)
            )
-         //| (Ex #j. TEE(v)@j)
-         | (Ex #j. LTKRev(v)@j & #j < #i)
-         )
+       )
+    )
     "
-lemma authKCIInjAgreeGuaranteeForR:
-    all-traces
-    "All tidR u v sk #i.
-         CommitR(tidR, u, v, sk)@i
-         ==>
-         ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, sk)@j & #j < #i)
-           & not( Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2
-                & not(#i = #i2)
-                )
-           )
-         //| (Ex #j. TEE(u)@j)
-         | (Ex #j. LTKRev(u)@j & #j < #i)
-	     )
-    "
-
-/* KCI for STAT-based methods */
-lemma authKCIImpGIYImplicitAuthGuaranteeForI:
-    all-traces
-    "All tidI u v impSk #i.
-         CommitI(tidI, u, v, impSk)@i ==>
-         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, impSk)@j ==>
-                (u = u2  &  v = v2)
-             )
-           &
-             (not Ex #k. K(impSk)@k)
-           &
-             (not( Ex tidR u v #j tidR2 u2 v2 #j2.
-                      ( CommitR(tidR,  u,  v,  impSk)@j
-                      & CommitR(tidR2, u2, v2, impSk)@j2
-                      & not(#j = #j2)
-                      )
-                 )
-             )
-           )
-         //| (Ex #k. TEE(v)@k)
-         | (Ex #k. LTKRev(v)@k & #k < #i)
-         )
-    "
-*/
+!>)
 end

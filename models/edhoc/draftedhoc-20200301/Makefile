@@ -19,7 +19,7 @@ MATTACKER=-Dm4ATTACKER=ACTIVE
 #MAD2=-Dm4AD2
 
 # Set this switch to include AD_3 in the model
-#MAD3=-Dm4AD3
+MAD3=-Dm4AD3
 
 # Set this switch to include C_R in the model
 #MCR=-Dm4CR
@@ -95,6 +95,15 @@ alotofsense: genModels
 		 )\
 	 )
 
+# Extra validation lemmas
+valid: genModels
+	#$(foreach meth,${SIGSTAT},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,valid*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
 # Injective agreement on session key except when G_IY is included for I.
 # Inj-agreement for full session key for R.
 authpsksig: genModels
@@ -123,13 +132,6 @@ authimplicit: genModels
 		 )\
 	 )
 
-injstat:
-	$(foreach meth,${STATSTAT},\
-		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authInjAgreeGuaranteeForI*,${TIME_PROVE_AND_LOG})\
-		 )\
-	)
-
 pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
@@ -138,22 +140,15 @@ pfs: genModels
 		 )\
 	 )
 
-kcisigsig: genModels
-	$(foreach meth,${SIGSIG},\
-		$(subst METH,${meth},\
-			$(subst LEMMAPREFIX,authKCIInj*,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
-
-kcistat: genModels
-	#$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},)
-	$(foreach meth,${STATSTAT},\
+ad3: genModels
+	#$(foreach meth,${PSKPSK},)
+	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authKCIImp*,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,securityAD_*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
-all: sense alotofsense auth authimplicit pfs
+all: sense alotofsense auth authimplicit pfs ad3
 
 clean:
 	rm ./TMP_*.spthy
