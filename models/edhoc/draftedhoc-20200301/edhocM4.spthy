@@ -468,17 +468,58 @@ lemma sanityLTKRev:
 /*
  * Additional validation lemmas
  */
-lemma validLTKRev:
+lemma validAuthDifferentKeysPosssible:
     exists-trace
-    "Ex u #i. LTKRev(u)@i"
+    "(Ex u1 v1 u2 v2 sk1 sk2 #i #j.
+         ( CompletedRun(u1, v1, sk1)@i
+         & CompletedRun(u2, v2, sk2)@j
+         & not(sk1 = sk2)
+         )
+     )
+    "
 
 
-/* Note that this only shows agreement on a reduced session key from R to I
- * since Responder does not know GIY when sending message 2, i.e., when Initiator
- * uses STAT method for authentication towards Responder.
- * This is for the session key we can explicitly show agreement for.
- * Also: Initiator gets no guarantee that R knows u (that should in fact
- * not be possible due to identity protection).
+lemma validAuthDifferentParties:
+    exists-trace
+    /* Two different threads with different parties */
+    "(Ex u v sk #i #j.
+         ( CompletedRun(u, v, sk)@i
+         & CompletedRun(u, v, sk)@j
+         & not(u = v)
+         )
+     )
+     &  /* Same party authenticates itself */
+     (Ex u sk #i #j.
+         ( CompletedRun(u, u, sk)@i
+         & CompletedRun(u, u, sk)@j
+         & not(#i = #j)
+         )
+     )
+    "
+
+/* Injective agreement.
+ * Following Lowe'97. Essentially, if a party completes the run and believes
+ * the run establishes a certain session key material and set of parameters,
+ * then there is one, and only one, other session out there who already
+ * believes it is running the protocol aiming to establish that session key
+ * material and that set of parameters.
+ *
+ * Because of identity protection of the initator, the responder cannot
+ * include U (and hence neither G_IY) in the ExpRunning event. Therefore,
+ * an injective agreement guarantee on those parameters is not possible I.
+ * For R the guarantee can be shown to hold because R completes last.
+ *
+ * The session key material and parameters agreed on when a party completes
+ * are hence explicitly authenticated (by definition).
+ *
+ * Adversary capabilities:
+ *  - LTKRev(party): if this lemma is proved, the protocol has KCI resistance.
+ *  - EphKeyRev(I, R)
+ *  - Adversary *not* allowed LTKRev(peer) before party commits, as this
+ *    enables trivial attacks.
+ *
+ * We split the property over two lemmas, one for each party,
+ * to ease termination.
  */
 
 lemma authInjAgreeGuaranteeForI:
@@ -486,13 +527,28 @@ lemma authInjAgreeGuaranteeForI:
     "All tidI u v expSk agreed #i.
          (ExpCommitI(tidI, u, v, expSk, agreed)@i
           ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, agreed)@j & #j < #i)
-           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
-           | (Ex #j. LTKRev(v)@j & #j < #i)
-         ))"
+             ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, agreed)@j & #j < #i)
+               & not(Ex tidI2 u2 v2 #i2.
+                        ExpCommitI(tidI2, u2, v2, expSk, agreed)@i2
+                    & not(#i = #i2)
+                    )
+               )
+             | (Ex #j. LTKRev(v)@j & #j < #i)
+             )
+         )"
 
+lemma authInjAgreeGuaranteeForR:
+    all-traces
+    "All tidR u v expSk agreed #i.
+         (ExpCommitR(tidR, u, v, expSk, agreed)@i
+         ==>
+           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk, agreed)@j & #j < #i)
+             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
+           | (Ex #j. LTKRev(u)@j & #j < #i)
+           )
+         )"
 
-/* PCS version */
+/* PCS version: Outdated! */
 /*
 lemma authInjAgreeGuaranteeForI:
     all-traces
@@ -510,27 +566,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
              | (Ex #j. LTKRev(v)@j & #j < #i)!>
 )
          ))"
-*/
 
-/* This shows agreement on the full session key and both u and v.
- * Note that this holds both for the key material we call explicitly
- * authenticated (excluding G_IY) and for the key material we call
- * implicitly authenticated (which includes G_IY).
- * The name "implicit" comes from that I can only get impilicit agreement on
- * it even though R can get explicit dito.
- */
-lemma authInjAgreeGuaranteeForR:
-    all-traces
-    "All tidR u v expSk agreed #i.
-         (ExpCommitR(tidR, u, v, expSk, agreed)@i
-         ==>
-           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk, agreed)@j & #j < #i)
-             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
-           | (Ex #j. LTKRev(u)@j & #j < #i)
-           )
-         )"
-/* PCS version */
-/*
 lemma authInjAgreeGuaranteeForR:
     all-traces
     "All tidR u v sk #i.
@@ -549,26 +585,40 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
          )"
 */
 
-/* If we include G_IY in the session key material, we will not get (injective)
- * agreement on the session key material from the responder to the initator.
- * We instead show implicit authentication of the key material.
- * This is a weaker guarantee than injective agreement that essentially
- * guarantees to a party U that has completed its protocol run and believes
- * the protocol is run with party V, that *if* there is anybody out there who
- * has computed this session key (at some point), then that party is V and
- * V believes it ran the protocol with U.
+/* Implicit authentication.
+ * Implicit authentication of the session key material essentially means that
+ * a party gets the guarantee that when the run is completed, other than I
+ * itself, only the the intended peer will be able to meaningfully use the
+ * session key material at a later stage.
  *
- * Note that we already proved injective agreement guarantee on the full
- * session key material (including G_IY) from Initiator to Responder above, so
- * we only have to fall back to implicit authentication "from" Responder to
- * Initiator.
+ * Because I is not required to have an explicit guarantee about the existance
+ * of a live peer on completion, like in the case of injective agreement, the
+ * authenticated session key material can include G_IY, and I will know that
+ * R agrees on the identies of both parties if R is able to compute the session
+ * key material.
  *
- * Second note: This is only interesting when the Initiator is using STAT
- * method.  In all other cases we have no G_IY and hence have injective
- * agreement on the entire key material becasue expSK is equal to impSK.
- * Nontheless, we prove it for all methods. This gives a common security
- * level that users can expect from all methods.
+ * Adversary capabilities:
+ *  - LTKRev(party): if this lemma is proved, the protocol has KCI resistance.
+ *  - EphKeyRev(I, R) *not* allowed:
+ *          If we allow EphKeyRev queries for the adversary after
+ *          completion, the following attack is possible:
+ *          A->B:  g^x
+ *          B->A:  g^y, sign(B, g^xy)
+ *          A: CommitI(A, B, g^xy)
+ *          Attacker: EphKeyRev(A) = x
+ *          Attacker: LTKRev(A')
+ *          Attacker->B: sign(A' g^xy)
+ *          B: CommitR(A', B, g^xy)
  *
+ *          Therefore, there is a party B, which can compute g^xy,
+ *          but who does not agree on the identity of the Inititor.
+ *          De Saint Guilhem et al. say they work in the pre-specified
+ *          peer model "where each session knows its intended partner's
+ *          identity from the start", but that is the problem here:
+ *          B doesn't know the initiator's identity until after receiving
+ *          message 3 (identity protection).
+ *  - Adversary *not* allowed LTKRev(peer) before party commits, as this
+ *    enables trivial attacks.
  */
 lemma authImplicitAuthGuaranteeForI:
     all-traces
@@ -586,28 +636,11 @@ lemma authImplicitAuthGuaranteeForI:
                  )
              )
            )
-         | (Ex #k. LTKRev(v)@k) //| (Ex #k. TEE(v)@k)
-        /*  If we allow EphKeyRev queries for the adversary after
-         *  completion, the following attack is possible:
-         *  A->B:  g^x
-         *  B->A:  g^y, sign(B, g^xy)
-         *  A: CommitI(A, B, g^xy)
-         *  Attacker: EphKeyRev(A) = x
-         *  Attacker: LTKRev(A')
-         *  Attacker->B: sign(A' g^xy)
-         *  B: CommitR(A', B, g^xy)
-         *
-         *  Therefore, there is a party B, which can compute g^xy,
-         *  but who does not agree on the identity of the Inititor.
-         *  De Saint Guilhem et al. say they work in the pre-specified
-         *  peer model "where each session knows its intended partner's
-         *  identity from the start", but that is the problem here:
-         *  B doesn't know the initiator's identity until after receiving
-         *  message 3 (identity protection).
-         */
+         | (Ex #k. LTKRev(v)@k & #k < #i) //| (Ex #k. TEE(v)@k)
          | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
          )
     "
+
 lemma authImplicitAuthGuaranteeForR:
     all-traces
     "All tidR u v sk agreed #i.
@@ -624,19 +657,20 @@ lemma authImplicitAuthGuaranteeForR:
                  )
              )
            )
-         | (Ex #k. LTKRev(u)@k) //| (Ex #k. TEE(u)@k)
+         | (Ex #k. LTKRev(u)@k & #k < #i) //| (Ex #k. TEE(u)@k)
          | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
          )
     "
 
-/* PFS (implying regular secrecy) of session key (**including G_IY**).
- */
-/* KARL: More compact and cleaner description of PFS:
- *   - Because of "new" definition of LTKRev for PSK, we have only one case
- *   - Reviewer seemed to confuse authentication property with the use of
- *     the CommitI and CommitR actions, so we change it to use a CompletedRun
- *     fact instead for clarity.  -- A side effect of this is that we don't
- *     need to state one clause for each role (I/R), so the lemma is shortened.
+/* PFS (implying regular secrecy) of session key material.
+ * Essentially, the adversary only knows the session key material if it revealed
+ * the LTKs *before* the protocol run or if it reveals the ephemeral keys at
+ * at any point in time. The session key material is hence secret even if LTKs
+ * are revealed in the future.
+ *
+ * Adversary capabilities:
+ *  - LTKRev(I, R) only allowed *after* completed run.
+ *  - EphKeyRev(I, R) *not* alloweed
  */
 lemma secrecyPFS:
    all-traces
@@ -648,6 +682,11 @@ lemma secrecyPFS:
        )
     "
 
+/* Secrecy of data AD_3 sent in 3rd message based on the same argument as PFS
+ * for the session key material.
+ * Integrity of AD_3 means that R only receives AD_3 if it was also sent by
+ * I in this session.
+ */
 ifdef(<!m4AD3!>,
 <!lemma secrecyAD_3AEAD:
    all-traces
@@ -661,9 +700,9 @@ ifdef(<!m4AD3!>,
     (All ad3 u v sk #i.
        (Recv(u, v, sk, ad3)@i ==>
            ( (Ex #j. Send(u, v, sk, ad3)@j & #j < #i)
-           | (Ex #j. LTKRev(u)@j & #j < #i)
-           | (Ex #j. LTKRev(v)@j & #j < #i)
-           | (Ex #j. EphKeyRev(sk)@j)
+             | (Ex #j. LTKRev(u)@j & #j < #i)
+             | (Ex #j. LTKRev(v)@j & #j < #i)
+             | (Ex #j. EphKeyRev(sk)@j)
            )
        )
     )
