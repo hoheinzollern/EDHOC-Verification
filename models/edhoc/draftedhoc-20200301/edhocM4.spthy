@@ -470,16 +470,29 @@ lemma sanityLTKRev:
  */
 lemma validAuthDifferentKeysPosssible:
     exists-trace
-    "(Ex u1 v1 u2 v2 sk1 sk2 #i #j.
-         ( CompletedRun(u1, v1, sk1)@i
-         & CompletedRun(u2, v2, sk2)@j
+    /* Same parties: Possible to have runs resulting in different keys */
+    "(Ex u v sk1 sk2 #i #j.
+         ( CompletedRun(u, v, sk1)@i
+         & CompletedRun(u, v, sk2)@j
          & not(sk1 = sk2)
          )
      )
     "
 
+lemma validAuthDifferentKeysPosssible2:
+    exists-trace
+      /* Different parties: Possible to have runs resulting in different keys */
+    "(Ex u1 v1 u2 v2 sk1 sk2 #i #j.
+         ( CompletedRun(u1, v1, sk1)@i
+         & CompletedRun(u2, v2, sk2)@j
+         & not(sk1 = sk2)
+         & not(u1 = u2)
+         & not(v1 = v2)
+         )
+     )
+    "
 
-lemma validAuthDifferentParties:
+lemma validAuthDifferentPartiesSameKey:
     exists-trace
     /* Two different threads with different parties */
     "(Ex u v sk #i #j.
@@ -488,8 +501,12 @@ lemma validAuthDifferentParties:
          & not(u = v)
          )
      )
-     &  /* Same party authenticates itself */
-     (Ex u sk #i #j.
+    "
+
+lemma validAuthDifferentPartiesSameKey2:
+    exists-trace
+     /* Same party authenticates itself */
+     "(Ex u sk #i #j.
          ( CompletedRun(u, u, sk)@i
          & CompletedRun(u, u, sk)@j
          & not(#i = #j)
@@ -518,10 +535,12 @@ lemma validAuthDifferentParties:
  *  - Adversary *not* allowed LTKRev(peer) before party commits, as this
  *    enables trivial attacks.
  *
+ * Because we show injective agreement over U and V on both sides, we also have
+ * shown that no UKS attacks applies.
+ *
  * We split the property over two lemmas, one for each party,
  * to ease termination.
  */
-
 lemma authInjAgreeGuaranteeForI:
     all-traces
     "All tidI u v expSk agreed #i.
@@ -620,17 +639,23 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  *  - Adversary *not* allowed LTKRev(peer) before party commits, as this
  *    enables trivial attacks.
  */
+
+// KARL: question: is this really correct?  This does not rule out that the
+//       adversary knows the session key material and later sends a message to
+//       to I protected by that key.  If that happens, I believes the message
+//       comes from V.     -- Should we require that CommitI implies secrecy of
+//       the session key material after all?
 lemma authImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v sk agreed #i.
          CommitI(tidI, u, v, sk, agreed)@i ==>
-         ( ( (All tidR u2 v2 #j. CommitR(tidR, u2, v2, sk, agreed)@j ==>
-                (u = u2  &  v = v2)
+         ( ( (All tidR u2 v2 agreed2 #j. CommitR(tidR, u2, v2, sk, agreed2)@j ==>
+                (u = u2  &  v = v2  &  agreed = agreed2)
              )
            &
-             (not( Ex tidR u v #j tidR2 u2 v2 #j2.
+             (not( Ex tidR u v #j tidR2 u2 v2 agreed2 #j2.
                       ( CommitR(tidR,  u,  v,  sk, agreed)@j
-                      & CommitR(tidR2, u2, v2, sk, agreed)@j2
+                      & CommitR(tidR2, u2, v2, sk, agreed2)@j2
                       & not(#j = #j2)
                       )
                  )
@@ -645,13 +670,13 @@ lemma authImplicitAuthGuaranteeForR:
     all-traces
     "All tidR u v sk agreed #i.
          CommitR(tidR, u, v, sk, agreed)@i ==>
-         ( ( (All tidI u2 v2 #j. CommitI(tidI, u2, v2, sk, agreed)@j ==>
-                (u = u2  &  v = v2)
+         ( ( (All tidI u2 v2 agreed2 #j. CommitI(tidI, u2, v2, sk, agreed2)@j ==>
+                (u = u2  &  v = v2  &  agreed = agreed2)
              )
            &
-             (not( Ex tidI u v #j tidI2 u2 v2 #j2.
+             (not( Ex tidI u v agreed#j tidI2 agreed2 u2 v2 #j2.
                       ( CommitI(tidI,  u,  v,  sk, agreed)@j
-                      & CommitI(tidI2, u2, v2, sk, agreed)@j2
+                      & CommitI(tidI2, u2, v2, sk, agreed2)@j2
                       & not(#j = #j2)
                       )
                  )
