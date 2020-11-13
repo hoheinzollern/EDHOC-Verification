@@ -653,12 +653,10 @@ lemma authImplicitAuthGuaranteeForI:
                 (u = u2  &  v = v2  &  agreed = agreed2)
              )
            &
-             (not( Ex tidR u v #j tidR2 u2 v2 agreed2 #j2.
+             (All tidR u v #j tidR2 u2 v2 agreed2 #j2.
                       ( CommitR(tidR,  u,  v,  sk, agreed)@j
-                      & CommitR(tidR2, u2, v2, sk, agreed2)@j2
-                      & not(#j = #j2)
-                      )
-                 )
+                      & CommitR(tidR2, u2, v2, sk, agreed2)@j2 )
+                       ==> (#j = #j2)
              )
            )
          | (Ex #k. LTKRev(v)@k & #k < #i) //| (Ex #k. TEE(v)@k)
