@@ -5,8 +5,10 @@ define(m4RULEI1, <!I1_!>m4METHODIR)
 define(m4RULER2, <!R2_!>m4METHODIR)
 define(m4RULEI3, <!I3_!>m4METHODIR)
 define(m4RULER4, <!R4_!>m4METHODIR)
-define(m4STATEI1, <!StI1_!>m4METHODIR)
-define(m4STATER2, <!StR2_!>m4METHODIR)
+define(m4STATIC_STATEI1, <!StStatI1_!>m4METHODIR)
+define(m4DYN_STATEI1, <!StDynI1_!>m4METHODIR)
+define(m4STATIC_STATER2, <!StStatR2_!>m4METHODIR)
+define(m4DYN_STATER2, <!StDynR2_!>m4METHODIR)
 /* Shorthands */
 define(m4EMPTYSTR, <!'e'!>)
 
@@ -57,7 +59,9 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         ]
         --[ I1(~tid, $U, $V, m1)
           ]->
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
+        [ m4STATIC_STATEI1<!!>(~tid, $U, ~ltk, $V)
+        , m4DYN_STATEI1<!!>(~tid, ~xx, m1, ~CS0, ~CI)
+        //, m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
         , Out(m1)
         ]
 
@@ -135,14 +139,11 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         --[ ExpRunningR(~tid, $V, exp_sk, agreed)
           , R2(~tid, $V, m1, m2)
           ]->
-ifelse(<!STAT!>, m4METHODR,
-        [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
-        ,
-        <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            [ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed),
-            [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
-        )!>
+ifelse(<!PSK_PSK!>, m4METHODIR,
+      <![ m4STATIC_STATER2<!!>(~tid, $U, $V, ~ltk)!>,
+      <![ m4STATIC_STATER2<!!>(~tid, $V, ~ltk)!>
 )
+        , m4DYN_STATER2<!!>(~tid, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx, m1, m2, agreed)
         , Out(m2)
         ]
 
@@ -251,10 +252,12 @@ ifelse(<!STAT!>, m4METHODI,
 )
 
     in
+        [ m4STATIC_STATEI1<!!>(~tid, $U, ~ltk, $V)
+        , m4DYN_STATEI1<!!>(~tid, ~xx, m1, ~CS0, ~CI)
+        //, m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
 ifelse(<!PSK_PSK!>, m4METHODIR,
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
+        <!!>
         ,
-        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
         <!, !PK_!>m4METHODI<!!>($U, pkU)
 )
@@ -268,7 +271,7 @@ ifdef(<!m4AD3!>,
           , ExpRunningI(~tid, $U, $V, exp_sk, agreed)  // Sugar for standard running/commit
           , RunningI(~tid, $U, $V, imp_sk, agreed)  // Sugar for standard running/commit
           , I3(~tid, $U, $V, m1, m2, m3)
-          , CompletedRun($U, $V, imp_sk)    // for clearer statement of PFS - secrecy only
+          , Accept($U, $V, <$U, $V, 'g'^~xx, gy>, <imp_sk>)  // for implicit authentication
 ifelse(<!SIG!>, m4METHODR,
          <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
          <!ifelse(<!STAT!>, m4METHODR,
@@ -277,15 +280,17 @@ ifelse(<!SIG!>, m4METHODR,
          )!>
 )
 ifdef(<!m4AD3!>,
-        <!, Send($U, $V, imp_sk, ~AD_3)!>
+        <!, Send($U, $V, 'g'^~xx, gy, ~AD_3)!>
 )
           ]->
-        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~xx)
+        [ DoRevEph('g'^~xx)
         , Out(m3)
         ]
 
 rule m4RULER4:
     let
+        gxy = gx^~yy
+        grx = gx^~ltk   // for x_STAT
         agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
         data_3 = ~CR //m4EMPTYSTR //~C_R
         TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
@@ -345,13 +350,19 @@ ifelse(<!STAT!>, m4METHODI,
 )
 
     in
-ifelse(<!STAT!>, m4METHODR,
-        <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
-        <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
-            <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>
-        )!>
+/* ifelse(<!STAT!>, m4METHODR, */
+/*         <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx, ~tid, m1, m2, agreed)!>, */
+/*         <!ifelse(<!PSK_PSK!>, m4METHODIR, */
+/*             <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx, ~tid, m1, m2, agreed)!>, */
+/*             <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx, ~tid, m1, m2, agreed)!> */
+/*         )!> */
+/* ) */
+ifelse(<!PSK_PSK!>, m4METHODIR,
+      <![ m4STATIC_STATER2<!!>(~tid, $U, $V, ~ltk)!>,
+      <![ m4STATIC_STATER2<!!>(~tid, $V, ~ltk)!>
 )
+        , m4DYN_STATER2<!!>(~tid, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx, m1, m2, agreed)
+
 ifelse(<!PSK_PSK!>, m4METHODIR,
         <!!> /* NOTHING */
         , /* All other methods */
@@ -363,7 +374,7 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
         --[ ExpCommitR(~tid, $U, $V, exp_sk, agreed)
           , CommitR(~tid, $U, $V, imp_sk, agreed)
           , R4(~tid, $U, $V, m1, m2, m3)
-          , CompletedRun($U, $V, imp_sk) // For clearer statement of PFS -- secrecy only
+          , Accept($V, $U, <$U, $V, gx, 'g'^~yy>, <imp_sk>)  // for implicit authentication
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -372,10 +383,10 @@ ifelse(<!SIG!>, m4METHODI,
          )!>
 )
 ifdef(<!m4AD3!>,
-        <!, Recv($U, $V, imp_sk, AD_3)!>
+        <!, Recv($U, $V, gx, 'g'^~yy, AD_3)!>
 )
           ]->
-        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~yy) ]
+        [ DoRevEph('g'^~yy) ]
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao
@@ -432,7 +443,7 @@ ifelse(<!PSK!>, m4METHODI,
  * sk = <gxy, grx, giy> for STAT_STAT method
  */
 rule revealEphKey:
-    [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
+    [DoRevEph(~eph)] --[EphKeyRev(~eph)]-> [Out(~eph)]
 
 /*
  * Invariants - Helper lemmas
@@ -459,59 +470,18 @@ lemma sanityExecutableToTheEnd:
 
 lemma sanityEphKeyRev:
     exists-trace
-    "Ex sk #i. EphKeyRev(sk)@i"
+    "Ex eph #i. EphKeyRev(eph)@i"
 
 lemma sanityLTKRev:
     exists-trace
     "Ex u #i. LTKRev(u)@i"
 
-/*
- * Additional validation lemmas
- */
-lemma validAuthDifferentKeysPosssible:
+lemma sanityAccept:
     exists-trace
-    /* Same parties: Possible to have runs resulting in different keys */
-    "(Ex u v sk1 sk2 #i #j.
-         ( CompletedRun(u, v, sk1)@i
-         & CompletedRun(u, v, sk2)@j
-         & not(sk1 = sk2)
-         )
-     )
-    "
-
-lemma validAuthDifferentKeysPosssible2:
-    exists-trace
-      /* Different parties: Possible to have runs resulting in different keys */
-    "(Ex u1 v1 u2 v2 sk1 sk2 #i #j.
-         ( CompletedRun(u1, v1, sk1)@i
-         & CompletedRun(u2, v2, sk2)@j
-         & not(sk1 = sk2)
-         & not(u1 = u2)
-         & not(v1 = v2)
-         )
-     )
-    "
-
-lemma validAuthDifferentPartiesSameKey:
-    exists-trace
-    /* Two different threads with different parties */
-    "(Ex u v sk #i #j.
-         ( CompletedRun(u, v, sk)@i
-         & CompletedRun(u, v, sk)@j
-         & not(u = v)
-         )
-     )
-    "
-
-lemma validAuthDifferentPartiesSameKey2:
-    exists-trace
-     /* Same party authenticates itself */
-     "(Ex u sk #i #j.
-         ( CompletedRun(u, u, sk)@i
-         & CompletedRun(u, u, sk)@j
-         & not(#i = #j)
-         )
-     )
+    "Ex u v sid sk #t1 #t2.
+          Accept(u, v, sid, sk)@t1
+        & Accept(u, v, sid, sk)@t2
+        & not(#t1 = #t2)
     "
 
 /* Injective agreement.
@@ -640,50 +610,62 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  *    enables trivial attacks.
  */
 
-// KARL: question: is this really correct?  This does not rule out that the
-//       adversary knows the session key material and later sends a message to
-//       to I protected by that key.  If that happens, I believes the message
-//       comes from V.     -- Should we require that CommitI implies secrecy of
-//       the session key material after all?
-lemma authImplicitAuthGuaranteeForI:
+
+// same SID = partner
+// partner ==> same key
+// partner ==> unique partner
+// Accept(tid, me, peer, <sid>, <sk>)
+// sid = <u, v, gx, gy>
+
+// If we allow for sessions to be partners with themselves, the unique partner
+// property fails. Then the case where the Accept at #t2 points to the case
+// where all variables are "empty" is allowed, and there *is* no Accept at #2,
+// so the implication fails.
+lemma authImplicitPartnering [reuse]:
     all-traces
-    "All tidI u v sk agreed #i.
-         CommitI(tidI, u, v, sk, agreed)@i ==>
-         ( ( (All tidR u2 v2 agreed2 #j. CommitR(tidR, u2, v2, sk, agreed2)@j ==>
-                (u = u2  &  v = v2  &  agreed = agreed2)
-             )
-           &
-             (All tidR u v #j tidR2 u2 v2 agreed2 #j2.
-                      ( CommitR(tidR,  u,  v,  sk, agreed)@j
-                      & CommitR(tidR2, u2, v2, sk, agreed2)@j2 )
-                       ==> (#j = #j2)
-             )
-           )
-         | (Ex #k. LTKRev(v)@k & #k < #i) //| (Ex #k. TEE(v)@k)
-         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
-         )
+    "(All u1 v1 u2 v2 sid sk1 sk2 #t1 #t2.
+        // A session and its partner...
+        ( ( Accept(u1, v1, sid, sk1)@t1 // A session
+          & Accept(u2, v2, sid, sk2)@t2 // Its partner
+          )
+          ==> // ...compute the same session key
+          ( ( (sk1 = sk2)
+            & // ...and the partner of the session is unique
+              (All u3 v3 sk3 #t3.
+                 Accept(u3, v3, sid, sk3)@t3
+                 ==>
+                 // ..., i.e., it is either the session istelf or its partner
+                 (#t3 = #t1 | #t3 = #t2)
+              )
+            )
+          | (#t1 = #t2) // A session cannot be partner with itself (a party can)
+          )
+        )
+     )
     "
 
-lemma authImplicitAuthGuaranteeForR:
+// This allows attacke to derive sk; there is no secrecy guarantee from this
+// authentication property
+lemma authImplicitlMutualAuth:
     all-traces
-    "All tidR u v sk agreed #i.
-         CommitR(tidR, u, v, sk, agreed)@i ==>
-         ( ( (All tidI u2 v2 agreed2 #j. CommitI(tidI, u2, v2, sk, agreed2)@j ==>
-                (u = u2  &  v = v2  &  agreed = agreed2)
-             )
-           &
-             (not( Ex tidI u v agreed#j tidI2 agreed2 u2 v2 #j2.
-                      ( CommitI(tidI,  u,  v,  sk, agreed)@j
-                      & CommitI(tidI2, u2, v2, sk, agreed2)@j2
-                      & not(#j = #j2)
-                      )
-                 )
-             )
-           )
-         | (Ex #k. LTKRev(u)@k & #k < #i) //| (Ex #k. TEE(u)@k)
-         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
-         )
+    "(All u1 v1 sid sk #t1.
+        // If a session accepts with key sk...
+        ( Accept(u1, v1, sid, sk)@t1
+          ==>
+          // ...any *other* session with the same sk must have the identity
+          // that the first session accepted as peer
+          ( All u2 v2 sid2 #t2.
+              ( Accept(u2, v2, sid2, sk)@t2
+                ==>
+                ( (u2 = v1)
+                | (#t1 = #t2) // not the same as *the* session
+                )
+              )
+          )
+        )
+     )
     "
+
 
 /* PFS (implying regular secrecy) of session key material.
  * Essentially, the adversary only knows the session key material if it revealed
@@ -697,11 +679,16 @@ lemma authImplicitAuthGuaranteeForR:
  */
 lemma secrecyPFS:
    all-traces
-   "All u v sk #i #j. (K(sk)@i & CompletedRun(u, v, sk)@j) ==>
-       ( (Ex #l. LTKRev(u)@l & #l < #j)
-       | (Ex #l. LTKRev(v)@l & #l < #j)
-       | (Ex #l. EphKeyRev(sk)@l)
-       // | (Ex w #l. TEE(w)@l)
+    "All u v gx gy sk #t1 #t2.
+       ( ( K(sk)@t1
+         & Accept(u, v, <u, v, gx, gy>, <sk>)@t2
+         )
+         ==>
+         ( (Ex #t3. LTKRev(u)@t3 & #t3 < #t2)
+         | (Ex #t3. LTKRev(v)@t3 & #t3 < #t2)
+         | (Ex #t3. EphKeyRev(gx)@t3)
+         | (Ex #t3. EphKeyRev(gy)@t3)
+         )
        )
     "
 
@@ -713,19 +700,21 @@ lemma secrecyPFS:
 ifdef(<!m4AD3!>,
 <!lemma secrecyAD_3AEAD:
    all-traces
-   "(All ad3 u v sk #i #j. (K(ad3)@i & Send(u, v, sk, ad3)@j) ==>
-       ( (Ex #l. LTKRev(u)@l & #l < #j)
-       | (Ex #l. LTKRev(v)@l & #l < #j)
-       | (Ex #l. EphKeyRev(sk)@l)
+   "(All ad3 u v gx gy #t1 #t2. (K(ad3)@t1 & Send(u, v, gx, gy, ad3)@t2) ==>
+       ( (Ex #t3. LTKRev(u)@t3 & #t3 < #t2)
+       | (Ex #t3. LTKRev(v)@t3 & #t3 < #t2)
+       | (Ex #t3. EphKeyRev(gx)@t3)
+       | (Ex #t3. EphKeyRev(gy)@t3)
        )
     )
     &
-    (All ad3 u v sk #i.
-       (Recv(u, v, sk, ad3)@i ==>
-           ( (Ex #j. Send(u, v, sk, ad3)@j & #j < #i)
-             | (Ex #j. LTKRev(u)@j & #j < #i)
-             | (Ex #j. LTKRev(v)@j & #j < #i)
-             | (Ex #j. EphKeyRev(sk)@j)
+    (All ad3 u v gx gy #t1.
+       (Recv(u, v, gx, gy, ad3)@t1 ==>
+           ( (Ex #t2. Send(u, v, gx, gy, ad3)@t2 & #t2 < #t1)
+             | (Ex #t2. LTKRev(u)@t2 & #t2 < #t1)
+             | (Ex #t2. LTKRev(v)@t2 & #t2 < #t1)
+             | (Ex #t2. EphKeyRev(gx)@t2)
+             | (Ex #t2. EphKeyRev(gy)@t2)
            )
        )
     )

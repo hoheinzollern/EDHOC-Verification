@@ -44,78 +44,12 @@ def genPrios(goalLines, lemma):
         if "sanity" in lemma:
             if DEBUG:
                 print("MATCHING Sanity LEMMA: {}".format(lemma))
-            if re.match(".*SKRev.*", line) or\
-               re.match(".*Completed.*", line):
-                    prioritize(goal, 90, line)
-            elif re.match(".*StR.*", line) or\
-               re.match(".*StI.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*KU\( 'g'\^~xx \).*", line) or\
-               re.match(".*KU\( 'g'\^~yy \).*", line) or\
-               re.match(".*KU\( ~xx.*", line) or\
-               re.match(".*KU\( ~yy.*", line) or\
-               re.match(".*~~>.*", line) or\
-               re.match(".*=.*=.*", line):
-                    prioritize(goal, 70, line)
-            if re.match(".*LTK_.*", line):
-                    prioritize(goal, 67, line)
-            elif re.match(".*aead.*", line):
-                    prioritize(goal, 65, line)
-            elif re.match(".*KU\( sign.*", line) or\
-               re.match(".*KU\( extr.*", line) or\
-               re.match(".*KU\( expa.*", line):
-                    prioritize(goal, 60, line)
-            elif re.match(".*KU\( h\(.*", line):
-                    prioritize(goal, 55, line)
-            elif re.match(".*KU\( h\(.*", line):
-                    prioritize(goal, 55, line)
-            else:
-                prioritize(goal, 50, line)
-        elif "authImplicit" in lemma: #"authGIYImplicitAuthGuarantee" in lemma:   # Special for imp agree
+            prioritize(goal, 50, line)
+        elif "authImplicit" in lemma:
             if DEBUG:
                 print("MATCHING Auth LEMMA: {}".format(lemma))
-            if re.match(".*: !KU\( ~xx \).*", line) or\
-                 re.match(".*: !KU\( ~yy \).*", line) or\
-                 re.match(".*: !KU\( ~xx\.. \).*", line) or\
-                 re.match(".*: !KU\( ~yy\.. \).*", line) or\
-                 re.match(".*~~>.*", line) or\
-                 re.match(".*: !KU\( 'g'\^~xx \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~xx\.. \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~yy \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~yy\.. \).*", line) or\
-                 re.match(".*: !KU\( ~ltk \).*", line) or\
-                 re.match(".*: !KU\( ~ltk\.. \).*", line) or\
-                 re.match(".*: !KU\( pk\(~ltk\) \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~ltk \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~ltk\.. \).*", line) or\
-                 re.match(".*: !LTK_SIG\(.*", line) or\
-                 re.match(".*: !LTK_STAT\(.*", line) or\
-                 re.match(".*: !PK_SIG\(.*", line) or\
-                 re.match(".*: !PK_STAT\(.*", line) or\
-                 re.match(".*: StI._.*", line) or\
-                 re.match(".*: StR._.*", line) or\
-                 re.match(".*ExpRunning.*", line):
-                      prioritize(goal, 97, line)
-            elif re.match(".*KU\( 'g'\^\(~yy.*\*~ltk.*", line) or\
-                 re.match(".*KU\( 'g'\^\(~xx.*\*~ltk.*", line):
-                    prioritize(goal, 93, line)
-            elif re.match(".*KU\( 'g'\^\(~xx.*\*~yy.*", line) or\
-                 re.match(".*KU\( 'g'\^\(~yy.*\*~xx.*", line):
-                    prioritize(goal, 90, line)
-            elif re.match(".*KU\( extr.*", line) or\
-                 re.match(".*KU\( expa.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*LTKRev.*", line) or\
-                 re.match(".*sign.*", line) or\
-                 re.match(".*aead.*", line):
-                    prioritize(goal, 70, line)
-            elif re.match(".*KU\( h\(.*", line):
-                    prioritize(goal, 60, line)
-            elif re.match(".*KU\( \(.V⊕.*", line):
-                    prioritize(goal, 40, line)
-            else:
-                 prioritize(goal, 50, line)
-        elif "auth" in lemma:
+            prioritize(goal, 50, line)
+        elif "auth" in lemma or "validAuth" in lemma:
             if DEBUG:
                 print("MATCHING Auth LEMMA: {}".format(lemma))
             if re.match(".*KU\( ~ltk.*", line) or\
@@ -174,79 +108,10 @@ def genPrios(goalLines, lemma):
                     prioritize(goal, 40, line)
             else:
                  prioritize(goal, 50, line)
-        elif "secrecyPFSSTATSIG" in lemma:
-            if DEBUG:
-                print("MATCHING PFS STATSIG LEMMA: {}".format(lemma))
-            if re.match(".*: !KU\( ~xx \).*", line) or\
-                 re.match(".*: !KU\( ~yy \).*", line) or\
-                 re.match(".*: !KU\( ~xx\.. \).*", line) or\
-                 re.match(".*: !KU\( ~yy\.. \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~xx \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~xx\.. \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~yy \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~yy\.. \).*", line) or\
-                 re.match(".*: !KU\( ~ltk \).*", line) or\
-                 re.match(".*: !KU\( ~ltk\.. \).*", line) or\
-                 re.match(".*: !KU\( pk\(~ltk\) \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~ltk \).*", line) or\
-                 re.match(".*: !KU\( 'g'\^~ltk\.. \).*", line) or\
-                 re.match(".*: !LTK_SIG\(.*", line) or\
-                 re.match(".*: !LTK_STAT\(.*", line) or\
-                 re.match(".*: !PK_SIG\(.*", line) or\
-                 re.match(".*: !PK_STAT\(.*", line) or\
-                 re.match(".*: StI1_.*", line):
-                      prioritize(goal, 90, line)
-            elif re.match(".*KU\( 'g'\^\(~ltk\*~yy\).*", line) or\
-                 re.match(".*KU\( 'g'\^\(~ltk\*~xx\).*", line):
-                    prioritize(goal, 30, line)
-            elif re.match(".*: !KU\( \(\$V⊕.*", line) or\
-                 re.match(".*: !KU\( \(      expa.*⊕      sign\(.*", line):
-                    prioritize(goal, 40, line)
-            elif re.match(".*: !KU\( *extr.*", line) or\
-                 re.match(".*: !KU\( h\(*", line) or\
-                 re.match(".*: !KU\( *aead\(.*", line) or\
-                 re.match(".*: !KU\( *expa.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*Completed.*", line) or\
-                 re.match(".*: !KU\( sign.*", line) or\
-                 re.match(".*XorKDFHelper.*", line) or\
-                 re.match(".*~~>.*", line):
-                    prioritize(goal, 70, line)
-            elif re.match(".*∃ #.. \(!KU\( ~xx.*", line) or\
-                 re.match(".*∃ #..   \(!KU\( extr\('e'.*", line):
-                    prioritize(goal, 65, line)
-            else:
-                prioritize(goal, 50, line)
-        elif "secrecy" in lemma: # or "Secrecy" in lemma:
+        elif "secrecy" in lemma:
             if DEBUG:
                print("MATCHING Secrecy LEMMA: {}".format(lemma))
-            if re.match(".*KU\( ~ltk.*", line) or\
-               re.match(".*KU\( 'g'\^\(~ltk\*.*\).*", line):
-                    prioritize(goal, 97, line)
-            elif re.match(".*KU\( ~xx.*", line) or\
-                 re.match(".*KU\( ~yy.*", line) or\
-                 re.match(".*Helper.*", line) or\
-                 re.match(".*~~>.*", line) or\
-                 re.match(".*=.*=.*", line):
-                    prioritize(goal, 95, line)
-            elif re.match(".*KU\( 'g'\^\(~xx\*~yy\).*", line) or\
-                 re.match(".*KU\( 'g'\^\(~yy\*~xx\).*", line):
-                    prioritize(goal, 90, line)
-            elif re.match(".*KU\( extr.*", line) or\
-                 re.match(".*KU\( expa.*", line):
-                    prioritize(goal, 80, line)
-            elif re.match(".*LTKRev.*", line) or\
-                 re.match(".*sign.*", line) or\
-                 re.match(".*StI.*", line) or\
-                 re.match(".*StR.*", line) or\
-                 re.match(".*aead.*", line):
-                    prioritize(goal, 70, line)
-            elif re.match(".*KU\( h\(.*", line):
-                    prioritize(goal, 60, line)
-            elif re.match(".*KU\( \(.V⊕.*", line):
-                    prioritize(goal, 40, line)
-            else:
-                 prioritize(goal, 50, line)
+            prioritize(goal, 50, line)
         else:
             if DEBUG:
                 print("NO MATCH FOR LEMMA: {}".format(lemma))
