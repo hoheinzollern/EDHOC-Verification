@@ -62,7 +62,6 @@ TIME=/usr/bin/time -f ${TIMEFMT}
 # Don't change the METH string or the LEMMAPREFIX strings. They are used
 # as variables in substitutions below
 TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
-TIME_PROVE_AND_LOG_CLEAN=(time ${TAMARIN_CLEAN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
 
 check:
 	grep --color=auto -E "verified|falsified|Killed|(user.*m.*s)" ${PROOFS}/*
@@ -79,11 +78,6 @@ genModels:
 interactive: genModels
 	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --auto-sources --heuristic=O --oraclename=oracle.py
 
-interpsk: genModels
-	cp ${TPSKPSK} ./tmp/
-	${TAMARIN_CLEAN} interactive ./tmp -b=5 --quit-on-warning --auto-sources --heuristic=O --oraclename=oracle.py
-
-
 
 # This target checks that all models parses correctly
 sense: genModels
@@ -97,7 +91,7 @@ alotofsense: genModels
 	#$(foreach meth,${SIGSTAT},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,sanity*,${TIME_PROVE_AND_LOG_CLEAN})\
+			$(subst LEMMAPREFIX,sanity*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -134,7 +128,7 @@ authimplicit: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG_CLEAN})\
+			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -142,7 +136,7 @@ pfs: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,secrecyPFS*,${TIME_PROVE_AND_LOG_CLEAN})\
+			$(subst LEMMAPREFIX,secrecyPFS*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
@@ -150,7 +144,7 @@ ad3: genModels
 	#$(foreach meth,${PSKPSK},)
 	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
 		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,secrecyAD_*,${TIME_PROVE_AND_LOG})\
+			$(subst LEMMAPREFIX,securityAD_*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
