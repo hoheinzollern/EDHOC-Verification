@@ -701,7 +701,7 @@ lemma secrecyPFS:
  * I in this session.
  */
 ifdef(<!m4AD3!>,
-<!lemma secrecyAD_3AEAD:
+<!lemma securityAD_3AEAD:
    all-traces
    "(All ad3 u v sk #i #j. (K(ad3)@i & Send(u, v, sk, ad3)@j) ==>
        ( (Ex #l. LTKRev(u)@l & #l < #j)
