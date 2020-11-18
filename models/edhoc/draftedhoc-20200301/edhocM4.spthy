@@ -335,8 +335,8 @@ ifelse(<!STAT_SIG!>, m4METHODIR,
     )!>
 )
 
-/* Def of session key imp_sk we can get explicit auth (agreement) on I->R, but only
- * implicitly on R->I because R does not know G_IY when sending message 2,
+/* Def of session key imp_sk we can get injective agreement for I->R, but only
+ * implicit auth for R->I because R does not know G_IY when sending message 2,
  * so I cannot deduce that R is using the same value of GIY when I completes.
  */
 ifelse(<!STAT!>, m4METHODI,
@@ -433,10 +433,6 @@ ifelse(<!PSK!>, m4METHODI,
  */
 rule revealEphKey:
     [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
-
-/*
- * Invariants - Helper lemmas
- */
 
 /*
  * Sanity - Correct exectution trace exists
@@ -639,12 +635,6 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  *  - Adversary *not* allowed LTKRev(peer) before party commits, as this
  *    enables trivial attacks.
  */
-
-// KARL: question: is this really correct?  This does not rule out that the
-//       adversary knows the session key material and later sends a message to
-//       to I protected by that key.  If that happens, I believes the message
-//       comes from V.     -- Should we require that CommitI implies secrecy of
-//       the session key material after all?
 lemma authImplicitAuthGuaranteeForI:
     all-traces
     "All tidI u v sk agreed #i.
