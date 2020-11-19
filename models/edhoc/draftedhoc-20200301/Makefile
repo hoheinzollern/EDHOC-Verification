@@ -12,23 +12,11 @@ PROOFS=proofs
 #MATTACKER=-Dm4ATTACKER=PASSIVE
 MATTACKER=-Dm4ATTACKER=ACTIVE
 
-# Set this switch to include AD_1 in the model
-#MAD1=-Dm4AD1
-
-# Set this switch to include AD_2 in the model
-#MAD2=-Dm4AD2
-
 # Set this switch to include AD_3 in the model
 MAD3=-Dm4AD3
 
-# Set this switch to include C_R in the model
-#MCR=-Dm4CR
-
-# Set this switch to include C_I in the model
-#MCI=-Dm4CI
-
 # All flags that are required for all models
-MFLAGS=${MATTACKER} ${MAD1} ${MAD2} ${MAD3} ${MCI} ${MCR}
+MFLAGS=${MATTACKER} ${MAD3}
 
 # Flags and filenames used for each method-model
 METHODPAIRS=PSK_PSK SIG_SIG SIG_STAT STAT_SIG STAT_STAT
@@ -49,6 +37,8 @@ TSTATSTAT=TMP_${STATSTAT}
 MPSKPSK=-Dm4METHODI=PSK -Dm4METHODR=PSK
 PSKPSK=edhoc_PSK_PSK.spthy
 TPSKPSK=TMP_${PSKPSK}
+
+SPTHYS=${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT}
 
 # Using GNU time we can get more useful information about memory and time
 # consumption.
@@ -76,79 +66,70 @@ genModels:
 
 # This target is useful for viewing the GUI
 interactive: genModels
-	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --auto-sources --heuristic=O --oraclename=oracle.py
-
+	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
 
 # This target checks that all models parses correctly
 sense: genModels
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	$(foreach meth,${SPTHYS},\
 		${TAMARIN_CLEAN} --parse-only TMP_$(meth) 2>&1\
 			| grep --color=auto -E "analyzed|error|tamarin-prover:.*";\
 	 )
 
 # This target verifies all lemmas beginning with "sanity" for all models
 alotofsense: genModels
-	#$(foreach meth,${SIGSTAT},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	$(foreach meth,${SPTHYS},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,sanity*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
 # Extra validation lemmas
+VALID_LEMMAS= validAuthDifferentKeysPosssible \
+		      validAuthDifferentKeysPosssible2 \
+			  validAuthDifferentPartiesSameKey \
+			  validAuthDifferentPartiesSameKey2
+
 valid: genModels
-	#$(foreach meth,${SIGSTAT},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
-		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,valid*,${TIME_PROVE_AND_LOG})\
-		 )\
-	 )
+	$(foreach lemma, ${VALID_LEMMAS}, $(subst LEMMA,$(lemma),\
+		$(foreach meth,${SPTHYS}, $(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,LEMMA,${TIME_PROVE_AND_LOG})\
+		))\
+	))
 
 # Injective agreement on session key except when G_IY is included for I.
 # Inj-agreement for full session key for R.
-authpsksig: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG},\
+authInjAgree: genModels
+	$(foreach meth,${SPTHYS},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,authInj*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
-authstat: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${STATSIG} ${SIGSTAT} ${STATSTAT},\
-		$(subst METH,$(meth),\
-			$(subst LEMMAPREFIX,authInj*,${TIME_PROVE_AND_LOG})\
-		 )\
-	)
-
-auth: authpsksig authstat
-
-authimplicit: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+# Implicit agreement. Covers all keying material
+authImplicit: genModels
+	$(foreach meth,${SPTHYS},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
+auth: authInjAgree authImplicit
+
 pfs: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	$(foreach meth,${SPTHYS},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,secrecyPFS*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
 ad3: genModels
-	#$(foreach meth,${PSKPSK},)
-	$(foreach meth,${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT},\
+	$(foreach meth,${SPTHYS},\
 		$(subst METH,$(meth),\
 			$(subst LEMMAPREFIX,securityAD_*,${TIME_PROVE_AND_LOG})\
 		 )\
 	 )
 
-all: sense alotofsense auth authimplicit pfs ad3
+all: sense alotofsense valid auth pfs ad3
 
 clean:
 	rm ./TMP_*.spthy
