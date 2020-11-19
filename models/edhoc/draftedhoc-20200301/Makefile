@@ -129,7 +129,7 @@ ad3: genModels
 		 )\
 	 )
 
-all: sense alotofsense valid auth pfs ad3
+all: sense alotofsense auth pfs ad3
 
 clean:
 	rm ./TMP_*.spthy
