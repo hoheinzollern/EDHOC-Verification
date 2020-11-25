@@ -603,8 +603,8 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
 /* Implicit authentication.
  * Implicit authentication of the session key material essentially means that
  * a party gets the guarantee that when the run is completed, other than I
- * itself, only the the intended peer will be able to meaningfully use the
- * session key material at a later stage.
+ * itself, exactly one other run by the intended peer will be able to
+ * meaningfully use the session key material at a later stage.
  *
  * Because I is not required to have an explicit guarantee about the existance
  * of a live peer on completion, like in the case of injective agreement, the
