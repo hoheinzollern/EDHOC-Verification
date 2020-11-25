@@ -1,26 +1,47 @@
 % !TEX root =  main.tex
-Next we describe our approach towards formalizing the \mEdhoc{} protocol and list the properties we verify. %We used the
-%symbolic (Dolev-Yao) model for verification, with \mTamarin{} for tool support.
+Next we describe our approach towards formalizing the \mEdhoc{} protocol and the
+properties we verify.
 %
-%The next three subsections describe our threat model, briefly present the \mTamarin{} tool, and our modeling choices.
-%
-%Finally, we present the properties that we proved in this effort.
-\subsection{Threat Model}\label{sec:threat-model}
-We verify \mEdhoc{} in the symbolic Dolev-Yao model: as customary in this style of
-modeling, we assume all cryptographic primitives to be ``perfect''. Encrypted messages can only be decrypted with the key, and no hash collisions exist. The attacker controls the
-%, and hence
-%only allow the attacker to encrypt and decrypt messages when they know the key,
-%and exclude hash collisions, for example; the attacker is in control of the
- communication channel, and can interact with unbounded sessions of the protocol,
-dropping, injecting and modifying messages at their liking.
 
-We allow the attacker to impersonate
-dishonest and/or compromised endpoints, by revealing their long-term and session
-key material at any given point.
+\subsection{Adversary Model}\label{sec:threat-model}
+We verify \mEdhoc{} in the symbolic Dolev-Yao model, where
+cryptographic primitives are idealized, e.g, encrypted messages can only be
+decrypted with access to the key, and no hash collisions exist.
 %
-%Conversely, 
-We say that a party is honest if they never reveal their
-long-term key or session key material.
+The adversary fully controls the
+communication channel, and can interact with an unbounded number of sessions
+of the protocol, dropping, injecting and modifying messages at their liking.
+%
+
+On top of the basic Dolev-Yao model, we consider three more advanced
+adversary capabilities, long-term key reveal, temporary access to long-term
+keys and ephemeral key reveal.
+%
+The long-term key reveal leak a party's long-term key to the adversary.
+%
+This models compromise of the long-term key of a party $A$, and we denote this
+event \mRevLTK{A}.
+%
+Temporary access to a party's long-term key provides the adversary temporary
+access to the cryptographic operations of the protocol without learning the
+long-term key itself.
+%
+This models that the adversary has temporary access to a Trusted Execution
+Environment (TEE), e.g., a smart-card, in which the long-term key is stored.
+%
+We denote such an access to party $A$'s trusted execution environment by
+\mTEE{A}.
+%
+We use this to model weak post-compromise security properties.
+%
+Finally, ephemeral key reveal leaks the DH half-key of a party $A$, and is
+denoted \mRevEph{A}.
+%
+
+Because the \mSpec{} does not specify an adversary model, we instead explore
+in which adversary models, i.e., with which combinations of advanced adversary
+capabilities, we can prove properties.
+%
 
 An important point is to define what the key material is.
     \mEdhoc{} does not result in an explicit session key, but a cryptographic
@@ -30,7 +51,523 @@ An important point is to define what the key material is.
     %In particular, all methods except those where the initiator uses the
     %\mStat{} method provide a stronger form of authentication (injective
     %agreement) for the initiator.
+    \knote{The above paragraph is out of place}
 
+    \knote{Most state-of-the-art Tamarin models of real-world protocols
+        (involving DH) do not
+        reveal the actual session key used for the secure channel, e.g., Cremers
+        et~al.~\cite{DBLP:conf/ccs/CremersFKN20}, Girol
+        et~al.~\cite{DBLP:conf/uss/GirolHSJCB20}. Similarly to us, they instead
+        only leak the session state (only ephemeral keys in out case).  We had
+        serious problems getting Tamarin to terminate if leaking actual session
+        key. Is this a common problem in Tamarin?  "All" computational models
+        have session key reveal queries. CK and eCK have session state (eph-key)
+        reveal queries as well.
+    }
+\subsection{Verified Properties}
+\label{sec:desired-properties}
+Because we use \mTamarin{} to reason about event traces, we define the
+properties in terms of relations between timestamped events $E_i^{t_i}$, where
+$E_i$ is the event name and $t_i$ is its timestamp.
+%
+An event $E^t$ may be associated with a sequence of parameters
+$(p_i)_{i\in\mathbb{N}}$, and we write this as $E^t(p_i)_{i\in\mathbb{N}}$.
+%
+This is a more compact notation for \mTamarin{}'s notation for
+actions $E(p_i)_{i\in\mathbf{N}}@t$.
+%
+More than one event may have the same timestamp and hence they form a quasi
+order, which we denote by $\lessdot$.
+%
+Two events $E_1$ and $E_2$ occurring at the same time is written
+$E_1 \doteq E_2$.
+%
+When the order of an event $E^t$ is irrelevant, we write it as $E$.
+%
+Abusing notation, we sometimes write $E_1 \lessdot E_2$ as a shorthand for
+two events $E_1^{t_1}$ and $E_2^{t_2}$ such that $t_1 \lessdot t_2$.
+%
+To simplify the exposition, we do not express the properties in full detail.
+%
+The interested reader is referred to the \mTamarin{}
+model~\cite{edhocTamarinRepo}.
+%
+
+In reference to Figure~\ref{fig:edhocFramework}, the initiator $I$ considers the
+protocol run to start when it sends message \mMsgone{} and considers the run
+completed when sending message \mMsgthree{}.
+%
+We denote the first event \mIStart{} and the second \mIComplete{}.
+%
+Similarly, the responder $R$ considers the run starting when receiving
+\mMsgone{}, and completing when receiving \mMsgthree{}.
+%
+We denote the first event \mRStart{} and the second \mRComplete{}.
+%
+The protocol imposes the following order of these events when two parties
+participate in the same run:
+\mIStart{} $\lessdot$ \mRStart{} $\lessdot$ \mIComplete{}
+$\lessdot$ \mRComplete{}.
+%
+As is customary, the properties we show are guaranteed to hold for a party when
+the party completes the protocol run.
+%
+
+%----------------------------------------------------------------------- PFS
+%\subsubsection{Secrecy}
+\runhead{Secrecy}
+We prove a form of \emph{Perfect Forward Secrecy} (PFS).
+%
+Informally, PFS captures the idea that a session key remains secret even if
+a long-term key leaks in the future.
+%
+Generalizing PFS to any information element $x$ resulting from the protocol run
+and using $\mK(x)$ to denote that the adversary knows $x$, we formalize PFS, with
+respect to the strongest adversary model we managed to prove,
+more precisely as follows:
+%
+\begin{align*}
+    \forall I, R, k, t_1, t_2\mLogicDot
+    \mK^{t_1}(x) \land (\mIComplete^{t_2}(I, R, k)\, \lor\, & \mRComplete^{t_2}(I, R, k))
+    \rightarrow\\
+    &(\exists t_3\mLogicDot \mRevLTK{I}^{t_3} \land t_3 \lessdot t_2)\\
+    \lor&(\exists t_3\mLogicDot \mRevLTK{R}^{t_3} \land t_3 \lessdot t_2)\\
+    \lor&(\exists t_3\mLogicDot \mRevEph{I}^{t_3})
+    \lor(\exists t_3\mLogicDot \mRevEph{R}^{t_3}),
+\end{align*}
+%
+where the variable meanings and types should be clear from previous
+descriptions.
+%
+The essence is that the adversary only knows $x$ if they compromised one of the
+parties long-term keys before that party completed the run, or if the adversary
+compromised any of the ephemeral DH half-keys at any time after a party starts
+its protocol run.
+%
+This is depicted in Figure~\ref{fig:pfs}.
+%
+\begin{figure}[h!]
+    \begin{center}
+        \tikzset{>=latex}
+        \begin{tikzpicture}
+            % All units in pt
+            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+            \pgfmathsetmacro{\IS}{50}    % X-coord
+            \pgfmathsetmacro{\IC}{200}    % X-coord
+            \pgfmathsetmacro{\RS}{80}    % X-coord
+            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            % I's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,0pt) -- (300pt,0pt);
+            % First event
+            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+            % Second event
+            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+            % R's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+            % First event
+            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+            % Second event
+            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+            % LTKRev(I,R)  -----------------------------------------------
+            % Baseline
+            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+            % Attack events
+            \draw (\LTKR pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}, \mRevLTK{R}};
+            \draw (\LTKR pt,2*\LOFFS + 3pt) -- (\LTKR pt,2*\LOFFS - 3pt);
+        \end{tikzpicture}
+        \caption{Perfect Forward Secrecy: the earliest the adversary can use its
+                 advanced capabilities and still maintain secrecy.
+                 Ephemeral DH half-keys can never be revealed.}
+        \label{fig:pfs}
+    \end{center}
+\end{figure}
+\knote{We may be able to strengthen PFS property by pushing LTKRev(I)
+to the end of $I$'s session.}
+
+%-------------------------------------------------------------------- InjAgree
+%\subsubsection{Authentication}
+\runhead{Authentication}
+\label{sec:authenticationDef}
+We prove two different flavors of authentication, the first being classical
+injective agreement following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, and the second
+being an implicit authentication property.
+%
+Informally, \emph{injective agreement} guarantees to an initiator $I$
+running with a responder $R$
+that if, whenever $I$ believes they have completed a run of the protocol with $R$,
+then $R$ has been running the protocol with $I$ in these particular
+roles, and each such run of $I$ corresponds to a unique run of $R$.
+%
+In addition, the property guarantees to $I$ that the two parties agree on a set
+$p$ of parameters associated with the run, in particular the set includes the
+session key material $k$.
+%
+On completion, $I$ knows that $R$ has access to the session key material.
+%
+The corresponding property for $R$ is defined analogously.
+%
+We model this slightly differently.
+%
+\knote{I don't recall why we needed to deviate. Now that we reveal ephemeral
+    keys instead of the session key, I will try to re-prove the standard version
+of Lowe's injAgree.}
+%
+Our formulation for guaranteeing injective agreement to $I$ with $R$, enforces
+that for any session key material $k$, there can be at most one run of $I$
+involving it, and this run must map to at least one run of $R$ involving $k$.
+%
+Injective agreement for $R$ with $I$ is formulated as the dual of this.
+%
+Our formulation uniquely guarantees one run of the initiator involving $k$,
+but allows us to have potentially multiple runs of $R$ involving $k$, and vice
+versa.
+%
+However, because we prove injective agreement for both $I$ and $R$, this
+becomes equivalent to the Lowe formulation, and guarantees a unique map.
+%
+
+Traditionally, the event names used to describe injective agreement are called
+\emph{Running} and \emph{Commit}, but to harmonize the presentation of
+authentication and secrecy, we refer to these events as \mIStart{} and
+\mIComplete{} respectively for the initiator, and \mRStart{} and \mRComplete{}
+for the responder.
+%
+More formally, for the initiator role we write
+\begin{align*}
+    \forall I,& R, p, k, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, p)
+    \rightarrow\\
+    &(\exists t_2\mLogicDot \mRStart^{t_2}(R, k, p) \land t_2 \lessdot t_1)\ 
+    \land\ \neg(\exists I' R' t_3 \mLogicDot \mIComplete^{t_3}(I' , R', k, p)
+        \land \mIComplete^{t_2} \not = \mIComplete^{t_3}) \\
+    \lor&(\exists t_2\mLogicDot \mRevLTK{R}^{t_2} \land t_2 \lessdot t_1).
+\end{align*}
+%
+Figure~\ref{fig:injAgreeI} depicts when the adversary at the earliest can use
+advanced capabilities.
+%
+Ephemeral DH half-keys can be revealed as soon as they are created.
+%
+The initiator's long-term key can be revealed before any of the parties start
+their runs.
+%
+\begin{figure}[h!]
+    \begin{center}
+        \tikzset{>=latex}
+        \begin{tikzpicture}
+            % All units in pt
+            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+            \pgfmathsetmacro{\IS}{80}     % X-coord
+            \pgfmathsetmacro{\IC}{200}    % X-coord
+            \pgfmathsetmacro{\RS}{120}    % X-coord
+            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            % I's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,0pt) -- (300pt,0pt);
+            % First event
+            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+            % Second event
+            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+            % R's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+            % First event
+            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+            % Second event
+            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+            % LTKRev(I,R)  -----------------------------------------------
+            % Baseline
+            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+            % Attack events
+            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{R}};
+            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}};
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
+            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{I}};
+            \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
+            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{R}};
+            \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
+        \end{tikzpicture}
+        \caption{Injective agreement guarantee for $I$: the earliest the
+        adversary can use its advanced capabilities.}
+        \label{fig:injAgreeI}
+    \end{center}
+\end{figure}
+%
+For the responder role we write
+\begin{align*}
+    \forall I,& R, p, k, t_1\mLogicDot \mRComplete^{t_1}(I, R, k, p)
+    \rightarrow\\
+    &(\exists t_2\mLogicDot \mIStart^{t_2}(I, R, k, p) \land t_2 \lessdot t_1)\ 
+    \land\ \neg(\exists I' R' t_3 \mLogicDot \mRComplete^{t_3}(I' , R', k, p)
+        \land \mRComplete^{t_2} \not = \mRComplete^{t_3}) \\
+    \lor&(\exists t_2\mLogicDot \mRevLTK{I}^{t_2} \land t_2 \lessdot t_1),
+\end{align*}
+%
+Figure~\ref{fig:injAgreeR} depicts when the adversary at the earliest can use
+advanced capabilities.
+%
+Ephemeral DH half-keys can be revealed as soon as they are created.
+%
+The responder's long-term key can be revealed before any of the parties start
+their runs.
+%
+\begin{figure}[h!]
+    \begin{center}
+        \tikzset{>=latex}
+        \begin{tikzpicture}
+            % All units in pt
+            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+            \pgfmathsetmacro{\IS}{80}     % X-coord
+            \pgfmathsetmacro{\IC}{200}    % X-coord
+            \pgfmathsetmacro{\RS}{120}    % X-coord
+            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            % I's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,0pt) -- (300pt,0pt);
+            % First event
+            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+            % Second event
+            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+            % R's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+            % First event
+            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+            % Second event
+            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+            % LTKRev(I,R)  -----------------------------------------------
+            % Baseline
+            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+            % Attack events
+            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}};
+            \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{R}};
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
+            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{I}};
+            \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
+            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{R}};
+            \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
+        \end{tikzpicture}
+        \caption{Injective agreement guarantee for $R$: the earliest the
+        adversary can use its advanced capabilities.}
+        \label{fig:injAgreeR}
+    \end{center}
+\end{figure}
+%
+
+We define the agreed upon parameters on which $I$ get injective agreement
+guarantees as follows:
+\begin{itemize}
+    \item responder identity,
+    \item session key material (which varies depending on \mEdhoc{} method),
+    \item context identifiers \mCi{} and \mCr{}, and
+    \item cipher suites \mSuites{}.
+\end{itemize}
+%
+Because of \mEdhoc{} aiming to provide identity protection for $I$, there is no
+guarantee for $I$ that $R$ injectively agrees on the initiator identity.
+%
+Because $R$ completes after $I$, $R$ can get injective agreement guarantees on
+more parameters, namely the initator's identity and, as will become clear
+shortly, the complete session key material for all methods.
+%
+
+%Achieving injective agreement on the roles and the
+%identities of the parties in those roles implies \emph{entity authentication}.
+%
+%In addition, achieving injective agreement on the session key material implies
+%\emph{session key material authentication}.
+%
+
+%------------------------------------------------------------- Implicit auth
+Not all \mEdhoc{} methods have the injective agreement property and so we show
+a form of implicit authentication they all share.
+%
+We take inspiration from the computational model definitions of implicit
+authentication proposed by Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20}.
+%
+The intuition behind our definition is that a party $A$ may complete a protocol
+run resulting in a set of parameters $p$ it believes to be agreed with another
+party $B$.
+%
+When completing, $A$ is then guaranteed that $B$ has been or is
+engaged in exactly one protocol run with $A$ in the opposite role, that $B$
+has or will be able to agree on $p$.
+%
+This allows allows $A$ to conclude that if the last message reaches $B$, then
+$A$ and $B$ have agreed on $p$.
+%
+Also here we split the property into one guarantee for the initiator $I$ and
+one for $R$.
+%
+The definition for $I$ is
+\knote{TODO: Start implicit authentication definition here}
+
+%We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
+%the initiator $I$ with a responder $R$, if injective agreement holds for $I$
+%with $R$ on the session key $sk$, when running method $m$.
+%%
+%The corresponding definition for the responder is analogous.
+%%
+%If both parties obtain explicit authentication we refer to it as mutual explicit
+%authentication (or simply explicit authentication).
+%%
+%A party $A$ is guaranteed explicit authentication when both parties have
+%agreement on fresh session key material, each others identities and roles
+%(and other parameters), when $A$ completes the protocol run.
+%%
+%Because they have (cryptographically justified) agreement on each others
+%identities, it follows that explicit authentication implies entity
+%authentication.
+%%
+%As we discuss later, it turned out that explicit authentication does not hold for all
+%\mEdhoc{} methods, in which cases we prove \emph{implicit authentication}.
+
+%Computational models often rely on implicit session key authentication
+%(see, for example, the definition of SK-security in the Canetti-Krawczyk
+%model~\cite{DBLP:conf/crypto/CanettiK02}).
+%%
+%Although symbolic models predominantly rely on correspondence properties
+%in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where
+%implicit session key authentication has been used.
+%%
+%For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
+%symbolized version of an extended Canetti-Krawzcyk model.
+
+%%
+%We say that a protocol satisfies \emph{implicit authentication} if the
+%initiator and responder agree on the session key only after both parties
+%successfully completes the protocol.
+%%
+%That is, authentication is implicit, as the
+%initiator receives no confirmation that the responder has computed the same session key.
+%%
+%More precisely, we adapt the definition of~\cite{DBLP:journals/iacr/GuilhemFW19}
+%to the symbolic model, and we prove that if an initiator $I$ and a responder $R$
+%complete the protocol deriving the same session key, then $I$ believes they are
+%talking to $R$ and vice versa.
+%%
+
+\mEdhoc{} claims to support mutual authentication with consistency, aliveness
+and peer awareness (see Section~\ref{sec:claimedProperties}).
+%
+These claims appear to have been imported from \mSigma{}~\cite{sigma}, using the
+inheritance argument, because all three appear there as well.
+%
+The definition of consistency~\cite{sigma} is very close in intent to the
+definition we use for implicit authentication, except that it is posed in a
+computational setting.
+%
+We therefore consider them equal in terms of intent for the purpose of this
+paper.
+%
+Aliveness is, according to \mSigma{}~\cite{sigma}, guaranteed to a party $A$ if
+after running the protocol with $B$, $A$ knows that $B$ was alive during
+the execution, e.g., by verifying that $B$ signed a challenge.
+%
+For \mEdhoc{} this means that if we can prove mutual injective agreement, i.e.,
+explicit authentication, on \mGxy{}, then mutual aliveness follows.
+%
+Peer awareness is informally defined in~\cite{sigma} as the guarantee
+that if $A$ completes a protocol run with $B$, then not only does $A$
+know that $B$ is alive, but also that $B$ has initiated a corresponding session
+with $A$.
+\\
+
+%\runhead{Session Key Material Independence}
+%\subsubsection{Session Key Material Independence}
+%Session key material independence holds if knowing the key material for one
+%session does not give the attacker any information about the key material from
+%other sessions.  To model session
+%key material independence of \mEdhoc, we allow leaking session key material
+%after the protocol run, and verify secrecy for those sessions where the
+%session key material has not directly revealed to the attacker.
+%Would the attacker be able to break secrecy for one of those sessions after
+%learning session key material from another session, the key material would not 
+%be independent.\\
+
+%\runhead{Perfect Forward Secrecy (PFS)}
+%%\subsubsection{Perfect Forward Secrecy} 
+%Perfect forward
+%secrecy holds if, for any run in which the initiator and the responder
+%agree on a session key $sk$ and any of their long-term keys are revealed after
+%the run is complete, the attacker does still not learn $sk$.
+
+ 
+%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
+%of the endpoints of the protocol, say Alice running a session with Bob. A
+%protocol is secure under KCI if Alice can still establish a secure session with
+%Bob, even though Alice's keys are compromised at any time, and Bob's key
+%material is not leaked until the end of the session.
+%
+% 
+%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
+%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
+%is capable of establishing a secure session even after one of the parties has
+%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
+%PCS, namely weak and strong PCS: here we focus on the latter.
+%%
+%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
+%between the initiator and the responder, even if the run of the protocol that
+%established $sk$ happens after a \emph{limited compromise}, where the key
+%material is not leaked, but the attacker is capable of impersonating both
+%parties (i.e. has the ability to perform all cryptographic operations using the
+%initiator's and responder's long term keys, but has not access to the long term
+%keys).
+
+ 
+%With the first rule we allow the protocol to decrypt the message \mT{m} if the encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the same algorithm \mT{al}.
+%
+%The second rule allows the attacker to decrypt the message \mT{m} with the key
+%\mT{k} and without the authenticated data \mT{ad}, and hence skip the check.
+
+%The built-in theories for XOR and Diffie-Hellman are a fair bit more complex
+%than authenticated encryption, hence we refer to the original
+%papers~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}
+%for a full reference.
+%
+
+ 
+%\subsubsection{Syntactic Sugar} In the following presentation we use some syntactic
+%sugar, namely
+%the use of let bindings (\mT{let ... in}), which are series of
+%definitions of patterns which are substituted in the rest of the rule. %Another
+%prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
+%built-in concept in \mTamarin.
+
+%---------------------------------------------------------------------------
 \subsection{\mTamarin{}}
 \label{sec:tamarin}
  
@@ -122,178 +659,6 @@ Both the above equations govern decryption. The first rule checks to see if the 
 
 
  
-\subsection{Verified Properties}
-\label{sec:desired-properties}
-
- 
-%\subsubsection{Secrecy}
-\runhead{Secrecy}
-We say that \mEdhoc{} satisfies secrecy of the established session key $sk$
-between two honest parties $I$ and $R$ if, for any run of the protocol between $I$ and
-$R$, the attacker does not get to know $sk$.\\
-%
-%The attacker may passively observe---and actively interfere with---the
-%communication, and run any number of sessions with $A$ and $B$, in either role,
-%concurrently or otherwise.
-
- 
-%\subsubsection{Authentication}
-\runhead{Authentication}
-\label{sec:authenticationDef}
-Following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, we say that a protocol guarantees to an
-initiator $I$ injective agreement with a responder $R$ if, whenever $I$ believes
-they have completed a run of the protocol with $R$, then $R$ has previously been
-running the protocol with $I$ in these particular roles, and each such run of
-$I$ corresponds to a unique run of $R$.
-
-We model this slightly differently, as we show in Section~\ref{sec:propertyFormalization} later. In the lemma for guaranteeing injective agreement to $I$ with $R$, we enforce that for any session key $sk$, there can only be at most one run of $I$ involving it, and this run must map to at least one run of $R$ involving $sk$. The lemma for assuring injective agreement for $R$ with $I$ is formulated as the dual of this. This formulation uniquely guarantees one run of the initiator involving $sk$, but allows us to have potentially multiple runs of $R$ involving $sk$, and vice versa. However, because we prove injective agreement for both $I$ and $R$, this becomes equivalent to the Lowe formulation, and guarantees a unique map.
-
-%To define \mEdhoc{}'s authentication properties we make use of Lowe's definition
-%of \emph{injective agreement}~\cite{DBLP:conf/csfw/Lowe97a}:
-%\knote{Maybe we don't need to quote the definition and could paraphrase it in a
-%shorter form to save space.}
-%\begin{quote}
-%  ``We say that a protocol guarantees to an initiator $A$ [injective] agreement
-%  with a responder $B$ on a set of data items $ds$ if, whenever $A$ (acting as
-%  initiator) completes a run of the protocol, apparently with responder $B$,
-%  then $B$ has previously been running the protocol, apparently with $A$, and
-%  $B$ was acting as responder in his run, and the two agents agreed on the data
-%  values corresponding to all the variables in $ds$, and each such run of $A$
-%  corresponds to a unique run of $B$.''
-%\end{quote}
-%
-We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
-the initiator $I$ with a responder $R$, if injective agreement holds for $I$
-with $R$ on the session key $sk$, when running method $m$.
-%
-The corresponding definition for the responder is analogous.
-%
-If both parties obtain explicit authentication we refer to it as mutual explicit
-authentication (or simply explicit authentication).
-%
-A party $A$ is guaranteed explicit authentication when both parties have
-agreement on fresh session key material, each others identities and roles
-(and other parameters), when $A$ completes the protocol run.
-%
-Because they have (cryptographically justified) agreement on each others
-identities, it follows that explicit authentication implies entity
-authentication.
-%
-As we discuss later, it turned out that explicit authentication does not hold for all
-\mEdhoc{} methods, in which cases we prove \emph{implicit authentication}.
-
-Computational models often rely on implicit session key authentication
-(see, for example, the definition of SK-security in the Canetti-Krawczyk
-model~\cite{DBLP:conf/crypto/CanettiK02}).
-%
-Although symbolic models predominantly rely on correspondence properties
-in the style of Lowe~\cite{DBLP:conf/csfw/Lowe97a}, there are examples where
-implicit session key authentication has been used.
-%
-For example, Schmidt~et~al.~\cite{DBLP:conf/csfw/SchmidtMCB12} use a
-symbolized version of an extended Canetti-Krawzcyk model.
-
-%
-We say that a protocol satisfies \emph{implicit authentication} if the
-initiator and responder agree on the session key only after both parties
-successfully completes the protocol.
-%
-That is, authentication is implicit, as the
-initiator receives no confirmation that the responder has computed the same session key.
-%
-More precisely, we adapt the definition of~\cite{DBLP:journals/iacr/GuilhemFW19}
-to the symbolic model, and we prove that if an initiator $I$ and a responder $R$
-complete the protocol deriving the same session key, then $I$ believes they are
-talking to $R$ and vice versa.
-%
-
-\mEdhoc{} claims to support mutual authentication with consistency, aliveness
-and peer awareness (see Section~\ref{sec:claimedProperties}).
-%
-These claims appear to have been imported from \mSigma{}~\cite{sigma}, using the
-inheritance argument, because all three appear there as well.
-%
-The definition of consistency~\cite{sigma} is very close in intent to the
-definition we use for implicit authentication, except that it is posed in a
-computational setting.
-%
-We therefore consider them equal in terms of intent for the purpose of this
-paper.
-%
-Aliveness is, according to \mSigma{}~\cite{sigma}, guaranteed to a party $A$ if
-after running the protocol with $B$, $A$ knows that $B$ was alive during
-the execution, e.g., by verifying that $B$ signed a challenge.
-%
-For \mEdhoc{} this means that if we can prove mutual injective agreement, i.e.,
-explicit authentication, on \mGxy{}, then mutual aliveness follows.
-%
-Peer awareness is informally defined in~\cite{sigma} as the guarantee
-that if $A$ completes a protocol run with $B$, then not only does $A$
-know that $B$ is alive, but also that $B$ has initiated a corresponding session
-with $A$.
-\\
-
-\runhead{Session Key Material Independence}
-%\subsubsection{Session Key Material Independence}
-Session key material independence holds if knowing the key material for one
-session does not give the attacker any information about the key material from
-other sessions.  To model session
-key material independence of \mEdhoc, we allow leaking session key material
-after the protocol run, and verify secrecy for those sessions where the
-session key material has not directly revealed to the attacker.
-Would the attacker be able to break secrecy for one of those sessions after
-learning session key material from another session, the key material would not 
-be independent.\\
-
-\runhead{Perfect Forward Secrecy (PFS)}
-%\subsubsection{Perfect Forward Secrecy} 
-Perfect forward
-secrecy holds if, for any run in which the initiator and the responder
-agree on a session key $sk$ and any of their long-term keys are revealed after
-the run is complete, the attacker does still not learn $sk$.
-
- 
-%\subsubsection{Key-Compromise Impersonation} (KCI) This property takes the perspective of one
-%of the endpoints of the protocol, say Alice running a session with Bob. A
-%protocol is secure under KCI if Alice can still establish a secure session with
-%Bob, even though Alice's keys are compromised at any time, and Bob's key
-%material is not leaked until the end of the session.
-%
-% 
-%\subsubsection{Post-Compromise Security} (PCS) A protocol that has
-%\emph{post-compromise security} (following definitions in~\cite{cohn2016post})
-%is capable of establishing a secure session even after one of the parties has
-%been compromised. Cohn-Cordon et al.~\cite{cohn2016post} presents two notions of
-%PCS, namely weak and strong PCS: here we focus on the latter.
-%%
-%A protocol guarantees \emph{weak PCS} if secrecy of any session key $sk$ holds
-%between the initiator and the responder, even if the run of the protocol that
-%established $sk$ happens after a \emph{limited compromise}, where the key
-%material is not leaked, but the attacker is capable of impersonating both
-%parties (i.e. has the ability to perform all cryptographic operations using the
-%initiator's and responder's long term keys, but has not access to the long term
-%keys).
-
- 
-%With the first rule we allow the protocol to decrypt the message \mT{m} if the encryption has matching key \mT{k}, authenticated data \mT{ad}, and uses the same algorithm \mT{al}.
-%
-%The second rule allows the attacker to decrypt the message \mT{m} with the key
-%\mT{k} and without the authenticated data \mT{ad}, and hence skip the check.
-
-%The built-in theories for XOR and Diffie-Hellman are a fair bit more complex
-%than authenticated encryption, hence we refer to the original
-%papers~\cite{DBLP:conf/csfw/DreierHRS18,DBLP:conf/csfw/SchmidtMCB12}
-%for a full reference.
-%
-
- 
-%\subsubsection{Syntactic Sugar} In the following presentation we use some syntactic
-%sugar, namely
-%the use of let bindings (\mT{let ... in}), which are series of
-%definitions of patterns which are substituted in the rest of the rule. %Another
-%prominent feature is the use of tuples (\mT{<t1, ..., tn>}) which are a
-%built-in concept in \mTamarin.
-
 %-------------------------------------------------------------------------- sub
 \subsection{Modeling \mEdhoc{}}
 \label{sec:modeling} 
