@@ -20,7 +20,7 @@ keys and ephemeral key reveal.
 The long-term key reveal leak a party's long-term key to the adversary.
 %
 This models compromise of the long-term key of a party $A$, and we denote this
-event \mRevLTK{A}.
+event \mRevLTK$(A)$.
 %
 Temporary access to a party's long-term key provides the adversary temporary
 access to the cryptographic operations of the protocol without learning the
@@ -35,7 +35,7 @@ We denote such an access to party $A$'s trusted execution environment by
 We use this to model weak post-compromise security properties.
 %
 Finally, ephemeral key reveal leaks the DH half-key of a party $A$, and is
-denoted \mRevEph{A}.
+denoted \mRevEph$(A)$.
 %
 
 Because the \mSpec{} does not specify an adversary model, we instead explore
@@ -127,13 +127,13 @@ respect to the strongest adversary model we managed to prove,
 more precisely as follows:
 %
 \begin{align*}
-    \forall I, R, k, t_1, t_2\mLogicDot
-    \mK^{t_1}(x) \land (\mIComplete^{t_2}(I, R, k)\, \lor\, & \mRComplete^{t_2}(I, R, k))
+    \forall I, R, x, t_1, t_2\mLogicDot
+    \mK^{t_1}(x) \land (\mIComplete^{t_3}(I, R, x)\, \lor\, & \mRComplete^{t_3}(I, R, x))
     \rightarrow\\
-    &(\exists t_3\mLogicDot \mRevLTK{I}^{t_3} \land t_3 \lessdot t_2)\\
-    \lor&(\exists t_3\mLogicDot \mRevLTK{R}^{t_3} \land t_3 \lessdot t_2)\\
-    \lor&(\exists t_3\mLogicDot \mRevEph{I}^{t_3})
-    \lor(\exists t_3\mLogicDot \mRevEph{R}^{t_3}),
+    &(\exists t_2\mLogicDot \mRevLTK^{t_2}(I) \land t_2 \lessdot t_3)\\
+    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_3)\\
+    \lor&(\exists t_2\mLogicDot \mRevEph^{t_2}(R))
+    \lor(\exists t_2\mLogicDot \mRevEph^{t_2}(I)),
 \end{align*}
 %
 where the variable meanings and types should be clear from previous
@@ -184,7 +184,7 @@ This is depicted in Figure~\ref{fig:pfs}.
             % Baseline
             \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
             % Attack events
-            \draw (\LTKR pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}, \mRevLTK{R}};
+            \draw (\LTKR pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$, \mRevLTK$(R)$};
             \draw (\LTKR pt,2*\LOFFS + 3pt) -- (\LTKR pt,2*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Perfect Forward Secrecy: the earliest the adversary can use its
@@ -251,7 +251,7 @@ More formally, for the initiator role we write
     &(\exists t_2\mLogicDot \mRStart^{t_2}(R, k, p) \land t_2 \lessdot t_1)\ 
     \land\ \neg(\exists I' R' t_3 \mLogicDot \mIComplete^{t_3}(I' , R', k, p)
         \land \mIComplete^{t_2} \not = \mIComplete^{t_3}) \\
-    \lor&(\exists t_2\mLogicDot \mRevLTK{R}^{t_2} \land t_2 \lessdot t_1).
+    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_1).
 \end{align*}
 %
 Figure~\ref{fig:injAgreeI} depicts when the adversary at the earliest can use
@@ -300,13 +300,13 @@ their runs.
             % Baseline
             \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
             % Attack events
-            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{R}};
+            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
             \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}};
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{I}};
+            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
             \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
-            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{R}};
+            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
             \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Injective agreement guarantee for $I$: the earliest the
@@ -322,7 +322,7 @@ For the responder role we write
     &(\exists t_2\mLogicDot \mIStart^{t_2}(I, R, k, p) \land t_2 \lessdot t_1)\ 
     \land\ \neg(\exists I' R' t_3 \mLogicDot \mRComplete^{t_3}(I' , R', k, p)
         \land \mRComplete^{t_2} \not = \mRComplete^{t_3}) \\
-    \lor&(\exists t_2\mLogicDot \mRevLTK{I}^{t_2} \land t_2 \lessdot t_1),
+    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(I) \land t_2 \lessdot t_1),
 \end{align*}
 %
 Figure~\ref{fig:injAgreeR} depicts when the adversary at the earliest can use
@@ -371,13 +371,13 @@ their runs.
             % Baseline
             \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
             % Attack events
-            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{I}};
+            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
             \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK{R}};
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{I}};
+            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
             \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
-            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph{R}};
+            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
             \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Injective agreement guarantee for $R$: the earliest the
@@ -413,28 +413,109 @@ shortly, the complete session key material for all methods.
 
 %------------------------------------------------------------- Implicit auth
 Not all \mEdhoc{} methods have the injective agreement property and so we show
-a form of implicit authentication they all share.
+a form of implicit agreement they all share.
 %
 We take inspiration from the computational model definitions of implicit
 authentication proposed by Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20}.
 %
 The intuition behind our definition is that a party $A$ may complete a protocol
-run resulting in a set of parameters $p$ it believes to be agreed with another
-party $B$.
+run resulting in a set of parameters $p$, one of which is a session key $k$,
+and $A$ believes these parameters be agreed with another party $B$.
 %
 When completing, $A$ is then guaranteed that $B$ has been or is
-engaged in exactly one protocol run with $A$ in the opposite role, that $B$
+engaged in exactly one protocol run with $A$ in the opposite role, and that $B$
 has or will be able to agree on $p$.
 %
-This allows allows $A$ to conclude that if the last message reaches $B$, then
+This allows $A$ to conclude that if the last message reaches $B$, then
 $A$ and $B$ have agreed on $p$.
+%
+In contrast to injective agreement, this property is symmetric.
+%
+In particular, because the guarantee only reasons about completed and
+hypothetically completed protocol runs, it can reason about parameters that the
+responder learns only after receiving the last message.
 %
 Also here we split the property into one guarantee for the initiator $I$ and
 one for $R$.
 %
 The definition for $I$ is
-\knote{TODO: Start implicit authentication definition here}
-
+\begin{align*}
+    \forall I, R,& p, k, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, p)
+    \rightarrow\\
+      &(\forall I', R', p', t_2\mLogicDot \mRComplete^{t_2}(I', R', k, p') \rightarrow
+             (I=I' \land R=R' \land p=p'))\\
+      \land &(\forall I', R', p', t_2'\mLogicDot
+             (\mRComplete^{t_2}(I, R, k, p)
+             \land \mRComplete^{t_2'}(I', R', k, p')) \rightarrow
+             \mRComplete^{t_2} = \mRComplete^{t_2'}
+             )\\
+    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_1)
+    \lor(\exists t_2\mLogicDot \mRevEph^{t_2}(R))
+    \lor (\exists t_2\mLogicDot \mRevEph^{t_2}(I)).
+\end{align*}
+Figure~\ref{fig:impAgreeI} depicts when the adversary at the earliest can use
+advanced capabilities.
+%
+Ephemeral DH half-keys can never be revealed, and the responder's long-term key
+can be revealed once the initiator completes its run.
+%
+The initiator's long-term key can be revealed before any of the parties start
+their runs.
+%
+\begin{figure}[h!]
+    \begin{center}
+        \tikzset{>=latex}
+        \begin{tikzpicture}
+            % All units in pt
+            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+            \pgfmathsetmacro{\IS}{80}     % X-coord
+            \pgfmathsetmacro{\IC}{200}    % X-coord
+            \pgfmathsetmacro{\RS}{120}    % X-coord
+            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            % I's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,0pt) -- (300pt,0pt);
+            % First event
+            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+            % Second event
+            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+            % R's session ------------------------------------------------
+            % Baseline
+            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+            % First event
+            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+            % Second event
+            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+            % Thick session span line
+            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+            % LTKRev(I,R)  -----------------------------------------------
+            % Baseline
+            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+            % Attack events
+            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
+            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
+            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
+        \end{tikzpicture}
+        \caption{Implicit agreement guarantee for $I$: the earliest the
+        adversary can use its advanced capabilities. Ephemeral keys can never be
+        revealed.}
+        \label{fig:impAgreeI}
+    \end{center}
+\end{figure}
+%
+The responder's guarantee is an defined analogously, letting initiator and
+repsonder events swap places, and letting long-term key reveal events swap
+places.
+%
 %We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
 %the initiator $I$ with a responder $R$, if injective agreement holds for $I$
 %with $R$ on the session key $sk$, when running method $m$.
@@ -968,10 +1049,6 @@ lemma authInjAgreeGuaranteeForI:
           )
      "
 \end{lstlisting}
-\knote{Please remind me again: how does this formula capture that there is only
-    one unique responder session? We do check that the initiator session is
-    unique, but not that the responder is.
-}
 
 Note that this property \emph{does not hold} when the initiator is
 running the \mStat{} method, because the key material would then cover \mGiy{},
