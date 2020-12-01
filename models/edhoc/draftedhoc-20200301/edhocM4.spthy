@@ -434,6 +434,7 @@ ifelse(<!PSK!>, m4METHODI,
 rule revealEphKey:
     [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
 
+
 /*
  * Sanity - Correct exectution trace exists
  */
@@ -511,7 +512,7 @@ lemma validAuthDifferentPartiesSameKey2:
     "
 
 /* Injective agreement.
- * Following Lowe'97. Essentially, if a party completes the run and believes
+ * Essentially, if a party completes the run and believes
  * the run establishes a certain session key material and set of parameters,
  * then there is one, and only one, other session out there who already
  * believes it is running the protocol aiming to establish that session key
@@ -542,9 +543,9 @@ lemma authInjAgreeGuaranteeForI:
     "All tidI u v expSk agreed #t2.
         (ExpCommitI(tidI, u, v, expSk, agreed)@t2
         ==>
-            ( ( (Ex tidR #t1. ExpRunningR(tidR, v, expSk, agreed)@t1 & #t1 < #t2)
-              & (All tidR2p #t1p.
-                    ExpRunningR(tidRp, v, expSk, agreed)@t1p ==> t1p = t1)
+            ( ( Ex tidR #t1. ExpRunningR(tidR, v, expSk, agreed)@t1 & #t1 < #t2
+              & (All tidIp up vp #t1p.
+                     ExpCommitI(tidIp, up, vp, expSk, agreed)@t1p ==> #t1p = #t2)
               )
             | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
             )
@@ -556,78 +557,15 @@ lemma authInjAgreeGuaranteeForR:
     "All tidR u v expSk agreed #t2.
          (ExpCommitR(tidR, u, v, expSk, agreed)@t2
           ==>
-             ( ( (Ex tidI #t1. ExpRunningI(tidI, u, v, expSk, agreed)@t1 & #t1 < #t2)
-               & (All tidI2p #t1p.
-                     ExpRunningI(tidIp, v, expSk, agreed)@t1p ==> t1p = t1)
+             ( ( Ex tidI #t1. ExpRunningI(tidI, u, v, expSk, agreed)@t1 & #t1 < #t2
+               & (All tidRp up vp #t1p.
+                     ExpCommitR(tidRp, up, vp, expSk, agreed)@t1p ==> #t1p = #t2)
                )
              | (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
              )
          )
     "
-/* Our version
-lemma authInjAgreeGuaranteeForI:
-    all-traces
-    "All tidI u v expSk agreed #i.
-         (ExpCommitI(tidI, u, v, expSk, agreed)@i
-          ==>
-             ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk, agreed)@j & #j < #i)
-               & not(Ex tidI2 u2 v2 #i2.
-                        ExpCommitI(tidI2, u2, v2, expSk, agreed)@i2
-                    & not(#i = #i2)
-                    )
-               )
-             | (Ex #j. LTKRev(v)@j & #j < #i)
-             )
-         )"
 
-lemma authInjAgreeGuaranteeForR:
-    all-traces
-    "All tidR u v expSk agreed #i.
-         (ExpCommitR(tidR, u, v, expSk, agreed)@i
-         ==>
-           ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, expSk, agreed)@j & #j < #i)
-             & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, expSk, agreed)@i2 & not(#i = #i2) ) )
-           | (Ex #j. LTKRev(u)@j & #j < #i)
-           )
-         )"
-*/
-
-/* PCS version: Outdated! */
-/*
-lemma authInjAgreeGuaranteeForI:
-    all-traces
-    "All tidI u v expSk #i.
-         ((ExpCommitI(tidI, u, v, expSk)@i
-	        & (All #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
-            & (All tidR #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
-         )
-          ==>
-         ( ( (Ex tidR #j. ExpRunningR(tidR, v, expSk)@j & #j < #i)
-           & not(Ex tidI2 u2 v2 #i2. ExpCommitI(tidI2, u2, v2, expSk)@i2 & not(#i = #i2) ) )
-ifelse(<!PSK_PSK!>, m4METHODIR,
-          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
-          <! | (Ex #j. LTKRev(u)@j & #j < #i)
-             | (Ex #j. LTKRev(v)@j & #j < #i)!>
-)
-         ))"
-
-lemma authInjAgreeGuaranteeForR:
-    all-traces
-    "All tidR u v sk #i.
-         ((CommitR(tidR, u, v, sk)@i
-	        & (All tidI #j m1. I1(tidI, u, v, m1) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j))
-            & (All #j m1 m2. R2(tidR, v, m1, m2) @ j ==> (All #k. TEE(u)@k ==> k < j) & (All #k. TEE(v)@k ==> k < j)) )
-         )
-         ==>
-         ( ( (Ex tidI #j. ExpRunningI(tidI, u, v, sk)@j & #j < #i)
-           & not(Ex tidR2 u2 v2 #i2. ExpCommitR(tidR2, u2, v2, sk)@i2 & not(#i = #i2)) )
-ifelse(<!PSK_PSK!>, m4METHODIR,
-          <! | (Ex #j. LTKRev(<u, v>)@j & #j < #i) !>,
-          <! | (Ex #j. LTKRev(u)@j & #j < #i)
-             | (Ex #j. LTKRev(v)@j & #j < #i)!>
-)
-         )"
-*/
 
 /* Implicit authentication.
  * Implicit authentication of the session key material essentially means that
@@ -666,41 +604,35 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
  */
 lemma authImplicitAuthGuaranteeForI:
     all-traces
-    "All tidI u v sk agreed #i.
-         CommitI(tidI, u, v, sk, agreed)@i ==>
-         ( ( (All tidR u2 v2 agreed2 #j. CommitR(tidR, u2, v2, sk, agreed2)@j ==>
-                (u = u2  &  v = v2  &  agreed = agreed2)
+    "All tidI u v sk agreed #t1.
+         CommitI(tidI, u, v, sk, agreed)@t1 ==>
+         ( ( (All tidR up vp agreedp #t2. CommitR(tidR, up, vp, sk, agreedp)@t2 ==>
+                (u = up  &  v = vp  &  agreed = agreedp)
              )
            &
-             (All tidR u v #j tidR2 u2 v2 agreed2 #j2.
-                      ( CommitR(tidR,  u,  v,  sk, agreed)@j
-                      & CommitR(tidR2, u2, v2, sk, agreed2)@j2 )
-                       ==> (#j = #j2)
+             (All tidIp up vp agreedp #t1p.
+                CommitI(tidIp,  up,  vp,  sk, agreedp)@t1p ==> (#t1p = #t1)
              )
            )
-         | (Ex #k. LTKRev(v)@k & #k < #i) //| (Ex #k. TEE(v)@k)
-         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
+         | (Ex #t0. LTKRev(v)@t0 & #t0 < #t1) //| (Ex #k. TEE(v)@k)
+         | (Ex #t0. EphKeyRev(sk)@t0) //| (Ex #k. TEE(v)@k)
          )
     "
 
 lemma authImplicitAuthGuaranteeForR:
     all-traces
-    "All tidR u v sk agreed #i.
-         CommitR(tidR, u, v, sk, agreed)@i ==>
-         ( ( (All tidI u2 v2 agreed2 #j. CommitI(tidI, u2, v2, sk, agreed2)@j ==>
-                (u = u2  &  v = v2  &  agreed = agreed2)
+    "All tidR u v sk agreed #t1.
+         CommitR(tidR, u, v, sk, agreed)@t1 ==>
+         ( ( (All tidI up vp agreedp #t2. CommitI(tidI, up, vp, sk, agreedp)@t2 ==>
+                (u = up  &  v = vp  &  agreed = agreedp)
              )
            &
-             (not( Ex tidI u v agreed#j tidI2 agreed2 u2 v2 #j2.
-                      ( CommitI(tidI,  u,  v,  sk, agreed)@j
-                      & CommitI(tidI2, u2, v2, sk, agreed2)@j2
-                      & not(#j = #j2)
-                      )
-                 )
+             (All tidRp up vp agreedp #t1p.
+                CommitR(tidRp,  up,  vp,  sk, agreedp)@t1p ==> (#t1p = #t1)
              )
            )
-         | (Ex #k. LTKRev(u)@k & #k < #i) //| (Ex #k. TEE(u)@k)
-         | (Ex #k. EphKeyRev(sk)@k) //| (Ex #k. TEE(v)@k)
+         | (Ex #t0. LTKRev(u)@t0 & #t0 < #t1) //| (Ex #k. TEE(u)@k)
+         | (Ex #t0. EphKeyRev(sk)@t0) //| (Ex #k. TEE(v)@k)
          )
     "
 
@@ -714,24 +646,12 @@ lemma authImplicitAuthGuaranteeForR:
  *  - LTKRev(I, R) only allowed *after* completed run.
  *  - EphKeyRev(I, R) *not* alloweed
  */
-/*
 lemma secrecyPFS:
    all-traces
-   "All u v sk #i #j. (K(sk)@i & CompletedRun(u, v, sk)@j) ==>
-       ( (Ex #l. LTKRev(u)@l & #l < #j)
-       | (Ex #l. LTKRev(v)@l & #l < #j)
-       | (Ex #l. EphKeyRev(sk)@l)
-       // | (Ex w #l. TEE(w)@l)
-       )
-    "
-*/
-
-lemma secrecyPFS:
-   all-traces
-   "All u v sk #i #j. (K(sk)@i & CompletedRun(u, v, sk)@j) ==>
-       ( (Ex #l. LTKRev(u)@l & #l < #j)
-       | (Ex #l. LTKRev(v)@l & #l < #j)
-       | (Ex #l. EphKeyRev(sk)@l)
+   "All u v sk #t3 #t2. (K(sk)@t3 & CompletedRun(u, v, sk)@t2) ==>
+       ( (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
+       | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+       | (Ex #t1. EphKeyRev(sk)@t1)
        // | (Ex w #l. TEE(w)@l)
        )
     "
@@ -744,19 +664,19 @@ lemma secrecyPFS:
 ifdef(<!m4AD3!>,
 <!lemma securityAD_3AEAD:
    all-traces
-   "(All ad3 u v sk #i #j. (K(ad3)@i & Send(u, v, sk, ad3)@j) ==>
-       ( (Ex #l. LTKRev(u)@l & #l < #j)
-       | (Ex #l. LTKRev(v)@l & #l < #j)
-       | (Ex #l. EphKeyRev(sk)@l)
+   "(All ad3 u v sk #t3 #t2. (K(ad3)@t3 & Send(u, v, sk, ad3)@t2) ==>
+       ( (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
+       | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+       | (Ex #t1. EphKeyRev(sk)@t1)
        )
     )
     &
-    (All ad3 u v sk #i.
-       (Recv(u, v, sk, ad3)@i ==>
-           ( (Ex #j. Send(u, v, sk, ad3)@j & #j < #i)
-             | (Ex #j. LTKRev(u)@j & #j < #i)
-             | (Ex #j. LTKRev(v)@j & #j < #i)
-             | (Ex #j. EphKeyRev(sk)@j)
+    (All ad3 u v sk #t3.
+       (Recv(u, v, sk, ad3)@t3 ==>
+           ( (Ex #t2. Send(u, v, sk, ad3)@t2 & #t2 < #t3)
+             | (Ex #t2. LTKRev(u)@t2 & #t2 < #t3)
+             | (Ex #t2. LTKRev(v)@t2 & #t2 < #t3)
+             | (Ex #t2. EphKeyRev(sk)@t2)
            )
        )
     )
