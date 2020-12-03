@@ -203,8 +203,8 @@ We give an explicit security model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
 secrecy, for all five methods. \textbf{*** Fix this list at the end ***}
 %
-We also discuss the relationship between proven properties and the claimed
-security properties, in the absence of a precise security model in the \mSpec.
+%We also discuss the relationship between proven properties and the claimed
+%security properties, in the absence of a precise security model in the \mSpec.
 %
 %This analysis has also resulted in some improvements to the \mSpec.%, 
 %which we discuss in Section~\ref{sec:discussion}.
@@ -264,13 +264,13 @@ which we found during this work and communicated to the authors. We discuss them
 %Instead the goals are there typically made more specific by listing resistance
 %to attacks as these are discovered throughout the work.
 %
-%Granted, 
-As discussed in Section~\ref{sec:claimedProperties}, the \mSpec{} lists
-several specific security goals.
+The \mEdhoc{} \mSpec{} lists several specific security goals, but they are
+imprecise and difficult to interpret due to lacking context and intended usage
+descriptions.
 %
-However, without knowing how the protocol is to be used,
-it is not clear whether these are the most important goals for constrained IoT
-devices.
+Without knowing how the protocol is to be used,
+it is not clear whether the listed security goals are the most important ones
+for constrained IoT devices.
 %
 
 The abstract goal of \mEdhoc{} is simple: establish an \mOscore{} security
@@ -296,24 +296,23 @@ sub-optimal trade-offs and design decisions.
 While constructing our model, we came up with simple user stories to identify
 security properties of interest.
 %
-Several of these revealed undefined aspects of \mEdhoc{}.
+Several of these revealed subtleties and undefined aspects of \mEdhoc{}.
 %
-We informed the \mEdhoc{} authors, who then included these aspects the \mSpec{}.
-%
-%We present a couple of examples here.\\
+We informed the \mEdhoc{} authors, who then included these aspects the
+\mSpec{}.\\
 %
 
 %\subsubsection{Non-repudiation.}
-\runhead{Non-repudiation}
+\runhead{(Non)-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
 machine to log a list of users along with their coffee preferences.
 %
 Via this simple thought experiment, we realized that the \mSpec{} did not
-consider non-repudiation.
+consider the concept of (non)-repudiation.
 %
-In response, the authors of the \mSpec{} added a paragraph about which methods
-provided which types of (non)-repudiation~\cite{selander-lake-edhoc-01}.
+In response, the authors of the \mSpec{} added a paragraph discussing how
+different methods relate to (non)-repudiation~\cite{selander-lake-edhoc-01}.\\
 
 %\subsubsection{Unintended Peer Authentication.}
 \runhead{Unintended Peer Authentication}
@@ -369,12 +368,14 @@ Even though \mEdhoc{} incorporates cryptographic cores from different academic
 security protocols, its design does not take into account the attacker models
 for which these protocols were designed.
 %
-For example, \mOptls{} is designed to be secure in the CK
+For example, \mOptls{}, whose cryptographic core is essentially the same
+as the \mStat{}-based authentication method, is designed to be secure in the CK
 model~\cite{DBLP:conf/crypto/CanettiK02}.
 %
 The CK security model explicitly separates the secure storage of long-term
-credentials from storage of session state and ephemeral keys to model the 
-use of TEEs.
+credentials from storage of session state and ephemeral keys.
+%
+This is appropriate for modelling use of TEEs.
 %
 
 The \mEdhoc{} authors indicated to us that it was
@@ -436,6 +437,9 @@ However, our understanding is that adding an extra message is
 undesirable, since~\cite{selander-lake-edhoc-01} requests as few messages as
 possible.
 %
+IETF have however reconsidered and is currently discussing adding a fourth
+message as an option.
+%
 Another possibility is to include \mGi{}, or its hash, in the first and
 second messages.
 %
@@ -449,7 +453,7 @@ of the initiator's ephemeral DH key.
 %
 
 Regardless of how this problem is handled, we have verified that all methods
-share a common, but weaker, security property: mutual implicit authentication
+share a common, but weaker, security property: mutual implicit agreement
 on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %
 
@@ -516,21 +520,21 @@ We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 %
 
-%\begin{table}[h!]
-%    \begin{center}
-%        \caption{Summary of verified properties.}
-%        \label{tab:props}
-%        \begin{tabular}{|l|c|c|c|c|}
-%                \hline
-%                \textbf{Property} & \textbf{Verified} & \textbf{Steps} & \textbf{time} \\
-%                \hline
-%                Injective agreement & & &\\
-%                Implicit agreement & & &\\
-%                PFS & & & \\
-%                \hline
-%        \end{tabular}
-%    \end{center}
-%\end{table}
+\begin{table}[h!]
+    \begin{center}
+        \caption{Summary of verified properties.}
+        \label{tab:props}
+        \begin{tabular}{|l|c|c|c|c|}
+                \hline
+                \textbf{Property} & \textbf{Verified} & \textbf{Steps} & \textbf{time} \\
+                \hline
+                Injective agreement & & &\\
+                Implicit agreement & & &\\
+                PFS & & & \\
+                \hline
+        \end{tabular}
+    \end{center}
+\end{table}
 
 Further, we identified a situation where initiators may establish an \mOscore{}
 security context with a different party than the application using \mEdhoc{}
@@ -544,10 +548,6 @@ There is some work that was done as part of this effort which has not been menti
 
 We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
 However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
-
-We also tried to incorporate the parameters \mCi, \mCr, and \mAD{} into our model. This too resulted in non-termination for some of the methods, and further study is required to obtain conclusive results along these lines. 
-
-Another potential extension is to incorporate the cipher suite negotiation process into the formal modeling.\\ 
 %
 
 %-------------------------------------------------------------------------- ack

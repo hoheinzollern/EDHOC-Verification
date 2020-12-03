@@ -64,6 +64,11 @@
 \newcommand{\mIComplete}{\ensuremath{\mathbf{I}_\mFunStyle{C}}}
 \newcommand{\mRStart}{\ensuremath{\mathbf{R}_\mFunStyle{S}}}
 \newcommand{\mRComplete}{\ensuremath{\mathbf{R}_\mFunStyle{C}}}
+\newcommand{\mPredPfs}{\ensuremath{\mathbf{PFS}}}
+\newcommand{\mPredInjI}{\ensuremath{\mathbf{InjAgree}_I}}
+\newcommand{\mPredInjR}{\ensuremath{\mathbf{InjAgree}_R}}
+\newcommand{\mPredImpI}{\ensuremath{\mathbf{ImpAgree}_I}}
+\newcommand{\mPredImpR}{\ensuremath{\mathbf{ImpAgree}_R}}
 \newcommand{\mK}{\ensuremath{\mathcal{K}}}
 \DeclareMathOperator{\mLogicDot}{.}
 
@@ -188,6 +193,7 @@
     keywordstyle=\color{ForestGreen},
     numberstyle=\color{Gray},
     stringstyle=,
+    %basicstyle=\ttfamily\small,
     basicstyle=\sffamily\small,
     keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out},
     breakatwhitespace=false,
@@ -203,12 +209,12 @@
     morecomment=[l]{//},
     literate=
     {=}{$=$}{1}
-    {[}{$[$}{1}%
-    {]}{$]$}{1}%
+    %{[}{$[$}{1}%
+    %{]}{$]$}{1}%
     {<}{$\langle$}{1}%
     {>}{$\rangle$}{1}%
-    {(}{$($}{1}%
-    {)}{$)$}{1}%
+    %{(}{$($}{1}%
+    %{)}{$)$}{1}%
     {&}{$\wedge$}{1}
     {|}{$\vee$}{1}
     {$}{\$}{1}
@@ -218,11 +224,11 @@
     {-->}{$\rightarrow$}{1}
     {==>}{$\Rightarrow$}{1}
     {XOR}{$\oplus$}{1}%
-    {aeadEncrypt}{\mAead{}}{6}%
-    {decrypt}{\mDecrypt}{6}
-    {aeadDecrypt}{\mAeadDecrypt}{11}
-    {hkdfExtract}{\mHkdfExtract}{14}
-    {hkdfExpand}{\mHkdfExpand}{14}
+    %{aeadEncrypt}{\mAead{}}{6}%
+    %{decrypt}{\mDecrypt}{6}
+    %{aeadDecrypt}{\mAeadDecrypt}{11}
+    %{hkdfExtract}{\mHkdfExtract}{14}
+    %{hkdfExpand}{\mHkdfExpand}{14}
     {All\ }{$\forall$\ }{3}
     {Ex\ }{$\exists$\ }{3}
     {h(}{H$($}{2}

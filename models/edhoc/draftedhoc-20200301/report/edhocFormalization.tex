@@ -1,9 +1,19 @@
 % !TEX root =  main.tex
+The \mEdhoc{} \mSpec{} \cite{selander-lake-edhoc-01} claims
+that \mEdhoc{} satisfies many security properties, but these are imprecisely
+expressed and motivated.
+%
+In particular, there is no coherent adversary model.
+%
+Therefore, we explore in which adversary models we can prove properties and
+incorporate those models into the properties themselves.
+%
+
 Next we describe our approach towards formalizing the \mEdhoc{} protocol and the
 properties we verify.
 %
 
-\subsection{Adversary Model}\label{sec:threat-model}
+\subsection{General Adversary Model}\label{sec:threat-model}
 We verify \mEdhoc{} in the symbolic Dolev-Yao model, where
 cryptographic primitives are idealized, e.g, encrypted messages can only be
 decrypted with access to the key, and no hash collisions exist.
@@ -13,14 +23,14 @@ communication channel, and can interact with an unbounded number of sessions
 of the protocol, dropping, injecting and modifying messages at their liking.
 %
 
-On top of the basic Dolev-Yao model, we consider three more advanced
-adversary capabilities, long-term key reveal, temporary access to long-term
-keys and ephemeral key reveal.
+In addition to the basic Dolev-Yao model we consider three more advanced, but
+yet common, adversary capabilities, namely long-term key reveal, temporary
+access to long-term key and ephemeral key reveal.
 %
 The long-term key reveal leak a party's long-term key to the adversary.
 %
 This models compromise of the long-term key of a party $A$, and we denote this
-event \mRevLTK$(A)$.
+type of event \mRevLTK$(A)$.
 %
 Temporary access to a party's long-term key provides the adversary temporary
 access to the cryptographic operations of the protocol without learning the
@@ -30,7 +40,7 @@ This models that the adversary has temporary access to a Trusted Execution
 Environment (TEE), e.g., a smart-card, in which the long-term key is stored.
 %
 We denote such an access to party $A$'s trusted execution environment by
-\mTEE{A}.
+\mTEE$(A)$.
 %
 We use this to model weak post-compromise security properties.
 %
@@ -38,20 +48,6 @@ Finally, ephemeral key reveal leaks the DH half-key of a party $A$, and is
 denoted \mRevEph$(A)$.
 %
 
-Because the \mSpec{} does not specify an adversary model, we instead explore
-in which adversary models, i.e., with which combinations of advanced adversary
-capabilities, we can prove properties.
-%
-
-An important point is to define what the key material is.
-    \mEdhoc{} does not result in an explicit session key, but a cryptographic
-    state from which keys for \mOscore{} can be derived using \mHkdf.
-    As will be seen later, depending on how the key material is defined, the
-    different methods will have different authentication properties.
-    %In particular, all methods except those where the initiator uses the
-    %\mStat{} method provide a stronger form of authentication (injective
-    %agreement) for the initiator.
-    \knote{The above paragraph is out of place}
 
     \knote{Most state-of-the-art Tamarin models of real-world protocols
         (involving DH) do not
@@ -66,51 +62,75 @@ An important point is to define what the key material is.
     }
 \subsection{Verified Properties}
 \label{sec:desired-properties}
-Because we use \mTamarin{} to reason about event traces, we define the
-properties in terms of relations between timestamped events $E_i^{t_i}$, where
-$E_i$ is the event name and $t_i$ is its timestamp.
+Our model is based on event traces and we define the
+properties in terms of relations between timestamped events.
 %
-An event $E^t$ may be associated with a sequence of parameters
-$(p_i)_{i\in\mathbb{N}}$, and we write this as $E^t(p_i)_{i\in\mathbb{N}}$.
+The model and properties are encoded for the \mTamarin{} verification tool.
 %
-This is a more compact notation for \mTamarin{}'s notation for
-actions $E(p_i)_{i\in\mathbf{N}}@t$.
+\mTamarin{} uses an LTL-style temporal logic to reason about events and
+knowledge of parties and the adversary.
 %
-More than one event may have the same timestamp and hence they form a quasi
-order, which we denote by $\lessdot$.
+For compactness of the presentation, we use a slightly different syntax, which
+has a direct mapping to \mTamarin{}'s logic.
 %
-Two events $E_1$ and $E_2$ occurring at the same time is written
-$E_1 \doteq E_2$.
+
+Event types are predicates over global states of the system executions.
 %
-When the order of an event $E^t$ is irrelevant, we write it as $E$.
+Let $E$ be an event type and let $t$ be a timestamp indicating a point in a
+trace.
 %
-Abusing notation, we sometimes write $E_1 \lessdot E_2$ as a shorthand for
-two events $E_1^{t_1}$ and $E_2^{t_2}$ such that $t_1 \lessdot t_2$.
+Then $E^{t}$ denotes an event of type $E$ at time $t$ in that trace.
 %
+An event type $E$ may be associated with a sequence of parameters
+$(p_i)_{i\in\mathbb{N}}$, and an event of that type at time $t$ is then
+written $E^t(p_i)_{i\in\mathbb{N}}$.
+%
+This corresponds to \mTamarin{}'s notation for actions
+$E(p_i)_{i\in\mathbb{N}}@t$.
+%
+In general, more than one event may have the same timestamp and hence
+timestamps form a quasi order, which we denote by $t_1 \lessdot t_2$ when $t_1$
+is before $t_2$ in a trace.
+%
+We define $\doteq$ analogously.
+%
+However, two events of the same type cannot have the same timestamp, so
+$t_1 \doteq t_2$ implies $E^{t_1} = E^{t_2}$.
+%
+Other first order logic connectives and parenthesis have their standard
+interpretation.
+%
+A special event type $\mK$ represent adversary knowledge.
+%
+The notation $\mK^t(p)$ denotes that the adversary knows a parameter $p$ at
+time $t$.
+%
+Intuitively, events of type $\mK$ evaluate to true when the parameter is in
+the closure of the
+parameters the adversary observed from interacting with parties using the
+protocol, under the operations of the Dolev-Yao message deduction rules and
+the advanced adversary capabilities up until time $t$.
+%
+
 To simplify the exposition, we do not express the properties in full detail.
 %
 The interested reader is referred to the \mTamarin{}
 model~\cite{edhocTamarinRepo}.
 %
 
-In reference to Figure~\ref{fig:edhocFramework}, the initiator $I$ considers the
+In reference to Figure~\ref{fig:edhocFramework}, an initiator $I$ considers the
 protocol run to start when it sends message \mMsgone{} and considers the run
 completed when sending message \mMsgthree{}.
 %
-We denote the first event \mIStart{} and the second \mIComplete{}.
+We denote the first event type \mIStart{} and the second \mIComplete{}.
 %
-Similarly, the responder $R$ considers the run starting when receiving
+Similarly, a responder $R$ considers the run starting when receiving
 \mMsgone{}, and completing when receiving \mMsgthree{}.
 %
-We denote the first event \mRStart{} and the second \mRComplete{}.
-%
-The protocol imposes the following order of these events when two parties
-participate in the same run:
-\mIStart{} $\lessdot$ \mRStart{} $\lessdot$ \mIComplete{}
-$\lessdot$ \mRComplete{}.
+We denote the first event type \mRStart{} and the second \mRComplete{}.
 %
 As is customary, the properties we show are guaranteed to hold for a party when
-the party completes the protocol run.
+the party completes their part of the protocol run.\\
 %
 
 %----------------------------------------------------------------------- PFS
@@ -121,25 +141,39 @@ We prove a form of \emph{Perfect Forward Secrecy} (PFS).
 Informally, PFS captures the idea that a session key remains secret even if
 a long-term key leaks in the future.
 %
-Generalizing PFS to any information element $x$ resulting from the protocol run
-and using $\mK(x)$ to denote that the adversary knows $x$, we formalize PFS, with
-respect to the strongest adversary model we managed to prove,
-more precisely as follows:
+Generalizing PFS to any information element $x$ resulting from the protocol
+run, we formalize PFS with respect to the strongest adversary model we
+successfully proved, as the trace predicate
 %
 \begin{align*}
-    \forall I, R, x, t_1, t_2\mLogicDot
-    \mK^{t_1}(x) \land (\mIComplete^{t_3}(I, R, x)\, \lor\, & \mRComplete^{t_3}(I, R, x))
+    \mPredPfs \triangleq
+    \forall I, R, x, t_2, t_3\mLogicDot
+    \mK^{t_3}(x) \land (\mIComplete^{t_2}(I, R, x)\, \lor\, & \mRComplete^{t_2}(I, R, x))
     \rightarrow\\
-    &(\exists t_2\mLogicDot \mRevLTK^{t_2}(I) \land t_2 \lessdot t_3)\\
-    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_3)\\
-    \lor&(\exists t_2\mLogicDot \mRevEph^{t_2}(R))
-    \lor(\exists t_2\mLogicDot \mRevEph^{t_2}(I)),
+    &(\exists t_1\mLogicDot \mRevLTK^{t_1}(I) \land t_1 \lessdot t_2)\\
+    \lor&(\exists t_1\mLogicDot \mRevLTK^{t_1}(R) \land t_1 \lessdot t_2)\\
+    \lor&(\exists t_1\mLogicDot \mRevEph^{t_1}(R))
+    \lor(\exists t_1\mLogicDot \mRevEph^{t_1}(I)).
 \end{align*}
 %
-where the variable meanings and types should be clear from previous
+\knote{The Tamarin model is logically equivalent, but not exactly the same.
+    We for instance don't actually have separate "completeI" and "completeR"
+    event types in the Tamarin model, but we do here to make the pictures
+    prettier.
+}
+The first parameter of the \mIComplete{} event represents the
+identity that the initiator believes plays the initiator role, i.e., itself,
+and the second parameter represents the identity the initiator believes plays
+the repsonder role.
+%
+The first and second parameter of the \mRComplete{} event are defined the same
+way.
+%
+The meaning of remaining variables and types should be clear from previous
 descriptions.
 %
-The essence is that the adversary only knows $x$ if they compromised one of the
+The essence of the definition is that an adversary only knows $x$ if they
+compromised one of the
 parties long-term keys before that party completed the run, or if the adversary
 compromised any of the ephemeral DH half-keys at any time after a party starts
 its protocol run.
@@ -188,13 +222,11 @@ This is depicted in Figure~\ref{fig:pfs}.
             \draw (\LTKR pt,2*\LOFFS + 3pt) -- (\LTKR pt,2*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Perfect Forward Secrecy: the earliest the adversary can use its
-                 advanced capabilities and still maintain secrecy.
+                 advanced capabilities while secrecy is still maintained.
                  Ephemeral DH half-keys can never be revealed.}
         \label{fig:pfs}
     \end{center}
-\end{figure}
-\knote{We may be able to strengthen PFS property by pushing LTKRev(I)
-to the end of $I$'s session.}
+\end{figure}\\
 
 %-------------------------------------------------------------------- InjAgree
 %\subsubsection{Authentication}
@@ -202,64 +234,83 @@ to the end of $I$'s session.}
 \label{sec:authenticationDef}
 We prove two different flavors of authentication, the first being classical
 injective agreement following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, and the second
-being an implicit authentication property.
+being an implicit agreement property.
 %
 Informally, \emph{injective agreement} guarantees to an initiator $I$
-running with a responder $R$
-that if, whenever $I$ believes they have completed a run of the protocol with $R$,
-then $R$ has been running the protocol with $I$ in these particular
-roles, and each such run of $I$ corresponds to a unique run of $R$.
+running with some responder that if, whenever $I$ completed the run and
+believes the responder is $R$,
+then $R$ has been engaged in the protocol in the opposite role,
+and the run of $I$ corresponds to a unique run of $R$.
 %
 In addition, the property guarantees to $I$ that the two parties agree on a set
-$p$ of parameters associated with the run, in particular the set includes the
+$S$ of parameters associated with the run, in particular the set includes the
 session key material $k$.
+%
+However, we will treat $k$ separately for clarity.
 %
 On completion, $I$ knows that $R$ has access to the session key material.
 %
 The corresponding property for $R$ is defined analogously.
 %
-We model this slightly differently.
-%
-\knote{I don't recall why we needed to deviate. Now that we reveal ephemeral
-    keys instead of the session key, I will try to re-prove the standard version
-of Lowe's injAgree.}
-%
-Our formulation for guaranteeing injective agreement to $I$ with $R$, enforces
-that for any session key material $k$, there can be at most one run of $I$
-involving it, and this run must map to at least one run of $R$ involving $k$.
-%
-Injective agreement for $R$ with $I$ is formulated as the dual of this.
-%
-Our formulation uniquely guarantees one run of the initiator involving $k$,
-but allows us to have potentially multiple runs of $R$ involving $k$, and vice
-versa.
-%
-However, because we prove injective agreement for both $I$ and $R$, this
-becomes equivalent to the Lowe formulation, and guarantees a unique map.
-%
+%This is no longer true: We model this slightly differently.
+%%
+%Our formulation for guaranteeing injective agreement to $I$ with $R$, enforces
+%that for any session key material $k$, there can be at most one run of $I$
+%involving it, and this run must map to at least one run of $R$ involving $k$.
+%%
+%Injective agreement for $R$ with $I$ is formulated as the dual of this.
+%%
+%Our formulation uniquely guarantees one run of the initiator involving $k$,
+%but allows us to have potentially multiple runs of $R$ involving $k$, and vice
+%versa.
+%%
+%However, because we prove injective agreement for both $I$ and $R$, this
+%becomes equivalent to the Lowe formulation, and guarantees a unique map.
+%%
 
-Traditionally, the event names used to describe injective agreement are called
+Traditionally, the event types used to describe injective agreement are called
 \emph{Running} and \emph{Commit}, but to harmonize the presentation of
 authentication and secrecy, we refer to these events as \mIStart{} and
 \mIComplete{} respectively for the initiator, and \mRStart{} and \mRComplete{}
 for the responder.
 %
-More formally, for the initiator role we write
+More formally, for the initiator role we define injective agreement by the
+trace predicate
 \begin{align*}
-    \forall I,& R, p, k, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, p)
+    \mPredInjI& \triangleq
+    \forall I, R, k, S, t_2\mLogicDot \mIComplete^{t_2}(I, R, k, S)
     \rightarrow\\
-    &(\exists t_2\mLogicDot \mRStart^{t_2}(R, k, p) \land t_2 \lessdot t_1)\ 
-    \land\ \neg(\exists I' R' t_3 \mLogicDot \mIComplete^{t_3}(I' , R', k, p)
-        \land \mIComplete^{t_2} \not = \mIComplete^{t_3}) \\
-    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_1).
+    &(\exists t_1\mLogicDot \mRStart^{t_1}(R, k, S) \land t_1 \lessdot t_2)
+    \land\ (\forall I' R' t_1' \mLogicDot \mIComplete^{t_1'}(I' , R', k, S)
+        \rightarrow t_1' \doteq t_1) \\
+    &\lor(\exists t_1\mLogicDot \mRevLTK^{t_1}(R) \land t_1 \lessdot t_2).
 \end{align*}
 %
-Figure~\ref{fig:injAgreeI} depicts when the adversary at the earliest can use
-advanced capabilities.
+Figure~\ref{fig:injAgree} shows when the adversary at the earliest can use
+advanced capabilities such that \mPredInjI{} still holds.
 %
 Ephemeral DH half-keys can be revealed as soon as they are created.
 %
 The initiator's long-term key can be revealed before any of the parties start
+their runs.
+%
+For the responder role we define
+\begin{align*}
+    \mPredInjR& \triangleq\
+    \forall I, R, k, S, t_2\mLogicDot \mRComplete^{t_2}(I, R, k, S)
+    \rightarrow\\
+    &(\exists t_1\mLogicDot \mIStart^{t_1}(I, R, k, S) \land t_1 \lessdot t_2)
+    \land (\forall I' R' t_1' \mLogicDot \mRComplete^{t_1'}(I' , R', k, S)
+        \rightarrow t_1' \doteq t_1)\\
+    &\lor(\exists t_1\mLogicDot \mRevLTK^{t_1}(I) \land t_1 \lessdot t_2).
+\end{align*}
+%
+Figure~\ref{fig:injAgree} depicts when the adversary at the earliest can use
+advanced capabilities.
+%
+Ephemeral DH half-keys can be revealed as soon as they are created.
+%
+The responder's long-term key can be revealed before any of the parties start
 their runs.
 %
 \begin{figure}[h!]
@@ -274,6 +325,7 @@ their runs.
             \pgfmathsetmacro{\RC}{230}    % X-coord
             \pgfmathsetmacro{\LTKI}{200}  % X-coord
             \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            \draw (-10 pt,10pt) node [above] {\mPredInjI};
             % I's session ------------------------------------------------
             % Baseline
             \draw [->] (0pt,0pt) -- (300pt,0pt);
@@ -308,151 +360,118 @@ their runs.
             \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
             \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
             \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
-        \end{tikzpicture}
-        \caption{Injective agreement guarantee for $I$: the earliest the
-        adversary can use its advanced capabilities.}
-        \label{fig:injAgreeI}
-    \end{center}
-\end{figure}
-%
-For the responder role we write
-\begin{align*}
-    \forall I,& R, p, k, t_1\mLogicDot \mRComplete^{t_1}(I, R, k, p)
-    \rightarrow\\
-    &(\exists t_2\mLogicDot \mIStart^{t_2}(I, R, k, p) \land t_2 \lessdot t_1)\ 
-    \land\ \neg(\exists I' R' t_3 \mLogicDot \mRComplete^{t_3}(I' , R', k, p)
-        \land \mRComplete^{t_2} \not = \mRComplete^{t_3}) \\
-    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(I) \land t_2 \lessdot t_1),
-\end{align*}
-%
-Figure~\ref{fig:injAgreeR} depicts when the adversary at the earliest can use
-advanced capabilities.
-%
-Ephemeral DH half-keys can be revealed as soon as they are created.
-%
-The responder's long-term key can be revealed before any of the parties start
-their runs.
-%
-\begin{figure}[h!]
-    \begin{center}
-        \tikzset{>=latex}
-        \begin{tikzpicture}
-            % All units in pt
-            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+            % InjAgree for R =============================================
             \pgfmathsetmacro{\IS}{80}     % X-coord
             \pgfmathsetmacro{\IC}{200}    % X-coord
             \pgfmathsetmacro{\RS}{120}    % X-coord
             \pgfmathsetmacro{\RC}{230}    % X-coord
             \pgfmathsetmacro{\LTKI}{200}  % X-coord
             \pgfmathsetmacro{\LTKR}{230}  % X-coord
+            \draw (-10 pt,4*\LOFFS+6pt) node [above] {\mPredInjR};
             % I's session ------------------------------------------------
             % Baseline
-            \draw [->] (0pt,0pt) -- (300pt,0pt);
+            \draw [->] (0pt,4*\LOFFS + 0pt) -- (300pt,4*\LOFFS + 0pt);
             % First event
-            \draw (\IS pt,3pt) node[above] {\mIStart{}};
-            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+            \draw (\IS pt,4*\LOFFS + 3pt) node[above] {\mIStart{}};
+            \draw (\IS pt,4*\LOFFS + 3pt) -- (\IS pt,4*\LOFFS + -3pt);
             % Second event
-            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
-            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+            \draw (\IC pt,4*\LOFFS + 3pt) node[above] {\mIComplete{}};
+            \draw (\IC pt,4*\LOFFS + 3pt) -- (\IC pt,4*\LOFFS + -3pt);
             % Thick session span line
-            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+            \draw [line width=2pt] (\IS pt,4*\LOFFS + 0pt) -- (\IC pt,4*\LOFFS + 0pt);
             % R's session ------------------------------------------------
             % Baseline
-            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+            \draw [->] (0pt,5*\LOFFS + 0pt) -- (300pt,5*\LOFFS + 0pt);
             % First event
-            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
-            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+            \draw (\RS pt,5*\LOFFS + 3pt) node[above] {\mRStart{}};
+            \draw (\RS pt,5*\LOFFS + 3pt) -- (\RS pt,5*\LOFFS - 3pt);
             % Second event
-            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
-            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+            \draw (\RC pt,5*\LOFFS + 3pt) node[above] {\mRComplete{}};
+            \draw (\RC pt,5*\LOFFS + 3pt) -- (\RC pt,5*\LOFFS - 3pt);
             % Thick session span line
-            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+            \draw [line width=2pt] (\RS pt,5*\LOFFS + 0pt) -- (\RC pt,5*\LOFFS + 0pt);
             % LTKRev(I,R)  -----------------------------------------------
             % Baseline
-            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+            \draw [->] (0pt,6*\LOFFS + 0pt) -- (300pt,6*\LOFFS + 0pt);
             % Attack events
-            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
-            \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
-            \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
-            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
-            \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
+            \draw (\RC pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
+            \draw (\RC pt,6*\LOFFS + 3pt) -- (\RC pt,6*\LOFFS - 3pt);
+            \draw (\IS - 50 pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
+            \draw (\IS - 50 pt,6*\LOFFS + 3pt) -- (\IS - 50 pt,6*\LOFFS - 3pt);
+            \draw (\IS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
+            \draw (\IS pt,6*\LOFFS + 3pt) -- (\IS pt,6*\LOFFS - 3pt);
+            \draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
+            \draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
         \end{tikzpicture}
-        \caption{Injective agreement guarantee for $R$: the earliest the
-        adversary can use its advanced capabilities.}
-        \label{fig:injAgreeR}
+        \caption{Injective agreement guarantee: the earliest the
+        adversary can use its advanced capabilities such that the properties
+        are still proven to be maintained.}
+        \label{fig:injAgree}
     \end{center}
 \end{figure}
 %
 
-We define the agreed upon parameters on which $I$ get injective agreement
-guarantees as follows:
-\begin{itemize}
-    \item responder identity,
-    \item session key material (which varies depending on \mEdhoc{} method),
-    \item context identifiers \mCi{} and \mCr{}, and
-    \item cipher suites \mSuites{}.
-\end{itemize}
-%
-Because of \mEdhoc{} aiming to provide identity protection for $I$, there is no
-guarantee for $I$ that $R$ injectively agrees on the initiator identity.
-%
-Because $R$ completes after $I$, $R$ can get injective agreement guarantees on
-more parameters, namely the initator's identity and, as will become clear
-shortly, the complete session key material for all methods.
-%
-
-%Achieving injective agreement on the roles and the
-%identities of the parties in those roles implies \emph{entity authentication}.
-%
-%In addition, achieving injective agreement on the session key material implies
-%\emph{session key material authentication}.
-%
-
 %------------------------------------------------------------- Implicit auth
-Not all \mEdhoc{} methods have the injective agreement property and so we show
-a form of implicit agreement they all share.
+Not all \mEdhoc{} methods have the injective agreement property, so we show
+for all methods a form of \emph{implicit agreement} on all the parameters
+mentioned above.
 %
 We take inspiration from the computational model definitions of implicit
-authentication proposed by Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20}.
+authentication proposed by Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20} to
+modify the classical injective agreement into an implicit property.
 %
-The intuition behind our definition is that a party $A$ may complete a protocol
-run resulting in a set of parameters $p$, one of which is a session key $k$,
-and $A$ believes these parameters be agreed with another party $B$.
+An important difference between our definition and theirs, is that they focus on
+authenticating a key and related identities, whereas we extend the more general
+concept of agreeing on a set of parameters, deriving from the idea of injective
+agreement~\cite{DBLP:conf/csfw/Lowe97a}.
+%
+We use the term \emph{implicit} in this context to refer to that a party
+accepts any other party who knows the session key material as the
+authenticated party, and that party (if honest) will also agree on the
+parameters computed by the protocol.
+%
+The intuition behind our definition is that a party $A$, being either initiator
+or responder, may complete a protocol
+run resulting in a set of parameters $S$, one of which is a session key $k$,
+and $A$ then believes these parameters can be agreed with another party $B$.
 %
 When completing, $A$ is then guaranteed that $B$ has been or is
 engaged in exactly one protocol run with $A$ in the opposite role, and that $B$
-has or will be able to agree on $p$.
+has or will be able to agree on $S$.
 %
 This allows $A$ to conclude that if the last message reaches $B$, then
-$A$ and $B$ have agreed on $p$.
+$A$ and $B$ have agreed on $S$.
 %
-In contrast to injective agreement, this property is symmetric.
+In contrast to injective agreement, this property is symmetric with respect to
+the roles.
 %
 In particular, because the guarantee only reasons about completed and
 hypothetically completed protocol runs, it can reason about parameters that the
 responder learns only after receiving the last message.
 %
+In contrast to almost full explicit key authentication defined by
+Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20}, our definition does not
+require key confirmation, so our definition is indeed closer to their implicit
+authentication.
+%
 Also here we split the property into one guarantee for the initiator $I$ and
-one for $R$.
+one for $R$, but only show the definition for $I$.
 %
 The definition for $I$ is
 \begin{align*}
-    \forall I, R,& p, k, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, p)
+    \mPredImpI& \triangleq
+    \forall I, R, k, S, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, S)
     \rightarrow\\
-      &(\forall I', R', p', t_2\mLogicDot \mRComplete^{t_2}(I', R', k, p') \rightarrow
-             (I=I' \land R=R' \land p=p'))\\
-      \land &(\forall I', R', p', t_2'\mLogicDot
-             (\mRComplete^{t_2}(I, R, k, p)
-             \land \mRComplete^{t_2'}(I', R', k, p')) \rightarrow
-             \mRComplete^{t_2} = \mRComplete^{t_2'}
-             )\\
-    \lor&(\exists t_2\mLogicDot \mRevLTK^{t_2}(R) \land t_2 \lessdot t_1)
-    \lor(\exists t_2\mLogicDot \mRevEph^{t_2}(R))
-    \lor (\exists t_2\mLogicDot \mRevEph^{t_2}(I)).
+      &(\forall I', R', S', t_2\mLogicDot \mRComplete^{t_2}(I', R', k, S') \rightarrow
+             (I=I' \land R=R' \land S=S'))\\
+      \land &(\forall I', R', S', t_1'\mLogicDot
+        (\mIComplete^{t_1'}(I', R', k, S') \rightarrow t_1' \doteq t_1
+        )\\
+    &\lor(\exists t_0\mLogicDot \mRevLTK^{t_0}(R) \land t_0 \lessdot t_1)
+    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(R))
+    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(I)).
 \end{align*}
+%
 Figure~\ref{fig:impAgreeI} depicts when the adversary at the earliest can use
 advanced capabilities.
 %
@@ -514,7 +533,78 @@ their runs.
 %
 The responder's guarantee is an defined analogously, letting initiator and
 repsonder events swap places, and letting long-term key reveal events swap
-places.
+places.\\
+%
+
+%------------------------------------------------------- Agreed parameters
+\runhead{Agreed Parameters}
+%\subsubsection{Agreed Parameters}
+The initiator $I$ gets injective and implicit agreement guarantees on the
+following set $S_\mEdhoc$ of parameters:
+\begin{itemize}
+    \item responder identity,
+    \item the roles played by itself and its peer,
+    \item session key material (which varies depending on \mEdhoc{} method),
+    \item context identifiers \mCi{} and \mCr{}, and
+    \item cipher suites \mSuites{}.
+\end{itemize}
+%
+Because of \mEdhoc{} aiming to provide identity protection for $I$, there is no
+injective agreement guarantee for $I$ that $R$ agrees on the initiator identity.
+%
+For the same reason, there is neither any such guarantee for $I$ with respect to
+the \mGiy{} part of the session key material when $I$ uses a \mStat{}-based
+method.
+%
+There is, however, an implicit agreement guarantee for $I$ that $R$ agrees on
+$I$'s identity and the full session key material.
+%
+Since $R$ completes after $I$, $R$ can get injective agreement guarantees on
+more parameters, namely the initator's identity and the full session key
+material for all methods.\\
+%
+
+%------------------------------------------------------- Implied properties
+\runhead{Subsumed Properties}
+%\subsubsection{Subsumed Properties}
+Given the secrecy and agreement properties and parameter set $S_\mEdhoc$ defined
+above, other properties can be indirectly concluded to hold.
+%
+Protocols where a party does not get confirmation on that their peer knows the
+session key material are known to be at risk to
+\emph{Key-Compromise Impersonation (KCI)}
+attacks~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
+%
+Attacks in this class allows an adversary in possession of a party's secret
+long-term key to coerce that party to complete a
+protocol run believing it authenticated a certain peer, but where that peer did
+not engage in a run.
+%
+Because both our notions of agreement above ensure agreement on identities,
+roles and session key material, all methods passing verification of those also
+have resistance to KCI attacks.
+%
+
+If a party can be coerced into believing it completed a run with a peer $A$, but
+where the session key material is actuality shared with a party $B$, the used
+protocol is vulnerable to an \emph{Unknown Key-Share (UKS)}
+attack~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
+%
+For the same reason as for KCI, a protocol passing verification of our agreement
+properties is also resistant to UKS attacks.
+%
+
+Our agreement properties also capture \emph{entity authentication}.
+%
+
+
+%Achieving injective agreement on the roles and the
+%identities of the parties in those roles implies \emph{entity authentication}.
+%
+%In addition, achieving injective agreement on the session key material implies
+%\emph{session key material authentication}.
+%
+
 %
 %We say that \mEdhoc{} in method $m$ satisfies \emph{explicit authentication} for
 %the initiator $I$ with a responder $R$, if injective agreement holds for $I$
@@ -561,43 +651,35 @@ places.
 %talking to $R$ and vice versa.
 %%
 
-\mEdhoc{} claims to support mutual authentication with consistency, aliveness
-and peer awareness (see Section~\ref{sec:claimedProperties}).
-%
-These claims appear to have been imported from \mSigma{}~\cite{sigma}, using the
-inheritance argument, because all three appear there as well.
-%
-The definition of consistency~\cite{sigma} is very close in intent to the
-definition we use for implicit authentication, except that it is posed in a
-computational setting.
-%
-We therefore consider them equal in terms of intent for the purpose of this
-paper.
-%
-Aliveness is, according to \mSigma{}~\cite{sigma}, guaranteed to a party $A$ if
-after running the protocol with $B$, $A$ knows that $B$ was alive during
-the execution, e.g., by verifying that $B$ signed a challenge.
-%
-For \mEdhoc{} this means that if we can prove mutual injective agreement, i.e.,
-explicit authentication, on \mGxy{}, then mutual aliveness follows.
-%
-Peer awareness is informally defined in~\cite{sigma} as the guarantee
-that if $A$ completes a protocol run with $B$, then not only does $A$
-know that $B$ is alive, but also that $B$ has initiated a corresponding session
-with $A$.
-\\
-
-%\runhead{Session Key Material Independence}
-%\subsubsection{Session Key Material Independence}
-%Session key material independence holds if knowing the key material for one
-%session does not give the attacker any information about the key material from
-%other sessions.  To model session
-%key material independence of \mEdhoc, we allow leaking session key material
-%after the protocol run, and verify secrecy for those sessions where the
-%session key material has not directly revealed to the attacker.
-%Would the attacker be able to break secrecy for one of those sessions after
-%learning session key material from another session, the key material would not 
-%be independent.\\
+\knote{I propose we remove all discussions about what the spec claims (except
+    that it is imprecise and unclear. There is simply too many loose statements
+there that does not coherently add up to treat all those claims. Discussing some of them
+here does not seem to make sense to me.}
+%\mEdhoc{} claims to support mutual authentication with consistency, aliveness
+%and peer awareness (see Section~\ref{sec:claimedProperties}).
+%%
+%These claims appear to have been imported from \mSigma{}~\cite{sigma}, using the
+%inheritance argument, because all three appear there as well.
+%%
+%The definition of consistency~\cite{sigma} is very close in intent to the
+%definition we use for implicit authentication, except that it is posed in a
+%computational setting.
+%%
+%We therefore consider them equal in terms of intent for the purpose of this
+%paper.
+%%
+%Aliveness is, according to \mSigma{}~\cite{sigma}, guaranteed to a party $A$ if
+%after running the protocol with $B$, $A$ knows that $B$ was alive during
+%the execution, e.g., by verifying that $B$ signed a challenge.
+%%
+%For \mEdhoc{} this means that if we can prove mutual injective agreement, i.e.,
+%explicit authentication, on \mGxy{}, then mutual aliveness follows.
+%%
+%Peer awareness is informally defined in~\cite{sigma} as the guarantee
+%that if $A$ completes a protocol run with $B$, then not only does $A$
+%know that $B$ is alive, but also that $B$ has initiated a corresponding session
+%with $A$.
+%\\
 
 %\runhead{Perfect Forward Secrecy (PFS)}
 %%\subsubsection{Perfect Forward Secrecy} 
@@ -654,9 +736,9 @@ with $A$.
  
 We chose \mTamarin{} to model and verify \mEdhoc{} in the symbolic model.
 %
-\mTamarin{} is an interactive verification tool based on multi-set rewriting rules
+\mTamarin{} is an interactive verification tool based on multi-set rewrite rules
 with event annotations based on action facts, which allow the user to check
- Linear Temporal Logic (LTL) formulas on these models.
+ LTL-style formulas on these models as mentioned above.
 %
 Multi-set rewrite rules with action facts look like $ l \ifarrow[e] r $,
 where $l$ and $r$ are multi-sets of facts, and $e$ is a multi-set of action facts.
@@ -666,11 +748,8 @@ checks equality of these terms under an equational theory $E$. For example,
 one can write $ dec(enc(x,y),y) =_E x $
 to denote that symmetric decryption reverses the encryption operation under this theory.
 The equational theory $E$ is fixed per model, and hence we omit the subscript.
-
-In the presentation of the model we use some syntactic
-sugar, namely
-the use of let bindings (\mT{let ... in}). This is a series of
-definitions of patterns which are substituted in the rest of the rule. \\
+\mTamarin{} supports let-bindings and tuples as syntactic sugar to simplify model
+definitions. \\
 
 %\runhead{Semantics and Built-ins}
 %%\subsubsection{Semantics and Built-ins} \phantom{} 
@@ -709,7 +788,7 @@ definitions of patterns which are substituted in the rest of the rule. \\
 %for the responder) as to avoid confusion with \mTamarin's builtin variable
 %names \mT{x} and \mT{y}.}
 
-\runhead{Protocol rules and equations}
+\runhead{Protocol Rules and Equations}
 %\subsubsection{Protocol Rules and Equations}
 \mTamarin{} allows users to define new function symbols and equational theories.
 These user defined objects are then translated by \mTamarin{} into rewrite
