@@ -67,7 +67,7 @@ rule m4RULER2<!!>:
          gx = 'g'^xx       // This removes partial deconstructions
          data_2 = <'g'^~yy, CI, ~CR>
 ifelse(<!PSK_PSK!>, m4METHODIR,
-        <!ID_PSK = <$U, $V>
+        <!ID_PSK = <u, $V>
          m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', CS0, CI, gx, ID_PSK>
          TH_2 = h(<$H0, m1, data_2>)
          prk_2e = extr(~ltk, gx^~yy)
@@ -123,7 +123,7 @@ ifelse(<!STAT_SIG!>, m4METHODIR,
 
     in
 ifelse(<!PSK_PSK!>, m4METHODIR,
-        [ !<!LTK_!>m4METHODR<!!>(<$U, $V>, ~ltk),
+        [ !<!LTK_!>m4METHODR<!!>(<u, $V>, ~ltk),
         [ !<!LTK_!>m4METHODR<!($V, ~ltk)
         ,  !PK_!>m4METHODR<!($V, pkV)!>
 )
@@ -139,7 +139,7 @@ ifelse(<!STAT!>, m4METHODR,
         [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
         ,
         <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            [ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed),
+            [ m4STATER2<!!>(u, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed),
             [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
         )!>
 )
@@ -302,8 +302,8 @@ ifdef(<!m4AD3!>,
        <!CRED_U = pkU
         extAad3 = TH_3
 ifdef(<!m4AD3!>,
-        <!plainText3 = <$U, authI, AD_3>!>,
-        <!plainText3 = <$U, authI>!>
+        <!plainText3 = <u, authI, AD_3>!>,
+        <!plainText3 = <u, authI>!>
 )
         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
         ifelse(<!STAT!>, m4METHODI,
@@ -312,7 +312,7 @@ ifdef(<!m4AD3!>,
            <!prk_4x3m = prk_3e2m!>
         )
         K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
-        protected3 = $U // ID_CRED_U
+        protected3 = u // ID_CRED_U
 ifdef(<!m4AD3!>,
         <!extAad3 = <TH_3, CRED_U, AD_3>!>,
         <!extAad3 = <TH_3, CRED_U>!>
@@ -348,22 +348,22 @@ ifelse(<!STAT!>, m4METHODI,
 ifelse(<!STAT!>, m4METHODR,
         <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
         <!ifelse(<!PSK_PSK!>, m4METHODIR,
-            <![ m4STATER2<!!>($U, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
+            <![ m4STATER2<!!>(u, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
             <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>
         )!>
 )
 ifelse(<!PSK_PSK!>, m4METHODIR,
         <!!> /* NOTHING */
         , /* All other methods */
-        <!, !PK_!>m4METHODI<!!>($U, pkU)
+        <!, !PK_!>m4METHODI<!!>(u, pkU)
         <!, !PK_!>m4METHODR<!!>($V, pkV)
 )
         , In(m3)
         ]
-        --[ ExpCommitR(~tid, $U, $V, exp_sk, agreed)
-          , CommitR(~tid, $U, $V, imp_sk, agreed)
-          , R4(~tid, $U, $V, m1, m2, m3)
-          , CompletedRun($U, $V, imp_sk) // For clearer statement of PFS -- secrecy only
+        --[ ExpCommitR(~tid, u, $V, exp_sk, agreed)
+          , CommitR(~tid, u, $V, imp_sk, agreed)
+          , R4(~tid, u, $V, m1, m2, m3)
+          , CompletedRun(u, $V, imp_sk) // For clearer statement of PFS -- secrecy only
 ifelse(<!SIG!>, m4METHODI,
          <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
          <!ifelse(<!STAT!>, m4METHODI,
@@ -372,10 +372,10 @@ ifelse(<!SIG!>, m4METHODI,
          )!>
 )
 ifdef(<!m4AD3!>,
-        <!, Recv($U, $V, imp_sk, AD_3)!>
+        <!, Recv(u, $V, imp_sk, AD_3)!>
 )
           ]->
-        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~yy) ]
+        [ CompletedRevEph(~tid, u, $V, imp_sk, ~yy) ]
 
 /*
  * Environment and adversary model additions to standard Dolev-Yao

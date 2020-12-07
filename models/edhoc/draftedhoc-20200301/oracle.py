@@ -32,12 +32,12 @@ def prioritize(goalNumber, prio, goalLine):
 
 def genPrios(goalLines, lemma):
     # Prioritize splitEqs over new instances
-    splitEqs = False
-    splitEqsLine = -1
-    for i in range(len(goalLines)):
-        if re.match(".*splitEqs.*", goalLines[i]):
-            splitEqs = True
-            splitEqsLine = i
+    # splitEqs = False
+    # splitEqsLine = -1
+    # for i in range(len(goalLines)):
+    #     if re.match(".*splitEqs.*", goalLines[i]):
+    #         splitEqs = True
+    #         splitEqsLine = i
 
     for line in goalLines:
         goal = line.split(':')[0]
@@ -57,7 +57,7 @@ def genPrios(goalLines, lemma):
                re.match(".*~~>.*", line) or\
                re.match(".*=.*=.*", line):
                     prioritize(goal, 70, line)
-            if re.match(".*LTK_.*", line):
+            elif re.match(".*LTK_.*", line):
                     prioritize(goal, 67, line)
             elif re.match(".*aead.*", line):
                     prioritize(goal, 65, line)
