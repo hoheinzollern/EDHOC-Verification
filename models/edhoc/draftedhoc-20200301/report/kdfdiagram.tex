@@ -26,7 +26,7 @@ term/.style={rounded corners},
   keyb/.style={base, keybbox, text width=4em},
   % -------------------------------------------------
   norm/.style={->, draw, black},
-  cond/.style={base, draw=black, fill=none, diamond},
+  cond/.style={base, draw=black, dashed, fill=none, rectangle},
   txt/.style={base, draw=none, fill=none}
   }
 % -------------------------------------------------
@@ -34,14 +34,14 @@ term/.style={rounded corners},
 %\node [terminput] (u1) {Seed};
 %\node [hkdfext, join] (h1) {\mHkdfExtract};
 \node [prk, join] (p2) {\mPRKtwo};
-\node [cond, join] (c1) {R uses \\ \mStat};
+\node [cond, join] (c1) {R uses \mStat?};
 
 \node [prk, below=6mm of c1.south] (p3) {\mPRKthree};
-\draw [->, norm] (c1.south) -- (p3.north) node[midway, above right] {N};
+\draw [->, norm] (c1.south) -- (p3.north) node[midway, right] {N};
 
-\node [cond, join, below=8mm of p3.south] (c2) {I uses \\ \mStat};
+\node [cond, join, below=8mm of p3.south] (c2) {I uses \mStat?};
 \node [prk, below=5mm of c2.south] (p4) {\mPRKfour};
-\draw [->, norm] (c2.south) -- (p4.north) node[midway, above right] {N};
+\draw [->, norm] (c2.south) -- (p4.north) node[midway, right] {N};
 
 \node [hkdfext, right=3cm of p3] (h3) {\mHkdfExtract};
 \node [hkdfext, right=3cm of p4] (h5) {\mHkdfExtract};
@@ -49,7 +49,7 @@ term/.style={rounded corners},
 \node [hkdfexp, shape border rotate=180, left= 2.5cm of p4] (h6) {\mHkdfExpand};
 \node [keyb, join, left=3cm of h6] (k3) {\mKthreem};
 \node [hkdfexp, shape border rotate=180, below= 0.8cm of h6] (h9) {\mHkdfExpand};
-\node [txt, join, left=1cm of h9.west] (t4) {EDHOC-Exporter()};
+\node [txt, join, left=1cm of h9.west] (t4) {EDHOC-Exporter};
 
 \node [hkdfexp, shape border rotate=180, left= 2.5cm of p3] (h4) {\mHkdfExpand};
 \node [keyb, join, left=3cm of h4] (k2) {\mKtwom};
@@ -85,9 +85,9 @@ term/.style={rounded corners},
 
 \node [hkdfext, right=3cm of p2] (h1) {\mHkdfExtract};
 \node [dhk, right=2cm of h1] (p0) {$\mGxy$};
-\node [terminput, text width=2em, below = 0.3cm of h1] (u1) {Seed};
+\node [terminput, text width=2em, below = 0.2cm of p0] (u1) {Seed};
 \draw [->] (h1.west) -- (p2.east);
-\draw [->] (u1.north) -- (h1.south);
+\draw [->] (u1.west) -- ++(-1.55,0) -- (h1.south);
 \draw [->] (p0.west) -- (h1.east);
 
 
@@ -98,11 +98,11 @@ term/.style={rounded corners},
 \draw [->, norm] (u3.west) -- (h5.east);
 
 
-\node [term, above = 1.3cm of h4] (u5) {\mTHtwo};
+\node [term, above = 0.55cm of h4] (u5) {\mTHtwo};
 \draw [->, dotted, shorten >=1mm] (u5) -- (h4);
 \draw [->, dotted, shorten >=1mm] (u5) -- (h2);
 
-\node [term, above = 1cm of h6] (u6) {\mTHthree};
+\node [term, above = 0.3cm of h6] (u6) {\mTHthree};
 \draw [->, dotted, shorten >=1mm] (u6) -- (h6);
 \draw [->, dotted, shorten >=1mm] (u6) -- (h8);
 
@@ -111,11 +111,11 @@ term/.style={rounded corners},
 %\draw [->, dotted, shorten >=1mm] (u7) -- (h9.south);
 \draw [-> , dotted ] (u7.west) -- ([yshift=-0.4em] h9.east);
 
-\matrix [draw, ultra thick, double, below=3em of t1.east] {
-  \node [dhkbox, semithick, label=right:DH key] {}; \\
-  \node [prkbox, semithick, label=right:Intermediate key material] {}; \\
-  \node [keybbox, semithick, label=right:Key for \mAead{} or \mXor] {}; \\
-};
+%\matrix [draw, ultra thick, double, below=2em of t1.east] {
+%  \node [dhkbox, semithick, label=right:DH key] {}; \\
+%  \node [prkbox, semithick, label=right:Intermediate key material] {}; \\
+%  \node [keybbox, semithick, label=right:Key for \mAead{} or \mXor] {}; \\
+%};
 
 %
 % ------------------------------------------------- 

@@ -4,89 +4,88 @@
 %context for the \mOscore{} security protocol.
 %
 %To reach this goal, 
-Here, we provide a quick introduction to the \mEdhoc{} protocol. For more details, we refer the reader to~\cite{selander-lake-edhoc-01}. To establish an authenticated security context for \mOscore,
-\mEdhoc{} uses a three-message protocol structure
+%In this section, we provide an overview of the \mEdhoc{} protocol.
+% For more details, we refer the reader to~\cite{selander-lake-edhoc-01}. 
+%To establish an authenticated security context for \mOscore,
+\mEdhoc{} uses a three-message protocol structure.
 %in the style of the \mNoise{} framework, outlined in
-shown in Figure~\ref{fig:edhocFramework}.
+%shown in Figure~\ref{fig:edhocFramework}.
 %
-In the first message \mMsgone{}, the initiator $I$ sends to the responder $R$ an
-ephemeral DH half-key \mGx{}, along with some parameters to establish an \mOscore{} security context (supported authentication method \mMethod, supported cipher suites \mSuites, and connection identifier \mCi).\footnote{While we present these parameters here while describing \mEdhoc, we will ignore them in our formal modelling, in Section~\ref{sec:formalization}.} \mT{R} may reject the choice of the authentication method or cipher suites, leading to a negotiation across multiple \mEdhoc{} sessions.
+In the first message, the initiator $I$ sends to the responder $R$ an
+ephemeral DH half-key \mGx{}, along with some parameters to establish an \mOscore{} security context (supported authentication method, supported cipher suites, and connection identifiers) and optional application layer data.\footnote{While we present these parameters here while describing \mEdhoc, and they are useful to establish a security context for \mOscore, we will ignore some of them in our formal modelling, in Section~\ref{sec:formalization}. Application layer data enjoys differing levels of protection depending on the message it is part of.} \mT{R} may reject the choice of the authentication method or cipher suites, leading to a negotiation across multiple \mEdhoc{} sessions.
 %an ordered list of supported cipher suites, and, in the \mMethod{} element, suggests
 %authentication methods to be used.
 %%
 %\mT{R} may reject the choice of cipher suite, leading to a negotiation across multiple \mEdhoc{} sessions (see Section~\ref{sec:ciphersuiteNegotiation}), or that of the authentication methods.
 %
-In the second message \mMsgtwo{}, $R$ provides its ephemeral
+In the second message, $R$ provides its ephemeral
 DH half-key \mGy{} and its connection identifier \mCr, and authenticates itself
 to $I$ by providing authentication data \mAuthr{}.
 %
-Finally, in the third message \mMsgthree{}, $I$ authenticates itself
+Finally, in the third message, $I$ authenticates itself
 to $R$ by providing authentication data \mAuthi{}.
 %
 The authentication data consists of a MAC for all authentication methods.
 %
-This MAC is also signed when authentication is based on public key signatures.
-%
-In addition to the exchange of DH half-keys and authentication data, the
-messages also include parameters for the \mOscore{} security context, such as
-encryption algorithm identifiers (\mSuites{}) and \mOscore{} security context
-identifiers \mCi{} and \mCr{}.
-%
-Optionally, messages may also include application layer data \mAD{}, which
-enjoys differing levels of protection depending on which message it is part of.
+This is illustrated in Figure~\ref{fig:edhocFramework} in the appendix.
 %
 %We do not include \mCi, \mCr, and \mAD{} in our modelling here.
 %As will be described below, 
-When authentication is based on
-a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not
-used.
+%When authentication is based on
+%a pre-shared key, the \mCredi{} and \mCredr{} credential identifiers are not
+%used.
 %
-Instead, a single identifier for the pre-shared key is transmitted in \mMsgone{}.
+%Instead, a single identifier for the pre-shared key is transmitted in \mMsgone{}.
 %
-\begin{figure}
-\centering
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-\begin{tikzpicture}
-    \node (ini) at (0, 0) {Initiator (\mT{I})};
-    \draw [very thick] (0, -0.25) -- (0,-2.2);
-    \draw [very thick] (7, -0.25) -- (7,-2.2);
-    \node (res) at (7,0) {Responder (\mT{R})};
-    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-\msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
-    \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
-    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
-    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
-    \end{tikzpicture}
-\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
-\label{fig:edhocFramework}
-\end{figure}
+%\begin{figure}
+%\centering
+%\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+%\begin{tikzpicture}
+%    \node (ini) at (0, 0) {Initiator (\mT{I})};
+%    \draw [very thick] (0, -0.25) -- (0,-2.2);
+%    \draw [very thick] (7, -0.25) -- (7,-2.2);
+%    \node (res) at (7,0) {Responder (\mT{R})};
+%    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+%\msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
+%    \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
+%    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
+%    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
+%    \end{tikzpicture}
+%\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
+%\label{fig:edhocFramework}
+%\end{figure}
 
 %One of the driving design goals is to 
-\mEdhoc{} accommodates three credential types
-an endpoint may use for authentication: certificates, private keys
-and static long-term DH keys.
+\mEdhoc{} accommodates various credential types
+an endpoint may use for authentication, 
+%: certificates, private keys and static long-term DH keys. 
+%
+%The three authentication methods are based on 
+namely 
+digital signatures (\mSig), 
+and
+challenge-response signatures based on static long-term DH keys (\mStat).
+%\pskstuff{and
+%pre-shared symmetric keys (\mPsk)}.
 %
 Depending on the types used, the authentication methods differ,
-and \mAuthi{} and \mAuthr{} are constructed accordingly.
-%
-The three authentication methods are based on digital signatures (\mSig),
-challenge-response signatures based on static long-term DH keys (\mStat) and
-pre-shared symmetric keys (\mPsk).
+and \mAuthi{} and \mAuthr{} are constructed accordingly (for example,  when authentication is based on digital signatures, the data is a signed MAC).
 %
 The two endpoints may use different authentication methods in an \mEdhoc{} run.
 %
-While any combination of the \mSig{} and \mStat{} methods is possible,
-when \mPsk{} is used, both endpoints must use \mPsk{}.
+%\pskstuff{While any combination of the \mSig{} and \mStat{} methods is possible,
+%when \mPsk{} is used, both endpoints must use \mPsk{}.}
 %
 We overload notation to refer to these combinations of authentication methods as
 \emph{methods} to follow the terminology in the \mEdhoc{}
 \mSpec{}~\cite{selander-lake-edhoc-01}.
 %
-Thus, we have five methods: \mSigSig, \mSigStat, \mStatStat, \mStatSig{} and
-\mPskPsk.
+Thus, we have 
+%\pskstuff{five}
+four 
+methods: \mSigSig, \mSigStat, \mStatStat, and \mStatSig. %\pskstuff{and \mPskPsk}.
 %
-The first authentication method in a method name denotes the
-authentication method used by the initiator of the protocol run and the second the one used by the responder.
+\footnote{The individual authentication methods in each name denote the authentication method used by the initiator and responder respectively.}
 %
 We refer to a method where at least one party uses \mSig{} (resp. \mStat) as a \mSig-based (resp. \mStat-based)
 method.
@@ -204,8 +203,8 @@ method.
 %%
 %
 %------------------------------------------------------------------------- sub
-\subsection{Methods of \mEdhoc{}}
-\label{sec:methods}
+%\subsection{Methods of \mEdhoc{}}
+%\label{sec:methods}
 %Although \mCbor{} and \mCose{}~\cite{rfc8152} are important building blocks of
 %\mEdhoc{}, and we use their terminology in our \mTamarin{} model to better
 %reflect the \mSpec{}, our model does not cover the details of encoding and
@@ -218,61 +217,62 @@ method.
 %
 %------------------------------------------------------------------------- sub
 %\subsubsection{Key Hierarchy.}
-\runhead{Key Schedule}
-\label{sec:keyHierarchy}
-\mEdhoc{} derives keys using \mHkdf{}~\cite{rfc5869}.
+%\runhead{Key Schedule}
+%\label{sec:keyHierarchy}
+We first discuss the key schedule of \mEdhoc{} here (Figure~\ref{fig:kdfdiagram}). \mEdhoc{} uses two functions from the \mHkdf{} interface~\cite{rfc5869} to derive keys.
 %
-The \mHkdf{} interface provides two functions -- \mHkdfExtract{}, which
+\mHkdfExtract{} 
 constructs uniformly distributed key material from random input and a seed,
-and \mHkdfExpand{}, which generates keys from key material and a seed.
+while \mHkdfExpand{} generates keys from key material and a seed.
 %
 %The seeds are used to bind the key material and keys to certain parameters.
 %
 
-The key schedule is rooted in the ephemeral DH key \mGxy{}, the combination
-of the two half-keys \mGx{}, \mGy{} and the corresponding secret half-keys $x$
-and $y$.
+This key schedule is rooted in the ephemeral DH key \mGxy{}, the combination
+of the two half-keys \mGx{}, \mGy{} and the corresponding secret half-keys $x$ and $y$.
 %
 From \mGxy{}, three intermediate keys \mPRKtwo, \mPRKthree{} and
 \mPRKfour{} are derived during the course of the protocol execution.
 %
-Each one of them corresponds to a specific message in the protocol, and from
+Each one of them is used for a specific message in the protocol, and from
 these intermediate keys, encryption and integrity keys
 (\mKtwoe, \mKtwom{}, \mKthreeae, and \mKthreem) for that message are derived.
 %
-The seed for generating \mPRKtwo{} differs between methods.
+The seed for generating \mPRKtwo{} is empty for all methods. %\pskstuff{except \mPskPsk{}, where it is the pre-shared key}.%
+%For \mPskPsk{}, the seed is the pre-shared key and for all other methods it is
+%empty.
 %
-For \mPskPsk{}, the seed is the pre-shared key and for all other methods it is
-empty.
-%
-In the \mPskPsk{} and \mSigSig{} methods, all three intermediate keys
-are the same, i.e., $\mPRKtwo{} = \mPRKthree{} = \mPRKfour$.
-%
-For the three \mStat-based methods, however, they differ.
-%
-This is because the intermediate key \mPRKthree{} is dependent on the static
-long-term key of the initiator if used (and \mPRKfour{} possibly also on the
-static long-term key of the responder).
+
+%In the 
+%%\pskstuff{\mPskPsk{} and} 
+%\mSigSig{} method, all three intermediate keys
+%are the same, i.e., $\mPRKtwo{} = \mPRKthree{} = \mPRKfour$.
+%%
+%For the three \mStat-based methods, however, they differ.
+%%
+%This is because the intermediate key \mPRKthree{} is dependent on the static
+%long-term key of the initiator if used (and \mPRKfour{} possibly also on the
+%static long-term key of the responder).
 %
 
 The protocol execution culminates in the established session key material.
 %
-The key material is different for the different methods.
+%The key material is different for the different methods.
 %
-For all methods \mGxy{} is part of the key material.
+For all methods, \mGxy{} is part of the key material.
 %
 If the initiator uses the \mStat{} authentication method, so is \mGrx, which is
 the initiator's public key \mGr{} raised to the power of $x$.
 %
-If the responder uses the \mStat{} authentication method, \mGiy{}, which is
-the initiator's public key \mGi{} raised to the power of $y$, is part of the
+If the responder uses the \mStat{} authentication method, \mGiy{} (which is
+the initiator's public key \mGi{} raised to the power of $y$), is part of the
 session key material.
 %
 From the session key material, a key exporter (\mEdhoc-Exporter) based on
-\mHkdf{} can be used to extract the encryption and integrity keys required
-for \mOscore{}.
+\mHkdf{} can be used to extract %the encryption and integrity 
+keys required for \mOscore{}.
 %
-Figure~\ref{fig:kdfdiagram} shows an abstract description of the key schedule.
+%Figure~\ref{fig:kdfdiagram} shows an abstract description of the key schedule.
 %
 
 \begin{figure}[h]
@@ -280,20 +280,19 @@ Figure~\ref{fig:kdfdiagram} shows an abstract description of the key schedule.
 \scalebox{.785}{
 \input{kdfdiagram.tex}
 }
-\caption{Key schedule}
+\caption{Key schedule: The light blue boxes contain DH keys (\mGxy, \mGrx, \mGiy), orange boxes intermediate key material (\mPRKtwo, \mPRKthree, \mPRKfour), and dark blue boxes the keys for \mAead{} or \mXor (\mKtwoe, \mKtwom, \mKthreeae, \mKthreem). Dashed boxes indicate conditionals.}
 \label{fig:kdfdiagram}
 \end{figure}
 
-We now describe the \mEdhoc{} methods.
+%We now describe the \mEdhoc{} methods.
 %
 %Since the \mSigSig{} method has been analyzed earlier, we do not focus on
 %it here.
-%
+
 For brevity, we only focus on the \mStat-based methods here.
 %
-However, a detailed description of the \mSigSig{} and \mPskPsk{} methods can be found in the
+However, a detailed description of all methods can be found in the
 technical report at~\cite{edhocTamarinRepo}. 
-\vnote{Ensure that this is put in.}
 %
 
 %\subsubsection{\mPskPsk{}.}
@@ -408,15 +407,18 @@ challenge-response signature pattern used by protocols such as
 %------------------------------------------------------------------------- sub
 %\subsubsection{\mSigStat.}
 
-\runhead{\mSigStat}
-The initiator uses the \mSig{}-based method, authenticating with a signature,
+%\runhead{\mSigStat}
+We describe the \mSigStat{} method in some detail here (the message sequence chart can be found in Figure~\ref{fig:edhocsigstat}). The initiator uses the \mSig{}-based method, authenticating with a signature,
 while the responder uses the \mStat{}-based method, authenticating with a
 challenge-response signature.
 %
-The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
+In \mStat{}-based methods, each party provides an identifier, \mIdcredi{} and \mIdcredr{} respectively, for the credentials they use.
 %
-\mCredi{} and \mLtki{} are signature keys since the initiator is using the
-\mSig{} method.
+%
+\mCredi{} and \mLtki{} are signature keys since the initiator is using
+\mSig.
+
+The initiator sends the first message as usual to the responder. The keys $\mPRKtwo$, $\mPRKthree$, and $\mKtwom$ are generated by the responder according to the key schedule. The responder MAC is the \mAead{} encryption of its credential identifier \mIdcredr{}, the hash of the first message, its credential \mCredr{}, and any application data $\mADtwo$. However, since the initiator is running \mSig{}, its MAC (which is computed the same way using its credential, identifier, hash of the second message, and application data \mADthree) also needs to be signed using $\mLtki$. %The precise details of the communications can be seen in the message sequence chart, in Figure~\ref{fig:edhocsigstat}.
 
 \begin{figure}[ht]
 \centering
@@ -484,29 +486,24 @@ The detailed message sequence chart is shown in Figure~\ref{fig:edhocsigstat}.
 \label{fig:edhocsigstat}
 \end{figure}
 %------------------------------------------------------------------------- sub
-\runhead{\mStatSig}
-This method mirrors the \mSigStat{} method.
+
+The \mStatSig{} method mirrors \mSigStat{}.
 %
-The responder runs \mSig{} and creates \mAuthr{} as a signature over MAC,
+The responder runs \mSig{} and creates \mAuthr{} as a signature over MAC, 
 while the initiator runs \mStat{}.
 %
 %This is illustrated in Figure~\ref{fig:edhocstatsig}. 
-The message sequence chart for this method can be found in Appendix~\ref{sec:mscstatsig}.
+This can be found in Figure~\ref{fig:edhocstatsig} in the appendix.
 %
-
-%------------------------------------------------------------------------- sub
-\runhead{\mStatStat}
-Both the initiator and the responder use the \mStat{}
-authentication method.
-%
-Both parties' secret static long-term DH keys feed into the key schedule.
-%
-The initiator computes authentication data using the \mAead{} transform
-and includes that in the third message for the responder to verify.
+Finally, in \mStatStat{}, both endpoints use \mStat.
+%Both parties' secret static long-term DH keys feed into the key schedule.
+%%
+%The initiator computes authentication data using the \mAead{} transform
+%and includes that in the third message for the responder to verify.
 %
 %As expected, the initiator's behavior mirrors the \mStat{} authentication method used by the responder in \mSigStat{}.
 %
-
+%
 % 
 %\subsubsection{\mSigSig{}.}
 %Both parties run \mSig{} and authenticate with signatures.
@@ -529,10 +526,10 @@ and includes that in the third message for the responder to verify.
 %do not focus on it here.
 %%
 %However, we model it and verify its properties as carefully as for the other methods.
-
-
-%KARL: we didn't verify anything about this after all. Propose to delete it.
-
+%
+%
+%%KARL: we didn't verify anything about this after all. Propose to delete it.
+%
 %\subsection{Negotiating a cipher suite and method and correlation parameters}
 %\label{sec:ciphersuite}
 %Recall that we mentioned that the first message contains a list of cipher suites, ranked according to the preference of the initiator. What does a cipher suite actually contain? An \mEdhoc{} cipher suite consists of an ordered set of \mCose{} algorithms: an \mAead{} algorithm, a hash algorithm, an ECDH curve, a signature algorithm, a signature algorithm curve, an application \mAead{} algorithm, and an application hash algorithm from the \mCose{} Algorithms and Elliptic Curves registries.  
@@ -540,12 +537,10 @@ and includes that in the third message for the responder to verify.
 %There are four supported cipher suites in \mEdhoc{} -- we refer the reader to Section 3.4 of~\cite{selander-lake-edhoc-01} for the specifics of the algorithms allowed therein. Each cipher suite is identified by one of four predefined integer labels (0--3). Some algorithms are not used in some methods.  The signature algorithm and the signature algorithm curve are not used in methods without signature authentication (i.e. in \mPskPsk{} and \mStatStat).
 %
 %In order to keep the presentation clean, we have omitted the cipher suite negotiation process from the description of the methods. However, this process happens as follows, at the beginning of every method, once the responder receives the first message. The initiator proposes an ordered list of cipher suites they support. This list presented in descending order to the responder who either accepts the topmost entry in this list (if they also support that suite) or makes a counter-proposal, namely the topmost entry which they support from the remaining part of the list. If there is no such entry the responder can reject, and the protocol does not continue. Similarly, the responder can reject the initiator's choices for the method and correlation parameters as well -- in the case of a reject for either of these values, the protocol aborts.
-
 %------------------------------------------------------------------------- sub
- 
 %\subsection{Claimed Security Properties}
 %\label{sec:claimedProperties}
- 
+ %
 %The \mEdhoc{} \mSpec{} \cite{selander-lake-edhoc-01} claims
 %that \mEdhoc{} satisfies many security properties, but these are imprecisely
 %expressed and motivated.

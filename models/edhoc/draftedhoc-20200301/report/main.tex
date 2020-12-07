@@ -149,14 +149,16 @@ By a \emph{key establishment method} we mean a core with such details added.}
 The core based on challenge-response signatures was replaced by \mSigma{}
 in May 2018.
 %
-In the current version, variants using challenge-response signatures have been added again.
+In the current version, the \mPskPsk{} method has been removed.~\footnote{In our analysis in~\cite{edhocTamarinRepo}, we also analyze the last known variant of the \mPskPsk{} method, from~{\textbf{*** Put in the right link to the spec version here ***}}, since it might be added again. We present a quick overview of the same in the appendix.}
+
+\vnote{Karl, please check that this footnote makes sense. Do we have any better justification?}
 %by
 %integrating the cryptographic core of \mOptls{}.
 %
-Additionally, mixed variants where one party uses a challenge-response
+More importantly, mixed variants where one party uses a challenge-response
 signature and the other a regular signature have also been added.
 %
-Consequently, there are now five key establishment methods in total, and formal analysis is 
+Consequently, the protocol has undergone a lot of change, and formal analysis is 
 required to verify security guarantees for \mEdhoc.
 %
 This is especially important, since the \mSpec{} itself lacks a formal description
@@ -197,7 +199,7 @@ tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %This work is presented in Section~\ref{sec:formalization}.
 %
 The formal models and proven properties are based on the version as on
-2020-11-02~\cite{selander-lake-edhoc-01}. \textbf{*** Fix this reference ***}
+2020-11-02~\cite{selander-lake-edhoc-01}, with the \mPskPsk{} method based on the version as on \textbf{*** Fix this reference ***}.
 %
 We give an explicit security model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
@@ -549,7 +551,6 @@ There is some work that was done as part of this effort which has not been menti
 We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
 However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
 %
-
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
 %\runhead{Acknowledgments} This work was partially supported by
@@ -568,8 +569,31 @@ However, the tool does not terminate for these properties on the other methods, 
 
 \appendix
 
-\section{Message sequence chart for \mStatSig}\label{sec:mscstatsig}
+\section{\mPsk}
+As mentioned earlier, in an earlier version, \mEdhoc{} also allowed for a \mPsk{} mode, based on pre-shared keys. While any combination of the \mSig{} and \mStat{} authentication methods is possible,
+when \mPsk{} is used, both endpoints must use \mPsk{}, giving rise to the \mPskPsk{} method. The key schedule is followed exactly as usual here as well, except that the seed for generating \mPRKtwo is no longer empty, but the pre-shared key. All three intermediate keys are the same. The results for the analysis are presented in~\cite{edhocTamarinRepo}.
+\vnote{Cite the right version of the draft in the preceding paragraph. Something about the properties here?}
 
+\section{Abstract model of \mEdhoc{} communications}
+\begin{figure}
+\centering
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+\begin{tikzpicture}
+    \node (ini) at (0, 0) {Initiator (\mT{I})};
+    \draw [very thick] (0, -0.25) -- (0,-2.2);
+    \draw [very thick] (7, -0.25) -- (7,-2.2);
+    \node (res) at (7,0) {Responder (\mT{R})};
+    \msg{1em}{ini}{res}{\mMethod, \mSuites, \mGx, \mCi, \mADone};
+\msg{3em}{res}{ini}{\mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
+    \msg{5em}{ini}{res}{\mCr, [\mIdcredi, \mAuthi, \mADthree]};
+    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
+    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
+    \end{tikzpicture}
+\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
+\label{fig:edhocFramework}
+\end{figure}
+
+\section{Message sequence chart for \mStatSig}\label{sec:mscstatsig}
 \begin{figure}[ht]
 \centering
 %\includegraphics[scale=0.3]{Images/asym.png}
