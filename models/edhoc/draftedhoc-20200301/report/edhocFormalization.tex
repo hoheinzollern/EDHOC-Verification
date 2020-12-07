@@ -44,9 +44,12 @@ We denote such an access to party $A$'s trusted execution environment by
 %
 We use this to model weak post-compromise security properties.
 %
-Finally, ephemeral key reveal leaks the DH half-key of a party $A$, and is
-denoted \mRevEph$(A)$.
+Finally, ephemeral key reveal leaks the DH half-key of a party $A$ in a session
+establishing session key material $k$, and is denoted \mRevEph$(A, k)$.
 %
+\knote{Note: in the Tamarin code, we don't bind the \mRevEph{} actions to the
+    identity of the party, but checks if any of their ephemeral keys have been
+    revealed. 
 
 
     \knote{Most state-of-the-art Tamarin models of real-world protocols
@@ -62,6 +65,9 @@ denoted \mRevEph$(A)$.
     }
 \subsection{Verified Properties}
 \label{sec:desired-properties}
+\knote{Change A-eph(R) to A-eph(R, sk) and explain. Same for I.  Change Tamarin
+model to have two completed events for PFS, one for each role}
+
 Our model is based on event traces and we define the
 properties in terms of relations between timestamped events.
 %
@@ -138,33 +144,34 @@ the party completes their part of the protocol run.\\
 \runhead{Secrecy}
 We prove a form of \emph{Perfect Forward Secrecy} (PFS).
 %
-Informally, PFS captures the idea that a session key remains secret even if
-a long-term key leaks in the future.
+Informally, PFS captures the idea that session key material remains secret
+even if a long-term key leaks in the future.
 %
-Generalizing PFS to any information element $x$ resulting from the protocol
-run, we formalize PFS with respect to the strongest adversary model we
-successfully proved, as the trace predicate
+We formalize PFS for session key material $k$ with respect to the strongest
+adversary model we successfully proved, as the trace predicate
 %
 \begin{align*}
     \mPredPfs \triangleq
-    \forall I, R, x, t_2, t_3\mLogicDot
-    \mK^{t_3}(x) \land (\mIComplete^{t_2}(I, R, x)\, \lor\, & \mRComplete^{t_2}(I, R, x))
+    \forall I, R, k, t_2, t_3\mLogicDot
+    \mK^{t_3}(k) \land (\mIComplete^{t_2}(I, R, k)\, \lor\, & \mRComplete^{t_2}(I, R, k))
     \rightarrow\\
     &(\exists t_1\mLogicDot \mRevLTK^{t_1}(I) \land t_1 \lessdot t_2)\\
     \lor&(\exists t_1\mLogicDot \mRevLTK^{t_1}(R) \land t_1 \lessdot t_2)\\
-    \lor&(\exists t_1\mLogicDot \mRevEph^{t_1}(R))
-    \lor(\exists t_1\mLogicDot \mRevEph^{t_1}(I)).
+    \lor&(\exists t_1\mLogicDot \mRevEph^{t_1}(R, k))
+    \lor(\exists t_1\mLogicDot \mRevEph^{t_1}(I, k)).
 \end{align*}
 %
-\knote{The Tamarin model is logically equivalent, but not exactly the same.
-    We for instance don't actually have separate "completeI" and "completeR"
-    event types in the Tamarin model, but we do here to make the pictures
-    prettier.
+\knote{It turns out that Tamarin's logic does not allow formulas of the form:
+    $(A \lor B) \rightarrow C$, so I cannot make the Tamarin model match the
+    formula above. The Tamarin model still uses one event type to represent that
+    either $I$ or $R$ completed.  One way of solving this is to say here in the
+    paper that we define a new event type $\mathbf{Comp} = 
+    \mIComplete \lor \mRComplete$. That is exactly what is going on anyway.
 }
 The first parameter of the \mIComplete{} event represents the
 identity that the initiator believes plays the initiator role, i.e., itself,
 and the second parameter represents the identity the initiator believes plays
-the repsonder role.
+the reposnder role.
 %
 The first and second parameter of the \mRComplete{} event are defined the same
 way.
@@ -172,7 +179,7 @@ way.
 The meaning of remaining variables and types should be clear from previous
 descriptions.
 %
-The essence of the definition is that an adversary only knows $x$ if they
+The essence of the definition is that an adversary only knows $k$ if they
 compromised one of the
 parties long-term keys before that party completed the run, or if the adversary
 compromised any of the ephemeral DH half-keys at any time after a party starts
@@ -356,9 +363,9 @@ their runs.
             \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
+            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
             \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
-            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
+            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
             \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
             % InjAgree for R =============================================
             \pgfmathsetmacro{\IS}{80}     % X-coord
@@ -398,9 +405,9 @@ their runs.
             \draw (\RC pt,6*\LOFFS + 3pt) -- (\RC pt,6*\LOFFS - 3pt);
             \draw (\IS - 50 pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
             \draw (\IS - 50 pt,6*\LOFFS + 3pt) -- (\IS - 50 pt,6*\LOFFS - 3pt);
-            \draw (\IS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I)$};
+            \draw (\IS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
             \draw (\IS pt,6*\LOFFS + 3pt) -- (\IS pt,6*\LOFFS - 3pt);
-            \draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R)$};
+            \draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
             \draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Injective agreement guarantee: the earliest the
@@ -468,8 +475,8 @@ The definition for $I$ is
         (\mIComplete^{t_1'}(I', R', k, S') \rightarrow t_1' \doteq t_1
         )\\
     &\lor(\exists t_0\mLogicDot \mRevLTK^{t_0}(R) \land t_0 \lessdot t_1)
-    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(R))
-    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(I)).
+    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(R, k))
+    \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(I, k)).
 \end{align*}
 %
 Figure~\ref{fig:impAgreeI} depicts when the adversary at the earliest can use
@@ -532,7 +539,7 @@ their runs.
 \end{figure}
 %
 The responder's guarantee is an defined analogously, letting initiator and
-repsonder events swap places, and letting long-term key reveal events swap
+responder events swap places, and letting long-term key reveal events swap
 places.\\
 %
 
