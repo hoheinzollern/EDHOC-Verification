@@ -550,18 +550,17 @@ lemma authInjAgreeGuaranteeForI:
 
 lemma authInjAgreeGuaranteeForR:
     all-traces
-    "All tidR u v expSk agreed #t2.
-         (ExpCommitR(tidR, u, v, expSk, agreed)@t2
+    "All tidR u v sk agreed #t2.
+         (CommitR(tidR, u, v, sk, agreed)@t2
           ==>
-             ( ( Ex tidI #t1. ExpRunningI(tidI, u, v, expSk, agreed)@t1 & #t1 < #t2
+             ( ( Ex tidI #t1. RunningI(tidI, u, v, sk, agreed)@t1 & #t1 < #t2
                & (All tidRp up vp #t1p.
-                     ExpCommitR(tidRp, up, vp, expSk, agreed)@t1p ==> #t1p = #t2)
+                     CommitR(tidRp, up, vp, sk, agreed)@t1p ==> #t1p = #t2)
                )
              | (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
              )
          )
     "
-
 
 /* Implicit authentication.
  * Implicit authentication of the session key material essentially means that
