@@ -505,34 +505,49 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
     included as an option. Use-case section included in standard.
 }
 We formally modeled all five
-methods of the \mEdhoc{} key establishment protocol using the \mTamarin{} tool, and
-formulated and verified several important security properties in this model --
-PFS; session key material independence; mutual injective agreement on roles, identities and session key material
-(except for when the initiator uses the \mStat{} method); implicit
-authentication on on the same parameters for all methods; consitency, aliveness
-and peer awareness (the last two when mutual injective agreement holds);
-entity authentication (also when mutual injective agreement holds).
+methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool, four of which
+constitutes the methods of the present version of the \mSpec{}.
 %
-%We also identified security properties that do not hold for all methods.
+We formulated several important security properties and identified precise
+adversary models in which we verified these.
 %
-Most importantly, we found that injective agreement on \mGiy{} does not hold for
-initiators when they use the \mStat{} method.
+The properties are shown in Table~\ref{tab:props}.
 %
+Mutual injective agreement covers the parameters: responder identity, roles,
+session key material (except for \mGiy{} when initiator uses a \mStat{}-based
+method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites{}.
+%
+The responder in addition is ensured agreement on the initiators identity and
+\mGiy{}.
+%
+Implicit agreement covers the all previously mentioned parameters for both
+peers.
+%
+{\color{red}
+Verification took X minutes on a Intel Core i7-6500U 2.5GHz with Y cores.
+}
+%
+
 We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 %
-
 \begin{table}[h!]
     \begin{center}
-        \caption{Summary of verified properties.}
+        \caption{Summary of verified properties. A $*$ marks restrictions as
+            mentioned above.}
         \label{tab:props}
-        \begin{tabular}{|l|c|c|c|c|}
+        \begin{tabular}{|l|c|c|c|c|c|}
                 \hline
-                \textbf{Property} & \textbf{Verified} & \textbf{Steps} & \textbf{time} \\
+                & \mPskPsk & \mSigSig & \mSigStat & \mStatSig & \mStatStat \\
                 \hline
-                Injective agreement & & &\\
-                Implicit agreement & & &\\
-                PFS & & & \\
+                Injective agreement for I & \cm & \cm & \cm & $\cm^*$ & $\cm^*$\\
+                Injective agreement for R & \cm & \cm & \cm & \cm & \cm\\
+                Implicit agreement for I & \cm & \cm & \cm & \cm & \cm\\
+                Implicit agreement for R & \cm & \cm & \cm & \cm & \cm\\
+                Mutual entity authentication & \cm & \cm & \cm & \cm & \cm\\
+                PFS for session key material & \cm & \cm & \cm & \cm & \cm\\
+                UKS & \cm & \cm & \cm & \cm & \cm\\
+                KCI & \cm & \cm & \cm & \cm & \cm\\
                 \hline
         \end{tabular}
     \end{center}
@@ -545,11 +560,11 @@ intended, and proposed a simple mitigation.
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
 %
-There is some work that was done as part of this effort which has not been mentioned in this paper. These lines of enquiry form the basis for future work.
+%There is some work that was done as part of this effort which has not been mentioned in this paper. These lines of enquiry form the basis for future work.
 %For more details, see~\cite{edhocTamarinRepo}.
 
-We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
-However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
+%We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
+%However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
 %
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
