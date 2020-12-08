@@ -44,15 +44,10 @@ We denote such an access to party $A$'s trusted execution environment by
 %
 We use this to model weak post-compromise security properties.
 %
-Finally, ephemeral key reveal leaks the DH half-key of a party $A$ in a session
-establishing session key material $k$, and is denoted \mRevEph$(A, k)$.
+Finally, \mRevEph$(A, k)$ reveals the ephemeral DH half-key of party $A$
+establishing session key material $k$.
 %
-\knote{Note: in the Tamarin code, we don't bind the \mRevEph{} actions to the
-    identity of the party, but checks if any of their ephemeral keys have been
-    revealed. 
-
-
-    \knote{Most state-of-the-art Tamarin models of real-world protocols
+\knote{Most state-of-the-art Tamarin models of real-world protocols
         (involving DH) do not
         reveal the actual session key used for the secure channel, e.g., Cremers
         et~al.~\cite{DBLP:conf/ccs/CremersFKN20}, Girol
@@ -63,11 +58,8 @@ establishing session key material $k$, and is denoted \mRevEph$(A, k)$.
         have session key reveal queries. CK and eCK have session state (eph-key)
         reveal queries as well.
     }
-\subsection{Verified Properties}
+\subsection{Formalization of Properties}
 \label{sec:desired-properties}
-\knote{Change A-eph(R) to A-eph(R, sk) and explain. Same for I.  Change Tamarin
-model to have two completed events for PFS, one for each role}
-
 Our model is based on event traces and we define the
 properties in terms of relations between timestamped events.
 %
@@ -165,13 +157,13 @@ adversary model we successfully proved, as the trace predicate
     $(A \lor B) \rightarrow C$, so I cannot make the Tamarin model match the
     formula above. The Tamarin model still uses one event type to represent that
     either $I$ or $R$ completed.  One way of solving this is to say here in the
-    paper that we define a new event type $\mathbf{Comp} = 
+    paper that we define a new event type $\mathbf{Comp} =
     \mIComplete \lor \mRComplete$. That is exactly what is going on anyway.
 }
 The first parameter of the \mIComplete{} event represents the
 identity that the initiator believes plays the initiator role, i.e., itself,
 and the second parameter represents the identity the initiator believes plays
-the reposnder role.
+the responder role.
 %
 The first and second parameter of the \mRComplete{} event are defined the same
 way.
@@ -326,10 +318,10 @@ their runs.
         \begin{tikzpicture}
             % All units in pt
             \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
-            \pgfmathsetmacro{\IS}{80}     % X-coord
-            \pgfmathsetmacro{\IC}{200}    % X-coord
-            \pgfmathsetmacro{\RS}{120}    % X-coord
-            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\IS}{70}     % X-coord
+            \pgfmathsetmacro{\IC}{170}    % X-coord
+            \pgfmathsetmacro{\RS}{130}    % X-coord
+            \pgfmathsetmacro{\RC}{240}    % X-coord
             \pgfmathsetmacro{\LTKI}{200}  % X-coord
             \pgfmathsetmacro{\LTKR}{230}  % X-coord
             \draw (-10 pt,10pt) node [above] {\mPredInjI};
@@ -359,19 +351,19 @@ their runs.
             % Baseline
             \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
             % Attack events
-            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
+            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$,\mRevEph$(I,k)$};
             \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
             \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\IS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
-            \draw (\IS pt,2*\LOFFS + 3pt) -- (\IS pt,2*\LOFFS - 3pt);
-            \draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
-            \draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
+            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+            \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
+            %\draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+            %\draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
             % InjAgree for R =============================================
-            \pgfmathsetmacro{\IS}{80}     % X-coord
-            \pgfmathsetmacro{\IC}{200}    % X-coord
-            \pgfmathsetmacro{\RS}{120}    % X-coord
-            \pgfmathsetmacro{\RC}{230}    % X-coord
+            \pgfmathsetmacro{\IS}{70}     % X-coord
+            \pgfmathsetmacro{\IC}{170}    % X-coord
+            \pgfmathsetmacro{\RS}{130}    % X-coord
+            \pgfmathsetmacro{\RC}{240}    % X-coord
             \pgfmathsetmacro{\LTKI}{200}  % X-coord
             \pgfmathsetmacro{\LTKR}{230}  % X-coord
             \draw (-10 pt,4*\LOFFS+6pt) node [above] {\mPredInjR};
@@ -401,14 +393,14 @@ their runs.
             % Baseline
             \draw [->] (0pt,6*\LOFFS + 0pt) -- (300pt,6*\LOFFS + 0pt);
             % Attack events
-            \draw (\RC pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
+            \draw (\RC pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$,\mRevEph$(R,k)$};
             \draw (\RC pt,6*\LOFFS + 3pt) -- (\RC pt,6*\LOFFS - 3pt);
             \draw (\IS - 50 pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
             \draw (\IS - 50 pt,6*\LOFFS + 3pt) -- (\IS - 50 pt,6*\LOFFS - 3pt);
-            \draw (\IS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
-            \draw (\IS pt,6*\LOFFS + 3pt) -- (\IS pt,6*\LOFFS - 3pt);
-            \draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
-            \draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
+            \draw (\IC pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
+            \draw (\IC pt,6*\LOFFS + 3pt) -- (\IC pt,6*\LOFFS - 3pt);
+            %\draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+            %\draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
         \end{tikzpicture}
         \caption{Injective agreement guarantee: the earliest the
         adversary can use its advanced capabilities such that the properties
@@ -1006,10 +998,6 @@ For instance, the fact
 in the listing above stores the responder's internal state after executing the
 second step of the \mStatSig{} method.
 %
-%\vnote{Is there any way to make these tildes in textsf show up ``normally''? Right now they're almost superscripted and it looks odd. Not high priority though.}
-%\knote{I added a fix to the listings formatting. There was a jungle of
-%font-specific hacks out there, not was perfect. This looks reasonable for a
-%small work effort}
 
 We mark some steps of the protocol with \mT{Running} action facts, e.g., line 29
 above.
