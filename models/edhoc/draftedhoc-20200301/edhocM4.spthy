@@ -108,6 +108,19 @@ ifelse(<!PSK_PSK!>, m4METHODIR,
          m2 = <data_2, CIPHERTEXT_2>
 
 
+/* Session key defined as follows:
+ * Explicit authentication possible for:
+ * sk = <gxy> for PSK and SIG_SIG methods
+ * sk = <gxy, grx> for SIG_STAT method
+ * sk = <gxy> for STAT_SIG method           -- GIY not known to R for msg2
+ * sk = <gxy, grx> for STAT_STAT method     -- GIY not known to R for msg2
+ * Implicit authentication *possible* for:
+ * sk = <gxy> for PSK and SIG_SIG methods
+ * sk = <gxy, grx> for SIG_STAT method
+ * sk = <gxy, giy> for STAT_SIG method
+ * sk = <gxy, grx, giy> for STAT_STAT method
+ */
+
 /* Def of session key exp_sk we can get explicit auth (agreement) on */
 /* I.e., exp_sk does not include G_IY */
 ifelse(<!STAT_SIG!>, m4METHODIR,
@@ -419,18 +432,6 @@ ifelse(<!PSK!>, m4METHODI,
 )
 */
 
-/* Reveal session key for all methods.
- * Explicit authentication possible for:
- * sk = <gxy> for PSK and SIG_SIG methods
- * sk = <gxy, grx> for SIG_STAT method
- * sk = <gxy> for STAT_SIG method           -- GIY not known to R for msg2
- * sk = <gxy, grx> for STAT_STAT method     -- GIY not known to R for msg2
- * Implicit authentication *possible* for:
- * sk = <gxy> for PSK and SIG_SIG methods
- * sk = <gxy, grx> for SIG_STAT method
- * sk = <gxy, giy> for STAT_SIG method
- * sk = <gxy, grx, giy> for STAT_STAT method
- */
 rule revealEphKey:
     [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
 
@@ -512,11 +513,6 @@ lemma validAuthDifferentPartiesSameKey2:
     "
 
 /* Injective agreement.
- * Essentially, if a party completes the run and believes
- * the run establishes a certain session key material and set of parameters,
- * then there is one, and only one, other session out there who already
- * believes it is running the protocol aiming to establish that session key
- * material and that set of parameters.
  *
  * Because of identity protection of the initator, the responder cannot
  * include U (and hence neither G_IY) in the ExpRunning event. Therefore,
@@ -524,7 +520,7 @@ lemma validAuthDifferentPartiesSameKey2:
  * For R the guarantee can be shown to hold because R completes last.
  *
  * The session key material and parameters agreed on when a party completes
- * are hence explicitly authenticated (by definition).
+ * are explicitly authenticated (by definition).
  *
  * Adversary capabilities:
  *  - LTKRev(party): if this lemma is proved, the protocol has KCI resistance.
@@ -533,7 +529,7 @@ lemma validAuthDifferentPartiesSameKey2:
  *    enables trivial attacks.
  *
  * Because we show injective agreement over U and V on both sides, we also have
- * shown that no UKS attacks applies.
+ * shown that no UKS attacks applies in the given adversary model.
  *
  * We split the property over two lemmas, one for each party,
  * to ease termination.
@@ -573,8 +569,9 @@ lemma authInjAgreeGuaranteeForR:
  * itself, exactly one other run by the intended peer will be able to
  * meaningfully use the session key material at a later stage.
  *
- * Because I is not required to have an explicit guarantee about the existance
- * of a live peer on completion, like in the case of injective agreement, the
+ * Because I when it completes is not required to have an explicit guarantee
+ * about the existance of a live peer knowing all session key meterial, like
+ * in the case of injective agreement, the
  * authenticated session key material can include G_IY, and I will know that
  * R agrees on the identies of both parties if R is able to compute the session
  * key material.
