@@ -23,28 +23,16 @@ communication channel, and can interact with an unbounded number of sessions
 of the protocol, dropping, injecting and modifying messages at their liking.
 %
 
-In addition to the basic Dolev-Yao model we consider three more advanced, but
-yet common, adversary capabilities, namely long-term key reveal, temporary
-access to long-term key and ephemeral key reveal.
+In addition to the basic Dolev-Yao model we consider two more advanced, but
+yet common, adversary capabilities, namely long-term key reveal and ephemeral
+key reveal.
 %
 The long-term key reveal leak a party's long-term key to the adversary.
 %
 This models compromise of the long-term key of a party $A$, and we denote this
 type of event \mRevLTK$(A)$.
 %
-Temporary access to a party's long-term key provides the adversary temporary
-access to the cryptographic operations of the protocol without learning the
-long-term key itself.
-%
-This models that the adversary has temporary access to a Trusted Execution
-Environment (TEE), e.g., a smart-card, in which the long-term key is stored.
-%
-We denote such an access to party $A$'s trusted execution environment by
-\mTEE$(A)$.
-%
-We use this to model weak post-compromise security properties.
-%
-Finally, \mRevEph$(A, k)$ reveals the ephemeral DH half-key of party $A$
+The event \mRevEph$(A, k)$ represents ephemeral DH half-key reveal of party $A$
 establishing session key material $k$.
 %
 \knote{Most state-of-the-art Tamarin models of real-world protocols
@@ -63,13 +51,14 @@ establishing session key material $k$.
 Our model is based on event traces and we define the
 properties in terms of relations between timestamped events.
 %
-The model and properties are encoded for the \mTamarin{} verification tool.
+We encoded the model and properties in language of the \mTamarin{} verification
+tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
-\mTamarin{} uses an LTL-style temporal logic to reason about events and
-knowledge of parties and the adversary.
+\mTamarin{} uses a fragment of temporal first order logic to reason about
+events and knowledge of parties and the adversary.
 %
-For compactness of the presentation, we use a slightly different syntax, which
-has a direct mapping to \mTamarin{}'s logic.
+For conciseness of the presentation, we use a slightly different syntax than
+used by \mTamarin{}, but which has a direct mapping to \mTamarin{}'s logic.
 %
 
 Event types are predicates over global states of the system executions.
@@ -119,6 +108,7 @@ model~\cite{edhocTamarinRepo}.
 In reference to Figure~\ref{fig:edhocFramework}, an initiator $I$ considers the
 protocol run to start when it sends message \mMsgone{} and considers the run
 completed when sending message \mMsgthree{}.
+\knote{NOTE to self: put the figure mentioned above back into Section 2.}
 %
 We denote the first event type \mIStart{} and the second \mIComplete{}.
 %
@@ -153,20 +143,13 @@ adversary model we successfully proved, as the trace predicate
     \lor(\exists t_1\mLogicDot \mRevEph^{t_1}(I, k)).
 \end{align*}
 %
-\knote{It turns out that Tamarin's logic does not allow formulas of the form:
-    $(A \lor B) \rightarrow C$, so I cannot make the Tamarin model match the
-    formula above. The Tamarin model still uses one event type to represent that
-    either $I$ or $R$ completed.  One way of solving this is to say here in the
-    paper that we define a new event type $\mathbf{Comp} =
-    \mIComplete \lor \mRComplete$. That is exactly what is going on anyway.
-}
 The first parameter of the \mIComplete{} event represents the
 identity that the initiator believes plays the initiator role, i.e., itself,
 and the second parameter represents the identity the initiator believes plays
 the responder role.
 %
-The first and second parameter of the \mRComplete{} event are defined the same
-way.
+The first and second parameter of the \mRComplete{} event are defined
+analogously.
 %
 The meaning of remaining variables and types should be clear from previous
 descriptions.
@@ -175,67 +158,67 @@ The essence of the definition is that an adversary only knows $k$ if they
 compromised one of the
 parties long-term keys before that party completed the run, or if the adversary
 compromised any of the ephemeral DH half-keys at any time after a party starts
-its protocol run.
+its protocol run.\\
 %
-This is depicted in Figure~\ref{fig:pfs}.
-%
-\begin{figure}[h!]
-    \begin{center}
-        \tikzset{>=latex}
-        \begin{tikzpicture}
-            % All units in pt
-            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
-            \pgfmathsetmacro{\IS}{50}    % X-coord
-            \pgfmathsetmacro{\IC}{200}    % X-coord
-            \pgfmathsetmacro{\RS}{80}    % X-coord
-            \pgfmathsetmacro{\RC}{230}    % X-coord
-            \pgfmathsetmacro{\LTKI}{200}  % X-coord
-            \pgfmathsetmacro{\LTKR}{230}  % X-coord
-            % I's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,0pt) -- (300pt,0pt);
-            % First event
-            \draw (\IS pt,3pt) node[above] {\mIStart{}};
-            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
-            % Second event
-            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
-            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
-            % R's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
-            % First event
-            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
-            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
-            % Second event
-            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
-            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
-            % LTKRev(I,R)  -----------------------------------------------
-            % Baseline
-            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
-            % Attack events
-            \draw (\LTKR pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$, \mRevLTK$(R)$};
-            \draw (\LTKR pt,2*\LOFFS + 3pt) -- (\LTKR pt,2*\LOFFS - 3pt);
-        \end{tikzpicture}
-        \caption{Perfect Forward Secrecy: the earliest the adversary can use its
-                 advanced capabilities while secrecy is still maintained.
-                 Ephemeral DH half-keys can never be revealed.}
-        \label{fig:pfs}
-    \end{center}
-\end{figure}\\
+%This is depicted in Figure~\ref{fig:pfs}.
+%%
+%\begin{figure}[h!]
+%    \begin{center}
+%        \tikzset{>=latex}
+%        \begin{tikzpicture}
+%            % All units in pt
+%            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+%            \pgfmathsetmacro{\IS}{50}    % X-coord
+%            \pgfmathsetmacro{\IC}{200}    % X-coord
+%            \pgfmathsetmacro{\RS}{80}    % X-coord
+%            \pgfmathsetmacro{\RC}{230}    % X-coord
+%            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+%            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+%            % I's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,0pt) -- (300pt,0pt);
+%            % First event
+%            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+%            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+%            % Second event
+%            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+%            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+%            % R's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+%            % First event
+%            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+%            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+%            % Second event
+%            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+%            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+%            % LTKRev(I,R)  -----------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+%            % Attack events
+%            \draw (\LTKR pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$, \mRevLTK$(R)$};
+%            \draw (\LTKR pt,2*\LOFFS + 3pt) -- (\LTKR pt,2*\LOFFS - 3pt);
+%        \end{tikzpicture}
+%        \caption{Perfect Forward Secrecy: the earliest the adversary can use its
+%                 advanced capabilities while secrecy is still maintained.
+%                 Ephemeral DH half-keys can never be revealed.}
+%        \label{fig:pfs}
+%    \end{center}
+%\end{figure}\\
 
 %-------------------------------------------------------------------- InjAgree
 %\subsubsection{Authentication}
 \runhead{Authentication}
 \label{sec:authenticationDef}
 We prove two different flavors of authentication, the first being classical
-injective agreement following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, and the second
-being an implicit agreement property.
+\emph{injective agreement} following Lowe~\cite{DBLP:conf/csfw/Lowe97a}, and
+the second being an implicit agreement property.
 %
-Informally, \emph{injective agreement} guarantees to an initiator $I$
+Informally, injective agreement guarantees to an initiator $I$
 running with some responder that if, whenever $I$ completed the run and
 believes the responder is $R$,
 then $R$ has been engaged in the protocol in the opposite role,
@@ -269,11 +252,11 @@ The corresponding property for $R$ is defined analogously.
 
 Traditionally, the event types used to describe injective agreement are called
 \emph{Running} and \emph{Commit}, but to harmonize the presentation of
-authentication and secrecy, we refer to these events as \mIStart{} and
+authentication and secrecy, we refer to these event types as \mIStart{} and
 \mIComplete{} respectively for the initiator, and \mRStart{} and \mRComplete{}
 for the responder.
 %
-More formally, for the initiator role we define injective agreement by the
+For the initiator role we define injective agreement by the
 trace predicate
 \begin{align*}
     \mPredInjI& \triangleq
@@ -285,11 +268,14 @@ trace predicate
     &\lor(\exists t_1\mLogicDot \mRevLTK^{t_1}(R) \land t_1 \lessdot t_2).
 \end{align*}
 %
-Figure~\ref{fig:injAgree} shows when the adversary at the earliest can use
-advanced capabilities such that \mPredInjI{} still holds.
-%
 Ephemeral DH half-keys can be revealed as soon as they are created.
 %
+\knote{Note that our Tamarin model only reveals ephemeral keys first when a party
+    completes the run. So even if the formula above checks for ephemeral keys to
+    be revealed as soon as they are created, our Tamarin model will never
+    generate any such traces. That is, we do not actually verify the above
+    formula truly.  How to deal with that?
+}
 The initiator's long-term key can be revealed before any of the parties start
 their runs.
 %
@@ -304,111 +290,103 @@ For the responder role we define
     &\lor(\exists t_1\mLogicDot \mRevLTK^{t_1}(I) \land t_1 \lessdot t_2).
 \end{align*}
 %
-Figure~\ref{fig:injAgree} depicts when the adversary at the earliest can use
-advanced capabilities.
-%
-Ephemeral DH half-keys can be revealed as soon as they are created.
-%
-The responder's long-term key can be revealed before any of the parties start
-their runs.
-%
-\begin{figure}[h!]
-    \begin{center}
-        \tikzset{>=latex}
-        \begin{tikzpicture}
-            % All units in pt
-            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
-            \pgfmathsetmacro{\IS}{70}     % X-coord
-            \pgfmathsetmacro{\IC}{170}    % X-coord
-            \pgfmathsetmacro{\RS}{130}    % X-coord
-            \pgfmathsetmacro{\RC}{240}    % X-coord
-            \pgfmathsetmacro{\LTKI}{200}  % X-coord
-            \pgfmathsetmacro{\LTKR}{230}  % X-coord
-            \draw (-10 pt,10pt) node [above] {\mPredInjI};
-            % I's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,0pt) -- (300pt,0pt);
-            % First event
-            \draw (\IS pt,3pt) node[above] {\mIStart{}};
-            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
-            % Second event
-            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
-            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
-            % R's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
-            % First event
-            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
-            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
-            % Second event
-            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
-            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
-            % LTKRev(I,R)  -----------------------------------------------
-            % Baseline
-            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
-            % Attack events
-            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$,\mRevEph$(I,k)$};
-            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
-            \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
-            %\draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
-            %\draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
-            % InjAgree for R =============================================
-            \pgfmathsetmacro{\IS}{70}     % X-coord
-            \pgfmathsetmacro{\IC}{170}    % X-coord
-            \pgfmathsetmacro{\RS}{130}    % X-coord
-            \pgfmathsetmacro{\RC}{240}    % X-coord
-            \pgfmathsetmacro{\LTKI}{200}  % X-coord
-            \pgfmathsetmacro{\LTKR}{230}  % X-coord
-            \draw (-10 pt,4*\LOFFS+6pt) node [above] {\mPredInjR};
-            % I's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,4*\LOFFS + 0pt) -- (300pt,4*\LOFFS + 0pt);
-            % First event
-            \draw (\IS pt,4*\LOFFS + 3pt) node[above] {\mIStart{}};
-            \draw (\IS pt,4*\LOFFS + 3pt) -- (\IS pt,4*\LOFFS + -3pt);
-            % Second event
-            \draw (\IC pt,4*\LOFFS + 3pt) node[above] {\mIComplete{}};
-            \draw (\IC pt,4*\LOFFS + 3pt) -- (\IC pt,4*\LOFFS + -3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\IS pt,4*\LOFFS + 0pt) -- (\IC pt,4*\LOFFS + 0pt);
-            % R's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,5*\LOFFS + 0pt) -- (300pt,5*\LOFFS + 0pt);
-            % First event
-            \draw (\RS pt,5*\LOFFS + 3pt) node[above] {\mRStart{}};
-            \draw (\RS pt,5*\LOFFS + 3pt) -- (\RS pt,5*\LOFFS - 3pt);
-            % Second event
-            \draw (\RC pt,5*\LOFFS + 3pt) node[above] {\mRComplete{}};
-            \draw (\RC pt,5*\LOFFS + 3pt) -- (\RC pt,5*\LOFFS - 3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\RS pt,5*\LOFFS + 0pt) -- (\RC pt,5*\LOFFS + 0pt);
-            % LTKRev(I,R)  -----------------------------------------------
-            % Baseline
-            \draw [->] (0pt,6*\LOFFS + 0pt) -- (300pt,6*\LOFFS + 0pt);
-            % Attack events
-            \draw (\RC pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$,\mRevEph$(R,k)$};
-            \draw (\RC pt,6*\LOFFS + 3pt) -- (\RC pt,6*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
-            \draw (\IS - 50 pt,6*\LOFFS + 3pt) -- (\IS - 50 pt,6*\LOFFS - 3pt);
-            \draw (\IC pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
-            \draw (\IC pt,6*\LOFFS + 3pt) -- (\IC pt,6*\LOFFS - 3pt);
-            %\draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
-            %\draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
-        \end{tikzpicture}
-        \caption{Injective agreement guarantee: the earliest the
-        adversary can use its advanced capabilities such that the properties
-        are still proven to be maintained.}
-        \label{fig:injAgree}
-    \end{center}
-\end{figure}
-%
+%\begin{figure}[h!]
+%    \begin{center}
+%        \tikzset{>=latex}
+%        \begin{tikzpicture}
+%            % All units in pt
+%            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+%            \pgfmathsetmacro{\IS}{70}     % X-coord
+%            \pgfmathsetmacro{\IC}{170}    % X-coord
+%            \pgfmathsetmacro{\RS}{130}    % X-coord
+%            \pgfmathsetmacro{\RC}{240}    % X-coord
+%            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+%            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+%            \draw (-10 pt,10pt) node [above] {\mPredInjI};
+%            % I's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,0pt) -- (300pt,0pt);
+%            % First event
+%            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+%            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+%            % Second event
+%            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+%            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+%            % R's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+%            % First event
+%            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+%            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+%            % Second event
+%            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+%            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+%            % LTKRev(I,R)  -----------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+%            % Attack events
+%            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$,\mRevEph$(I,k)$};
+%            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
+%            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
+%            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
+%            \draw (\RC pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+%            \draw (\RC pt,2*\LOFFS + 3pt) -- (\RC pt,2*\LOFFS - 3pt);
+%            %\draw (\RS pt,2*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+%            %\draw (\RS pt,2*\LOFFS + 3pt) -- (\RS pt,2*\LOFFS - 3pt);
+%            % InjAgree for R =============================================
+%            \pgfmathsetmacro{\IS}{70}     % X-coord
+%            \pgfmathsetmacro{\IC}{170}    % X-coord
+%            \pgfmathsetmacro{\RS}{130}    % X-coord
+%            \pgfmathsetmacro{\RC}{240}    % X-coord
+%            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+%            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+%            \draw (-10 pt,4*\LOFFS+6pt) node [above] {\mPredInjR};
+%            % I's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,4*\LOFFS + 0pt) -- (300pt,4*\LOFFS + 0pt);
+%            % First event
+%            \draw (\IS pt,4*\LOFFS + 3pt) node[above] {\mIStart{}};
+%            \draw (\IS pt,4*\LOFFS + 3pt) -- (\IS pt,4*\LOFFS + -3pt);
+%            % Second event
+%            \draw (\IC pt,4*\LOFFS + 3pt) node[above] {\mIComplete{}};
+%            \draw (\IC pt,4*\LOFFS + 3pt) -- (\IC pt,4*\LOFFS + -3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\IS pt,4*\LOFFS + 0pt) -- (\IC pt,4*\LOFFS + 0pt);
+%            % R's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,5*\LOFFS + 0pt) -- (300pt,5*\LOFFS + 0pt);
+%            % First event
+%            \draw (\RS pt,5*\LOFFS + 3pt) node[above] {\mRStart{}};
+%            \draw (\RS pt,5*\LOFFS + 3pt) -- (\RS pt,5*\LOFFS - 3pt);
+%            % Second event
+%            \draw (\RC pt,5*\LOFFS + 3pt) node[above] {\mRComplete{}};
+%            \draw (\RC pt,5*\LOFFS + 3pt) -- (\RC pt,5*\LOFFS - 3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\RS pt,5*\LOFFS + 0pt) -- (\RC pt,5*\LOFFS + 0pt);
+%            % LTKRev(I,R)  -----------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,6*\LOFFS + 0pt) -- (300pt,6*\LOFFS + 0pt);
+%            % Attack events
+%            \draw (\RC pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$,\mRevEph$(R,k)$};
+%            \draw (\RC pt,6*\LOFFS + 3pt) -- (\RC pt,6*\LOFFS - 3pt);
+%            \draw (\IS - 50 pt,6*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
+%            \draw (\IS - 50 pt,6*\LOFFS + 3pt) -- (\IS - 50 pt,6*\LOFFS - 3pt);
+%            \draw (\IC pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(I, k)$};
+%            \draw (\IC pt,6*\LOFFS + 3pt) -- (\IC pt,6*\LOFFS - 3pt);
+%            %\draw (\RS pt,6*\LOFFS + 3pt) node[above] {\mRevEph$(R, k)$};
+%            %\draw (\RS pt,6*\LOFFS + 3pt) -- (\RS pt,6*\LOFFS - 3pt);
+%        \end{tikzpicture}
+%        \caption{Injective agreement guarantee: the earliest the
+%        adversary can use its advanced capabilities such that the properties
+%        are still proven to be maintained.}
+%        \label{fig:injAgree}
+%    \end{center}
+%\end{figure}
+%%
 
 %------------------------------------------------------------- Implicit auth
 Not all \mEdhoc{} methods have the injective agreement property, so we show
@@ -454,7 +432,7 @@ require key confirmation, so our definition is indeed closer to their implicit
 authentication.
 %
 Also here we split the property into one guarantee for the initiator $I$ and
-one for $R$, but only show the definition for $I$.
+one for $R$, but due to the symmetry we only show the definition for $I$.
 %
 The definition for $I$ is
 \begin{align*}
@@ -471,75 +449,72 @@ The definition for $I$ is
     \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(I, k)).
 \end{align*}
 %
-Figure~\ref{fig:impAgreeI} depicts when the adversary at the earliest can use
-advanced capabilities.
-%
 Ephemeral DH half-keys can never be revealed, and the responder's long-term key
-can be revealed once the initiator completes its run.
+can be revealed first after the initiator completes its run.
 %
 The initiator's long-term key can be revealed before any of the parties start
 their runs.
 %
-\begin{figure}[h!]
-    \begin{center}
-        \tikzset{>=latex}
-        \begin{tikzpicture}
-            % All units in pt
-            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
-            \pgfmathsetmacro{\IS}{80}     % X-coord
-            \pgfmathsetmacro{\IC}{200}    % X-coord
-            \pgfmathsetmacro{\RS}{120}    % X-coord
-            \pgfmathsetmacro{\RC}{230}    % X-coord
-            \pgfmathsetmacro{\LTKI}{200}  % X-coord
-            \pgfmathsetmacro{\LTKR}{230}  % X-coord
-            % I's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,0pt) -- (300pt,0pt);
-            % First event
-            \draw (\IS pt,3pt) node[above] {\mIStart{}};
-            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
-            % Second event
-            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
-            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
-            % R's session ------------------------------------------------
-            % Baseline
-            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
-            % First event
-            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
-            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
-            % Second event
-            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
-            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
-            % Thick session span line
-            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
-            % LTKRev(I,R)  -----------------------------------------------
-            % Baseline
-            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
-            % Attack events
-            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
-            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
-            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
-        \end{tikzpicture}
-        \caption{Implicit agreement guarantee for $I$: the earliest the
-        adversary can use its advanced capabilities. Ephemeral keys can never be
-        revealed.}
-        \label{fig:impAgreeI}
-    \end{center}
-\end{figure}
-%
-The responder's guarantee is an defined analogously, letting initiator and
-responder events swap places, and letting long-term key reveal events swap
-places.\\
+%\begin{figure}[h!]
+%    \begin{center}
+%        \tikzset{>=latex}
+%        \begin{tikzpicture}
+%            % All units in pt
+%            \pgfmathsetmacro{\LOFFS}{-20} % Offset between horizontal lines
+%            \pgfmathsetmacro{\IS}{80}     % X-coord
+%            \pgfmathsetmacro{\IC}{200}    % X-coord
+%            \pgfmathsetmacro{\RS}{120}    % X-coord
+%            \pgfmathsetmacro{\RC}{230}    % X-coord
+%            \pgfmathsetmacro{\LTKI}{200}  % X-coord
+%            \pgfmathsetmacro{\LTKR}{230}  % X-coord
+%            % I's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,0pt) -- (300pt,0pt);
+%            % First event
+%            \draw (\IS pt,3pt) node[above] {\mIStart{}};
+%            \draw (\IS pt,3pt) -- (\IS pt,-3pt);
+%            % Second event
+%            \draw (\IC pt,3pt) node[above] {\mIComplete{}};
+%            \draw (\IC pt,3pt) -- (\IC pt,-3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\IS pt,0pt) -- (\IC pt,0pt);
+%            % R's session ------------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,\LOFFS + 0pt) -- (300pt,\LOFFS + 0pt);
+%            % First event
+%            \draw (\RS pt,\LOFFS + 3pt) node[above] {\mRStart{}};
+%            \draw (\RS pt,\LOFFS + 3pt) -- (\RS pt,\LOFFS - 3pt);
+%            % Second event
+%            \draw (\RC pt,\LOFFS + 3pt) node[above] {\mRComplete{}};
+%            \draw (\RC pt,\LOFFS + 3pt) -- (\RC pt,\LOFFS - 3pt);
+%            % Thick session span line
+%            \draw [line width=2pt] (\RS pt,\LOFFS + 0pt) -- (\RC pt,\LOFFS + 0pt);
+%            % LTKRev(I,R)  -----------------------------------------------
+%            % Baseline
+%            \draw [->] (0pt,2*\LOFFS + 0pt) -- (300pt,2*\LOFFS + 0pt);
+%            % Attack events
+%            \draw (\IC pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(R)$};
+%            \draw (\IC pt,2*\LOFFS + 3pt) -- (\IC pt,2*\LOFFS - 3pt);
+%            \draw (\IS - 50 pt,2*\LOFFS + 3pt) node[above] {\mRevLTK$(I)$};
+%            \draw (\IS - 50 pt,2*\LOFFS + 3pt) -- (\IS - 50 pt,2*\LOFFS - 3pt);
+%        \end{tikzpicture}
+%        \caption{Implicit agreement guarantee for $I$: the earliest the
+%        adversary can use its advanced capabilities. Ephemeral keys can never be
+%        revealed.}
+%        \label{fig:impAgreeI}
+%    \end{center}
+%\end{figure}
+%%
+The responder's guarantee \mPredImpR{} is defined analogously, letting
+initiator and responder events swap places, and letting long-term key reveal
+events swap places.\\
 %
 
 %------------------------------------------------------- Agreed parameters
 \runhead{Agreed Parameters}
 %\subsubsection{Agreed Parameters}
 The initiator $I$ gets injective and implicit agreement guarantees on the
-following set $S_\mEdhoc$ of parameters:
+following partial set $S_P$ of parameters:
 \begin{itemize}
     \item responder identity,
     \item the roles played by itself and its peer,
@@ -562,11 +537,14 @@ Since $R$ completes after $I$, $R$ can get injective agreement guarantees on
 more parameters, namely the initator's identity and the full session key
 material for all methods.\\
 %
+Let the full set of parameters be $S_F = S_P \cup \{I, \mGiy\}$ when \mGiy{} is
+part of the session key material and $S_P \cup \{I\}$ otherwise.\\
+%
 
 %------------------------------------------------------- Implied properties
 \runhead{Subsumed Properties}
 %\subsubsection{Subsumed Properties}
-Given the secrecy and agreement properties and parameter set $S_\mEdhoc$ defined
+Given the secrecy and agreement properties and parameter set $S_P$ defined
 above, other properties can be indirectly concluded to hold.
 %
 Protocols where a party does not get confirmation on that their peer knows the
@@ -583,6 +561,10 @@ Because both our notions of agreement above ensure agreement on identities,
 roles and session key material, all methods passing verification of those also
 have resistance to KCI attacks.
 %
+\knote{Even if this is true for the formalization above, it may not hold once
+    encoded into Tamarin. Cas mentioned at IndoCrypt that there are KCI attacks
+    that Tamarin cannot discover (need reference for that).
+}
 
 If a party can be coerced into believing it completed a run with a peer $A$, but
 where the session key material is actuality shared with a party $B$, the used
@@ -593,7 +575,10 @@ For the same reason as for KCI, a protocol passing verification of our agreement
 properties is also resistant to UKS attacks.
 %
 
-Our agreement properties also capture \emph{entity authentication}.
+From the injective agreement properties it follows that each party upon
+completion is assured about the identity of its peer.
+%
+Therefore, the agreement properties also capture \emph{entity authentication}.
 %
 
 
@@ -650,10 +635,6 @@ Our agreement properties also capture \emph{entity authentication}.
 %talking to $R$ and vice versa.
 %%
 
-\knote{I propose we remove all discussions about what the spec claims (except
-    that it is imprecise and unclear. There is simply too many loose statements
-there that does not coherently add up to treat all those claims. Discussing some of them
-here does not seem to make sense to me.}
 %\mEdhoc{} claims to support mutual authentication with consistency, aliveness
 %and peer awareness (see Section~\ref{sec:claimedProperties}).
 %%
@@ -732,6 +713,13 @@ here does not seem to make sense to me.}
 %---------------------------------------------------------------------------
 \subsection{\mTamarin{}}
 \label{sec:tamarin}
+\knote{FOR PFS: It turns out that Tamarin's logic does not allow formulas of the form:
+    $(A \lor B) \rightarrow C$, so I cannot make the Tamarin model match the
+    formula above. The Tamarin model still uses one event type to represent that
+    either $I$ or $R$ completed.  One way of solving this is to say here in the
+    paper that we define a new event type $\mathbf{Comp} =
+    \mIComplete \lor \mRComplete$. That is exactly what is going on anyway.
+}
  
 We chose \mTamarin{} to model and verify \mEdhoc{} in the symbolic model.
 %
