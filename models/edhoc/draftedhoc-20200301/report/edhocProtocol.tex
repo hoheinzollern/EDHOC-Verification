@@ -7,9 +7,9 @@
 %In this section, we provide an overview of the \mEdhoc{} protocol.
 % For more details, we refer the reader to~\cite{selander-lake-edhoc-01}. 
 %To establish an authenticated security context for \mOscore,
-\mEdhoc{} uses a three-message protocol structure.
+\mEdhoc{} uses a three-message protocol structure
+shown in Figure~\ref{fig:edhocFramework}.
 %in the style of the \mNoise{} framework, outlined in
-%shown in Figure~\ref{fig:edhocFramework}.
 %
 In the first message, the initiator $I$ sends to the responder $R$ an
 ephemeral DH half-key \mGx{}, along with some parameters to establish an \mOscore{} security context (supported authentication method, supported cipher suites, and connection identifiers) and optional application layer data.\footnote{While we present these parameters here while describing \mEdhoc, and they are useful to establish a security context for \mOscore, we will ignore some of them in our formal modelling, in Section~\ref{sec:formalization}. Application layer data enjoys differing levels of protection depending on the message it is part of.} \mT{R} may reject the choice of the authentication method or cipher suites, leading to a negotiation across multiple \mEdhoc{} sessions.
@@ -37,23 +37,23 @@ This is illustrated in Figure~\ref{fig:edhocFramework} in the appendix.
 %
 %Instead, a single identifier for the pre-shared key is transmitted in \mMsgone{}.
 %
-%\begin{figure}
-%\centering
-%\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-%\begin{tikzpicture}
-%    \node (ini) at (0, 0) {Initiator (\mT{I})};
-%    \draw [very thick] (0, -0.25) -- (0,-2.2);
-%    \draw [very thick] (7, -0.25) -- (7,-2.2);
-%    \node (res) at (7,0) {Responder (\mT{R})};
-%    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-%\msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
-%    \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
-%    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
-%    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
-%    \end{tikzpicture}
-%\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
-%\label{fig:edhocFramework}
-%\end{figure}
+\begin{figure}
+\centering
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+\begin{tikzpicture}
+    \node (ini) at (0, 0) {Initiator ($I$)};
+    \draw [very thick] (0, -0.25) -- (0,-2.2);
+    \draw [very thick] (7, -0.25) -- (7,-2.2);
+    \node (res) at (7,0) {Responder ($R$)};
+    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+\msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
+    \msg{5em}{ini}{res}{\mMsgthree: \mCr, [\mIdcredi, \mAuthi, \mADthree]};
+    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
+    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
+    \end{tikzpicture}
+\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
+\label{fig:edhocFramework}
+\end{figure}
 
 %One of the driving design goals is to 
 \mEdhoc{} accommodates various credential types

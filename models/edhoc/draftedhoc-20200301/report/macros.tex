@@ -212,9 +212,9 @@
     tabsize=2,
     morecomment=[l]{//},
     literate=
-    {=}{$=$}{1}
-    %{[}{$[$}{1}%
-    %{]}{$]$}{1}%
+    {=}{$=$ }{1}
+    {[}{$[$}{1}%
+    {]}{$]$}{1}%
     {<}{$\langle$}{1}%
     {>}{$\rangle$}{1}%
     %{(}{$($}{1}%
@@ -228,6 +228,12 @@
     {-->}{$\rightarrow$}{1}
     {==>}{$\Rightarrow$}{1}
     {XOR}{$\oplus$}{1}%
+    {tid}{\small{tid}}{2}%
+    {ltk}{\small{ltk}}{2}%
+    {agreed}{\small{agreed}}{5}%
+    {assocData2}{\small{assocData2}}{9}%
+    {protected2}{\small{protected2}}{9}%
+    {extAad2}{\small{extAad2}}{6}%
     %{aeadEncrypt}{\mAead{}}{6}%
     %{decrypt}{\mDecrypt}{6}
     %{aeadDecrypt}{\mAeadDecrypt}{11}
@@ -235,7 +241,7 @@
     %{hkdfExpand}{\mHkdfExpand}{14}
     {All\ }{$\forall$\ }{3}
     {Ex\ }{$\exists$\ }{3}
-    {h(}{H$($}{2}
+    {h(}{h$($}{2}
     {~}{{\url{~}}}{1}
     }
 \lstset{style=mystyle}

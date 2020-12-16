@@ -225,7 +225,7 @@ secrecy, for all five methods. \textbf{*** Fix this list at the end ***}
 %-------------------------------------------------------------------------- sec
 \section{Discussion}
 \label{sec:discussion}
-There are a few instances where \mEdhoc{} can be improved,
+There are a few places where \mEdhoc{} can be improved,
 which we found during this work and communicated to the authors. We discuss them below.
 %
 
@@ -499,11 +499,14 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %This needs to be clearly specified, and we have conveyed this to the authors of the \mSpec.
 
 %-------------------------------------------------------------------------- sec
-\section{Conclusions and future work}
+\section{Conclusions and Future Work}
 \label{sec:conclusions}
-\knote{More standard impact: -02 draft: 4th message to get key confirmation
+\knote{More standards impact: -02 draft: 4th message to get key confirmation
     included as an option. Use-case section included in standard.
 }
+\knote{We also modelled PFS and a form of integrity protection for \mT{AD_3}. 
+Add if there is space.}
+%
 We formally modeled all five
 methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool, four of which
 constitutes the methods of the present version of the \mSpec{}.
@@ -513,12 +516,13 @@ adversary models in which we verified these.
 %
 The properties are shown in Table~\ref{tab:props}.
 %
-Mutual injective agreement covers the parameters: responder identity, roles,
-session key material (except for \mGiy{} when initiator uses a \mStat{}-based
+Mutual injective agreement covers the parameters $S_P$:
+responder identity, roles, session key material (except for \mGiy{} when
+initiator uses a \mStat{}-based
 method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites{}.
 %
 The responder in addition is ensured agreement on the initiators identity and
-\mGiy{}.
+\mGiy{}, i.e., on the set $S_F$.
 %
 Implicit agreement covers the all previously mentioned parameters for both
 peers.
@@ -528,13 +532,17 @@ Verification took X minutes on a Intel Core i7-6500U 2.5GHz with Y cores.
 }
 %
 
+Properties subsumed by the verified properties in this model are mutual entity
+authentication, UKS and KCI.
+%
+
 We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 %
 \begin{table}[h!]
     \begin{center}
-        \caption{Summary of verified properties. A $*$ marks restrictions as
-            mentioned above.}
+        \caption{Summary of verified properties. Subsumed properties are shown
+            at the bottom of the table.}
         \label{tab:props}
         \begin{tabular}{|l|c|c|c|c|c|}
                 \hline
@@ -590,24 +598,24 @@ As mentioned earlier, in an earlier version, \mEdhoc{} also allowed for a \mPsk{
 when \mPsk{} is used, both endpoints must use \mPsk{}, giving rise to the \mPskPsk{} method. The key schedule is followed exactly as usual here as well, except that the seed for generating \mPRKtwo is no longer empty, but the pre-shared key. All three intermediate keys are the same. The results for the analysis are presented in~\cite{edhocTamarinRepo}.
 \vnote{Cite the right version of the draft in the preceding paragraph. Something about the properties here?}
 
-\section{Abstract model of \mEdhoc{} communications}
-\begin{figure}
-\centering
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-\begin{tikzpicture}
-    \node (ini) at (0, 0) {Initiator (\mT{I})};
-    \draw [very thick] (0, -0.25) -- (0,-2.2);
-    \draw [very thick] (7, -0.25) -- (7,-2.2);
-    \node (res) at (7,0) {Responder (\mT{R})};
-    \msg{1em}{ini}{res}{\mMethod, \mSuites, \mGx, \mCi, \mADone};
-\msg{3em}{res}{ini}{\mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
-    \msg{5em}{ini}{res}{\mCr, [\mIdcredi, \mAuthi, \mADthree]};
-    \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
-    \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
-    \end{tikzpicture}
-\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
-\label{fig:edhocFramework}
-\end{figure}
+% \section{Abstract model of \mEdhoc{} communications}
+% \begin{figure}
+% \centering
+% \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+% \begin{tikzpicture}
+%     \node (ini) at (0, 0) {Initiator (\mT{I})};
+%     \draw [very thick] (0, -0.25) -- (0,-2.2);
+%     \draw [very thick] (7, -0.25) -- (7,-2.2);
+%     \node (res) at (7,0) {Responder (\mT{R})};
+%     \msg{1em}{ini}{res}{\mMethod, \mSuites, \mGx, \mCi, \mADone};
+% \msg{3em}{res}{ini}{\mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
+%     \msg{5em}{ini}{res}{\mCr, [\mIdcredi, \mAuthi, \mADthree]};
+%     \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
+%     \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
+%     \end{tikzpicture}
+% \caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
+% \label{fig:edhocFramework}
+% \end{figure}
 
 \section{Message sequence chart for \mStatSig}\label{sec:mscstatsig}
 \begin{figure}[ht]
