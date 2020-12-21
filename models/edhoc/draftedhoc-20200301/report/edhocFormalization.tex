@@ -1020,6 +1020,11 @@ single term, onto the plaintext tuple.
 The XOR encryption can be seen in on line 18-21 in the listing of
 \mT{R2_STAT_SIG} below.
 %
+In the latest version of the \mEdhoc{}
+specification~\cite{latest-ietf-lake-edhoc-03}, the XOR-based encryption
+has been changed into using the encryption algorithm from the AEAD algorithm
+from \mSuites{}.
+%
 \begin{lstlisting}
 rule R2_STAT_SIG:
   let
