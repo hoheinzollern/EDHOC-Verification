@@ -64,14 +64,16 @@ constraints under which these devices operate.
 %
 EDHOC is an authenticated key establishment protocol for constrained IoT
 devices that was proposed in 2016, and is currently being standardized by the
-IETF.
+Internet Engineering Task Force (IETF).
 %
 A version of \mEdhoc{} with two key establishment methods was formally analyzed
 in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, the protocol has been significantly modified and now has five methods.
 %
-In this paper, we formally analyze all five methods of \mEdhoc{} (as given in the IETF internet draft~\cite{selander-lake-edhoc-01}) using the \mTamarin{} tool.
+In this paper, we formally analyze all five methods of \mEdhoc{} (as given in
+the IETF internet draft~\cite{selander-lake-edhoc-01}) using the \mTamarin{}
+tool.
 %
 %We show that the different methods provide sensible, but also rather
 %heterogeneous security properties.
@@ -114,14 +116,12 @@ appreciated.}
 %-------------------------------------------------------------------------- sub
 %\subsection{Background and motivation}
 %\label{sec:motivation}
-As IoT devices become more common, there is a need for securing communication between such devices. 
+As IoT devices become more common, there is a need for securing communication
+between such devices.
 %
-Most of the security analysis for IoT devices has focussed on computationally strong devices, such as cars and web-cameras, where existing protocols like \mDandTls{} suffice.  
-%IoT security threats involving computationally strong devices such as cars
-%and web-cameras receive the most attention from media and academia.
-%
-%Securing communication between such devices can readily be done using existing
-%protocols like \mDandTls.
+Most of the security analysis of IoT devices has focused on computationally
+strong devices, such as cars and web-cameras, where existing protocols like
+\mDandTls{} suffice.
 %
 Constrained devices, on the other hand, which operate under severe
 bandwidth and energy consumption restrictions, have received much less
@@ -137,24 +137,29 @@ maintenance for long periods of time.
 %The IETF defined the Constrained Application Protocol (\mCoap{}) protocol for
 %data transmission in such situations~\cite{rfc7252}.
 %
-%Howeverr, \mCoap{} does not include security protection on its own, and in some cases,
-%\mDandTls{} messages are too large to fit into the radio frames, or unsuitable to handle proxy operations with change of underlying transport protocol.
+%Howeverr, \mCoap{} does not include security protection on its own, and in some
+% cases, \mDandTls{} messages are too large to fit into the radio frames, or
+% unsuitable to handle proxy operations with change of underlying transport
+% protocol.
 %
 The IETF standardized the Object Security for
-Constrained RESTful Environments (\mOscore{}) protocol to secure communications between constrained devices~\cite{rfc8613}.
+Constrained RESTful Environments (\mOscore{}) protocol to secure communications
+between constrained devices~\cite{rfc8613}.
 %
 However, the \mOscore{} protocol requires a pre-established security context.
 %
 The IETF has been discussing requirements and mechanisms for a key
-exchange protocol, named \mEdhoc~\cite{selander-lake-edhoc-01}, for
+exchange protocol, named Ephemeral Diffie-Hellman Over COSE (\mEdhoc), for
 establishing \mOscore{} security contexts.
 %
-Naturally, \mEdhoc{} must work under the same constrained requirements as \mOscore{} itself.
+Naturally, \mEdhoc{} must work under the same constrained requirements as
+\mOscore{} itself.
 %
 While not all use cases for \mEdhoc{} are firmly set, the overall goal is to
 establish an \mOscore{} security context, under message size limitations.
 %
-It is therefore important that \mEdhoc{} provably satisfy the security properties required of a key exchange protocol.
+It is therefore important that \mEdhoc{} provably satisfy the security
+properties required of a key exchange protocol.
 %The work is now being done in the IETF Lightweight Authenticated Key Exchange
 %(LAKE) working group.
 %
@@ -167,41 +172,44 @@ The first incarnation of \mEdhoc{} appeared in March 2016.
 %
 It contained two different key establishment methods, one based on a
 pre-shared Diffie-Hellman (DH) cryptographic core and a second based on a
-variant of challenge-response signatures.%, in the style of the \mNoise{} framework~\cite{perrin2016noise}.
+variant of challenge-response signatures in the style of the \mNoise{}
+framework~\cite{perrin2016noise}.
 %
-\footnote{By a \emph{cryptographic core}, or simply core, we mean an academic protocol, without
-encodings or application specific details required by an industrial protocol.
+By a \emph{cryptographic core}, or simply core, we mean an academic protocol,
+without encodings or application specific details required by an industrial
+protocol.
 %
-By a \emph{key establishment method} we mean a core with such details added.}
+By a \emph{key establishment method} we mean a core with such details added.
+%
+\mEdhoc{} is therefore a framework of several key establishment methods.
 %
 
-The core based on challenge-response signatures was replaced by \mSigma{}
-in May 2018.
+In May 2018, the core based on challenge-response signatures was replaced by
+one based \mSigma{}~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
 %
-In the current version of the \mSpec{}, the \mPskPsk{} method has been removed.
+This version was formally analyzed by Bruni et.
+al~\cite{DBLP:conf/secsr/BruniJPS18} using the ProVerif
+tool~\cite{DBLP:conf/csfw/Blanchet01}.
 %
-In our analysis in~\cite{edhocTamarinRepo}, we also analyze the last known
-variant of the \mPskPsk{} method, from~{\textbf{*** Put in the right link to the
-spec version here ***}}, since it might be added again, e.g., as a basis for
-fast re-establishment.
+
+Since then the protocol has seen significant changes.
 %
-We present a quick overview of the same in the appendix, to easy understanding
-of Section~\ref{sec:formalization}.
+Three new cores mixing challenge-response signatures and normal signature for
+authentication were added~\cite{our-analysis-selander-lake-edhoc-01}.
 %
-\vnote{Karl, please check that this footnote makes sense. Do we have any better justification?}
-%by
-%integrating the cryptographic core of \mOptls{}.
+Consequently, although the framework is similar to the one analyzed by Bruni
+et.~al, the cryptographic underpinnings have increased in complexity more than
+twofold.
 %
-\knote{Mads proposes starting the following paragraph with "since there has been a lot of change..." and
-then explain what. Also highlight difference to Bruni.}
-More importantly, mixed variants where one party uses a challenge-response
-signature and the other a regular signature have also been added.
+We formulate and formalize a security model covering all the five key
+establishment methods, which is important especially since the \mSpec{} itself
+lacks a clear description of the intended security model and overall security
+goals.
 %
-Consequently, the protocol has undergone a lot of change, and formal analysis is
-required to verify security guarantees for \mEdhoc.
-%
-This is especially important, since the \mSpec{} itself lacks a formal description
-of the intended security model and overall security goals.
+
+In the current version, the pre-shared key method has been removed, but we
+include it in our analysis in case it is later added back, e.g., as a basis for
+a fast session re-establishment method.
 %
 
 %Three cores have been analyzed in the computational model (\mSigma{}~\cite{DBLP:conf/crypto/CanettiK02},
@@ -212,9 +220,6 @@ of the intended security model and overall security goals.
 %these proofs do not carry over automatically
 %(See Section~\ref{sec:relationsToOtherProtocols}).
 %
-The work closest to ours is that of Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18},
-which formally analyzes the May 2018 version of \mEdhoc{} (with two methods) in
-\mProverif~\cite{DBLP:conf/csfw/Blanchet01}.
 %
 %\knote{should be moved to section 3}
 %
@@ -230,10 +235,18 @@ which formally analyzes the May 2018 version of \mEdhoc{} (with two methods) in
 %symbolized version of an extended Canetti-Krawzcyk model.
 %%
 %-------------------------------------------------------------------------- sub
-%\subsection{Contributions}
-%\label{sec:contributions}
-In this paper, we formally analyze the latest version of the \mEdhoc{} protocol (with five methods) in the \mTamarin{}
-tool~\cite{DBLP:conf/cav/MeierSCB13}.
+\subsection{Contributions}
+\label{sec:contributions}
+In this paper, we formally analyze the \mEdhoc{} protocol (with five methods)
+in the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
+%
+We analyze the protocol as it were in the
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}, which differ from the
+current version in that it includes an additional pre-shared key core, and a
+modified encryption function in message number two.
+\knote{They removed XOR with HKDF-countermode as a key stream generator and
+    substitute it for a real encryption function. We should probably update our
+model with this.}
 %
 %This work is presented in Section~\ref{sec:formalization}.
 %
