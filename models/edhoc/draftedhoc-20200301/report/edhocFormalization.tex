@@ -32,10 +32,13 @@ capabilities, namely long-term key reveal and ephemeral DH half-key reveal.
 %
 The long-term key reveal models an adversary compromising a party $A$'s
 long-term key, and we denote this type of event by \mRevLTK$(A)$.
-% KARL: we do need to explain what the parameter A represents
 %
 The event \mRevEph$(A, k)$ represents the reveal of the ephemeral DH half-key
 used by party $A$ while establishing session key material $k$.
+%
+This two capabilities model the possibility for long-term keys to be stored in a
+hardened storage, a Trusted Execution Environment (TEE), whereas ephemeral keys
+may be stored in a less secure part of a device.
 %
 
 \subsection{Formalization of Properties}
@@ -49,7 +52,7 @@ tool~\cite{DBLP:conf/cav/MeierSCB13} to encode the model and verify properties.
 This tool uses a fragment of temporal first order logic to reason about
 events and knowledge of the parties and of the adversary.
 %
-For conciseness of the presentation, we use a slightly different syntax than
+For conciseness we use a slightly different syntax than
 that used by \mTamarin{}, but which has a direct mapping to \mTamarin{}'s logic.
 %
 
@@ -407,7 +410,7 @@ parameters computed by the protocol, one of which is the session key $k$.
 %
 If implicit agreement holds for both roles, upon completion, $A$ is guaranteed
 that $B$ has been or is engaged in exactly one protocol run with $A$ in the
-opposite role, and that $B$ has or will be able to agree on $S$.
+opposite role, and that $B$ has been or will be able to agree on $S$.
 %
 The main difference to injective agreement is that $A$ can conclude that if
 $A$ sends the last message and this reaches $B$, then $A$ and $B$ have agreed
