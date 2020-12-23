@@ -353,13 +353,13 @@ If another device $B$, initiates a connection to a third device $C$, the
 compromised device $A$ may interfere by responding in $C$'s place, blocking
 the legitimate response from $C$.
 %
-Since $B$ does not verify that the received identity in the second message
+Since $B$ does not verify that the identity indicated in the second message
 matches the intended identity $C$, and device $A$ is part of the allowed set,
 $B$ will complete and accept the \mEdhoc{} run with device $A$ instead of the
 intended $C$.
 %
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
-identity provided by the application.
+identity indicated by the application.
 %
 We have communicated this situation to the \mEdhoc{} authors and they are considering
 how to resolve the issue.
