@@ -72,7 +72,7 @@ in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 Since then, the protocol has been significantly modified and now has five methods.
 %
 In this paper, we formally analyze all five methods of \mEdhoc{} (as given in
-the IETF internet draft~\cite{selander-lake-edhoc-01}) using the \mTamarin{}
+the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the \mTamarin{}
 tool.
 %
 %We show that the different methods provide sensible, but also rather
@@ -251,7 +251,7 @@ model with this.}
 %This work is presented in Section~\ref{sec:formalization}.
 %
 The formal models and proven properties are based on the version as on
-2020-11-02~\cite{selander-lake-edhoc-01}, with the \mPskPsk{} method based on the version as on \textbf{*** Fix this reference ***}.
+2020-11-02~\cite{our-analysis-selander-lake-edhoc-01}, with the \mPskPsk{} method based on the version as on \textbf{*** Fix this reference ***}.
 %
 We give an explicit security model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
@@ -278,7 +278,9 @@ secrecy, for all five methods. \textbf{*** Fix this list at the end ***}
 \section{Discussion}
 \label{sec:discussion}
 There are a few places where \mEdhoc{} can be improved,
-which we found during this work and communicated to the authors. We discuss them below.
+which we found during this work and communicated to the authors.
+%
+We discuss them below.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -339,12 +341,12 @@ protocol is to be used and their specific goals, risks resulting in
 sub-optimal trade-offs and design decisions.
 %
 
-%\mEdhoc{} is intended to cover a variety of use cases, many of which are
-%difficult to predict today.
-%%
-%Just because it is difficult to predict these use cases, does not
-%prevent one from collecting \emph{typical} use cases and user stories
-%to identify more specific security goals that will be important in most cases.
+\mEdhoc{} is intended to cover a variety of use cases, many of which are
+difficult to predict today.
+%
+It can be that it is difficult to predict these use cases, but that does not
+prevent one from collecting \emph{typical} use cases and user stories
+to identify more specific security goals that will be important in most cases.
 %
 
 While constructing our model, we came up with simple user stories to identify
@@ -366,7 +368,7 @@ Via this simple thought experiment, we realized that the \mSpec{} did not
 consider the concept of (non)-repudiation.
 %
 In response, the authors of the \mSpec{} added a paragraph discussing how
-different methods relate to (non)-repudiation~\cite{selander-lake-edhoc-01}.\\
+different methods relate to (non)-repudiation.\\
 
 %\subsubsection{Unintended Peer Authentication.}
 \runhead{Unintended Peer Authentication}
@@ -488,7 +490,7 @@ Successful MAC verification guarantees
 to the initiator that the responder injectively agrees on \mGiy{}.
 %
 However, our understanding is that adding an extra message is
-undesirable, since~\cite{selander-lake-edhoc-01} requests as few messages as
+undesirable, since~\cite{our-analysis-selander-lake-edhoc-01} requests as few messages as
 possible.
 %
 IETF have however reconsidered and is currently discussing adding a fourth
@@ -553,11 +555,6 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %-------------------------------------------------------------------------- sec
 \section{Conclusions and Future Work}
 \label{sec:conclusions}
-\knote{More standards impact: -02 draft: 4th message to get key confirmation
-    included as an option. Use-case section included in standard.
-}
-\knote{We also modelled PFS and a form of integrity protection for \mT{AD_3}. 
-Add if there is space.}
 %
 We formally modeled all five
 methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool, four of which
@@ -593,8 +590,10 @@ the methods are secure under composition.
 %
 \begin{table}[h!]
     \begin{center}
-        \caption{Summary of verified properties. Subsumed properties are shown
-            at the bottom of the table.}
+        \caption{Summary of verified properties. $S_P$ is the parameters:
+            responder identity, roles, session key material (except for
+            \mGiy{}), \mCi{}, \mCr{} and \mSuites{}. $S_F$ in addition includes
+            the initiators identity and \mGiy.}
         \label{tab:props}
         \begin{tabular}{|l|c|c|c|c|c|}
                 \hline
@@ -605,10 +604,10 @@ the methods are secure under composition.
                 Implicit agreement for I & $S_F$ & $S_F$ & $S_F$ & $S_F$ & $S_F$\\
                 Implicit agreement for R & $S_F$ & $S_F$ & $S_F$ & $S_F$ & $S_F$\\
                 PFS for session key material & \cm & \cm & \cm & \cm & \cm\\
-                \hline
-                Mutual entity authentication & \cm & \cm & \cm & \cm & \cm\\
-                UKS & \cm & \cm & \cm & \cm & \cm\\
-                KCI & \cm & \cm & \cm & \cm & \cm\\
+                %\hline
+                %Mutual entity authentication & \cm & \cm & \cm & \cm & \cm\\
+                %UKS & \cm & \cm & \cm & \cm & \cm\\
+                %KCI & \cm & \cm & \cm & \cm & \cm\\
                 \hline
         \end{tabular}
     \end{center}
@@ -620,12 +619,6 @@ intended, and proposed a simple mitigation.
 %
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
-%
-%There is some work that was done as part of this effort which has not been mentioned in this paper. These lines of enquiry form the basis for future work.
-%For more details, see~\cite{edhocTamarinRepo}.
-
-%We considered two more properties, namely key-compromise impersonation (KCI) resistance and weak post-compromise security (PCS). A protocol is said to have KCI resistance if a party $I$ can establish a secure session with party $R$, even if $I$'s keys are compromised at any time, and $R$'s key material is not leaked until the end of the session. The authors of \mSpec{} claim that \mEdhoc{} has KCI resistance. Weak PCS~\cite{cohn2016post} is said to hold if a session key established in a run $\rho$ between parties $I$ and $R$ continues to be secret between them, even if $\rho$ was such that the attacker could perform cryptographic operations using $I$ and $R$'s long term keys (without having access to the keys themselves). We verified that KCI resistance and weak PCS guarantees hold for the \mSigSig{} and \mPskPsk{} methods.
-%However, the tool does not terminate for these properties on the other methods, and therefore, we do not know whether the \mStat-based methods enjoy these properties or not. We relegate the verification of these properties for the \mStat-based methods to future work. 
 %
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class

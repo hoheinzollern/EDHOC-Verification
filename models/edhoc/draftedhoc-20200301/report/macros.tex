@@ -180,25 +180,26 @@
 \newcommand{\action}[3]{\node[draw,thick,fill=white,align=center,below={#1} of {#2}]{#3}}
 
 % Tamarin symbols
-\newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-4.2pt}[{#1}]\hspace{-5pt}\rightarrow}}
+\newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-5.2pt}[{#1}]\hspace{-7pt}\rightarrow}}
 \newcommand{\semarrow}[1][]{\ifthenelse{\equal{#1}{}}{\Rightarrow}{=\hspace{-3pt}[{#1}]\hspace{-3pt}\Rightarrow}}
 \newcommand{\mIn}{\mathsf{In}}
 \newcommand{\mOut}{\mathsf{Out}}
 \newcommand{\mFr}{\mathsf{Fr}}
 \newcommand{\mKD}{\mathsf{KD}}
 \newcommand{\mKU}{\mathsf{KU}}
-\newcommand{\mT}[1]{\lstinline[basicstyle=\sffamily\normalsize]{#1}} % Tamarin code inline
+\newcommand{\mT}[1]{\lstinline[basicstyle=\ttfamily\normalsize]{#1}} % Tamarin code inline
 \usepackage[final]{listings}
 
+
 \lstdefinestyle{mystyle}{
-    backgroundcolor=,   
+    backgroundcolor=,
     commentstyle=\color{Green},
     identifierstyle=\color{black},
     keywordstyle=\color{ForestGreen},
     numberstyle=\color{Gray},
     stringstyle=,
-    %basicstyle=\ttfamily\small,
-    basicstyle=\sffamily\small,
+    basicstyle=\ttfamily\small,
+    %basicstyle=\sffamily\small,
     keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out},
     breakatwhitespace=false,
     breaklines=true,
@@ -212,28 +213,29 @@
     tabsize=2,
     morecomment=[l]{//},
     literate=
-    {=}{$=$ }{1}
-    {[}{$[$}{1}%
-    {]}{$]$}{1}%
-    {<}{$\langle$}{1}%
-    {>}{$\rangle$}{1}%
-    %{(}{$($}{1}%
-    %{)}{$)$}{1}%
-    {&}{$\wedge$}{1}
-    {|}{$\vee$}{1}
+    {=}{{$=$} }{1}
+    {[}{{$[$}}{1}%
+    {]}{{$]$}}{1}%
+    {<}{{$\langle$}}{1}%
+    {>}{{$\rangle$}}{1}%
+    %{(}{{$($}}{1}%
+    %{)}{{$)$}}{1}%
+    {&}{{$\wedge$}}{1}
+    {|}{{$\vee$}}{1}
     {$}{\$}{1}
-    {<\ \#}{$<$\ \ \#}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
+    {<\ \#}{{$<$\ \ \#}}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
     {--[}{$\mbox{-\hspace{-4.0pt}[}$}{3}%
     {]->}{$\mbox{]\hspace{-4.2pt}\rightarrow}$}{3}%
     {-->}{$\rightarrow$}{1}
     {==>}{$\Rightarrow$}{1}
     {XOR}{$\oplus$}{1}%
-    {tid}{\small{tid}}{2}%
-    {ltk}{\small{ltk}}{2}%
-    {agreed}{\small{agreed}}{5}%
-    {assocData2}{\small{assocData2}}{9}%
-    {protected2}{\small{protected2}}{9}%
-    {extAad2}{\small{extAad2}}{6}%
+    {tid}{{tid}}{2}%
+    {ltk}{{ltk}}{2}%
+    {agreed}{{agreed}}{5}%
+    %{assocData2}{{assocData2}}{9}%
+    %{protected2}{{protected2}}{10}%
+    %{protected2}{protected2}{7}%
+    {extAad2}{{extAad2}}{6}%
     %{aeadEncrypt}{\mAead{}}{6}%
     %{decrypt}{\mDecrypt}{6}
     %{aeadDecrypt}{\mAeadDecrypt}{11}

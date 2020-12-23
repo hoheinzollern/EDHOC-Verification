@@ -1,5 +1,5 @@
 % !TEX root =  main.tex
-The \mEdhoc{} \mSpec{} \cite{selander-lake-edhoc-01} claims
+The \mEdhoc{} \mSpec{} \cite{our-analysis-selander-lake-edhoc-01} claims
 that \mEdhoc{} satisfies many security properties, but these are imprecisely
 expressed and motivated.
 %
@@ -756,7 +756,7 @@ The equational theory $E$ is fixed per model, and hence we omit the subscript.
 \mTamarin{} supports let-bindings and tuples as syntactic sugar to simplify
 model definitions.
 %
-It also provides built-in rules for the Dolev-Yao adversary and for
+It also provides built-in rules for Dolev-Yao adversaries and for
 managing their knowledge.
 %
 
@@ -831,7 +831,7 @@ the encryption, and thus get to know the message
 %verification effort.
 %
 We model all five different methods of the \mEdhoc{}
-\mSpec~\cite{selander-ace-cose-ecdhe-08}, namely \mPskPsk,
+\mSpec~\cite{our-analysis-selander-lake-edhoc-01}, namely \mPskPsk,
 \mSigSig, \mSigStat, \mStatSig{} and \mStatStat.
 %
 The methods share much common structure, and we derive
@@ -907,8 +907,14 @@ for the \mSig{}- and \mStat{}-based methods respectively.
 %A similar rule \mT{registerLTK_PSK} registers pre-shared symmetric keys for
 %pairs of agents.
 %%
-The event \mT{UniqLTK} together with a corresponding restriction models the fact that
-the each party is associated with exactly one long-term key.
+The fact \mT{Fr(~ltk)} creates a fresh term \mbox{\mT{ltk},} representing a long-term
+secret key, which is not known to the adversary.
+%
+The fact \mbox{\mT{Out(<$A, pk(~ltk)>)}} sends the identity of the party
+owning the long-term key and the corresponding public key to the adversary.
+%
+The event \mT{UniqLTK} together with a corresponding restriction models the fact
+that the each party is associated with exactly one long-term key.
 %
 Consequently, an adversary cannot register additional long-term keys for an
 identity.
@@ -1028,7 +1034,7 @@ from \mSuites{}.
 \begin{lstlisting}
 rule R2_STAT_SIG:
   let
-     agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
+     agreed = <CS0, CI, ~CR> // Agreed data (and exp_sk)
      gx = 'g'^xx
      data_2 = <'g'^~yy, CI, ~CR>
      m1 = <'STAT', 'SIG', CS0, CI, gx>
