@@ -69,11 +69,12 @@ Internet Engineering Task Force (IETF).
 A version of \mEdhoc{} with two key establishment methods was formally analyzed
 in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
-Since then, the protocol has been significantly modified and now has five methods.
+Since then, the protocol has been significantly modified and several new key
+establishment methods added.
 %
-In this paper, we formally analyze all five methods of \mEdhoc{} (as given in
-the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the \mTamarin{}
-tool.
+In this paper, we formally analyze all methods of \mEdhoc{} (as given in
+the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the
+\mTamarin{} tool.
 %
 %We show that the different methods provide sensible, but also rather
 %heterogeneous security properties.
@@ -84,6 +85,10 @@ the designers.
 %
 \end{abstract}
 %
+\knote{The last sentence says "also". That only makes sense in reference to the
+    previous, now deleted sentence.  I propose to remove the "also", or add a
+    sentence before it explaining that we have shown agreement properties and
+PFS}
 
 % KARL: ESORICS 2021 call does not discuss keywords. Some papers from previous
 % years have them and some don't.
