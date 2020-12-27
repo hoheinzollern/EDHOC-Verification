@@ -89,11 +89,14 @@ the designers.
     previous, now deleted sentence.  I propose to remove the "also", or add a
     sentence before it explaining that we have shown agreement properties and
 PFS}
+\vnote{Yes, I do think we need to add a sentence about what properties we've proven. I think we can remove the keywords though. Do you think it might help to change the title to ``Formal Verification'' instead of ``Formal Analysis''? I feel like the latter is more standard terminology in this community.}
+\vnote{The link we have in [15] is the generic link to the EDHOC spec drafts, and it says accessed in March (we say accessed in November in the text instead). I feel like it might be better to actually link to draft-ietf-lake-edhoc-02 instead, which certainly came out in November, and which is what we mention in the text as well. It also makes sense to add a reference to the older version (01?) so we can cite that while talking about PSK. Let me know what you think.}
 
 % KARL: ESORICS 2021 call does not discuss keywords. Some papers from previous
 % years have them and some don't.
-\keywords{Formal verification \and Security \and IETF standardization \and
-Key establishment protocols \and Tamarin}
+% VAISHNAVI: I don't think there is any need to add keywords
+%\keywords{Formal verification \and Security \and IETF standardization \and
+%Key establishment protocols \and Tamarin}
 
 %-------------------------------------------------------------------------- sec
 %\vspace{-2.5em}
@@ -194,9 +197,9 @@ lacks a clear description of the intended security model and overall security
 goals.
 %
 
-In the current version, the pre-shared key method has been removed, but we
-include it in our analysis in case it is later added back, e.g., as a basis for
-a fast session re-establishment method.
+%In the current version, the pre-shared key method has been removed, but we
+%include it in our analysis in case it is later added back, e.g., as a basis for
+%a fast session re-establishment method.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -205,13 +208,14 @@ a fast session re-establishment method.
 In this paper, we formally analyze the \mEdhoc{} protocol (with five methods)
 in the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
-We analyze the protocol as it were in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}, which differ from the
-current version in that it includes an additional pre-shared key core, and a
-modified encryption function in message number two.
-\knote{They removed XOR with HKDF-countermode as a key stream generator and
-    substitute it for a real encryption function. We should probably update our
-model with this.}
+%We analyze the protocol as provided in the
+%\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}. 
+%, which differ from the
+%current version in that it includes an additional pre-shared key core, and a
+%modified encryption function in message number two.
+%\knote{They removed XOR with HKDF-countermode as a key stream generator and
+%    substitute it for a real encryption function. We should probably update our
+%model with this.}
 %
 %This work is presented in Section~\ref{sec:formalization}.
 %
@@ -220,7 +224,9 @@ The formal models and proven properties are based on the version as on
 %
 We give an explicit security model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
-secrecy, for all five methods. \textbf{*** Fix this list at the end ***}
+secrecy, for all five methods. 
+
+\vnote{I think it would be good to add a note about why the modelling in Tamarin is difficult here. Right now it feels like a very brusque paragraph, and it could use some detail, and it makes perfect sense to put it here.}
 %
 %We also discuss the relationship between proven properties and the claimed
 %security properties, in the absence of a precise security model in the \mSpec.
@@ -521,6 +527,7 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 \section{Conclusions and Future Work}
 \label{sec:conclusions}
 %
+\subsection{Summary}
 We formally modeled all five
 methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool, four of which
 constitutes the methods of the present version of the \mSpec{}.
@@ -584,6 +591,19 @@ intended, and proposed a simple mitigation.
 %
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
+
+\subsection{Newer version of the \mSpec}
+In this work, we have analyzed the version of the \mEdhoc{} protocol as presented in the \mSpec{} document dated 2020-11-02~\cite{our-analysis-selander-lake-edhoc-01} (along with the \mPskPsk{} mode as presented in~\textbf{*** Enter proper reference here ***}). 
+We are aware that there is a more recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
+However, the changes to the protocol therein are not particularly significant. 
+The authors discuss how to modify the encryption function in message  \mMsgtwo{} and add a ``real'' encryption function, as opposed to the current use of XOR for encryption. 
+We leave this as an avenue for future work. 
+
+%
+%This work is presented in Section~\ref{sec:formalization}.
+%
+
+
 %
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
@@ -605,33 +625,64 @@ enable easier verification.
 
 \section{\mPsk}
 \label{sec:appendixPsk}
-As mentioned earlier, in an earlier version, \mEdhoc{} also allowed for a \mPsk{} mode, based on pre-shared keys. While any combination of the \mSig{} and \mStat{} authentication methods is possible,
-when \mPsk{} is used, both endpoints must use \mPsk{}, giving rise to the \mPskPsk{} method. The key schedule is followed exactly as usual here as well, except that the seed for generating \mPRKtwo is no longer empty, but the pre-shared key. All three intermediate keys are the same. The results for the analysis are presented in~\cite{edhocTamarinRepo}.
-\vnote{Cite the right version of the draft in the preceding paragraph. Something about the properties here?}
 
-% \section{Abstract model of \mEdhoc{} communications}
-% \begin{figure}
-% \centering
-% \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-% \begin{tikzpicture}
-%     \node (ini) at (0, 0) {Initiator (\mT{I})};
-%     \draw [very thick] (0, -0.25) -- (0,-2.2);
-%     \draw [very thick] (7, -0.25) -- (7,-2.2);
-%     \node (res) at (7,0) {Responder (\mT{R})};
-%     \msg{1em}{ini}{res}{\mMethod, \mSuites, \mGx, \mCi, \mADone};
-% \msg{3em}{res}{ini}{\mCi, \mGy, \mCr, [\mIdcredr, \mAuthr, \mADtwo]};
-%     \msg{5em}{ini}{res}{\mCr, [\mIdcredi, \mAuthi, \mADthree]};
-%     \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
-%     \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
-%     \end{tikzpicture}
-% \caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
-% \label{fig:edhocFramework}
-% \end{figure}
+\begin{figure}
+\centering
+\linespread{1}
+\scalebox{.69}{
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+\begin{tikzpicture}
+    \node (ini) at (0, 0) {Initiator};
+    \draw [very thick] (0, -0.5) -- (0,-11);
+    \draw [very thick] (11.5, -0.5) -- (11.5,-11);
+    \node[below=0.5em of ini,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADone,\ \mADthree$};
+    \node (res) at (11.5,0) {Responder};
+    \node[below=0.5em of res,fill=white] () {Knows $g,\ \mPsk,\ \mIDPsk,\ \mADtwo$};
+    \action{3em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
+    \msg{6.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mIDPsk, \mADone};
+    \action{7em}{res}{$
+      \begin{array}{c}
+        \text{Generates } \mCr,\ $y$\\
+        \mGy = g^{y}\\
+        \mTHtwo = \mHash(\mMsgone, g^{y})\\
+        \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
+        \mKtwoae = \mHkdfExpand(\mPRKtwo, \mTHtwo)
+      \end{array}$};
+    \msg{15.5em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mAead(\mKtwoae; \mTHtwo, \mADtwo)}^{\mCipher}$};
+    \action{16.5em}{ini}{$
+      \begin{array}{c}
+       \mTHtwo = \mHash(\mMsgone, \mGy)\\
+       \mPRKtwo = \mHkdfExtract(\mPsk, g^{xy}) \\
+        \mKtwoae = \mHkdf(\mPRKtwo, \mTHtwo)\\
+        \mTHthree = \mHash(\mTHtwo, \mCipher)\\
+        \mPRKthree = \mPRKtwo \\
+        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
+      \end{array}$};
+    
+    \msg{25.5em}{ini}{res}{\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \mADthree)};
+    \action{26em}{res}{$
+    \begin{array}{c}
+    	\mPRKthree = \mPRKtwo \\
+        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
+    \end{array}$};
+    \draw [line width=1mm] (-2,-11) -- (2,-11);
+    \draw [line width=1mm] (9.5,-11) -- (13.5,-11);
+    \end{tikzpicture}}
+\caption{The \mPskPsk{} method of \mEdhoc}
+\label{fig:edhocpsk}
+\end{figure}
+
+As mentioned earlier, a previous version of \mEdhoc{} allowed for a \mPsk{} mode, based on pre-shared keys. 
+While any combination of the \mSig{} and \mStat{} authentication methods is possible, when \mPsk{} is used, both endpoints must use \mPsk{}, giving rise to the \mPskPsk{} method. 
+The key schedule is followed exactly as usual here as well, except that the seed for generating \mPRKtwo is no longer empty, but the pre-shared key.
+All three intermediate keys are the same. 
+The message sequence chart is presented in Figure~\ref{fig:edhocpsk}, and the following properties were verified to hold for this method: \textbf{*** List properties here ***}
+
+\vnote{Cite the right version of the draft in the preceding paragraph, I don't think we have a reference for that right now. Also, since we no longer have a techrep, we should mention the properties that hold for this method right here.}
 
 \section{Message sequence chart for \mStatSig}\label{sec:mscstatsig}
 \begin{figure}[ht]
 \centering
-%\includegraphics[scale=0.3]{Images/asym.png}
 \scalebox{.7}{
 \tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
 \begin{tikzpicture}
