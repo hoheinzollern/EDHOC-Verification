@@ -48,7 +48,8 @@ TIME=/usr/bin/time -f ${TIMEFMT}
 TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
 
 pack:
-	tar czvf edhocTamarin-`date -Idate`.tgz ${SRC} oracle.py Makefile README.txt
+	cd .. && tar cjvf edhocTamarin-`date -Idate`.tbz ESORICS
+	#	${SRC} oracle.py Makefile README.txt RUNTIME.txt ./${PROOFS}
 
 check:
 	grep --color=auto -E "verified|falsified|Killed|(user.*m.*s)" ${PROOFS}/*
