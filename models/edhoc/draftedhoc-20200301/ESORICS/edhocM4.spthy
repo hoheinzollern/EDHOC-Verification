@@ -1,0 +1,568 @@
+changequote(`<!', `!>') ifelse(m4ATTACKER, PASSIVE, <!define(Out, Msg($1)) define(In, Msg($1))!>, ) theory <!edhoc_!>m4METHODI<!_!>m4METHODR<!_!>m4ATTACKER
+define(m4METHODIR, m4METHODI<!_!>m4METHODR)
+// We tag the names in case we later want to merge all methods into a single one
+define(m4RULEI1, <!I1_!>m4METHODIR)
+define(m4RULER2, <!R2_!>m4METHODIR)
+define(m4RULEI3, <!I3_!>m4METHODIR)
+define(m4RULER4, <!R4_!>m4METHODIR)
+define(m4STATEI1, <!StI1_!>m4METHODIR)
+define(m4STATER2, <!StR2_!>m4METHODIR)
+/* Shorthands */
+define(m4EMPTYSTR, <!'e'!>)
+
+begin
+builtins: diffie-hellman, xor, signing, hashing
+
+/* WoW: Naming conventions:
+ *  - camelCase for functions and properties
+ *  - m4 macros are prefixed with m4 and the rest is all caps
+ */
+functions:
+    aead/4,         // Input: Plain-text, key, aad, cAEADx (AEAD algo ID)
+    aeadDecrypt/4,  // Input: Cipher-text, key, aad, cAEADx (AEAD algo ID)
+    decrypt/3,      // Input: Cipher-text, key, cAEADx (AEAD algo ID)
+    extr/2,         // Input: Salt, random source
+    expa/2          // Input: Salt, uniform random source
+
+equations:
+    aeadDecrypt(aead(pt, key, aad, algoId), key, aad, algoId) = pt,
+    decrypt(aead(pt, key, aad, algoID), key, algoId) = pt
+
+restriction Eq: "All x y #i. Eq(x, y)@i ==> x = y"
+
+rule m4RULEI1<!!>:
+    let gx = 'g'^~xx
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!ID_PSK = <$U, $V>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', ~CS0, ~CI, gx, ID_PSK>!>,
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', ~CS0, ~CI, gx>!>
+)
+    in
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        [ !<!LTK_!>m4METHODI<!!>(<$U, $V>, ~ltk),
+        [ !<!LTK_!>m4METHODI<!!>($U, ~ltk)
+)
+        , Fr(~xx)
+        , Fr(~CI)
+        , Fr(~CS0)
+        , Fr(~tid)  /* Thread ID */
+        ]
+        --[ I1(~tid, $U, $V, m1)
+          ]->
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
+        , Out(m1)
+        ]
+
+rule m4RULER2<!!>:
+    let
+         agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
+         gx = 'g'^xx
+         data_2 = <'g'^~yy, CI, ~CR>
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!ID_PSK = <u, $V>
+         m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', CS0, CI, gx, ID_PSK>
+         TH_2 = h(<$H0, m1, data_2>)
+         prk_2e = extr(~ltk, gx^~yy)
+         prk_3e2m = prk_2e
+         extAad2 = TH_2
+         plainText2 = m4EMPTYSTR //~AD_2
+         K_2ae = expa(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aead(plainText2, K_2ae, extAad2, $cAEAD0)
+        !>,
+        <!m1 = <'<!!>m4METHODI<!!>', '<!!>m4METHODR<!!>', CS0, CI, gx>
+         TH_2 = h(<$H0, m1, data_2>)
+         prk_2e = extr(m4EMPTYSTR, gx^~yy)
+         ifelse(<!STAT!>, m4METHODR,
+                 <!grx = gx^~ltk
+                  prk_3e2m = extr(prk_2e, grx)!>,
+                 <!prk_3e2m = prk_2e!>
+         )
+         K_2m = expa(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         protected2 = $V // ID_CRED_V
+         CRED_V = pkV
+         extAad2 = <TH_2, CRED_V>
+         assocData2 = <protected2, extAad2>
+         MAC_2 = aead(m4EMPTYSTR, K_2m, assocData2, $cAEAD0)
+         ifelse(<!SIG!>, m4METHODR,
+            <!authV = sign(<assocData2, MAC_2>, ~ltk)!>,
+            <!authV = MAC_2!>
+         )
+         plainText2 = <$V, authV>
+         K_2e = expa(<$cAEAD0, TH_2, 'K_2e'>, prk_2e)
+         /* K_2e is split in two parts to allow adversary to attack them
+          * individually
+          */
+         K_2e_1 = expa(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = expa(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authV XOR K_2e_2>
+        !>
+)
+         m2 = <data_2, CIPHERTEXT_2>
+/* Session key defined as follows:
+ * Explicit authentication possible for:
+ * sk = <gxy> for PSK and SIG_SIG methods
+ * sk = <gxy, grx> for SIG_STAT method
+ * sk = <gxy> for STAT_SIG method           -- GIY not known to R for msg2
+ * sk = <gxy, grx> for STAT_STAT method     -- GIY not known to R for msg2
+ * Implicit authentication *possible* for:
+ * sk = <gxy> for PSK and SIG_SIG methods
+ * sk = <gxy, grx> for SIG_STAT method
+ * sk = <gxy, giy> for STAT_SIG method
+ * sk = <gxy, grx, giy> for STAT_STAT method
+ */
+
+/* Def of session key exp_sk we can get explicit auth (agreement) on */
+/* I.e., exp_sk does not include G_IY */
+ifelse(<!STAT_SIG!>, m4METHODIR,
+    <!exp_sk = <gx^~yy>!>,  // Responder does not know G_IY when sending m2
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
+        <!exp_sk = <gx^~yy, grx>!>,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
+            <!exp_sk = <gx^~yy, grx>!>, // Responder does not know G_IY when sending m2
+            <!exp_sk = <gx^~yy>!> // SIG_SIG or PSK_PSK
+        )!>
+    )!>
+)
+
+    in
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        [ !<!LTK_!>m4METHODR<!!>(<u, $V>, ~ltk),
+        [ !<!LTK_!>m4METHODR<!($V, ~ltk)
+        ,  !PK_!>m4METHODR<!($V, pkV)!>
+)
+        , In(m1)
+        , Fr(~CR)
+        , Fr(~yy)
+        , Fr(~tid)
+        ]
+        --[ ExpRunningR(~tid, $V, exp_sk, agreed)
+          , R2(~tid, $V, m1, m2)
+          ]->
+ifelse(<!STAT!>, m4METHODR,
+        [ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
+        ,
+        <!ifelse(<!PSK_PSK!>, m4METHODIR,
+            [ m4STATER2<!!>(u, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed),
+            [ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gx^~yy, ~tid, m1, m2, agreed)
+        )!>
+)
+        , Out(m2)
+        ]
+
+
+rule m4RULEI3<!!>:
+    let
+         gy = 'g'^yy
+         agreed = <~CS0, ~CI, CR> // Data to agree on in addition to session key
+         data_2 = <gy, ~CI, CR>
+    /* Message 2 handling */
+         TH_2 = h(<$H0, m1, data_2>)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!prk_2e = extr(~ltk, gy^~xx)
+         prk_3e2m = prk_2e
+         plainText2 = m4EMPTYSTR //~AD_2
+         extAad2 = TH_2
+         K_2ae = expa(<$cAEAD0, TH_2, 'K_2ae'>, prk_2e)
+         CIPHERTEXT_2 = aead(plainText2, K_2ae, extAad2, $cAEAD0) // MAC check by pattern matching
+         m2 = <data_2, CIPHERTEXT_2>
+        !>,
+         /* STAT and SIG methods */
+        <!prk_2e = extr(m4EMPTYSTR, gy^~xx)
+         plainText2 = <$V, authR>
+         CRED_V = pkV
+         ifelse(<!STAT!>, m4METHODR,
+            <!grx = CRED_V^~xx
+             prk_3e2m = extr(prk_2e, grx)!>
+             ,
+            <!prk_3e2m = prk_2e!>
+         )
+         /* K_2e is split in two parts to allow adversary to attack them
+          * individually
+          */
+         K_2e_1 = expa(<$cAEAD0, TH_2, 'K_2e', '1'>, prk_2e)
+         K_2e_2 = expa(<$cAEAD0, TH_2, 'K_2e', '2'>, prk_2e)
+         CIPHERTEXT_2 = <$V XOR K_2e_1, authR XOR K_2e_2>
+         m2 = <data_2, CIPHERTEXT_2>
+
+         K_2m = expa(<$cAEAD0, TH_2, 'K_2m'>, prk_3e2m)
+         protected2 = $V // ID_CRED_V
+         extAad2 = <TH_2, CRED_V>
+         assocData2 = <protected2, extAad2>
+         MAC_2 = aead(m4EMPTYSTR, K_2m, assocData2, $cAEAD0)
+        !>
+)
+
+    /* Message 3 handling */
+         data_3 = CR //m4EMPTYSTR //~C_R
+         TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
+         K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!extAad3 = TH_3
+ifdef(<!m4AD3!>,
+         <!plainText3 = ~AD_3!>,
+         <!plainText3 = m4EMPTYSTR!>
+)
+         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3, $cAEAD0)!>,
+         /* STAT and SIG methods */
+        <!ifelse(<!STAT!>, m4METHODI,
+            <!giy = gy^~ltk
+             prk_4x3m = extr(prk_3e2m, giy)!>,
+            <!prk_4x3m = prk_3e2m!>
+         )
+         K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+         protected3 = $U // ID_CRED_U
+         CRED_U = pkU
+ifdef(<!m4AD3!>,
+         <!extAad3 = <TH_3, CRED_U, ~AD_3>!>,
+         <!extAad3 = <TH_3, CRED_U>!>
+)
+         assocData3 = <protected3, extAad3>
+         MAC_3 = aead(m4EMPTYSTR, K_3m, assocData3, $cAEAD0)
+         ifelse(<!SIG!>, m4METHODI,
+            <!authU = sign(<assocData3, MAC_3>, ~ltk)!>,
+            <!authU = MAC_3!>
+         )
+ifdef(<!m4AD3!>,
+         <!plainText3 = <$U, authU, ~AD_3>!>,
+         <!plainText3 = <$U, authU>!>
+)
+         extAad3Outer = TH_3
+         CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0)
+         !>
+)
+         m3 = <data_3, CIPHERTEXT_3>
+
+/* Def of session key exp_sk we can get explicit agreement on */
+ifelse(<!STAT_SIG!>, m4METHODIR,
+    <!exp_sk = <gy^~xx>!>,  // Responder does not know G_IY when sending m2
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
+        <!exp_sk = <gy^~xx, grx>!>,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
+            <!exp_sk = <gy^~xx, grx>!>, // Responder does not know G_IY when sending m2
+            <!exp_sk = <gy^~xx>!> // SIG_SIG or PSK_PSK
+        )!>
+    )!>
+)
+
+/* Def of session key imp_sk we can get explicit agreement on I->R, but only
+ * implicitly on R->I because R does not know G_IY when sending message 2,
+ * so I cannot deduce that R is using the same value of G_IY when I completes.
+ */
+ifelse(<!STAT!>, m4METHODI,
+    <!imp_sk = <exp_sk, giy>!>,
+    <!imp_sk =  exp_sk!>
+)
+
+    in
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
+        ,
+        [ m4STATEI1<!!>($U, ~ltk, $V, ~xx, m1, ~tid, ~CS0, ~CI)
+        <!, !PK_!>m4METHODR<!!>($V, pkV)
+        <!, !PK_!>m4METHODI<!!>($U, pkU)
+)
+        , In(m2)
+ifdef(<!m4AD3!>,
+        <!, Fr(~AD_3)!>
+)
+        ]
+        --[ ExpCommitI(~tid, $U, $V, exp_sk, agreed)  // standard running/commit
+          , CommitI(~tid, $U, $V, imp_sk, agreed)  // Requires R to complete
+          , ExpRunningI(~tid, $U, $V, exp_sk, agreed)  // Sugar for standard running/commit
+          , RunningI(~tid, $U, $V, imp_sk, agreed)  // Sugar for standard running/commit
+          , I3(~tid, $U, $V, m1, m2, m3)
+          , CompletedRun($U, $V, imp_sk)    // for clearer statement of PFS - secrecy only
+ifelse(<!SIG!>, m4METHODR,
+         <!, Eq(verify(authR, <assocData2, MAC_2>, CRED_V), true)!>,
+         <!ifelse(<!STAT!>, m4METHODR,
+             <!, Eq(authR, MAC_2)!>,
+             <!, Eq('1', '1')!>  /* nothing; to avoid tamrarin complainging for PSK */
+         )!>
+)
+ifdef(<!m4AD3!>,
+        <!, Send($U, $V, imp_sk, ~AD_3)!>
+)
+          ]->
+        [ CompletedRevEph(~tid, $U, $V, imp_sk, ~xx)
+        , Out(m3)
+        ]
+
+rule m4RULER4:
+    let
+        agreed = <CS0, CI, ~CR> // Data to agree on in addition to session key
+        data_3 = ~CR //m4EMPTYSTR
+        TH_3 = h(<$H0, TH_2, CIPHERTEXT_2, data_3>)
+        K_3ae = expa(<$cAEAD0, TH_3, 'K_3ae'>, prk_3e2m)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+       <!extAad3 = TH_3
+ifdef(<!m4AD3!>,
+        <!plainText3 = AD_3!>,
+        <!plainText3 = m4EMPTYSTR!>
+)
+        CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3, $cAEAD0) // MAC check by pattern matching
+       !>,
+        /* STAT and SIG methods */
+       <!CRED_U = pkU
+        extAad3 = TH_3
+ifdef(<!m4AD3!>,
+        <!plainText3 = <u, authI, AD_3>!>,
+        <!plainText3 = <u, authI>!>
+)
+        CIPHERTEXT_3 = aead(plainText3, K_3ae, extAad3Outer, $cAEAD0) // MAC check by pattern matching
+        ifelse(<!STAT!>, m4METHODI,
+           <!giy = CRED_U^~yy
+            prk_4x3m = extr(prk_3e2m, giy)!>,
+           <!prk_4x3m = prk_3e2m!>
+        )
+        K_3m = expa(<$cAEAD0, TH_3, 'K_3m'>, prk_4x3m)
+        protected3 = u // ID_CRED_U
+ifdef(<!m4AD3!>,
+        <!extAad3 = <TH_3, CRED_U, AD_3>!>,
+        <!extAad3 = <TH_3, CRED_U>!>
+)
+        assocData3 = <protected3, extAad3>
+        MAC_3 = aead(m4EMPTYSTR, K_3m, assocData3, $cAEAD0)
+       !>
+)
+        m3 = <data_3, CIPHERTEXT_3>
+
+/* Def of session key exp_sk we can get explicit agreement on */
+ifelse(<!STAT_SIG!>, m4METHODIR,
+    <!exp_sk = <gxy>!>,  // Responder does not know G_IY when sending m2
+    <!ifelse(<!SIG_STAT!>, m4METHODIR,
+        <!exp_sk = <gxy, grx>!>,
+        <!ifelse(<!STAT_STAT!>, m4METHODIR,
+            <!exp_sk = <gxy, grx>!>, // Responder does not know G_IY when sending m2
+            <!exp_sk = <gxy>!> // SIG_SIG or PSK_PSK
+        )!>
+    )!>
+)
+
+/* Def of session key imp_sk we can get injective agreement for I->R, but only
+ * implicit auth for R->I because R does not know G_IY when sending message 2,
+ * so I cannot deduce that R is using the same value of G_IY when I completes.
+ */
+ifelse(<!STAT!>, m4METHODI,
+    <!imp_sk = <exp_sk, giy>!>,
+    <!imp_sk =  exp_sk!>
+)
+    in
+ifelse(<!STAT!>, m4METHODR,
+        <![ m4STATER2<!!>($V, ~ltk, grx, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
+        <!ifelse(<!PSK_PSK!>, m4METHODIR,
+            <![ m4STATER2<!!>(u, $V, ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>,
+            <![ m4STATER2<!!>($V,     ~ltk, ~yy, prk_3e2m, TH_2, CIPHERTEXT_2, gxy, ~tid, m1, m2, agreed)!>
+        )!>
+)
+ifelse(<!PSK_PSK!>, m4METHODIR,
+        <!!> /* NOTHING */
+        , /* All other methods */
+        <!, !PK_!>m4METHODI<!!>(u, pkU)
+        <!, !PK_!>m4METHODR<!!>($V, pkV)
+)
+        , In(m3)
+        ]
+        --[ ExpCommitR(~tid, u, $V, exp_sk, agreed)
+          , CommitR(~tid, u, $V, imp_sk, agreed)
+          , R4(~tid, u, $V, m1, m2, m3)
+          , CompletedRun(u, $V, imp_sk) // For clearer statement of PFS -- secrecy only
+ifelse(<!SIG!>, m4METHODI,
+         <!, Eq(verify(authI, <assocData3, MAC_3>, CRED_U), true)!>,
+         <!ifelse(<!STAT!>, m4METHODI,
+             <!, Eq(authI, MAC_3)!>,
+             <!!>  /* nothing */
+         )!>
+)
+ifdef(<!m4AD3!>,
+        <!, Recv(u, $V, imp_sk, AD_3)!>
+)
+          ]->
+        [ CompletedRevEph(~tid, u, $V, imp_sk, ~yy) ]
+
+/*
+ * Environment and adversary model additions to standard Dolev-Yao
+ */
+/* Assume binding between identities and their credentials */
+restriction uniqLTKs:
+    "All id k1 k2 #i #j. (UniqLTK(id, k1)@i & UniqLTK(id, k2)@j) ==> k1 = k2"
+
+
+/* LTK Registration and LTK-reveal per */
+rule registerLTK_SIG:
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_SIG($A, ~ltk),
+                                        !PK_SIG($A, pk(~ltk)),
+                                         Out(<!<$A, pk(~ltk)>!>)]
+rule registerLTK_STAT:
+    [Fr(~ltk)] --[UniqLTK($A, ~ltk)]-> [!LTK_STAT($A, ~ltk),
+                                        !PK_STAT($A, 'g'^~ltk),
+                                         Out(<!<$A, 'g'^~ltk>!>)]
+rule registerLTK_PSK:
+    [Fr(~ltk)] --[UniqLTK(<$A, $B>, ~ltk)]-> [!LTK_PSK(<$A, $B>, ~ltk)]
+rule revealLTK_SIG:
+    [!LTK_SIG($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_STAT:
+    [!LTK_STAT($A, ~ltk)] --[LTKRev($A)]-> [Out(~ltk)]
+rule revealLTK_PSK:
+    [!LTK_PSK(<$A, $B>, ~ltk)] --[LTKRev($A), LTKRev($B)]-> [Out(~ltk)]
+
+rule revealEphKey:
+    [CompletedRevEph(~tid, u, v, sk, ~eph)] --[EphKeyRev(sk)]-> [Out(~eph)]
+
+
+/*
+ * Sanity - Correct exectution trace exists
+ */
+lemma sanityExecutableToTheEnd:
+    exists-trace
+    "(Ex tidI tidR u v m1 m2 m3 sk sk2 agreed #i #j #k #l.
+       I1(tidI, u, v, m1)@i
+     & R2(tidR, v, m1, m2)@j & #i < #j
+     & I3(tidI, u, v, m1, m2, m3)@k &  #j < #k
+     & CommitI(tidI, u, v, sk, agreed)@k
+     & ExpCommitI(tidI, u, v, sk2, agreed)@k
+     & RunningI(tidI, u, v, sk, agreed)@k
+     & ExpRunningI(tidI, u, v, sk2, agreed)@k
+     & R4(tidR, u, v, m1, m2, m3)@l &  #k < #l
+     & CommitR(tidR, u, v, sk, agreed)@l
+     & ExpCommitR(tidR, u, v, sk2, agreed)@l
+     )
+    "
+
+lemma sanityEphKeyRev:
+    exists-trace
+    "Ex sk #i. EphKeyRev(sk)@i"
+
+lemma sanityLTKRev:
+    exists-trace
+    "Ex u #i. LTKRev(u)@i"
+
+/* Injective agreement.
+ *
+ * Because of identity protection of the initator, the responder cannot
+ * include U (and hence neither G_IY) in the ExpRunning event. Therefore,
+ * an injective agreement guarantee on those parameters is not possible for I.
+ * For R the guarantee can be shown to hold because R completes last.
+ *
+ * The session key material and parameters agreed on when a party completes
+ * are explicitly authenticated (by definition).
+ *
+ * We split the property over two lemmas, one for each party,
+ * to ease termination.
+ */
+lemma authInjAgreeGuaranteeForI:
+    all-traces
+    "All tidI u v expSk agreed #t2.
+        (ExpCommitI(tidI, u, v, expSk, agreed)@t2
+        ==>
+            ( ( Ex tidR #t1. ExpRunningR(tidR, v, expSk, agreed)@t1 & #t1 < #t2
+              & (All tidIp up vp #t1p.
+                     ExpCommitI(tidIp, up, vp, expSk, agreed)@t1p ==> #t1p = #t2)
+              )
+            | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+            )
+        )
+    "
+
+lemma authInjAgreeGuaranteeForR:
+    all-traces
+    "All tidR u v sk agreed #t2.
+         (CommitR(tidR, u, v, sk, agreed)@t2
+          ==>
+             ( ( Ex tidI #t1. RunningI(tidI, u, v, sk, agreed)@t1 & #t1 < #t2
+               & (All tidRp up vp #t1p.
+                     CommitR(tidRp, up, vp, sk, agreed)@t1p ==> #t1p = #t2)
+               )
+             | (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
+             )
+         )
+    "
+
+/* Implicit agreement.
+ * Implicit agreement of the session key material essentially means that
+ * a party gets the guarantee that when the run is completed, other than I
+ * itself, only the intended peer will be able to
+ * meaningfully use the session key material (possibly at a later stage).
+ *
+ * Because I when it completes is not required to have an explicit guarantee
+ * about the existance of a live peer knowing all session key meterial, like
+ * in the case of injective agreement, the
+ * agreed session key material can include G_IY, and I will know that
+ * R agrees on the identies of both parties if R is able to compute the session
+ * key material.
+ */
+lemma authImplicitAuthGuaranteeForI:
+    all-traces
+    "All tidI u v sk agreed #t1.
+         CommitI(tidI, u, v, sk, agreed)@t1 ==>
+         ( ( (All tidR up vp agreedp #t2. CommitR(tidR, up, vp, sk, agreedp)@t2 ==>
+                (u = up  &  v = vp  &  agreed = agreedp)
+             )
+           &
+             (All tidIp up vp agreedp #t1p.
+                CommitI(tidIp,  up,  vp,  sk, agreedp)@t1p ==> (#t1p = #t1)
+             )
+           )
+         | (Ex #t0. LTKRev(v)@t0 & #t0 < #t1)
+         | (Ex #t0. EphKeyRev(sk)@t0)
+         )
+    "
+
+lemma authImplicitAuthGuaranteeForR:
+    all-traces
+    "All tidR u v sk agreed #t1.
+         CommitR(tidR, u, v, sk, agreed)@t1 ==>
+         ( ( (All tidI up vp agreedp #t2. CommitI(tidI, up, vp, sk, agreedp)@t2 ==>
+                (u = up  &  v = vp  &  agreed = agreedp)
+             )
+           &
+             (All tidRp up vp agreedp #t1p.
+                CommitR(tidRp,  up,  vp,  sk, agreedp)@t1p ==> (#t1p = #t1)
+             )
+           )
+         | (Ex #t0. LTKRev(u)@t0 & #t0 < #t1)
+         | (Ex #t0. EphKeyRev(sk)@t0)
+         )
+    "
+
+/* PFS for session key material.
+ * Essentially, the adversary only knows the session key material if it revealed
+ * the LTKs *before* the protocol run or if it reveals the ephemeral keys at
+ * at any point in time. The session key material is hence secret even if LTKs
+ * are revealed in the future.
+ */
+lemma secrecyPFS:
+   all-traces
+   "All u v sk #t3 #t2. (K(sk)@t3 & CompletedRun(u, v, sk)@t2) ==>
+       ( (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
+       | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+       | (Ex #t1. EphKeyRev(sk)@t1)
+       )
+    "
+
+/* Secrecy of data AD_3 sent in 3rd message based on the same argument as PFS
+ * for the session key material.
+ * Integrity of AD_3 means that R only receives AD_3 if it was also sent by
+ * I in this session.
+ */
+ifdef(<!m4AD3!>,
+<!lemma securityAD_3AEAD:
+   all-traces
+   "(All ad3 u v sk #t3 #t2. (K(ad3)@t3 & Send(u, v, sk, ad3)@t2) ==>
+       ( (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
+       | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+       | (Ex #t1. EphKeyRev(sk)@t1)
+       )
+    )
+    &
+    (All ad3 u v sk #t3.
+       (Recv(u, v, sk, ad3)@t3 ==>
+           ( (Ex #t2. Send(u, v, sk, ad3)@t2 & #t2 < #t3)
+             | (Ex #t2. LTKRev(u)@t2 & #t2 < #t3)
+             | (Ex #t2. LTKRev(v)@t2 & #t2 < #t3)
+             | (Ex #t2. EphKeyRev(sk)@t2)
+           )
+       )
+    )
+    "
+!>)
+end

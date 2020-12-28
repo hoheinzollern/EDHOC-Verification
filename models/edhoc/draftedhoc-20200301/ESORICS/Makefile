@@ -1,0 +1,127 @@
+SRC=edhocM4.spthy
+TAMARIN_CLEAN=tamarin-prover
+TAMARIN=${TAMARIN_CLEAN} --quit-on-warning --heuristic=O --oraclename=oracle.py
+PROOFS=proofs
+
+# Set this to PASSIVE for passive adversary; else the adversary is DY
+#MATTACKER=-Dm4ATTACKER=PASSIVE
+MATTACKER=-Dm4ATTACKER=ACTIVE
+
+# Set this switch to include AD_3 in the model
+#MAD3=-Dm4AD3
+
+# All flags that are required for all models
+MFLAGS=${MATTACKER} ${MAD3}
+
+# Flags and filenames used for each method-model
+METHODPAIRS=PSK_PSK SIG_SIG SIG_STAT STAT_SIG STAT_STAT
+METHODSINGLES=PSK SIG STAT
+
+MSIGSIG=-Dm4METHODI=SIG -Dm4METHODR=SIG
+SIGSIG=edhoc_SIG_SIG.spthy
+TSIGSIG=TMP_${SIGSIG}
+MSIGSTAT=-Dm4METHODI=SIG -Dm4METHODR=STAT
+SIGSTAT=edhoc_SIG_STAT.spthy
+TSIGSTAT=TMP_${SIGSTAT}
+MSTATSIG=-Dm4METHODI=STAT -Dm4METHODR=SIG
+STATSIG=edhoc_STAT_SIG.spthy
+TSTATSIG=TMP_${STATSIG}
+MSTATSTAT=-Dm4METHODI=STAT -Dm4METHODR=STAT
+STATSTAT=edhoc_STAT_STAT.spthy
+TSTATSTAT=TMP_${STATSTAT}
+MPSKPSK=-Dm4METHODI=PSK -Dm4METHODR=PSK
+PSKPSK=edhoc_PSK_PSK.spthy
+TPSKPSK=TMP_${PSKPSK}
+
+SPTHYS=${PSKPSK} ${SIGSIG} ${STATSIG} ${SIGSTAT} ${STATSTAT}
+
+# Using GNU time we can get more useful information about memory and time
+# consumption.
+# We log in this format: "[hours:]:minutes:seconds MB-of-memory"
+# Time is measured in real time, becasue we care about how long we actually
+# have to wait for verification runs
+TIMEFMT=%E
+TIME=/usr/bin/time -f ${TIMEFMT}
+
+# Don't change the METH string or the LEMMAPREFIX strings. They are used
+# as variables in substitutions below
+TIME_PROVE_AND_LOG=(time ${TAMARIN} --prove=LEMMAPREFIX TMP_METH) > ${PROOFS}/LEMMAPREFIX-METH 2>&1;
+
+pack:
+	tar czvf edhocTamarin-`date -Idate`.tgz ${SRC} oracle.py Makefile README.txt
+
+check:
+	grep --color=auto -E "verified|falsified|Killed|(user.*m.*s)" ${PROOFS}/*
+
+genModels:
+	mkdir -p ./${PROOFS}
+	m4 ${MFLAGS} ${MSIGSTAT} ${SRC} > ${TSIGSTAT}
+	m4 ${MFLAGS} ${MSTATSIG} ${SRC} > ${TSTATSIG}
+	m4 ${MFLAGS} ${MSTATSTAT} ${SRC} > ${TSTATSTAT}
+	m4 ${MFLAGS} ${MSIGSIG} ${SRC} > ${TSIGSIG}
+	m4 ${MFLAGS} ${MPSKPSK} ${SRC} > ${TPSKPSK}
+
+# This target is useful for viewing the GUI
+interactive: genModels
+	${TAMARIN_CLEAN} interactive ./ -b=5 --quit-on-warning --heuristic=O --oraclename=oracle.py
+
+# This target checks that all models parses correctly
+sense: genModels
+	$(foreach meth,${SPTHYS},\
+		${TAMARIN_CLEAN} --parse-only TMP_$(meth) 2>&1\
+			| grep --color=auto -E "analyzed|error|tamarin-prover:.*";\
+	 )
+
+# This target verifies all lemmas beginning with "sanity" for all models
+alotofsense: genModels
+	$(foreach meth,${SPTHYS},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,sanity*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+# Injective agreement on session key except when G_IY is included for I.
+# Inj-agreement for full session key for R.
+authInjAgree: genModels
+	$(foreach meth,${SPTHYS},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authInj*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+# Implicit agreement. Covers all keying material
+authImplicit: genModels
+	$(foreach meth,${SPTHYS},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,authImplicit*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+auth: authInjAgree authImplicit
+
+pfs: genModels
+	$(foreach meth,${SPTHYS},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,secrecyPFS*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+ad3: genModels
+	$(foreach meth,${SPTHYS},\
+		$(subst METH,$(meth),\
+			$(subst LEMMAPREFIX,securityAD_*,${TIME_PROVE_AND_LOG})\
+		 )\
+	 )
+
+all: sense alotofsense auth pfs # ad3
+
+cleanall:
+	rm -f ./TMP_*.spthy
+	rm -fr ./proofs
+
+clean:
+	rm ./TMP_*.spthy
+
+cleanproofs:
+	rm ./proofs/*.spthy
+
