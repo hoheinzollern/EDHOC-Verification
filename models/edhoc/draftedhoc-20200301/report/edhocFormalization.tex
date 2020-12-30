@@ -18,7 +18,7 @@ formalizing the \mEdhoc{} protocol and the properties we verify.
 %
 
 \subsection{Adversary Model}\label{sec:threat-model}
-We verify \mEdhoc{} in a symbolic Dolev-Yao model, with idealized
+We verify \mEdhoc{} in the symbolic Dolev-Yao model, with idealized
 cryptographic primitives, e.g, encrypted messages can only be
 decrypted using the key, no hash collisions exist etc.
 %
@@ -527,7 +527,7 @@ following partial set $S_P$ of parameters:
     \item cipher suites \mSuites{}.
 \end{itemize}
 %
-Because of \mEdhoc{} aiming to provide identity protection for $I$, there is no
+Because \mEdhoc{} aims to provide identity protection for $I$, there is no
 injective agreement guarantee for $I$ that $R$ agrees on the initiator's
 identity.
 %
@@ -548,11 +548,10 @@ part of the session key material and $S_P \cup \{I\}$ otherwise.\\
 %------------------------------------------------------- Implied properties
 \runhead{Inferred Properties}
 %\subsubsection{Subsumed Properties}
-Given the secrecy and agreement properties, and parameter set $S_P$ defined
-above, other properties can be inferred to hold in our threat model
-under.
+Given that the secrecy and agreement properties %, and parameter set $S_P$ defined
+above hold, other properties can be inferred to hold in our threat model as well.
 %
-Protocols where a party does not get confirmation on that their peer knows the
+Protocols where a party does not get confirmation that their peer knows the
 session key material are known to be at risk to
 \emph{Key-Compromise Impersonation (KCI)}
 attacks~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
@@ -560,7 +559,7 @@ attacks~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
 Attacks in this class allow an adversary in possession of a party $A$'s secret
 long-term key to coerce $A$ to complete a
 protocol run believing it authenticated a certain peer $B$, but where $B$ did
-not engage with $A$ in a run.
+not engage with $A$ at all in a run.
 %
 Because both our notions of agreement above ensure agreement on identities,
 roles and session key material, all methods passing verification of those are
@@ -582,8 +581,8 @@ where the session key material is actually shared with $C$ instead, the
 protocol is vulnerable to an \emph{Unknown Key-Share (UKS)}
 attack~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
 %
-For the same reason as for KCI, a protocol passing verification of our agreement
-properties is also resistant to UKS attacks.
+For the same reason as for KCI, any method for which our agreement
+properties hold is also resistant to UKS attacks.
 %
 
 From the injective agreement properties it follows that each party is assured
@@ -761,11 +760,11 @@ managing their knowledge.
 %
 
 We implement events using actions, and parameters associated with events using
-terms of the algebra.
+terms of the algebra.\\
 %
 
-To simplify the exposition, we do not describe the model in full detail, but
-it can be found in~\cite{edhocTamarinRepo}.\\
+%To simplify the exposition, we do not describe the model in full detail, but
+%all the \mTamarin{} code can be found in~\cite{edhocTamarinRepo}.\\
 %
 
 %\runhead{Semantics and Built-ins}
@@ -830,12 +829,11 @@ the encryption, and thus get to know the message
 %In this section we detail the modeling choices that we have made for this formal
 %verification effort.
 %
-We model all five different methods of the \mEdhoc{}
-\mSpec~\cite{our-analysis-selander-lake-edhoc-01}, namely \mPskPsk,
+We model five different methods of \mEdhoc{}, namely \mPskPsk,
 \mSigSig, \mSigStat, \mStatSig{} and \mStatStat.
 %
-The methods share much common structure, and we derive
-their \mTamarin{}-models from a single specification written with the aid of the
+The methods share a lot of common structure, and we derive
+their \mTamarin-models from a single specification written with the aid of the
 M4 macro language.
 %
 %Whenever possible we adhere with the variable names present in the \mSpec{} and
@@ -951,7 +949,7 @@ The timing of these reveals as modelled by these events is important. The long-t
 The ephemeral DH half-key of a party is revealed when the party completes, i.e.,
 at events of type \mIComplete{} and \mRComplete.~\footnote{A stronger, and perhaps more realistic model, would reveal ephemeral keys also when they are
 created at the start of the protocol run, but we failed to get \mTamarin{} to
-terminate on that.}
+terminate on this formulation.}\\
 %
 % \knote{Most state-of-the-art Tamarin models of real-world protocols
 %         (involving DH) do not

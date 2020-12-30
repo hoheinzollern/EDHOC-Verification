@@ -297,12 +297,12 @@ We discuss them below.
 %Instead the goals are there typically made more specific by listing resistance
 %to attacks as these are discovered throughout the work.
 %
-The \mEdhoc{} \mSpec{} lists several specific security goals, but they are
-imprecise and difficult to interpret due to lacking context and intended usage
+The \mEdhoc{} \mSpec{} lists several security goals, but they are
+imprecise and difficult to interpret due to lack of context and intended usage
 descriptions.
 %
 Without knowing how the protocol is to be used,
-it is not clear whether the listed security goals are the most important ones
+it is not clear whether the listed security goals are important ones
 for constrained IoT devices.
 %
 
@@ -321,7 +321,7 @@ sub-optimal trade-offs and design decisions.
 \mEdhoc{} is intended to cover a variety of use cases, many of which are
 difficult to predict today.
 %
-It can be that it is difficult to predict these use cases, but that does not
+However, this does not
 prevent one from collecting \emph{typical} use cases and user stories
 to identify more specific security goals that will be important in most cases.
 %
@@ -331,7 +331,7 @@ security properties of interest.
 %
 Several of these revealed subtleties and undefined aspects of \mEdhoc{}.
 %
-We informed the \mEdhoc{} authors, who then included these aspects the
+We informed the \mEdhoc{} authors, who then included these aspects in newer versions of the
 \mSpec{}.\\
 %
 
@@ -408,7 +408,7 @@ model~\cite{DBLP:conf/crypto/CanettiK02}.
 The CK security model explicitly separates the secure storage of long-term
 credentials from storage of session state and ephemeral keys.
 %
-This is appropriate for modelling use of TEEs.
+This is appropriate for modelling the use of TEEs.
 %
 
 The \mEdhoc{} authors indicated to us that it was
@@ -470,7 +470,7 @@ However, our understanding is that adding an extra message is
 undesirable, since~\cite{our-analysis-selander-lake-edhoc-01} requests as few messages as
 possible.
 %
-IETF have however reconsidered and is currently discussing adding a fourth
+IETF has however reconsidered, and is currently discussing adding a fourth
 message as an option.
 %
 Another possibility is to include \mGi{}, or its hash, in the first and
@@ -482,7 +482,7 @@ This would, however, increase message sizes, a grave concern for \mEdhoc{}.
 A third alternative is to not derive the session key material from \mGiy{}.
 %
 Doing so would destroy the protection \mOptls{} (and similar protocols from
-which the \mStat{}-based methods are derived) provides against compromise
+which the \mStat{}-based methods are derived) enjoy against compromise
 of the initiator's ephemeral DH key.
 %
 
@@ -535,9 +535,10 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 \label{sec:conclusions}
 %
 \subsection{Summary}
-We formally modeled all five
-methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool, four of which
-constitutes the methods of the present version of the \mSpec{}.
+We formally modeled five
+methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool.
+%, four of which
+%constitute the methods of the present version of the \mSpec{}.
 %
 We formulated several important security properties and identified precise
 adversary models in which we verified these.
@@ -556,15 +557,13 @@ Implicit agreement covers the all previously mentioned parameters for both
 peers.
 %
 Verification of all lemmas, including model validation lemmas, took 42 minutes
-on a Intel Core i7-6500U 2.5GHz using two cores.
+on an Intel Core i7-6500U 2.5GHz using two cores.
 %
 
 The properties mutual entity authentication, UKS and KCI are inferred from the
-verified properties.
+verified properties, and not explicitly formulated or verified.
 %
 
-We verified each method in isolation, and leave as future work to verify whether
-the methods are secure under composition.
 %
 \begin{table}[h!]
     \begin{center}
@@ -597,6 +596,9 @@ intended, and proposed a simple mitigation.
 %
 We discussed how the IETF may extract and better define security properties to
 enable easier verification.
+
+We verified each method in isolation, and leave as future work to verify whether
+the methods are secure under composition.
 
 % KARL: I don't think we need this section now. Please see the introduction.
 %Vaishnavi: I'd like to keep it. I think it makes it very clear how we aren't too ``off the mark'' in terms of what we analyze. And I don't want to include this in 1.1 and muddy the waters, it's good to have a semantic separation of introducing the reader to what we have done, and point to this at the very end. I'd much rather that in 1.1 you added stuff about why the Tamarin modelling was not straightforward.
@@ -702,11 +704,11 @@ All three intermediate keys in the schedule are the same.
 %this method: \textbf{*** List properties here ***}
 %KARL: the sentence above is not needed. The Table 1 already covers it.
 
-\vnote{Cite the right version of the draft in the preceding paragraph, I don't think we have a reference for that right now. Also, since we no longer have a techrep, we should mention the properties that hold for this method right here.}
-\knote{I don't think this is a problem (except possibly for that it is unclear).
-    Please see the text I've added in the introduction, the knotes I added
-    there, and my comment above on that the table (and rest of analysis) already
-covers PSK method.}
+%\vnote{Cite the right version of the draft in the preceding paragraph, I don't think we have a reference for that right now. Also, since we no longer have a techrep, we should mention the properties that hold for this method right here.}
+%\knote{I don't think this is a problem (except possibly for that it is unclear).
+%    Please see the text I've added in the introduction, the knotes I added
+%    there, and my comment above on that the table (and rest of analysis) already
+%covers PSK method.}
 
 \section{Message sequence chart for \mStatSig}\label{sec:mscstatsig}
 \begin{figure}[ht]
