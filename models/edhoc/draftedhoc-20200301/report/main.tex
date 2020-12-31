@@ -206,11 +206,13 @@ The standardization process is ongoing, with the authors releasing newer version
 %-------------------------------------------------------------------------- sub
 \subsection{Contributions}
 \label{sec:contributions}
+\vnote{Please rewrite this, remove mentions of the later drafts, and focus on the difficulty of modelling this in Tamarin (if at all)}
+
 In this paper, we formally analyze the \mEdhoc{} protocol (with five methods)
 in the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
 We analyze the protocol as provided in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} as of 2020-03-01.
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} as of \mDate.
 %
 Compared to the current version it includes an additional pre-shared key core.
 %
@@ -257,7 +259,7 @@ which we discuss in Section~\ref{sec:discussion}.
 There are a few places where \mEdhoc{} can be improved,
 which we found during this work and communicated to the authors.
 %
-We discuss them below.
+We discuss them below. 
 %
 
 %-------------------------------------------------------------------------- sub
@@ -331,7 +333,7 @@ security properties of interest.
 %
 Several of these revealed subtleties and undefined aspects of \mEdhoc{}.
 %
-We informed the \mEdhoc{} authors, who then included these aspects in newer versions of the
+We informed the \mEdhoc{} authors, who then addressed these aspects in the
 \mSpec{}.\\
 %
 
@@ -402,7 +404,7 @@ security protocols, its design does not take into account the adversary models
 for which these protocols were designed.
 %
 For example, \mOptls{}, whose cryptographic core is essentially the same
-as the \mStat{}-based authentication method, is designed to be secure in the CK
+as the \mStat{}-based authentication methods, is designed to be secure in the CK
 model~\cite{DBLP:conf/crypto/CanettiK02}.
 %
 The CK security model explicitly separates the secure storage of long-term
@@ -536,7 +538,7 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 %
 \subsection{Summary}
 We formally modeled five
-methods of the \mEdhoc{} \mSpec{} using the \mTamarin{} tool.
+methods of the \mEdhoc{} \mSpec{} using \mTamarin.
 %, four of which
 %constitute the methods of the present version of the \mSpec{}.
 %
@@ -602,13 +604,13 @@ the methods are secure under composition.
 
 % KARL: I don't think we need this section now. Please see the introduction.
 %Vaishnavi: I'd like to keep it. I think it makes it very clear how we aren't too ``off the mark'' in terms of what we analyze. And I don't want to include this in 1.1 and muddy the waters, it's good to have a semantic separation of introducing the reader to what we have done, and point to this at the very end. I'd much rather that in 1.1 you added stuff about why the Tamarin modelling was not straightforward.
-\subsection{Newer version of the \mSpec} \label{sec:newdrafts}
+\subsection{Newer versions of the \mSpec} \label{sec:newdrafts}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
-presented in the \mSpec{} document dated 2020-03-01~\cite{our-analysis-selander-lake-edhoc-01}.
+presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-01}.
 %(along with the \mPskPsk{} mode as presented in~\textbf{*** Enter proper reference here ***}). 
-We are aware that there is a more recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
-However, the changes to the protocol therein are not particularly significant. 
-The authors have removed the \mPskPsk{} mode. They also discuss how to modify the encryption function in message  \mMsgtwo{} and add a ``real'' encryption function, as opposed to the current use of XOR for encryption. 
+We are aware that there have been three versions since, with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
+However, the changes to the protocol over these three versions are not particularly significant. 
+The authors have removed the \mPskPsk{} mode as of the IETF draft dated August 2020. In the December 2020 draft, they discuss how to modify the encryption function in message  \mMsgtwo{} and add a ``real'' encryption function, as opposed to the current use of XOR for encryption. 
 We leave this as an avenue for future work. 
 
 
@@ -687,20 +689,23 @@ We leave this as an avenue for future work.
 
 As mentioned earlier, the version of
 \mEdhoc{}~\cite{our-analysis-selander-lake-edhoc-01} we analyze allows for a
-\mPsk{}-based method, i.e., one based on pre-shared keys for authentication.
+\mPsk{}-based method.
+%
+This method, involving pre-shared keys for authentication, is slightly different from the others mentioned.
 %
 While any combination of the \mSig{} and \mStat{} authentication methods is
 possible, when the \mPsk{}-based authentication is used, both endpoints must
 use \mPsk{}.
 %, giving rise to the \mPskPsk{} method.
-In this method, the key schedule follows the other cases, except that the
+In this method, the key schedule follows exactly like the other cases, except that the
 seed for generating \mPRKtwo{} is not empty, but instead contains the
 pre-shared key.
 %
 All three intermediate keys in the schedule are the same.
 %
-%The message sequence chart for the \mPsk{} method is presented in
-%Figure~\ref{fig:edhocpsk}, and the following properties were verified for
+The message sequence chart for the \mPsk{} method is presented in
+Figure~\ref{fig:edhocpsk}. 
+%, and the following properties were verified for
 %this method: \textbf{*** List properties here ***}
 %KARL: the sentence above is not needed. The Table 1 already covers it.
 
