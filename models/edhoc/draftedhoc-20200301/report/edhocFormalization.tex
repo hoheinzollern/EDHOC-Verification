@@ -36,9 +36,12 @@ long-term key, and we denote this type of event by \mRevLTK$(A)$.
 The event \mRevEph$(A, k)$ represents the reveal of the ephemeral DH half-key
 used by party $A$ while establishing session key material $k$.
 %
-This two capabilities model the possibility for long-term keys to be stored in a
+These two capabilities model the possibility for long-term keys to be stored in a
 hardened storage, a Trusted Execution Environment (TEE), whereas ephemeral keys
 may be stored in a less secure part of a device.
+%
+This is more granular and realistic than assuming an adversary have equal
+opportunity to access both types of keys.
 %
 
 \subsection{Formalization of Properties}
@@ -73,7 +76,8 @@ We define $\doteq$ analogously.
 However, two events of the same type cannot have the same timestamp, so
 $t_1 \doteq t_2$ implies $E^{t_1} = E^{t_2}$.
 %
-This corresponds to \mTamarin{}'s notation $E(p_i)_{i\in\mathbb{N}}@t$ for action facts.
+This notation corresponds to \mTamarin{}'s use of action facts
+$E(p_i)_{i\in\mathbb{N}}@t$.
 %
 %
 %Other first order logic connectives and parenthesis have their standard
@@ -123,7 +127,7 @@ even if a long-term key leaks in the future.
 %We formalize PFS for session key material $k$ with respect to the strongest
 %adversary model in which we could successfully verify it.
 %
-We define PFS as follows: %through the trace predicate
+We define PFS for session key material $k$ as follows:
 %
 \begin{align*}
     \mPredPfs \triangleq
@@ -149,7 +153,7 @@ initiator's identity,
 and the second, $R$, represents that $I$ believes $R$ to be playing
 the responder role.
 %
-The third parameter, $k$, is the established session key.
+The third parameter, $k$, is the established session key material.
 %
 The parameters of the \mRComplete{} event are defined analogously.
 %
@@ -256,7 +260,7 @@ The corresponding property for $R$ is analogous.
 
 Traditionally, the event types used to describe injective agreement are called
 \emph{Running} and \emph{Commit}, but to harmonize the presentations of
-authentication and secrecy in this section, we refer to these event types as
+authentication and PFS in this section, we refer to these event types as
 \mIStart{} and \mIComplete{} respectively for the initiator, and
 \mRStart{} and \mRComplete{} for the responder.
 %
@@ -271,7 +275,7 @@ For the initiator role we define injective agreement as follows:
     &\lor(\exists t_1\mLogicDot \mRevLTK^{t_1}(R) \land t_1 \lessdot t_2).
 \end{align*}
 %
-The property claims that for an initiator $I$, either the injective agreement
+The property captures that for an initiator $I$, either the injective agreement
 property as described above holds, or the long-term key of the believed
 responder $R$ has been compromised before $I$ completed its role.
 %
@@ -404,17 +408,17 @@ concept of agreeing on a set of parameters, inspired by the idea of injective
 agreement~\cite{DBLP:conf/csfw/Lowe97a}.
 %
 We use the term \emph{implicit} in this context to denote that a party $A$
-assumes that any other party $B$ who knows the session key material must be the
-authenticated party, and that $B$ (if honest) will also agree on a set $S$ of
-parameters computed by the protocol, one of which is the session key $k$.
+assumes that any other party $B$ who knows the session key material $k$ must
+be the intended party, and that $B$ (if honest) will also agree on a set
+$S$ of parameters computed by the protocol, one of which is $k$.
 %
-If implicit agreement holds for both roles, upon completion, $A$ is guaranteed
-that $B$ has been or is engaged in exactly one protocol run with $A$ in the
+When implicit agreement holds for both roles, upon completion, $A$ is guaranteed
+that $A$ has been or is engaged in exactly one protocol run with $B$ in the
 opposite role, and that $B$ has been or will be able to agree on $S$.
 %
 The main difference to injective agreement is that $A$ can conclude that if
 $A$ sends the last message and this reaches $B$, then $A$ and $B$ have agreed
-on $S$.
+on $I$, $R$ and $S$.
 %
 In contrast to injective agreement, this property is symmetric with respect to
 the initiator and responder role.
@@ -429,7 +433,7 @@ Guilhem~et~al.~\cite{DBLP:conf/csfw/GuilhemFW20}, is a similar property, our
 definition does not require key confirmation, so our definition is closer to
 their definition of implicit authentication.
 %
-In the \mTamarin{} lemma we split the property into one lemma for the
+In the \mTamarin{} model we split the property into one lemma for
 $I$ and one for $R$.
 %
 We here show only the definition for $I$ because it is symmetric to the one
@@ -532,24 +536,26 @@ injective agreement guarantee for $I$ that $R$ agrees on the initiator's
 identity.
 %
 For the same reason, there is no such guarantee for $I$ with respect to
-the \mGiy{} part of the session key material when $I$ uses a \mStat{}-based method.
+the \mGiy{} part of the session key material when $I$ uses the \mStat{}
+authentication method.
 %
 There is, however, an implicit agreement guarantee for $I$ that $R$ agrees on
 $I$'s identity and the full session key material.
 %
 Since $R$ completes after $I$, $R$ can get injective agreement guarantees on
-more parameters, namely the initator's identity and the full session key
-material for all methods.\\
+more parameters, namely also the initator's identity and the full session key
+material for all methods.
 %
-Let the full set of parameters be $S_F = S_P \cup \{I, \mGiy\}$ when \mGiy{} is
+Let the full set of agreed parameters be $S_F = S_P \cup \{I, \mGiy\}$
+when \mGiy{} is
 part of the session key material and $S_P \cup \{I\}$ otherwise.\\
 %
 
 %------------------------------------------------------- Implied properties
 \runhead{Inferred Properties}
 %\subsubsection{Subsumed Properties}
-Given that the secrecy and agreement properties %, and parameter set $S_P$ defined
-above hold, other properties can be inferred to hold in our threat model as well.
+Given that the PFS and agreement properties
+above hold, other properties can be inferred to hold in our adversary model.
 %
 Protocols where a party does not get confirmation that their peer knows the
 session key material are known to be at risk to
@@ -843,7 +849,8 @@ M4 macro language.
 %modeling, and we use \mT{xx} and \mT{yy} for the ephemeral keys, to avoid name clashes.
 %
 To keep the presentation brief, we only present the \mStatSig{} metohod, as it
-shows asymmetric authentication methods simultaneously.
+illustrates the use of two different asymmetric authentication methods
+simultaneously.
 %
 %More details on the \mPskPsk{} method and 
 The full \mTamarin{} code for all models can be found at~\cite{edhocTamarinRepo}.
@@ -944,12 +951,14 @@ To model an adversary compromising long-term keys, i.e., events of type
 %rule forge_SIG: [!LTK_SIG($A, ~ltk), In(xx)] --[TEE($A)]-> [Out(sign(xx, ~ltk))]
 %rule exp_STAT: [!LTK_STAT($A, ~ltk), In('g'^x)] --[TEE($A)]-> [Out(('g'^x)^~ltk)]
 %
-The timing of these reveals as modelled by these events is important. The long-term keys are revealed on registration, before protocol execution.
+The timing of these reveals as modelled by these events is important.
 %
-The ephemeral DH half-key of a party is revealed when the party completes, i.e.,
-at events of type \mIComplete{} and \mRComplete.~\footnote{A stronger, and perhaps more realistic model, would reveal ephemeral keys also when they are
+The long-term keys can be revealed on registration, before protocol execution.
+%
+The ephemeral DH half-key of a party can be revealed when the party completes,
+i.e., at events of type \mIComplete{} and \mRComplete.~\footnote{A stronger, and perhaps more realistic model, would reveal ephemeral keys when they are
 created at the start of the protocol run, but we failed to get \mTamarin{} to
-terminate on this formulation.}\\
+terminate on a model formulated that way.}\\
 %
 % \knote{Most state-of-the-art Tamarin models of real-world protocols
 %         (involving DH) do not
@@ -1024,10 +1033,10 @@ single term, onto the plaintext tuple.
 The XOR encryption can be seen in on line 18-21 in the listing of
 \mT{R2_STAT_SIG} below.
 %
-In the latest version of the \mEdhoc{}
-specification~\cite{latest-ietf-lake-edhoc-03}, the XOR-based encryption
-has been changed into using the encryption algorithm from the AEAD algorithm
-from \mSuites{}.
+%In the latest version of the \mEdhoc{}
+%specification~\cite{latest-ietf-lake-edhoc-03}, the XOR-based encryption
+%has been changed into using the encryption algorithm from the AEAD algorithm
+%from \mSuites{}.
 %
 \begin{lstlisting}
 rule R2_STAT_SIG:
@@ -1073,10 +1082,10 @@ material.% for the purpose of injective agreement.
 As explained in Section~\ref{sec:agreedParams}, it is not possible to show
 injective agreement on session key material when it includes \mGiy.
 %
-Therefore, we use different actions to emit events that include \mGiy{} in the
-session key material and events that do not.
+Therefore, we use certain actions to implement events that include \mGiy{} in the
+session key material and other actions that do not.
 %
-Session key material which includes (resp. does not include) \mGiy{} is referred to as \mT{imp_sk} (resp. \mT{exp_{sk}}) in the
+Session key material which includes (resp. does not include) \mGiy{} is referred to as \mT{imp_sk} (resp. \mT{exp_sk}) in the
 \mTamarin{} model. %and the material that does not is referred to as \mT{exp_sk}.
 %
 In the case of the \mSigSig, \mSigStat{}, and \mPskPsk{} methods, \mT{imp_sk}
@@ -1112,7 +1121,7 @@ is the same as \mT{exp_sk}, because there is no \mGiy.%{} to take into account.
 \subsection{Property Formalization}
 \label{sec:propertyFormalization}
 The properties we defined above translate directly into \mTamarin's logic,
-with the mapping of events to the actions emitted from the model.
+using the straight forward mapping of events to the actions emitted from the model.
 %
 As an example, we show the lemma for verifying the property \mPredPfs.
 %

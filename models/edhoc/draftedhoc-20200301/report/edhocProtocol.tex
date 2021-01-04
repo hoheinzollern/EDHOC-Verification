@@ -3,11 +3,12 @@
 %The high-level goal of \mEdhoc{} is to establish an authenticated security
 %context for the \mOscore{} security protocol.
 %
-%To reach this goal, 
+%To reach this goal,
 %In this section, we provide an overview of the \mEdhoc{} protocol.
-% For more details, we refer the reader to~\cite{selander-lake-edhoc-01}. 
+% For more details, we refer the reader to~\cite{selander-lake-edhoc-01}.
 %To establish an authenticated security context for \mOscore,
-\mEdhoc{} uses a three-message protocol structure, as
+The \mEdhoc{} specification~\cite{our-analysis-selander-lake-edhoc-01} uses
+a three-message protocol structure, as
 shown in Figure~\ref{fig:edhocFramework}.
 %in the style of the \mNoise{} framework, outlined in
 %
@@ -16,8 +17,9 @@ shown in Figure~\ref{fig:edhocFramework}.
 In the first message, the initiator $I$ sends to the responder $R$ an
 ephemeral DH half-key \mGx{}, along with some parameters.
 %
-Parameters include proposed \mEdhoc{} authentication methods, proposed cipher
-suites, connection identifier \mCi{} and optional application layer data \mADone.
+These parameters include proposed \mEdhoc{} authentication methods, proposed
+cipher suites, connection identifier \mCi{} and optional application layer data
+\mADone.
 %
 $R$ may reject the choice of the authentication methods
 or cipher suites with an error message, leading to a negotiation across
@@ -34,17 +36,17 @@ to $I$ by providing authentication data \mAuthr{}.
 Finally, in the third message, $I$ authenticates itself
 to $R$ by providing authentication data \mAuthi{}.
 %
-The authentication data consists of a MAC or a signature, depending on
-authentication method.
+A party's authentication data consists of a MAC or a signature, depending on
+authentication method used.
 %
 
 % KARL: Elaborating on this was requested by SSR reviewer #1
 The connection identifiers \mCi{} and \mCr{}, described in Section 3.1 of the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}, deserve some elaboration.
+\mSpec{}, deserve some elaboration.
 %
-The \mSpec{} states that these identifiers as not serving a security purpose for
-\mEdhoc{}, but only to aid message routing to the correct \mEdhoc{} processing
-entity.
+The \mSpec{} describes these identifiers as not serving a security purpose for
+\mEdhoc{}, but only as aiding message routing to the correct \mEdhoc{} processing
+entity at a party.
 %
 Despite this, the \mSpec{} states that they may be used by \mOscore{}, or other
 protocols using the established security context, without restricting how they
@@ -53,12 +55,13 @@ are to be used.
 Because \mEdhoc{} may need them in clear-text for routing, \mOscore{} cannot
 rely on them being secret.
 %
-Section 7.1.1 of the \mSpec{}, requires the identifiers to be unique,
-defines this to mean that they do not have the same value, and requires parties
-to verify that this is the case.
+Section 7.1.1 of the \mSpec{} requires the identifiers to be unique.
+%
+Uniqueness is defined to mean that $\mCi{} \not = \mCr{}$ for a given session
+and the \mSpec{} requires parties to verify that this is the case.
 %
 The same section also require that \mOscore{} must be able to retrieve the
-security context based on the identifiers.
+security context based on these identifiers.
 %
 The intended usage of \mCi{} and \mCr{} by \mOscore{} is not specific and
 therefore it is not clear which properties should be verified.
@@ -88,46 +91,51 @@ We verify that the parties agrees on the established values.
     \draw [line width=1mm] (-0.75,-2.2) -- (0.75,-2.2);
     \draw [line width=1mm] (7-0.75,-2.2) -- (7+0.75,-2.2);
     \end{tikzpicture}
-\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity protected}
+\caption{Structure of \mEdhoc{}: $[t]$ means $t$ is encrypted and integrity
+protected. When a pre-shared key is used for authentication, its identifier is
+included in \mMsgone{}.}
 \label{fig:edhocFramework}
 \end{figure}
 
 %One of the driving design goals is to 
-\mEdhoc{} accommodates two credential types
+\mEdhoc{} accommodates three credential types
 an party may use for authentication, 
 %: certificates, private keys and static long-term DH keys. 
 %
 %The three authentication methods are based on 
-namely digital signatures (\mSig), and challenge-response signatures based on
-static long-term DH keys (\mStat).
+namely digital signatures (\mSig), challenge-response signatures based on
+static long-term DH keys (\mStat) and pre-shared keys (\mPsk).
 %
 %\pskstuff{and
 %pre-shared symmetric keys (\mPsk)}.
 %
-Depending on the types used, the authentication methods differ,
-and \mAuthi{} and \mAuthr{} are constructed accordingly.
-%
-For example, when authentication is based on digital signatures, the data is a
-signed MAC.
-%
 %\pskstuff{While any combination of the \mSig{} and \mStat{} methods is possible,
 %when \mPsk{} is used, both parties must use \mPsk{}.}
-%
-We overload notation to refer to these combinations of authentication methods as
-\emph{methods} to follow the terminology in the \mEdhoc{}
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}.
 %
 The initiator and responder are not required to use the same authentication
 method.
 %
-Thus, we have four methods: \mSigSig, \mSigStat, \mStatStat, and \mStatSig.
+Since both parties must use pre-shared key authentication if one of them does,
+we have five combinations of authentication methods:
+\mSigSig, \mSigStat, \mStatStat, \mStatSig{} and \mPskPsk.
+%
+We overload terminology and refer to these combinations of authentication methods as
+\emph{methods} to follow the terminology in the \mEdhoc{}
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}.
 %
 The individual authentication methods in each name denote the authentication
 method used by the initiator and responder respectively.
 %
-We refer to a method where at least one party uses \mSig{} (resp. \mStat) as a \mSig-based (resp. \mStat-based)
+We refer to a method where at least one party uses \mSig{}
+(resp. \mStat{} or \mPsk{}) as a \mSig-based (resp. \mStat-based or \mPsk-based)
 method.
 %and similarly for \mStat{} and \mPsk.
+%
+The fields \mAuthi{} and \mAuthr{} are constructed in accordance with the
+authentication method used.
+%
+For example, when authentication is based on digital signatures, the field is a
+signed MAC.
 %
 
 %We first briefly discuss \mEdhoc's relations to the protocols on which it is
@@ -263,8 +271,8 @@ Figure~\ref{fig:kdfdiagram}.
 \mEdhoc{} uses two functions from the \mHkdf{} interface~\cite{rfc5869} to derive keys.
 %
 \mHkdfExtract{} 
-constructs uniformly distributed key material from random input and a seed,
-while \mHkdfExpand{} generates keys from key material and a seed.
+constructs uniformly distributed key material from random input and a salt,
+while \mHkdfExpand{} generates keys from key material and a salt.
 %
 %The seeds are used to bind the key material and keys to certain parameters.
 %
@@ -279,7 +287,8 @@ Each one of them is used for a specific message in the protocol, and from
 these intermediate keys, encryption and integrity keys
 (\mKtwoe, \mKtwom{}, \mKthreeae, and \mKthreem) for that message are derived.
 %
-The seed for generating \mPRKtwo{} is empty for all methods. %\pskstuff{except \mPskPsk{}, where it is the pre-shared key}.%
+The salt for generating \mPRKtwo{} is the empty string for all methods
+except \mPskPsk{}, where it is the pre-shared key.%
 %For \mPskPsk{}, the seed is the pre-shared key and for all other methods it is
 %empty.
 %
@@ -303,12 +312,12 @@ The protocol execution culminates in the established session key material.
 For all methods, \mGxy{} is part of the key material.
 %
 If the initiator uses the \mStat{} authentication method, so is
-the initiator's public key \mGr{} raised to the power of $x$, a value which is
-denoted \mGrx.
+the initiator's public key \mGi{} raised to the power of $y$, a value which is
+denoted \mGiy.
 %
 If the responder uses the \mStat{} authentication method,
-the initiator's public key \mGi{} raised to the power of $y$, a value which is
-denoted \mGiy{}, is part of the session key material.
+the initiator's public key \mGr{} raised to the power of $x$, a value which is
+denoted \mGrx{}, is part of the session key material.
 %
 From the session key material, a key exporter (\mEdhoc-Exporter) based on
 \mHkdf{} is provided to extract keys required for \mOscore{}.
@@ -330,7 +339,12 @@ From the session key material, a key exporter (\mEdhoc-Exporter) based on
 %Since the \mSigSig{} method has been analyzed earlier, we do not focus on
 %it here.
 
-For brevity, we only focus on the \mSigStat{} method here. However, the message sequence charts for the \mPskPsk{} and \mStatSig{} methods can be found in Appendices~\ref{sec:appendixPsk} and~\ref{sec:mscstatsig} respectively.
+For brevity, we now focus on \mStat{}-based methods, and the \mSigStat{} method
+in particular.
+%
+However, the message sequence charts for the \mPskPsk{} and \mStatSig{} methods
+can be found in Appendices~\ref{sec:appendixPsk} and~\ref{sec:mscstatsig}
+respectively.
 %
 %However, a detailed description of all methods can be found in the
 %technical report at~\cite{edhocTamarinRepo}. 
@@ -451,23 +465,25 @@ challenge-response signature pattern used by protocols such as
 %
 %------------------------------------------------------------------------- sub
 %\subsubsection{\mSigStat.}
-
 %\runhead{\mSigStat}
-We describe the \mSigStat{} method in some detail here.
+The \mSigStat{} method is perhaps best illustrated by the message sequence chart
+shown in Figure~\ref{fig:edhocsigstat}.
 %
-The message sequence chart in Figure~\ref{fig:edhocsigstat} is perhaps best
-illustrating the method.
+The initiator uses the \mSig{} authentication method, authenticating with
+signature,
+while the responder uses the \mStat{} authentication method,
+authenticating with a challenge-response signature.
 %
-The initiator uses the \mSig{}-based method, authenticating with a signature,
-while the responder uses the \mStat{}-based method, authenticating with a
-challenge-response signature.
-%
-In \mStat{}-based methods, each party provide the other with an identifier,
+Each party provide the other with an identifier,
 \mIdcredi{} and \mIdcredr{} respectively, helping to obtain the corresponding
 credentials.
 %
-\mCredi{} and \mLtki{} are signature keys since the initiator is using
-\mSig.
+\mCredi{} and \mLtki{} are signature keys since the initiator is using the
+\mSig authentication method.
+%
+\mCredr{} and \mLtkr{} are challenge-response signature keys since the responder
+is using the \mStat authentication method.
+%
 
 The initiator sends the first message to the responder.
 %
@@ -479,10 +495,10 @@ for Authenticated Encryption with Additional Data (\mAead{}), when it is applied
 to the credential identifier \mIdcredr{}, the hash of the first
 message, its credential \mCredr{}, and any application data $\mADtwo$.
 %
-The initiator uses \mSig{}-based authentication, and therefore its
+The initiator uses \mSig{} authentication, and therefore its
 authentication data
 \mAuthi{} is a signature over a MAC that is computed similarly to MAC computed
-by the initiator.
+by the responder.
 %the same way using its credential, identifier, hash of the second message,
 %and application data \mADthree) also needs to be signed using $\mLtki$.
 %The precise details of the communications can be seen in the message sequence

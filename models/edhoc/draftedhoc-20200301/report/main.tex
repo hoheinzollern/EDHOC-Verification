@@ -58,7 +58,7 @@ disable your text-editor's line-concatenation feature. Thanks!}}
 
 \begin{abstract}
 %\hl{No restriction on no of words for ESORICS 2021}
-Constrained IoT devices are becoming ubiquitous in our daily lives,
+Constrained IoT devices are becoming ubiquitous in society
 and there is a need for secure communication protocols that respect the
 constraints under which these devices operate.
 %
@@ -76,8 +76,8 @@ In this paper, we formally analyze all methods of \mEdhoc{} (as given in
 the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the
 \mTamarin{} tool.
 %
-We show that \mEdhoc{} satisfies two authentication properties as well as
-Perfect Forward Secrecy of the session key material.
+We show that \mEdhoc{} satisfies two different notions of authentication
+as well as Perfect Forward Secrecy of the session key material.
 %
 In the course of this analysis, we also identified some potential improvements to the
 design and specification of \mEdhoc, which we have communicated to
@@ -86,24 +86,11 @@ the designers.
 \end{abstract}
 %
 
-\knote{I agree we don't need the keywords, but I'd prefer to keep them if there
-    is space left. Doing so increases the chance that our paper turns up in
-    web-searches related to formal methods and standardization.}
-\vnote{The link we have in [15] is the generic link to the EDHOC spec drafts, and it says accessed in March (we say accessed in November in the text instead). I feel like it might be better to actually link to draft-ietf-lake-edhoc-02 instead, which certainly came out in November, and which is what we mention in the text as well. It also makes sense to add a reference to the older version (01?) so we can cite that while talking about PSK. Let me know what you think.}
-\knote{That citation  is intentionally like that. It points to the repo and the access
-time gives an exact version of the document we analyzed. It is not exactly the
-same as -02 and it is not exactly the same as -01.  The link and access time
-identify exactly the PSK version we analyzed.
-In the paper we mention three versions of the EDHOC draft (and I tried to make it
-super-clear in the bib-file which is which by naming the bibtext-identifier
-appropriately).
-One of them is the one we analyzed~\cite{our-analysis-selander-lake-edhoc-01},
-another is the latest version of the draft~\cite{latest-ietf-lake-edhoc-03},
-and the third one is the one Bruni et al
-analyzed~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
-We need all three to refer to
-them correctly when discussing who has done what and what has not yet been done.}
-
+\todo[inline, color=red, size=\footnotesize]{\textbf{\color{white}Please
+        note: "authentication method" is what one party uses. The notation
+        "\mSig{}-based method" and similar refers to a \emph{combined} method --
+        not an authentication method used by a single party.
+We do spell this out, but take care to use it consistently in the text.}}
 \keywords{Formal verification \and Security \and IETF standardization \and
 Key establishment protocols \and Tamarin}
 
@@ -115,7 +102,7 @@ Key establishment protocols \and Tamarin}
 %-------------------------------------------------------------------------- sub
 %\subsection{Background and motivation}
 %\label{sec:motivation}
-As IoT devices become more prevalent and get involved in increasingly sensitive
+As IoT devices become more prevalent and get involved in progressively sensitive
 functions in society, the need to secure their communications
 becomes increasingly important.
 %
@@ -147,8 +134,8 @@ Naturally, \mEdhoc{} must work under the same constrained requirements as
 While not all use cases for \mEdhoc{} are firmly set, the overall goal is to
 establish an \mOscore{} security context, under message size limitations.
 %
-It is therefore important to ensure that \mEdhoc{} satisfies the ``standard'' security
-properties required of a key exchange protocol.
+It is therefore important to ensure that \mEdhoc{} satisfies fundamental
+security properties expected from a key exchange protocol.
 %The work is now being done in the IETF Lightweight Authenticated Key Exchange
 %(LAKE) working group.
 %
@@ -160,15 +147,16 @@ properties required of a key exchange protocol.
 The first incarnation of \mEdhoc{} appeared in March 2016.
 %
 It contained two different key establishment methods, one based on a
-pre-shared Diffie-Hellman (DH) cryptographic core and a second based on a
-variant of challenge-response signatures in the style of the \mNoise{}
-framework~\cite{perrin2016noise}.
-%
+pre-shared Diffie-Hellman (DH) cryptographic core
 \footnote{By a \emph{cryptographic core}, or simply core, we mean an academic protocol,
 without encodings or application specific details required by an industrial
 protocol.
 %
-By a \emph{key establishment method} we mean a core with some such details added.}
+By a \emph{key establishment method} we mean a core with some such details added.
+}
+and a second based on a
+variant of challenge-response signatures in the style of the \mNoise{}
+framework~\cite{perrin2016noise}.
 %
 \mEdhoc{} is therefore a framework of several key establishment methods.
 %
@@ -176,7 +164,7 @@ By a \emph{key establishment method} we mean a core with some such details added
 In May 2018, the core based on challenge-response signatures was replaced by
 one based on \mSigma{}~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
 %
-This version was formally analyzed by Bruni et.
+That version of \mEdhoc{} was formally analyzed by Bruni et.
 al~\cite{DBLP:conf/secsr/BruniJPS18} using the ProVerif
 tool~\cite{DBLP:conf/csfw/Blanchet01}.
 %
@@ -190,9 +178,10 @@ Consequently, although the framework is similar to the one analyzed by Bruni
 et.~al, the cryptographic underpinnings have increased in complexity more than
 twofold.
 %
-We formulate and formalize a security model covering all the five key
+We formulate and formalize a security model covering all five key
 establishment methods, which is important especially since the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} lacks a clear description of the intended security model and
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} lacks a clear description
+of the intended security model and
 overall security goals.
 %
 The standardization process is ongoing, with the authors releasing newer versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail about how these versions differ from the one analyzed here).
@@ -304,7 +293,7 @@ imprecise and difficult to interpret due to lack of context and intended usage
 descriptions.
 %
 Without knowing how the protocol is to be used,
-it is not clear whether the listed security goals are important ones
+it is not clear whether the listed security goals are the most important ones
 for constrained IoT devices.
 %
 
@@ -404,7 +393,7 @@ security protocols, its design does not take into account the adversary models
 for which these protocols were designed.
 %
 For example, \mOptls{}, whose cryptographic core is essentially the same
-as the \mStat{}-based authentication methods, is designed to be secure in the CK
+as the \mStat{} authentication method, is designed to be secure in the CK
 model~\cite{DBLP:conf/crypto/CanettiK02}.
 %
 The CK security model explicitly separates the secure storage of long-term
@@ -414,7 +403,7 @@ This is appropriate for modelling the use of TEEs.
 %
 
 The \mEdhoc{} authors indicated to us that it was
-not necessary to consider compromised ephemeral session keys separately from
+not necessary to consider compromised ephemeral keys separately from
 from compromised long-term keys.
 %
 The rationale is that \mSigma{} cannot protect against compromised ephemeral
@@ -428,8 +417,8 @@ methods.
 That rationale is only true, however, if one restricts attention to session key
 confidentiality of an ongoing session.
 %
-TEEs provide value in other ways, for example, by allowing contractions with
-weak PCS guarantees.
+TEEs provide value in other ways, for example, by allowing constructions with
+PCS guarantees.
 %
 It would be wasteful to not consider TEEs for long-term key storage as part of
 the security, since it could otherwise make use of many good properties of the
@@ -447,7 +436,7 @@ re-used cryptographic cores, like \mOptls.
 can be derived using the \mEdhoc{}-Exporter.
 %
 The session key material is affected by \mGxy{}, and if a party uses the
-\mStat{} method, also by that party's secret static long-term DH key.
+\mStat{} authentication method, also by that party's secret static long-term DH key.
 %
 As shown in Section~\ref{sec:formalization}, mutual injective agreement cannot
 be achieved for \mGiy{}.
@@ -478,7 +467,8 @@ message as an option.
 Another possibility is to include \mGi{}, or its hash, in the first and
 second messages.
 %
-This would, however, increase message sizes, a grave concern for \mEdhoc{}.
+This would, however, increase message sizes and prevent initiator identity
+protection, which are grave concerns for \mEdhoc{}.
 %and prevent initiator identity protection.
 %
 A third alternative is to not derive the session key material from \mGiy{}.
@@ -607,10 +597,11 @@ the methods are secure under composition.
 \subsection{Newer versions of the \mSpec} \label{sec:newdrafts}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
 presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-01}.
-%(along with the \mPskPsk{} mode as presented in~\textbf{*** Enter proper reference here ***}). 
 We are aware that there have been three versions since, with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
 However, the changes to the protocol over these three versions are not particularly significant. 
-The authors have removed the \mPskPsk{} mode as of the IETF draft dated August 2020. In the December 2020 draft, they discuss how to modify the encryption function in message  \mMsgtwo{} and add a ``real'' encryption function, as opposed to the current use of XOR for encryption. 
+The authors have removed the \mPskPsk{} mode as of the IETF draft dated August
+2020. In the December 2020 draft, they discuss how to modify the encryption
+function in message \mMsgtwo{} and add a more standard encryption function, as opposed to the current use of XOR for encryption. 
 We leave this as an avenue for future work. 
 
 
@@ -698,7 +689,7 @@ possible, when the \mPsk{}-based authentication is used, both endpoints must
 use \mPsk{}.
 %, giving rise to the \mPskPsk{} method.
 In this method, the key schedule follows exactly like the other cases, except that the
-seed for generating \mPRKtwo{} is not empty, but instead contains the
+salt for generating \mPRKtwo{} is not empty, but instead contains the
 pre-shared key.
 %
 All three intermediate keys in the schedule are the same.
