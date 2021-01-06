@@ -22,14 +22,14 @@
 
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
-%
-%\author{Karl Norrman\inst{1,2}\textsuperscript{(\Letter)}\orcidID{0000-0003-0164-1478}
-%\and
-%Vaishnavi Sundararajan\inst{3}
-%\and
-%Alessandro Bruni\inst{4}
-%}
-\author{}
+\author{Karl Norrman\inst{1,2}\textsuperscript{(\Letter)}\orcidID{0000-0003-0164-1478}
+\and
+    Vaishnavi Sundararajan\inst{3}
+\and
+    Alessandro Bruni\inst{4}
+}
+%\author{}
+
 %
 % Suggestion for shortened title in running heads:
 %    Formal Analysis of EDHOC Key Establishment
@@ -39,22 +39,19 @@
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
-%\institute{
-%    KTH Royal Institute of Technology, Stockholm, Sweden \and
-%    Ericsson Research, Security, Stockholm, Sweden,\\
-%    \email{karl.norrman@ericsson.com} \and
-%    University of California Santa Cruz, USA,
-%    \email{vasundar@ucsc.edu} \and
-%    IT University of Copenhagen, Copenhagen, Denmark,\\
-%    \email{brun@itu.dk}
-%}
-\institute{}
+\institute{
+    KTH Royal Institute of Technology, Stockholm, Sweden \and
+    Ericsson Research, Security, Stockholm, Sweden,\\
+    \email{karl.norrman@ericsson.com} \and
+    University of California Santa Cruz, USA,\\
+    \email{vasundar@ucsc.edu} \and
+    IT University of Copenhagen, Copenhagen, Denmark,\\
+    \email{brun@itu.dk}
+}
+%\institute{}
 %
 \maketitle
 %
-
-\todo[inline, color=red, size=\footnotesize]{\textbf{\color{white}Please
-disable your text-editor's line-concatenation feature. Thanks!}}
 
 \begin{abstract}
 %\hl{No restriction on no of words for ESORICS 2021}
@@ -70,14 +67,15 @@ A version of \mEdhoc{} with two key establishment methods was formally analyzed
 in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, the protocol has been significantly modified and several new key
-establishment methods added.
+establishment methods have been added.
 %
 In this paper, we formally analyze all methods of \mEdhoc{} (as given in
 the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the
 \mTamarin{} tool.
 %
-We show that \mEdhoc{} satisfies two different notions of authentication
-as well as Perfect Forward Secrecy of the session key material.
+We show that not all methods of \mEdhoc{} satisfies the authentication notion
+injective agreement, but that all do satisfy a notion of implicit
+authentication, as well as Perfect Forward Secrecy of the session key material.
 %
 In the course of this analysis, we also identified some potential improvements to the
 design and specification of \mEdhoc, which we have communicated to
@@ -86,11 +84,6 @@ the designers.
 \end{abstract}
 %
 
-\todo[inline, color=red, size=\footnotesize]{\textbf{\color{white}Please
-        note: "authentication method" is what one party uses. The notation
-        "\mSig{}-based method" and similar refers to a \emph{combined} method --
-        not an authentication method used by a single party.
-We do spell this out, but take care to use it consistently in the text.}}
 \keywords{Formal verification \and Security \and IETF standardization \and
 Key establishment protocols \and Tamarin}
 
@@ -174,10 +167,20 @@ Since then the protocol has seen significant changes.
 Three new cores, mixing challenge-response signatures and normal signature for
 authentication, were added~\cite{our-analysis-selander-lake-edhoc-01}.
 %
+In contrast to the methods analyzed by Bruni et.~al, which were based on the
+well-understood pre-shared key Diffie-Hellman and \mSigma{}, the newly added
+methods combine two unilateral authentication protocols to construct a mutual
+authentication protocol.
+%
+Combining two protocols, which individually provide unilateral authentication,
+is not guaranteed to result in a secure mutual authentication
+protocol~\cite{DBLP:conf/ccs/Krawczyk16}.
+%
 Consequently, although the framework is similar to the one analyzed by Bruni
 et.~al, the cryptographic underpinnings have increased in complexity more than
-twofold.
+twofold, and use mechanisms that have not previously been formally analyzed.
 %
+
 We formulate and formalize a security model covering all five key
 establishment methods, which is important especially since the
 \mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} lacks a clear description
@@ -187,49 +190,47 @@ overall security goals.
 The standardization process is ongoing, with the authors releasing newer versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail about how these versions differ from the one analyzed here).
 %
 
-%In the current version, the pre-shared key method has been removed, but we
-%include it in our analysis in case it is later added back, e.g., as a basis for
-%a fast session re-establishment method.
-%
-
 %-------------------------------------------------------------------------- sub
 \subsection{Contributions}
 \label{sec:contributions}
-\vnote{Please rewrite this, remove mentions of the later drafts, and focus on the difficulty of modelling this in Tamarin (if at all)}
-
-In this paper, we formally analyze the \mEdhoc{} protocol (with five methods)
-in the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
+In this paper, we formally analyze the \mEdhoc{} protocol (with its five key
+establishment methods) using the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
 We analyze the protocol as provided in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} as of \mDate.
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}.% as of \mDate.
 %
-Compared to the current version it includes an additional pre-shared key core.
-%
-We analyze this core as well, since it may be re-introduced in later versions
-of the \mSpec{} to handle re-establishment use cases.
-%
-Our understanding is that the latest version~\cite{latest-ietf-lake-edhoc-03}
-released 2020-12-18, does not contain any changes that affect our model except
-for one point regarding key stream generation for encryption of one message --
-a point that the ITEF still discuss how to resolve.
-%
-
-%This work is presented in Section~\ref{sec:formalization}.
-%
-%The formal models and proven properties are based on the version as on
-%2020-03-01~\cite{our-analysis-selander-lake-edhoc-01}, with the \mPskPsk{} method based on the version as on \textbf{*** Fix this reference ***}.
-%
-We give an explicit security model for the protocol and verify
+We give an explicit adversary model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
 secrecy, for all five methods.
+%
+We provide a common \mTamarin{} model using M4 macros, from which
+individual methods are derived.
+%
+The model itself is valuable as a basis for verifying further updates in the
+ongoing standardization.
+%
+It is publicly available~\cite{edhocTamarinRepo}.
+%
+The model is non-trivial.
+%
+It took several person-months to interpret the
+specification and construct the model.
+%
+Termination requires a hand-crafted proof oracle to guide \mTamarin{}.
+%
 
-\vnote{I think it would be good to add a note about why the modelling in Tamarin is difficult here. Right now it feels like a very brusque paragraph, and it could use some detail, and it makes perfect sense to put it here.}
+During the analysis we identified that not all \mEdhoc{}'s key establishment
+methods fulfill injective agreement on the session key material, and none
+on the initiator's identity.
 %
-We also discuss the relationship between proven properties and the claimed
-security properties, in the absence of a precise security model in the \mSpec.
+However, we did show that all methods fulfill an implicit agreement property on
+the session key and the initiator's identity.
+
+We identified a number of subtleties and ambiguities in the specification.
 %
-The analysis has resulted in some improvements to the \mSpec,
-which we discuss in Section~\ref{sec:discussion}.
+We discuss remedies for the identified issues and
+communicated this to the specification authors, who incorporated some of our
+suggestions and currently consider how to deal with the remaining ones.
 %
 
 %-------------------------------------------------------------------------- sec
@@ -545,21 +546,27 @@ method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites{}.
 The responder in addition is ensured agreement on the initiators identity and
 \mGiy{}, i.e., on the set $S_F$.
 %
-Implicit agreement covers the all previously mentioned parameters for both
-peers.
+Implicit agreement covers all previously mentioned parameters for both peers.
 %
 Verification of all lemmas, including model validation lemmas, took 42 minutes
 on an Intel Core i7-6500U 2.5GHz using two cores.
 %
 
 The properties mutual entity authentication, UKS and KCI are inferred from the
-verified properties, and not explicitly formulated or verified.
+verified properties.%, and not explicitly formulated or verified.
+% KARL: Rationale for deleting the last part:
+% We do verify that both parties agree on their identities and roles
+% explicitly, so I do believe some of the "inferred" properties are very
+% explicitly verified. The same hold for UKS and KCI. The problem is just that
+% they are not binary, but in relation to our model, and we have not explcitly
+% defined what we mean by UKS and KCI in as much detail as, e.g., PFS. That is
+% why I prefer to call them "inferred". 
 %
 
 %
 \begin{table}[h!]
     \begin{center}
-        \caption{Summary of verified properties. $S_P$ is the parameters:
+        \caption{Summary of verified properties. $S_P$ is the set of parameters:
             responder identity, roles, session key material (except for
             \mGiy{}), \mCi{}, \mCr{} and \mSuites{}. $S_F$ in addition includes
             the initiators identity and \mGiy.}
@@ -592,9 +599,11 @@ enable easier verification.
 We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 
-% KARL: I don't think we need this section now. Please see the introduction.
-%Vaishnavi: I'd like to keep it. I think it makes it very clear how we aren't too ``off the mark'' in terms of what we analyze. And I don't want to include this in 1.1 and muddy the waters, it's good to have a semantic separation of introducing the reader to what we have done, and point to this at the very end. I'd much rather that in 1.1 you added stuff about why the Tamarin modelling was not straightforward.
 \subsection{Newer versions of the \mSpec} \label{sec:newdrafts}
+\knote{Check the dates. They use different formats. I don't have a strong
+    opinion on which we use as long as it is consistent and unambiguous.
+    For example, now it is not super clear if the "December draft" is the same
+    as reference [18]}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
 presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-01}.
 We are aware that there have been three versions since, with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
@@ -602,7 +611,7 @@ However, the changes to the protocol over these three versions are not particula
 The authors have removed the \mPskPsk{} mode as of the IETF draft dated August
 2020. In the December 2020 draft, they discuss how to modify the encryption
 function in message \mMsgtwo{} and add a more standard encryption function, as opposed to the current use of XOR for encryption. 
-We leave this as an avenue for future work. 
+We leave this as an avenue for future work.\\
 
 
 %
@@ -613,13 +622,16 @@ We leave this as an avenue for future work.
 %
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
-%\runhead{Acknowledgments} This work was partially supported by
-%the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
-%the Knut and Alice Wallenberg Foundation.
-%%
-%We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
-%clarifications regarding the specification.
+\runhead{Acknowledgments} This work was partially supported by
+the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
+the Knut and Alice Wallenberg Foundation.
 %
+We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
+clarifications regarding the specification.
+%
+We appreciate the helpful comments from the reviewers of SSR2020.
+%
+
 
 %\vnote{We need to fix the link for the code repository.}
 

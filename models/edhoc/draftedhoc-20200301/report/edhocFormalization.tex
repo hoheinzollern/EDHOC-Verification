@@ -825,7 +825,7 @@ for which \mTamarin{} produces the following rule:
 to denote that if the adversary knows a key \mT{k}, a message \mT{m}, the
 authenticated data \mT{ad}, and an algorithm \mT{al}, then they can construct
 the encryption, and thus get to know the message
-\lstinline{aeadEncrypt(k, m, ad, al)}.
+\mT{aeadEncrypt(k, m, ad, al)}.
 
 
 
@@ -880,14 +880,14 @@ operations.
 %The Diffie-Hellman theory introduces exponentiation \mT{g^y} and product of exponents \mT{x * y} as built-in symbols in the language, plus the necessary equational theory of associativity, commutativity, distributivity of exponentiation with product, and inverse.
 %
 For \mAead{} operations on key \mT{k}, message \mbox{\mT{m}}, additional data \mT{ad}
-and algorithm identifier \mT{ai}, we use \lstinline{aeadEncrypt(k, m, ad, ai)}
+and algorithm identifier \mT{ai}, we use \mT{aeadEncrypt(k, m, ad, ai)}
 for encryption.
 %
 Decryption with verification of the integrity is defined via the equation
-\lstinline{aeadDecrypt(k, aeadEncrypt(k, m, ad, ai), ad, ai) = m}.
+\mT{aeadDecrypt(k, aeadEncrypt(k, m, ad, ai), ad, ai) = m}.
 %
 To enable the adversary to decrypt without needing to verify the integrity, we
-also add the equation \lstinline{decrypt(k, aeadEncrypt(k, m, ad, ai), ai) = m}.
+also add the equation \mT{decrypt(k, aeadEncrypt(k, m, ad, ai), ai) = m}.
 %
 The latter equation is not used by honest parties.\\
 %
