@@ -176,7 +176,7 @@ its protocol run.
 % The property states that for any session between $I$ and $R$ which establishes a session key $k$, if the adversary comes to know $k$, then it is because one (or more) of the following happened: the long-term key of $I$ or that of $R$ was obtained by the adversary before the completion of the session, or the ephemeral key used by $I$ or by $R$ was compromised anytime during the session. Any other information obtained by the adversary (or even this same information, obtained at a point of time not as above) does not help them gain access to the established session key. For example, with reference to the informal description above, compromising the long-term key of either party \emph{after} the completion of the session does not give the adversary access to the established session key.
 
 One way the definition slightly differs from the corresponding \mTamarin{} lemma
-is that \mTamarin{} does not allow a disjunction on the left hand side of an
+is that \mTamarin{} does not allow a disjunction on the left-hand side of an
 implication in a universally quantified formula.
 %
 In the lemma, therefore, instead of the disjunction
@@ -394,7 +394,7 @@ For the responder role we define the analogous property by
 %------------------------------------------------------------- Implicit auth
 Unlike PFS, not all \mEdhoc{} methods enjoy the injective agreement property.
 %
-Hence we show for all methods a form of \emph{implicit agreement} on all the
+Hence, we show for all methods a form of \emph{implicit agreement} on all the
 parameters mentioned above.
 %
 We take inspiration from the computational model definitions of implicit
@@ -543,7 +543,7 @@ There is, however, an implicit agreement guarantee for $I$ that $R$ agrees on
 $I$'s identity and the full session key material.
 %
 Since $R$ completes after $I$, $R$ can get injective agreement guarantees on
-more parameters, namely also the initator's identity and the full session key
+more parameters, namely also the initiator's identity and the full session key
 material for all methods.
 %
 Let the full set of agreed parameters be $S_F = S_P \cup \{I, \mGiy\}$
@@ -558,7 +558,7 @@ Given that the PFS and agreement properties
 above hold, other properties can be inferred to hold in our adversary model.
 %
 Protocols where a party does not get confirmation that their peer knows the
-session key material are known to be at risk to
+session key material may be susceptible to
 \emph{Key-Compromise Impersonation (KCI)}
 attacks~\cite{DBLP:conf/ima/Blake-WilsonJM97}.
 %
@@ -1121,7 +1121,7 @@ is the same as \mT{exp_sk}, because there is no \mGiy.%{} to take into account.
 \subsection{Property Formalization}
 \label{sec:propertyFormalization}
 The properties we defined above translate directly into \mTamarin's logic,
-using the straight forward mapping of events to the actions emitted from the model.
+using the straightforward mapping of events to the actions emitted from the model.
 %
 As an example, we show the lemma for verifying the property \mPredPfs.
 %

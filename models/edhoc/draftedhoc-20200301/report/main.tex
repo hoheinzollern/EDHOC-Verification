@@ -63,7 +63,7 @@ EDHOC is an authenticated key establishment protocol for constrained IoT
 devices that was proposed in 2016, and is currently being standardized by the
 Internet Engineering Task Force (IETF).
 %
-A version of \mEdhoc{} with two key establishment methods was formally analyzed
+A version of \mEdhoc{} with two key establishment methods were formally analyzed
 in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
 %
 Since then, the protocol has been significantly modified and several new key
@@ -700,14 +700,15 @@ While any combination of the \mSig{} and \mStat{} authentication methods is
 possible, when the \mPsk{}-based authentication is used, both endpoints must
 use \mPsk{}.
 %, giving rise to the \mPskPsk{} method.
-In this method, the key schedule follows exactly like the other cases, except that the
+In this method, the key schedule is the same as the other cases, except that the
 salt for generating \mPRKtwo{} is not empty, but instead contains the
 pre-shared key.
 %
-All three intermediate keys in the schedule are the same.
+All three intermediate keys in the key schedule for the \mPsk{}-based method
+are the same.
 %
 The message sequence chart for the \mPsk{} method is presented in
-Figure~\ref{fig:edhocpsk}. 
+Figure~\ref{fig:edhocpsk}.
 %, and the following properties were verified for
 %this method: \textbf{*** List properties here ***}
 %KARL: the sentence above is not needed. The Table 1 already covers it.
