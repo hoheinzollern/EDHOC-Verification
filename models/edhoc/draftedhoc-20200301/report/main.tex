@@ -70,7 +70,7 @@ Since then, the protocol has been significantly modified and several new key
 establishment methods have been added.
 %
 In this paper, we formally analyze all methods of \mEdhoc{} (as given in
-the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-01}) using the
+the IETF internet draft~\cite{our-analysis-selander-lake-edhoc-00}) using the
 \mTamarin{} tool.
 %
 We show that not all methods of \mEdhoc{} satisfies the authentication notion
@@ -165,7 +165,7 @@ tool~\cite{DBLP:conf/csfw/Blanchet01}.
 Since then the protocol has seen significant changes.
 %
 Three new cores, mixing challenge-response signatures and normal signature for
-authentication, were added~\cite{our-analysis-selander-lake-edhoc-01}.
+authentication, were added~\cite{our-analysis-selander-lake-edhoc-00}.
 %
 In contrast to the methods analyzed by Bruni et.~al, which were based on the
 well-understood pre-shared key Diffie-Hellman and \mSigma{}, the newly added
@@ -183,7 +183,7 @@ twofold, and use mechanisms that have not previously been formally analyzed.
 
 We formulate and formalize a security model covering all five key
 establishment methods, which is important especially since the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01} lacks a clear description
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00} lacks a clear description
 of the intended security model and
 overall security goals.
 %
@@ -197,7 +197,7 @@ In this paper, we formally analyze the \mEdhoc{} protocol (with its five key
 establishment methods) using the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
 We analyze the protocol as provided in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-01}.% as of \mDate.
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.% as of \mDate.
 %
 We give an explicit adversary model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
@@ -459,7 +459,7 @@ Successful MAC verification guarantees
 to the initiator that the responder injectively agrees on \mGiy{}.
 %
 However, our understanding is that adding an extra message is
-undesirable, since~\cite{our-analysis-selander-lake-edhoc-01} requests as few messages as
+undesirable, since~\cite{our-analysis-selander-lake-edhoc-00} requests as few messages as
 possible.
 %
 IETF has however reconsidered, and is currently discussing adding a fourth
@@ -605,7 +605,7 @@ the methods are secure under composition.
     For example, now it is not super clear if the "December draft" is the same
     as reference [18]}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
-presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-01}.
+presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-00}.
 We are aware that there have been three versions since, with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
 However, the changes to the protocol over these three versions are not particularly significant. 
 The authors have removed the \mPskPsk{} mode as of the IETF draft dated August
@@ -691,7 +691,7 @@ We appreciate the helpful comments from the reviewers of SSR2020.
 \end{figure}
 
 As mentioned earlier, the version of
-\mEdhoc{}~\cite{our-analysis-selander-lake-edhoc-01} we analyze allows for a
+\mEdhoc{}~\cite{our-analysis-selander-lake-edhoc-00} we analyze allows for a
 \mPsk{}-based method.
 %
 This method, involving pre-shared keys for authentication, is slightly different from the others mentioned.
