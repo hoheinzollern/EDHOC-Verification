@@ -13,8 +13,8 @@ properties.
 %incorporate those models into the properties themselves.
 %
 
-In this section, we describe our approach and modeling choices towards
-formalizing the \mEdhoc{} protocol and the properties we verify.
+%In this section, we describe our approach and modeling choices towards
+%formalizing the \mEdhoc{} protocol and the properties we verify.
 %
 
 \subsection{Adversary Model}\label{sec:threat-model}
@@ -282,7 +282,7 @@ responder $R$ has been compromised before $I$ completed its role.
 Note that this places no restrictions on the reveals of the ephemeral
 DH half-keys, or the reveal of the initiator's long-term key.
 %
-For the responder role we define the analogous property by
+For the responder we define the property as follows.
 \begin{align*}
     \mPredInjR& \triangleq\
     \forall I, R, k, S, t_2\mLogicDot \mRComplete^{t_2}(I, R, k, S)
@@ -436,20 +436,19 @@ their definition of implicit authentication.
 In the \mTamarin{} model we split the property into one lemma for
 $I$ and one for $R$.
 %
-We here show only the definition for $I$ because it is symmetric to the one
+We show only the definition for $I$ because it is symmetric to the one
 for $R$.
 %
-The definition for $I$ is
 \begin{align*}
     \mPredImpI& \triangleq
     \forall I, R, k, S, t_1\mLogicDot \mIComplete^{t_1}(I, R, k, S)
     \rightarrow\\
       &(\forall I', R', S', t_2\mLogicDot \mRComplete^{t_2}(I', R', k, S') \rightarrow
              (I=I' \land R=R' \land S=S'))\\
-      \land &(\forall I', R', S', t_1'\mLogicDot
+      &\land (\forall I', R', S', t_1'\mLogicDot
         (\mIComplete^{t_1'}(I', R', k, S') \rightarrow t_1' \doteq t_1
         )\\
-    &\lor(\exists t_0\mLogicDot \mRevLTK^{t_0}(R) \land t_0 \lessdot t_1)
+    & \ \ \ \lor(\exists t_0\mLogicDot \mRevLTK^{t_0}(R) \land t_0 \lessdot t_1)
     \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(R, k))
     \lor(\exists t_0\mLogicDot \mRevEph^{t_0}(I, k)).
 \end{align*}
@@ -546,9 +545,9 @@ Since $R$ completes after $I$, $R$ can get injective agreement guarantees on
 more parameters, namely also the initiator's identity and the full session key
 material for all methods.
 %
-Let the full set of agreed parameters be $S_F = S_P \cup \{I, \mGiy\}$
+The full set of agreed parameters ($S_F$) is $S_P \cup \{I, \mGiy\}$
 when \mGiy{} is
-part of the session key material and $S_P \cup \{I\}$ otherwise.\\
+part of the session key material, and $S_P \cup \{I\}$ otherwise.\\
 %
 
 %------------------------------------------------------- Implied properties
@@ -764,7 +763,6 @@ model definitions.
 It also provides built-in rules for Dolev-Yao adversaries and for
 managing their knowledge.
 %
-
 We implement events using actions, and parameters associated with events using
 terms of the algebra.\\
 %
@@ -956,9 +954,9 @@ The timing of these reveals as modelled by these events is important.
 The long-term keys can be revealed on registration, before protocol execution.
 %
 The ephemeral DH half-key of a party can be revealed when the party completes,
-i.e., at events of type \mIComplete{} and \mRComplete.~\footnote{A stronger, and perhaps more realistic model, would reveal ephemeral keys when they are
-created at the start of the protocol run, but we failed to get \mTamarin{} to
-terminate on a model formulated that way.}\\
+i.e., at events of type \mIComplete{} and \mRComplete.~\footnote{A stronger, and perhaps more realistic, model would reveal ephemeral keys upon
+creation at the start of the run, but we failed to get \mTamarin{} to
+terminate on this.}\\
 %
 % \knote{Most state-of-the-art Tamarin models of real-world protocols
 %         (involving DH) do not
@@ -1030,7 +1028,7 @@ We then XOR each term in the plaintext with its own key-stream term.
 This models the \mSpec{} closer than if we would have XORed \mT{K_2e}, as a
 single term, onto the plaintext tuple.
 %
-The XOR encryption can be seen in on line 18-21 in the listing of
+The XOR encryption can be seen in lines 18--21 in the listing of
 \mT{R2_STAT_SIG} below.
 %
 %In the latest version of the \mEdhoc{}
@@ -1088,8 +1086,7 @@ session key material and other actions that do not.
 Session key material which includes (resp. does not include) \mGiy{} is referred to as \mT{imp_sk} (resp. \mT{exp_sk}) in the
 \mTamarin{} model. %and the material that does not is referred to as \mT{exp_sk}.
 %
-In the case of the \mSigSig, \mSigStat{}, and \mPskPsk{} methods, \mT{imp_sk}
-is the same as \mT{exp_sk}, because there is no \mGiy.%{} to take into account.
+In the case of \mSigSig, \mSigStat, and \mPskPsk, therefore, \mT{imp_sk} is the same as \mT{exp_sk}.%, because there is no \mGiy.%{} to take into account.
 %
 
 %We model the session key material differently for implicit authentication and
@@ -1130,7 +1127,7 @@ lemma secrecyPFS:
    all-traces
    "All u v sk #t3 #t2. (K(sk)@t3 & CompletedRun(u, v, sk)@t2) ==>
        ( (Ex #t1. LTKRev(u)@t1 & #t1 < #t2)
-          | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2)
+          | (Ex #t1. LTKRev(v)@t1 & #t1 < #t2) 
           | (Ex #t1. EphKeyRev(sk)@t1))"
 \end{lstlisting}
 %

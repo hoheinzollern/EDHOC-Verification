@@ -41,11 +41,11 @@
 %
 \institute{
     KTH Royal Institute of Technology, Stockholm, Sweden \and
-    Ericsson Research, Security, Stockholm, Sweden,\\
+    Ericsson Research, Security, Stockholm, Sweden, 
     \email{karl.norrman@ericsson.com} \and
-    University of California Santa Cruz, USA,\\
+    University of California Santa Cruz, USA, 
     \email{vasundar@ucsc.edu} \and
-    IT University of Copenhagen, Copenhagen, Denmark,\\
+    IT University of Copenhagen, Copenhagen, Denmark, 
     \email{brun@itu.dk}
 }
 %\institute{}
@@ -84,8 +84,8 @@ the designers.
 \end{abstract}
 %
 
-\keywords{Formal verification \and Security \and IETF standardization \and
-Key establishment protocols \and Tamarin}
+%\keywords{Formal verification \and Security \and IETF standardization \and
+%Key establishment protocols \and Tamarin}
 
 %-------------------------------------------------------------------------- sec
 %\vspace{-2.5em}
@@ -153,32 +153,13 @@ framework~\cite{perrin2016noise}.
 %
 \mEdhoc{} is therefore a framework of several key establishment methods.
 %
-
 In May 2018, the core based on challenge-response signatures was replaced by
 one based on \mSigma{}~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
 %
-That version of \mEdhoc{} was formally analyzed by Bruni et.
-al~\cite{DBLP:conf/secsr/BruniJPS18} using the ProVerif
-tool~\cite{DBLP:conf/csfw/Blanchet01}.
-%
-
-Since then the protocol has seen significant changes.
+Since then the protocol has undergone significant changes.
 %
 Three new cores, mixing challenge-response signatures and normal signature for
 authentication, were added~\cite{our-analysis-selander-lake-edhoc-00}.
-%
-In contrast to the methods analyzed by Bruni et.~al, which were based on the
-well-understood pre-shared key Diffie-Hellman and \mSigma{}, the newly added
-methods combine two unilateral authentication protocols to construct a mutual
-authentication protocol.
-%
-Combining two protocols, which individually provide unilateral authentication,
-is not guaranteed to result in a secure mutual authentication
-protocol~\cite{DBLP:conf/ccs/Krawczyk16}.
-%
-Consequently, although the framework is similar to the one analyzed by Bruni
-et.~al, the cryptographic underpinnings have increased in complexity more than
-twofold, and use mechanisms that have not previously been formally analyzed.
 %
 
 We formulate and formalize a security model covering all five key
@@ -220,10 +201,10 @@ Termination requires a hand-crafted proof oracle to guide \mTamarin{}.
 %
 
 During the analysis we identified that not all \mEdhoc{}'s key establishment
-methods fulfill injective agreement on the session key material, and none
+methods fulfil injective agreement on the session key material, and none
 on the initiator's identity.
 %
-However, we did show that all methods fulfill an implicit agreement property on
+However, we did show that all methods fulfil an implicit agreement property on
 the session key and the initiator's identity.
 
 We identified a number of subtleties and ambiguities in the specification.
@@ -232,6 +213,27 @@ We discuss remedies for the identified issues and
 communicated this to the specification authors, who incorporated some of our
 suggestions and currently consider how to deal with the remaining ones.
 %
+
+\subsection{Comparison with related work}
+The May 2018 version of \mEdhoc{} was formally analyzed by Bruni et
+al~\cite{DBLP:conf/secsr/BruniJPS18} using the ProVerif
+tool~\cite{DBLP:conf/csfw/Blanchet01}. This analysis covered a DH core and one based on \mSigma. The properties checked for therein were secrecy, PFS and integrity of application data, identity protection against an active adversary, and strong authentication.
+%
+
+%
+In contrast to the methods analyzed by Bruni et al, which were based on the
+well-understood pre-shared key Diffie-Hellman and \mSigma, the three newly added
+methods combine two unilateral authentication protocols to construct a mutual
+authentication protocol.
+%
+Combining two protocols, which individually provide unilateral authentication,
+is not guaranteed to result in a secure mutual authentication
+protocol~\cite{DBLP:conf/ccs/Krawczyk16}.
+%
+Consequently, although the framework is similar to the one analyzed by Bruni
+et al, the cryptographic underpinnings have increased in complexity more than
+twofold, and use mechanisms which have not previously been formally analyzed. The set of properties we check for is also different; in particular, we explicitly check for PFS on the session key material. Our analysis is also carried out in a different tool, namely \mTamarin, and needs different kinds of strategies to formulate and successfully analyze the protocol in this tool.
+
 
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} Protocol}
@@ -446,7 +448,7 @@ If this property is not important for constrained IoT devices which cannot use
 any of the other methods, then one can simply accept that the methods have
 different authentication strengths.
 %
-However, if it is important, this is a problem.
+Otherwise, this is a problem.
 %
 
 We identified three alternatives for resolving this.
@@ -472,16 +474,15 @@ This would, however, increase message sizes and prevent initiator identity
 protection, which are grave concerns for \mEdhoc{}.
 %and prevent initiator identity protection.
 %
-A third alternative is to not derive the session key material from \mGiy{}.
+A third alternative is to not derive the session key material from \mGiy.
 %
-Doing so would destroy the protection \mOptls{} (and similar protocols from
-which the \mStat{}-based methods are derived) enjoy against compromise
+Doing so would destroy the protection that the \mStat-based methods enjoy against compromise
 of the initiator's ephemeral DH key.
 %
 
-Regardless of how this problem is handled, we have verified that all methods
-share a common, but weaker, security property: mutual implicit agreement
-on all of \mGxy{}, \mGiy{} and \mGrx{}.
+Regardless of how this is handled, we verified that all methods
+enjoy a common, but weaker, property: mutual implicit agreement
+on \mGxy, \mGiy, and \mGrx.
 %
 
 %-------------------------------------------------------------------------- sub
@@ -527,7 +528,7 @@ on all of \mGxy{}, \mGiy{} and \mGrx{}.
 \section{Conclusions and Future Work}
 \label{sec:conclusions}
 %
-\subsection{Summary}
+%\subsection{Summary}
 We formally modeled five
 methods of the \mEdhoc{} \mSpec{} using \mTamarin.
 %, four of which
@@ -540,20 +541,20 @@ The properties are shown in Table~\ref{tab:props}.
 %
 Mutual injective agreement covers the parameters $S_P$:
 responder identity, roles, session key material (except for \mGiy{} when
-initiator uses a \mStat{}-based
-method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites{}.
+initiator uses a \mStat-based
+method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites.
 %
 The responder in addition is ensured agreement on the initiators identity and
-\mGiy{}, i.e., on the set $S_F$.
+\mGiy, i.e., on the set $S_F$.
 %
 Implicit agreement covers all previously mentioned parameters for both peers.
 %
 Verification of all lemmas, including model validation lemmas, took 42 minutes
 on an Intel Core i7-6500U 2.5GHz using two cores.
 %
-
-The properties mutual entity authentication, UKS and KCI are inferred from the
-verified properties.%, and not explicitly formulated or verified.
+Mutual entity authentication, UKS and KCI can also be inferred from the
+verified properties.
+%, and not explicitly formulated or verified.
 % KARL: Rationale for deleting the last part:
 % We do verify that both parties agree on their identities and roles
 % explicitly, so I do believe some of the "inferred" properties are very
@@ -565,11 +566,12 @@ verified properties.%, and not explicitly formulated or verified.
 
 %
 \begin{table}[h!]
-    \begin{center}
-        \caption{Summary of verified properties. $S_P$ is the set of parameters:
-            responder identity, roles, session key material (except for
-            \mGiy{}), \mCi{}, \mCr{} and \mSuites{}. $S_F$ in addition includes
-            the initiators identity and \mGiy.}
+%    \begin{center}
+        \centering
+        \caption{Verified properties. $S_P$ contains
+            roles, responder identity, session key material (excluding
+            \mGiy), \mCi, \mCr, and \mSuites. $S_F$ is $S_{P}$,
+            the initiator identity, and \mGiy.}
         \label{tab:props}
         \begin{tabular}{|l|c|c|c|c|c|}
                 \hline
@@ -586,7 +588,7 @@ verified properties.%, and not explicitly formulated or verified.
                 %KCI & \cm & \cm & \cm & \cm & \cm\\
                 \hline
         \end{tabular}
-    \end{center}
+%    \end{center}
 \end{table}
 
 Further, we identified a situation where initiators may establish an \mOscore{}
@@ -606,7 +608,7 @@ the methods are secure under composition.
     as reference [18]}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
 presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-00}.
-We are aware that there have been three versions since, with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
+We are aware that there have been three versions since (in August, November, and December 2020), with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
 However, the changes to the protocol over these three versions are not particularly significant. 
 The authors have removed the \mPskPsk{} mode as of the IETF draft dated August
 2020. In the December 2020 draft, they discuss how to modify the encryption
@@ -622,14 +624,14 @@ We leave this as an avenue for future work.\\
 %
 %-------------------------------------------------------------------------- ack
 % Should be a run-in heading.  subsubsection works in llncs2e document class
-\runhead{Acknowledgments} This work was partially supported by
-the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
-the Knut and Alice Wallenberg Foundation.
-%
-We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
-clarifications regarding the specification.
-%
-We appreciate the helpful comments from the reviewers of SSR2020.
+%\runhead{Acknowledgments} This work was partially supported by
+%the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
+%the Knut and Alice Wallenberg Foundation.
+%%
+%We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
+%clarifications regarding the specification.
+%%
+%We appreciate the helpful comments from the reviewers of SSR2020.
 %
 
 

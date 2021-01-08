@@ -287,8 +287,7 @@ Each one of them is used for a specific message in the protocol, and from
 these intermediate keys, encryption and integrity keys
 (\mKtwoe, \mKtwom{}, \mKthreeae, and \mKthreem) for that message are derived.
 %
-The salt for generating \mPRKtwo{} is the empty string for all methods
-except \mPskPsk{}, where it is the pre-shared key.%
+The salt for generating \mPRKtwo{} is the empty string, or the pre-shared key in the case of \mPskPsk.%
 %For \mPskPsk{}, the seed is the pre-shared key and for all other methods it is
 %empty.
 %
@@ -305,11 +304,11 @@ except \mPskPsk{}, where it is the pre-shared key.%
 %static long-term key of the responder).
 %
 
-The protocol execution culminates in the established session key material.
+Successful protocol execution establishes session key material.
 %
 %The key material is different for the different methods.
 %
-For all methods, \mGxy{} is part of the key material.
+\mGxy{} is always part of the key material.
 %
 If the initiator uses the \mStat{} authentication method, so is
 the initiator's public key \mGi{} raised to the power of $y$, a value which is
@@ -320,7 +319,7 @@ the initiator's public key \mGr{} raised to the power of $x$, a value which is
 denoted \mGrx{}, is part of the session key material.
 %
 From the session key material, a key exporter (\mEdhoc-Exporter) based on
-\mHkdf{} is provided to extract keys required for \mOscore{}.
+\mHkdf{} is used to extract keys required for \mOscore{}.
 %
 %Figure~\ref{fig:kdfdiagram} shows an abstract description of the key schedule.
 %
