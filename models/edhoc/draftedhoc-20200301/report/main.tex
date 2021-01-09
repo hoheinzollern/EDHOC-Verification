@@ -490,8 +490,10 @@ protection, which are grave concerns for \mEdhoc{}.
 %
 A third alternative is to not derive the session key material from \mGiy.
 %
-Doing so would destroy the protection that the \mStat-based methods enjoy against compromise
-of the initiator's ephemeral DH key.
+Doing so, however, deviates from the design of \mOptls{} (and similar protocols
+from which the \mStat{}-based methods are derived), where the inclusion of
+\mGiy{} plays a crucial part in the security proof of resistance against
+compromise of the initiator's ephemeral DH key.
 %
 
 Regardless of how this is handled, we verified that all methods
@@ -555,7 +557,7 @@ The properties are shown in Table~\ref{tab:props}.
 %
 Mutual injective agreement covers the parameters $S_P$:
 responder identity, roles, session key material (except for \mGiy{} when
-initiator uses a \mStat-based
+initiator uses the \mStat{} authentication 
 method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites.
 %
 The responder in addition is ensured agreement on the initiators identity and
@@ -566,21 +568,10 @@ Implicit agreement covers all previously mentioned parameters for both peers.
 Verification of all lemmas, including model validation lemmas, took 42 minutes
 on an Intel Core i7-6500U 2.5GHz using two cores.
 %
-Mutual entity authentication, UKS and KCI can also be inferred from the
-verified properties.
-%, and not explicitly formulated or verified.
-% KARL: Rationale for deleting the last part:
-% We do verify that both parties agree on their identities and roles
-% explicitly, so I do believe some of the "inferred" properties are very
-% explicitly verified. The same hold for UKS and KCI. The problem is just that
-% they are not binary, but in relation to our model, and we have not explcitly
-% defined what we mean by UKS and KCI in as much detail as, e.g., PFS. That is
-% why I prefer to call them "inferred". 
-%
-
+Mutual entity authentication, UKS- and KCI resistance can be inferred
+from the verified properties.
 %
 \begin{table}[h!]
-%    \begin{center}
         \centering
         \caption{Verified properties. $S_P$ contains
             roles, responder identity, session key material (excluding
@@ -596,13 +587,8 @@ verified properties.
                 Implicit agreement for I & $S_F$ & $S_F$ & $S_F$ & $S_F$ & $S_F$\\
                 Implicit agreement for R & $S_F$ & $S_F$ & $S_F$ & $S_F$ & $S_F$\\
                 PFS for session key material & \cm & \cm & \cm & \cm & \cm\\
-                %\hline
-                %Mutual entity authentication & \cm & \cm & \cm & \cm & \cm\\
-                %UKS & \cm & \cm & \cm & \cm & \cm\\
-                %KCI & \cm & \cm & \cm & \cm & \cm\\
                 \hline
         \end{tabular}
-%    \end{center}
 \end{table}
 
 Further, we identified a situation where initiators may establish an \mOscore{}
