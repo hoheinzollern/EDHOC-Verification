@@ -41,11 +41,11 @@
 %
 \institute{
     KTH Royal Institute of Technology, Stockholm, Sweden \and
-    Ericsson Research, Security, Stockholm, Sweden, 
+    Ericsson Research, Security, Stockholm, Sweden,
     \email{karl.norrman@ericsson.com} \and
-    University of California Santa Cruz, USA, 
+    University of California Santa Cruz, USA,
     \email{vasundar@ucsc.edu} \and
-    IT University of Copenhagen, Copenhagen, Denmark, 
+    IT University of Copenhagen, Copenhagen, Denmark,
     \email{brun@itu.dk}
 }
 %\institute{}
@@ -158,7 +158,7 @@ one based on \mSigma{}~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
 %
 Since then the protocol has undergone significant changes.
 %
-Three new cores, mixing challenge-response signatures and normal signature for
+Three new cores, mixing challenge-response signatures and regular signature for
 authentication, were added~\cite{our-analysis-selander-lake-edhoc-00}.
 %
 
@@ -168,7 +168,9 @@ establishment methods, which is important especially since the
 of the intended security model and
 overall security goals.
 %
-The standardization process is ongoing, with the authors releasing newer versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail about how these versions differ from the one analyzed here).
+The standardization process is ongoing, with the authors releasing newer
+versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail
+about how these versions differ from the one analyzed here).
 %
 
 %-------------------------------------------------------------------------- sub
@@ -178,7 +180,7 @@ In this paper, we formally analyze the \mEdhoc{} protocol (with its five key
 establishment methods) using the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
 %
 We analyze the protocol as provided in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.% as of \mDate.
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.
 %
 We give an explicit adversary model for the protocol and verify
 properties such as session key and entity authentication, and perfect forward
@@ -215,25 +217,37 @@ suggestions and currently consider how to deal with the remaining ones.
 %
 
 \subsection{Comparison with related work}
-The May 2018 version of \mEdhoc{} was formally analyzed by Bruni et
-al~\cite{DBLP:conf/secsr/BruniJPS18} using the ProVerif
-tool~\cite{DBLP:conf/csfw/Blanchet01}. This analysis covered a DH core and one based on \mSigma. The properties checked for therein were secrecy, PFS and integrity of application data, identity protection against an active adversary, and strong authentication.
+The May 2018 version of \mEdhoc{} was formally analyzed by
+Bruni et~al.~\cite{DBLP:conf/secsr/BruniJPS18} using the \mProverif{}
+tool~\cite{DBLP:conf/csfw/Blanchet01}.
+%
+This analysis covered a DH core and one based on \mSigma.
+%
+The properties checked for therein were secrecy, PFS and integrity of
+application data, identity protection against an active adversary,
+and strong authentication.
 %
 
 %
-In contrast to the methods analyzed by Bruni et al, which were based on the
-well-understood pre-shared key Diffie-Hellman and \mSigma, the three newly added
-methods combine two unilateral authentication protocols to construct a mutual
-authentication protocol.
+In contrast to the methods analyzed by Bruni et~al., which were based on the
+well-understood pre-shared key DH and \mSigma protocols, the three newly added
+methods combine two unilateral authentication protocols with the goal to
+constructing mutual authentication protocols.
 %
 Combining two protocols, which individually provide unilateral authentication,
 is not guaranteed to result in a secure mutual authentication
 protocol~\cite{DBLP:conf/ccs/Krawczyk16}.
 %
 Consequently, although the framework is similar to the one analyzed by Bruni
-et al, the cryptographic underpinnings have increased in complexity more than
-twofold, and use mechanisms which have not previously been formally analyzed. The set of properties we check for is also different; in particular, we explicitly check for PFS on the session key material. Our analysis is also carried out in a different tool, namely \mTamarin, and needs different kinds of strategies to formulate and successfully analyze the protocol in this tool.
-
+et~al., the cryptographic underpinnings have increased in complexity more than
+twofold, and use mechanisms which have not previously been formally analyzed.
+%
+The set of properties we check for is also different.
+%
+Our analysis is further carried out using a different tool,
+namely \mTamarin; different kinds of strategies to formulate and
+successfully analyze the protocol are required when working with this tool.
+%
 
 %-------------------------------------------------------------------------- sec
 \section{The \mEdhoc{} Protocol}
@@ -602,24 +616,27 @@ We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 
 \subsection{Newer versions of the \mSpec} \label{sec:newdrafts}
-\knote{Check the dates. They use different formats. I don't have a strong
-    opinion on which we use as long as it is consistent and unambiguous.
-    For example, now it is not super clear if the "December draft" is the same
-    as reference [18]}
 In this work, we have analyzed the version of the \mEdhoc{} protocol as
-presented in the \mSpec{} document dated \mDate~\cite{our-analysis-selander-lake-edhoc-00}.
-We are aware that there have been three versions since (in August, November, and December 2020), with the most recent version as of 2020-12-18~\cite{latest-ietf-lake-edhoc-03}. 
-However, the changes to the protocol over these three versions are not particularly significant. 
-The authors have removed the \mPskPsk{} mode as of the IETF draft dated August
-2020. In the December 2020 draft, they discuss how to modify the encryption
-function in message \mMsgtwo{} and add a more standard encryption function, as opposed to the current use of XOR for encryption. 
+presented in the July 2020 version of the
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.
+%
+We are aware that there have been three versions since
+(in August, November, and December 2020), with the most recent version as
+of December 2020~\cite{latest-ietf-lake-edhoc-03}.
+%
+However, the changes to the protocol over these three versions are not
+particularly significant for our analysis.
+%
+The authors have removed the \mPskPsk{} core as of the IETF draft dated August
+2020.
+%
+In the December 2020 version, they discuss modifications the encryption
+function in message \mMsgtwo{} and add a more standard encryption function,
+as opposed to the current use of XOR for encryption.
+%
+The discussions are ongoing.
+%
 We leave this as an avenue for future work.\\
-
-
-%
-%This work is presented in Section~\ref{sec:formalization}.
-%
-
 
 %
 %-------------------------------------------------------------------------- ack
