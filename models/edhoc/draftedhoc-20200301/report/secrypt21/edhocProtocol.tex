@@ -1,0 +1,395 @@
+% !TEX root =  main.tex
+We now present the structure of the protocol using notation for key material,
+elliptic curve operations and
+identities mostly adopted from NIST SP 800-56A Rev. 3~\cite{sp800-56a-rev3}.
+%
+One notable difference is that we refer to the two roles executing the protocol
+as the initiator $I$ and the responder $R$.
+%
+We do this to avoid confusing roles with the parties taking them on.
+%
+
+%------------------------------------------------------------------------- sub
+\subsection{Preliminaries}
+\label{sec:preliminaries}
+Private/public key pairs are written
+$\langle d_{t,\mathit{id}},\,Q_{t,\mathit{id}}\rangle$,
+where $d$ is the private key, $Q$ the public key, $t \in \{e, s\}$ denotes
+whether the key is ephemeral or static, and $\mathit{id}$ is the role or
+party controlling the key pair.
+%
+When irrelevant, we drop the subscript or parts thereof.
+%
+Static key pairs are long-term keys used for authentication.
+%
+They are suitable for either regular signatures or challenge-response
+signatures.
+%
+When a party uses regular signatures for authentication, we say that they use
+the \emph{signature based authentication method}, or \mSig{} for short.
+%
+When a party uses challenge-response signatures for authentication, we say that
+they use the \emph{static key authentication method}, or \mStat{} for short.
+%
+The latter naming may appear confusing since signature keys are equally static,
+but is chosen to make the connection to the \mSpec{} clear.
+%
+We adopt the challenge-response terminology for this style of authentication
+from~\cite{DBLP:conf/crypto/Krawczyk05}.
+%
+
+\mEdhoc{} relies on \mCose{}~\cite{rfc8152} for elliptic curve operations and
+transforming points into bit strings, and we therefore abstract those as
+follows.
+%
+Signature operations using party $A$'s key pair are denoted \mSign{A}$(\cdot)$
+and \mVf{A}$(\cdot)$.
+%
+The DH-primitive combining a private key $d$ and a point $P$ is denoted
+$\mDH(d,P)$.
+%
+We abuse notation and let $\mDH(\cdot)$ denote both the resulting point
+and the corresponding bit string.
+%
+
+%------------------------------------------------------------------------- sub
+\subsection{Framework Structure}
+\label{sec:framework}
+\subsubsection{Protocol Pattern}
+\mEdhoc{}'s overall goal is to establish an \mOscore{} security context,
+including session key material denoted \mSessKey{}, and optionally transfer
+application data \mADone{}, \mADtwo{} and \mADthree{}.
+%
+To accomplish this, the \mEdhoc{}
+specification~\cite{our-analysis-selander-lake-edhoc-00} gives
+a three-message protocol pattern, shown in Figure~\ref{fig:edhocFramework}.
+%
+The first two messages negotiate authentication methods \mMethod{} and a
+ciphersuite \mSuites{}.
+%
+In \mMethod{}, the initiator $I$ proposes which authentication method each
+party should use.
+%
+These may differ, leading to four possible combinations:
+\mSigSig{}, \mSigStat{}, \mStatSig{} and \mStatStat{}.
+%
+We refer to these combinations of authentication methods simply as
+\emph{methods} to align with the \mSpec{} terminology.
+%
+The responder $R$ may reject the choice of method
+or cipher suite with an error message, resulting in negotiation across
+multiple \mEdhoc{} sessions.
+%
+Our analysis excludes multiple sessions.
+%
+
+\mEdhoc{}'s first two messages also exchange connection identifiers \mCi{} and
+\mCr{}, and ephemeral public keys, \mGx{} and \mGy{}.
+%
+The connection identifiers \mCi{} and \mCr{}, described in Section 3.1 of the
+\mSpec{}, deserve some elaboration.
+%
+The \mSpec{} describes these identifiers as not serving a security purpose for
+\mEdhoc{}, but only as aiding message routing to the correct \mEdhoc{} processing
+entity at a party.
+%
+Despite this, the \mSpec{} states that they may be used by \mOscore{}, or other
+protocols using the established security context, without restricting how they
+are to be used.
+%
+Because \mEdhoc{} may need them in clear-text for routing, \mOscore{} cannot
+rely on them being secret.
+%
+Section 7.1.1 of the \mSpec{} requires the identifiers to be unique.
+%
+Uniqueness is defined to mean that $\mCi{} \not = \mCr{}$ for a given session
+and the \mSpec{} requires parties to verify that this is the case.
+%
+The same section also require that \mOscore{} must be able to retrieve the
+security context based on these identifiers.
+%
+The intended usage of \mCi{} and \mCr{} by \mOscore{} is not made specific and
+therefore it is not clear which properties should be verified.
+%
+We verify that the parties agree on the established values.
+%
+
+The two last messages provide identification and authentication.
+%
+Parties exchange identifiers for their long-term keys, \mIdcredi{} and \mIdcredr{},
+as well as information to authenticate that they control the corresponding
+long-term keys, \mAuthi{} and \mAuthr{}.
+%
+The content of \mAuthi{} and \mAuthr{} depends on the authentication method
+associated with the corresponding long-term key.
+%
+For example, if $\mMethod{} = \mSigStat{}$, the responder $R$ must either
+reject the offer or provide an \mIdcredr{} corresponding to a key pair
+$\langle\mPriv{R},\ \mPub{R}\rangle$ suitable for use with challenge-response
+signatures, and
+compute \mAuthr{} based on the static key authentication method \mStat{}.
+%
+In turn, the initiator $I$ must provide an \mIdcredi{} corresponding to a key
+pair $\langle\mPriv{I},\ \mPub{I}\rangle$ suitable for a regular signature,
+and compute
+\mAuthi{} based on the signature based authentication method \mSig{}.
+%
+
+Regardless of whether \mStat{} or \mSig{} is used to compute \mAuthr{}, a
+MAC is first computed over \mIdcredr{}, \mCredr{}, a transcript hash of the
+information exchanged so far, and \mADtwo{} if included.
+%
+The MAC is the result of encrypting the empty string with the Authenticated
+Encryption with Additional Data (AEAD) algorithm from the ciphersuite
+\mSuites{}, using the mentioned information as additional data.
+%
+The MAC key is derived from the ephemeral key material
+\mGx{}, \mGy{}, \mX{} and \mY{}, where $I$
+compute $\mDH(\mX,\ \mGy)$ and $R$ compute $\mDH(\mY,\ \mGx)$, both resulting in
+the same output in the usual DH way.
+%
+
+In case $R$ uses the \mSig{} authentication method, \mAuthr{} is $R$'s
+signature over the MAC itself and the data that the MAC already covers.
+%
+In case $R$ uses the \mStat{} authentication method, \mAuthr{} is simply the
+MAC itself.
+%
+However, when using \mStat{}, the key for the MAC is derived, not only from the
+ephemeral key material, but also from $\langle\mPriv{R},\ \mPub{R}\rangle$.
+%
+For those familiar with \mOptls, this corresponds to the 1-RTT semi-static
+pattern computing the MAC key \textsf{sfk} for the \textsf{sfin}
+message~\cite{DBLP:conf/eurosp/KrawczykW16}.
+%
+The content of \mAuthi{} is computed in the corresponding way for the initiator
+$I$.
+%
+In Figure~\ref{fig:edhocFramework}, we denote a MAC using a key derived from
+both $\langle\mPriv{R},\ \mPub{R}\rangle$ and $\langle\mX,\ \mGx\rangle$ by
+$\mathit{MAC}_I$, and a MAC using a key derived from
+both $\langle\mPriv{I},\ \mPub{I}\rangle$ and $\langle\mY,\ \mGy\rangle$ by
+$\mathit{MAC}_R$.
+%
+
+Parts of the last two messages are encrypted and integrity protected, as
+indicated in~\ref{fig:edhocFramework}.
+%
+The second message is encrypted by XORing the output of the key derivation
+function HKDF (see Section~\ref{sec:keysched}) on to the plain text.
+%
+The third message is encrypted and integrity protected by the AEAD algorithm
+determined by the ciphersuite \mSuites{}.
+%
+
+\begin{figure}
+\centering
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+\begin{tikzpicture}
+    \node (ini) at (0, 0) {Initiator};
+    \draw [very thick] (0, -0.25) -- (0,-2.3);
+    \draw [very thick] (5.75, -0.25) -- (5.75,-2.3);
+    \node (res) at (5.75,0) {Responder};
+    \msg{1em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+    \msg{3em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, \{\mIdcredr, \mAuthr, \mADtwo\}};
+    \msg{5em}{ini}{res}{\mMsgthree: \mCr, \{\mIdcredi, \mAuthi, \mADthree\}};
+    \draw [line width=1mm] (-0.75,-2.3) -- (0.75,-2.3);
+    \draw [line width=1mm] (5.75-0.75,-2.3) -- (5.75+0.75,-2.3);
+    \node (padding) at (0,-2.5) {};
+    \end{tikzpicture}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \mMethod & \mAuthi & \mAuthr\\
+        \hline
+        \mSigSig{} & $\mSign{I}(\cdot)$ & $\mSign{R}(\cdot)$ \\
+        \mSigStat{} & $\mSign{I}(\cdot)$ & $\textit{MAC}_R(\cdot)$\\
+        \mStatSig{} & $\textit{MAC}_I(\cdot)$ & $\mSign{R}(\cdot)$\\
+        \mStatStat{} & $\textit{MAC}_I(\cdot)$ & $\textit{MAC}_R(\cdot)$\\
+        \hline
+    \end{tabular}
+    \caption{Structure of \mEdhoc{}: $\{t\}$ means $t$ is encrypted and integrity
+protected.}
+\label{fig:edhocFramework}
+\end{figure}
+
+\subsubsection{Key Schedule}
+\label{sec:keysched}
+At the heart of \mEdhoc{} is the key schedule depicted in
+Figure~\ref{fig:kdfdiagram}.
+%
+\mEdhoc{} uses two functions from the \mHkdf{} interface~\cite{rfc5869} to derive keys.
+%
+\mHkdfExtract{} 
+constructs uniformly distributed key material from random input and a salt,
+while \mHkdfExpand{} generates keys from key material and a salt.
+%
+%The seeds are used to bind the key material and keys to certain parameters.
+%
+
+The key schedule is rooted in the ephemeral DH key
+\mGxy{}, which is computed as $\mDH(\mX, \mGy)$ by $I$ and as $\mDH(\mY, \mGx)$
+by $R$.
+%
+From \mGxy{}, three intermediate keys \mPRKtwo, \mPRKthree{} and
+\mPRKfour{} are derived during the course of protocol execution.
+%
+Each of them is used for a specific message in the protocol, and from
+these intermediate keys, encryption and integrity keys
+(\mKtwoe, \mKtwom{}, \mKthreeae, and \mKthreem) for that message are derived.
+%
+The salt for generating \mPRKtwo{} is the empty string.
+%
+
+The protocol uses a running transcript hash $th$, which includes the information
+transmitted so far.
+%
+The value of the hash, denoted $th_i$ for the $i$th message, is included in key
+derivations as shown in Figure~\ref{fig:kdfdiagram}.
+%
+
+%In the 
+%\mSigSig{} method, all three intermediate keys
+%are the same, i.e., $\mPRKtwo{} = \mPRKthree{} = \mPRKfour$.
+%%
+%For the three \mStat-based methods, however, they differ.
+%%
+%This is because the intermediate key \mPRKthree{} is dependent on the static
+%long-term key of the initiator if used (and \mPRKfour{} possibly also on the
+%static long-term key of the responder).
+%
+
+Successful protocol execution establishes the session key material \mSessKey{}
+for \mOscore{}, which can be considered a set that always includes \mGxy{}.
+%
+If the initiator uses the \mStat{} authentication method, \mSessKey{} also
+includes
+$\mDH(\mY,\ \mGi{}) = \mDH(\mPriv{I},\ \mGy)$, which we denote $P_I$.
+%
+If the responder uses the \mStat{} authentication method, it also includes
+$\mDH(\mX,\ \mGr{}) = \mDH(\mPriv{R},\ \mGx)$, which we denote $P_R$.
+%
+From the session key material, a key exporter (\mEdhoc-Exporter) based on
+\mHkdf{} is used to extract keys required for \mOscore{}.
+%
+%Figure~\ref{fig:kdfdiagram} shows an abstract description of the key schedule.
+%
+
+\begin{figure*}[!h]
+\centering
+\scalebox{.785}{
+\input{kdfdiagram.tex}
+}
+\caption{Key schedule: Light blue boxes hold DH keys ($P_e, P_I, P_R$),
+orange boxes intermediate key material (\mPRKtwo, \mPRKthree, \mPRKfour), and
+dark blue boxes keys for \mAead{} or \mXor{} encryption
+(\mKtwoe, \mKtwom, \mKthreeae, \mKthreem).
+Dashed boxes are conditionals.}
+\label{fig:kdfdiagram}
+\end{figure*}
+
+As an illustrative example of the entire process, we refer to
+Figure~\ref{fig:edhocsigstat}, which depicts the protocol pattern, operations
+and key derivations for the \mSigStat{} method in more detail.
+%
+\begin{figure*}[ht]
+\centering
+\scalebox{.7}{
+\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
+\begin{tikzpicture}
+    \node (ini) at (0, 0) {Initiator};
+    \draw [very thick] (0, -0.5) -- (0,-14.8);
+    \draw [very thick] (9, -0.5) -- (9,-14.8);
+    \node[below=0.5em of ini,fill=white] {$
+    \begin{array}{c}
+        \text{Knows}\ \langle\mPriv{I},\ \mPub{I}\rangle,\ \mIdcredi,\ \mIdcredr,\ \mADone,\ \mADthree
+    \end{array}
+    $};
+    \node (res) at (9,0) {Responder};
+    \node[below=0.5em of res,fill=white] {$
+    \begin{array}{c}
+        \text{Knows}\ \langle\mPriv{R},\ \mPub{R}\rangle, \ \mIdcredr,\ \mADtwo
+    \end{array}$};
+    \action{3.5em}{ini}{Generates $\mMethod,\ \mSuites,\ \mCi,\ \langle\mX{},\ \mGx\rangle$};
+    \msg{6.5em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
+    \action{7.0em}{res}{$
+      \begin{array}{c}
+          \text{Generates } \mCr,\ \langle\mY{},\ \mGy\rangle\\
+          \ \ P_e = \mDH(\mY,\ \mGx{})\\
+          \ \ P_R = \mDH(\mPriv{R},\ \mGx{})\\
+        \mTHtwo = \mHash(\mMsgone, \langle \mCi, \mGy, \mCr \rangle)\\
+        \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, P_e) \\
+        \mPRKthree = \mHkdfExtract(\mPRKtwo, P_R) \\
+        \mKtwom = \mHkdfExpand(\mPRKthree, \mTHtwo) \\
+        \mMactwo = \mAead(\mKtwom; \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle; \textrm{``\phantom{}''}) \\
+        \mKtwoe = \mHkdfExpand(\mPRKtwo, \mTHtwo)
+      \end{array}$};
+    \msg{21.7em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mMactwo, \mADtwo \rangle}^{\mCipher}$};
+    \action{22.5em}{ini}{$
+      \begin{array}{c}
+        %\mTHtwo = \mHash(\mMsgone, \langle \mCi, \mGy, \mCr \rangle) \
+        \ P_e = \mDH(\mX,\ \mGy{})\\
+        \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, P_e) \\
+        %\mKtwoe = \mHkdfExpand(\mPRKtwo,\mTHtwo)\\
+        %\mGrx = \mCredr^{x} \\
+        \ \ P_R = \mDH(\mX,\ \mPub{R})\\
+        \mPRKfour = \mPRKthree = \mHkdfExtract(\mPRKtwo, P_R) \\
+        %\mKtwom = \mHkdfExpand(\mPRKthree, \mTHtwo) \\
+        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHtwo) \\
+        \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
+        \mKthreem = \mHkdfExpand(\mPRKfour, \mTHthree) \\
+        \mMacthree = \mAead(\mKthreem; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle; \textrm{``\phantom{}''}) \\
+        \mSigthree = \mSign{I}(\langle \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle, \mMacthree \rangle)
+      \end{array}$};
+    \msg{35.5em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mSigthree, \mADthree \rangle$)};
+    \action{36em}{res}{$
+    \begin{array}{c}
+        \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
+        \mKthreem = \mHkdfExpand(\mPRKthree, \mTHthree) \\
+        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
+    \end{array}$};
+    \draw [line width=1mm] (-2,-14.8) -- (2,-14.8);
+    \draw [line width=1mm] (7,-14.8) -- (11,-14.8);
+    \end{tikzpicture}
+}
+    \caption{The \mSigStat{} method.
+    Tuples are denoted $\langle\cdot\rangle$, and the hash function \mHash{} is
+    as determined by \mSuites{}.}
+\label{fig:edhocsigstat}
+\end{figure*}
+%------------------------------------------------------------------------- sub
+
+%\subsection{Negotiating a cipher suite and method and correlation parameters}
+%\label{sec:ciphersuite}
+%Recall that we mentioned that the first message contains a list of cipher suites, ranked according to the preference of the initiator. What does a cipher suite actually contain? An \mEdhoc{} cipher suite consists of an ordered set of \mCose{} algorithms: an \mAead{} algorithm, a hash algorithm, an ECDH curve, a signature algorithm, a signature algorithm curve, an application \mAead{} algorithm, and an application hash algorithm from the \mCose{} Algorithms and Elliptic Curves registries.  
+%
+%There are four supported cipher suites in \mEdhoc{} -- we refer the reader to Section 3.4 of~\cite{selander-lake-edhoc-01} for the specifics of the algorithms allowed therein. Each cipher suite is identified by one of four predefined integer labels (0--3). Some algorithms are not used in some methods.  The signature algorithm and the signature algorithm curve are not used in methods without signature authentication (i.e. in \mStatStat).
+%
+%In order to keep the presentation clean, we have omitted the cipher suite negotiation process from the description of the methods. However, this process happens as follows, at the beginning of every method, once the responder receives the first message. The initiator proposes an ordered list of cipher suites they support. This list presented in descending order to the responder who either accepts the topmost entry in this list (if they also support that suite) or makes a counter-proposal, namely the topmost entry which they support from the remaining part of the list. If there is no such entry the responder can reject, and the protocol does not continue. Similarly, the responder can reject the initiator's choices for the method and correlation parameters as well -- in the case of a reject for either of these values, the protocol aborts.
+%------------------------------------------------------------------------- sub
+%\subsection{Claimed Security Properties}
+%\label{sec:claimedProperties}
+ %
+%The \mEdhoc{} \mSpec{} \cite{selander-lake-edhoc-01} claims
+%that \mEdhoc{} satisfies many security properties, but these are imprecisely
+%expressed and motivated.
+%%
+%We will revisit these claims later. %when we discuss the formal modeling and
+%%verification of \mEdhoc{}.  in Section~\ref{sec:formalization} and in the
+%%discussions in Section~\ref{sec:discussion}.
+%%
+%%The following are our interpretations of the properties listed in Section~8.1 of \cite{selander-lake-edhoc-01}:
+%\begin{itemize}
+ %   \item Perfect Forward Secrecy (\textbf{PFS}) for the session key material
+ %   \item Mutual (entity) authentication, followed by claims of
+ %       \textbf{consistency}~\cite{sigma},
+ %       \textbf{aliveness}, and
+ %       \textbf{peer awareness} to the responder, but not to the initiator
+ %   \item \textbf{Identity protection} (the initiator against active attacks
+ %       and the responder against passive attacks)
+ %   \item Key Compromise Impersonation (\textbf{KCI}) resistance
+%%    \item A single session of \mEdhoc{} enables the responder to verify
+%%            that the selected cipher suite is the most preferred of the
+%%            initiator which is supported by both parties, even though there is
+%%            no negotiation of cipher suites per se.
+ %   \item \textbf{Session key independence}
+%\end{itemize}

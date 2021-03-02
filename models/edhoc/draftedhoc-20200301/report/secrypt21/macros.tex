@@ -1,0 +1,265 @@
+\usepackage{ifthen}
+
+% -- Editorial macros
+% http://tug.ctan.org/tex-archkeIVe/macros/latex/contrib/todonotes/todonotes.pdf
+\usepackage{todonotes}
+\newcommand{\knote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Karl:} #1}}}
+\newcommand{\anote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Alessandro:} #1}}}
+\newcommand{\vnote}[1]{\todo[inline,
+                             color=orange,
+                             size=\footnotesize
+                            ]{\textsf{\textbf{Vaishnavi:} #1}}}
+\newcommand{\vedit}[2]{{\color{Blue3}\st{#1} #2}}
+\newcommand{\pskstuff}[1]{{\color{violet}\textbf{#1}}}
+
+%\newcommand{\kedit}[2]{{\color{teal}\st{#1}#2}}
+%\renewcommand{\knote}[1]{}
+%\renewcommand{\vnote}[1]{}
+%\renewcommand{\anote}[1]{}
+\newcommand{\mPoint}[1]{{\color{red}\textbf{Point: }#1}}
+\newcommand{\mcneed}{\textbf{Citation needed}}
+\newcommand{\mcfix}{\textbf{Fix citation}}
+
+\definecolor{cbnavy}{RGB}{15, 32, 128}
+\definecolor{cborange}{RGB}{245, 121, 58}
+\definecolor{cbsky}{RGB}{133, 192, 249}
+
+%\newcommand{\runhead}[1]{\noindent\textbf{#1. }}
+\newcommand{\runhead}[1]{\subsubsection{#1}}
+
+% -- Fonts and styles for names
+%\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+%\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+%\newcommand{\mFunStyle}[1]{\text{\textup{\textsf{#1}}}}
+%\newcommand{\mConstStyle}[1]{\text{\textup{\textsf{#1}}}}
+%\newcommand{\mVarStyle}[1]{\mathit{#1}}
+%\newcommand{\mFactStyle}[1]{\text{\textsf{#1}}}
+%\newcommand{\mMethodStyle}[1]{\mbox{\mConstStyle{#1}}}
+%\newcommand{\mProtocolStyle}[1]{\mbox{\textrm{#1}}}
+
+%\newcommand{\mItemStyle}[1]{\ensuremath{#1}}
+%\newcommand{\mSetStyle}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
+\newcommand{\mFunStyle}[1]{\textsf{#1}}
+\newcommand{\mConstStyle}[1]{\textsf{#1}}
+\newcommand{\mVarStyle}[1]{\mathit{#1}}
+\newcommand{\mFactStyle}[1]{\textsf{#1}}
+\newcommand{\mMethodStyle}[1]{\mConstStyle{#1}}
+\newcommand{\mProtocolStyle}[1]{\text{#1}}
+
+
+
+% -- Macros for consistent wording
+\newcommand{\mSpec}{specification}  % The EDHOC spec document we are analyzing
+\newcommand{\mDate}{2020-07-06}
+
+
+
+% -- Formalization notation
+\newcommand{\mRevLTK}{\ensuremath{\mathbf{A}_\mFunStyle{LTK}}}
+\newcommand{\mTEE}{\ensuremath{\mathbf{A}_\mFunStyle{TEE}}}
+\newcommand{\mRevEph}{\ensuremath{\mathbf{A}_\mFunStyle{Eph}}}
+\newcommand{\mIStart}{\ensuremath{\mathbf{I}_\mFunStyle{S}}}
+\newcommand{\mIComplete}{\ensuremath{\mathbf{I}_\mFunStyle{C}}}
+\newcommand{\mRStart}{\ensuremath{\mathbf{R}_\mFunStyle{S}}}
+\newcommand{\mRComplete}{\ensuremath{\mathbf{R}_\mFunStyle{C}}}
+\newcommand{\mPredPfs}{\ensuremath{\mathbf{PFS}}}
+\newcommand{\mPredInjI}{\ensuremath{\mathbf{InjAgree}_I}}
+\newcommand{\mPredInjR}{\ensuremath{\mathbf{InjAgree}_R}}
+\newcommand{\mPredImpI}{\ensuremath{\mathbf{ImpAgree}_I}}
+\newcommand{\mPredImpR}{\ensuremath{\mathbf{ImpAgree}_R}}
+\newcommand{\mK}{\ensuremath{\mathcal{K}}}
+\DeclareMathOperator{\mLogicDot}{.}
+
+
+% -- Domain specific macros
+\newcommand{\mArxiv}{\texttt{arXiv}}
+\newcommand{\mTamarin}{\mProtocolStyle{Tamarin}}
+\newcommand{\mProverif}{\mProtocolStyle{ProVerif}}
+\newcommand{\mEdhoc}{\mProtocolStyle{EDHOC}}
+\newcommand{\mOscore}{\mProtocolStyle{OSCORE}}
+\newcommand{\mSigma}{\mProtocolStyle{SIGMA}}
+\newcommand{\mSigmaI}{\mProtocolStyle{SIGMA\nobreakdash-I}}
+\newcommand{\mCbor}{\mProtocolStyle{CBOR}}
+\newcommand{\mCose}{\mProtocolStyle{COSE}}
+\newcommand{\mCoseEncrypt}{\mProtocolStyle{COSE\_Encrypt0}}
+\newcommand{\mCoseSign}{\mProtocolStyle{Cose\_Sign1}}
+\newcommand{\mHkdf}{\mProtocolStyle{HKDF}}
+\newcommand{\mHkdfExtract}{\mProtocolStyle{HKDF\nobreakdash-extract}}
+\newcommand{\mHkdfExpand}{\mProtocolStyle{HKDF\nobreakdash-expand}}
+\newcommand{\mHmac}{\mProtocolStyle{HMAC}}
+\newcommand{\mAead}{\mProtocolStyle{AEAD}}
+\newcommand{\mAeadDecrypt}{\mProtocolStyle{AEAD\nobreakdash-decrypt}}
+\newcommand{\mDecrypt}{\mProtocolStyle{decrypt}}
+\newcommand{\mOptls}{\mProtocolStyle{OPTLS}}
+\newcommand{\mNoise}{\mProtocolStyle{Noise}}
+\newcommand{\mTls}{\mProtocolStyle{TLS}}
+\newcommand{\mDandTls}{\mProtocolStyle{(D)TLS}}
+\newcommand{\mCtls}{\mProtocolStyle{cTLS}}
+\newcommand{\mCoap}{\mProtocolStyle{CoAP}}
+
+\newcommand{\mStat}{\mMethodStyle{STAT}}
+\newcommand{\mSig}{\mMethodStyle{SIG}}
+\newcommand{\mPsk}{\mMethodStyle{PSK}}
+\newcommand{\mStatStat}{\mMethodStyle{STAT-STAT}}
+\newcommand{\mStatSig}{\mMethodStyle{STAT-SIG}}
+\newcommand{\mSigStat}{\mMethodStyle{SIG-STAT}}
+\newcommand{\mSigSig}{\mMethodStyle{SIG-SIG}}
+\newcommand{\mPskPsk}{\mMethodStyle{PSK-PSK}}
+
+\newcommand{\mSid}{\mConstStyle{sid}}    % session id = (u, v, s-key)
+
+\newcommand{\mXor}{\mConstStyle{XOR}}
+\newcommand{\mSuites}{\ensuremath{S_I}}
+\newcommand{\mMethod}{\ensuremath{M}}
+\newcommand{\mCi}{\ensuremath{C_I}}
+\newcommand{\mCr}{\ensuremath{C_R}}
+\newcommand{\mGi}{\ensuremath{Q_{s,I}}}
+\newcommand{\mGr}{\ensuremath{Q_{s,R}}}
+\newcommand{\mPriv}[1]{\ensuremath{d_{s,#1}}}
+\newcommand{\mPub}[1]{\ensuremath{Q_{s,#1}}}
+\newcommand{\mPrivE}[1]{\ensuremath{d_{e,#1}}}
+\newcommand{\mPubE}[1]{\ensuremath{Q_{e,#1}}}
+\newcommand{\mX}{\ensuremath{d_{e,I}}}
+\newcommand{\mY}{\ensuremath{d_{e,R}}}
+\newcommand{\mGiy}{\ensuremath{\mY\cdot\mGi}}
+\newcommand{\mGrx}{\ensuremath{\mX\cdot\mGr}}
+\newcommand{\mGx}{\ensuremath{Q_{e,I}}}
+\newcommand{\mGy}{\ensuremath{Q_{e,R}}}
+\newcommand{\mGxy}{\ensuremath{P_e}}
+\newcommand{\mSessKey}{\ensuremath{Z}}
+\newcommand{\mIDPsk}{\mConstStyle{ID\_PSK}}
+\newcommand{\mSign}[1]{\ensuremath{\mathit{sign_{#1}}}}
+\newcommand{\mVf}[1]{\ensuremath{\mathit{vf_{#1}}}}
+\newcommand{\mDH}{\ensuremath{\mathit{dh}}}
+\newcommand{\mTH}{\ensuremath{\mathit{th}}}
+\newcommand{\mTHtwo}{\ensuremath{\mathit{th}_2}}
+\newcommand{\mKtwoe}{\ensuremath{K_\mathit{2e}}}
+\newcommand{\mKtwom}{\ensuremath{K_\mathit{2m}}}
+\newcommand{\mKtwoae}{\ensuremath{K_\mathit{2ae}}}
+
+\newcommand{\mKthreeae}{\ensuremath{K_\mathit{3ae}}}
+\newcommand{\mKthreem}{\ensuremath{K_\mathit{3m}}}
+
+\newcommand{\mTHthree}{\ensuremath{\mathit{th}_3}}
+\newcommand{\mhplain}{\ensuremath{h''}}
+\newcommand{\mCredi}{\ensuremath{Q_{s,I}}}
+\newcommand{\mCredr}{\ensuremath{Q_{s,R}}}
+\newcommand{\mHash}{\ensuremath{h}}
+
+\newcommand{\mTHfour}{\ensuremath{\mathit{th}_4}}
+\newcommand{\mAuthi}{\ensuremath{\mathit{Auth}_I}}
+\newcommand{\mAuthr}{\ensuremath{\mathit{Auth}_R}}
+
+\newcommand{\mMactwo}{\ensuremath{\mathit{MAC}_2}}
+\newcommand{\mMacthree}{\ensuremath{\mathit{MAC}_3}}
+
+\newcommand{\mSigtwo}{\ensuremath{\mathit{Sig}_2}}
+\newcommand{\mSigthree}{\ensuremath{\mathit{Sig}_3}}
+
+% \newcommand{\mMsgone}{\mConstStyle{m1}}
+% \newcommand{\mMsgtwo}{\mConstStyle{m2}}
+% \newcommand{\mMsgthree}{\mConstStyle{m3}}
+\newcommand{\mMsgone}{\ensuremath{m_1}}
+\newcommand{\mMsgtwo}{\ensuremath{m_2}}
+\newcommand{\mMsgthree}{\ensuremath{m_3}}
+
+\newcommand{\mCipher}{\mConstStyle{CIPHERTEXT\_2}}
+
+\newcommand{\mAD}{\ensuremath{\mathit{ad}}}
+\newcommand{\mADone}{\ensuremath{\mathit{ad}_1}}
+\newcommand{\mADtwo}{\ensuremath{\mathit{ad}_2}}
+\newcommand{\mADthree}{\ensuremath{\mathit{ad}_3}}
+
+\newcommand{\mPRK}{\ensuremath{\mathit{PRK}}}
+\newcommand{\mPRKtwo}{\ensuremath{\mPRK_\mathit{2e}}}
+\newcommand{\mPRKthree}{\ensuremath{\mPRK_\mathit{3e2m}}}
+\newcommand{\mPRKfour}{\ensuremath{\mPRK_\mathit{4x3m}}}
+
+\newcommand{\mIdcredi}{\ensuremath{ID_I}}
+\newcommand{\mIdcredr}{\ensuremath{ID_R}}
+\newcommand{\mLtki}{\mConstStyle{ltk\_I}}
+\newcommand{\mLtkr}{\mConstStyle{ltk\_R}}
+\newcommand{\mLtk}{\mConstStyle{ltk}}
+
+\newcommand{\cm}{\checkmark}
+
+% TIKZ messages and actions
+\newcommand{\msg}[4]{\draw[->,thick] ([yshift=-#1]#2.south) coordinate (l1)--(l1-|#3) node[midway, above]{#4}}
+\newcommand{\action}[3]{\node[draw,thick,fill=white,align=center,below={#1} of {#2}]{#3}}
+
+% Tamarin symbols
+\newcommand{\ifarrow}[1][]{\ifthenelse{\equal{#1}{}}{\rightarrow}{-\hspace{-4.2pt}[{#1}]\hspace{-5pt}\rightarrow}}
+\newcommand{\semarrow}[1][]{\ifthenelse{\equal{#1}{}}{\Rightarrow}{=\hspace{-3.0pt}[{#1}]\hspace{-3pt}\Rightarrow}}
+\newcommand{\mIn}{\mathsf{In}}
+\newcommand{\mOut}{\mathsf{Out}}
+\newcommand{\mFr}{\mathsf{Fr}}
+\newcommand{\mKD}{\mathsf{KD}}
+\newcommand{\mKU}{\mathsf{KU}}
+\newcommand{\mT}[1]{\text{\texttt{#1}}}
+%\newcommand{\mT}[1]{\lstinline[basicstyle=\ttfamily\normalsize]{#1}} % Tamarin code inline
+%\usepackage[final]{listings}
+
+
+%\lstdefinestyle{mystyle}{
+%    backgroundcolor=,
+%    commentstyle=\color{Green},
+%    identifierstyle=\color{black},
+%    keywordstyle=\color{ForestGreen},
+%    numberstyle=\color{Gray},
+%    stringstyle=,
+%    basicstyle=\ttfamily\scriptsize,
+%    %basicstyle=\sffamily\small,
+%    keywords={let,in,rule,restriction,axiom,lemma,all-traces,exists-trace,Ex,All,Fr,In,Out},
+%    breakatwhitespace=false,
+%    breaklines=true,
+%    captionpos=b,
+%    keepspaces=false,
+%    numbers=left,
+%    numbersep=5pt,
+%    showspaces=false,
+%    showstringspaces=false,
+%    showtabs=false,
+%    tabsize=2,
+%    morecomment=[l]{//},
+%    literate=
+%    {=}{{$=$}}{1}
+%    {[}{{$[$}}{1}%
+%    {]}{{$]$}}{1}%
+%    {<}{{$\langle$}}{1}%
+%    {>}{{$\rangle$}}{1}%
+%    %{(}{{$($}}{1}%
+%    %{)}{{$)$}}{1}%
+%    {&}{{$\wedge$}}{1}
+%    {|}{{$\vee$}}{1}
+%    {$}{\$}{1}
+%    {<\ \#}{{$<$\ \ \#}}{3}% trick here: we distinguish angle brackets from temporal comparisons because of the # for the variable on the rhs
+%    {--[}{$\mbox{-\hspace{-4.0pt}[}$}{3}%
+%    {]->}{$\mbox{]\hspace{-4.2pt}\rightarrow}$}{3}%
+%    {-->}{$\rightarrow$}{1}
+%    {==>}{$\Rightarrow$}{1}
+%    {XOR}{$\oplus$}{1}%
+%    {tid}{{tid}}{2}%
+%    {ltk}{{ltk}}{2}%
+%    {agreed}{{agreed}}{5}%
+%    %{assocData2}{{assocData2}}{9}%
+%    %{protected2}{{protected2}}{10}%
+%    %{protected2}{protected2}{7}%
+%    {extAad2}{{extAad2}}{6}%
+%    %{aeadEncrypt}{\mAead{}}{6}%
+%    %{decrypt}{\mDecrypt}{6}
+%    %{aeadDecrypt}{\mAeadDecrypt}{11}
+%    %{hkdfExtract}{\mHkdfExtract}{14}
+%    %{hkdfExpand}{\mHkdfExpand}{14}
+%    {All\ }{$\forall$\ }{3}
+%    {Ex\ }{$\exists$\ }{3}
+%    {h(}{h$($}{2}
+%    {~}{{\url{~}}}{1}
+%    }
+%\lstset{style=mystyle}
+
