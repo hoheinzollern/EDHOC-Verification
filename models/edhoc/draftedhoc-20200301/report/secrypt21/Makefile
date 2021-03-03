@@ -5,3 +5,5 @@ clean:
 	latexmk -C
 	latexmk -c
 
+view:
+	evince main.pdf &
