@@ -91,7 +91,7 @@ timestamps results in that they are equal.
 This notation corresponds to \mTamarin{}'s use of action facts
 $E(p_i)_{i\in\mathbb{N}}@t$.
 %
-%
+
 %Other first order logic connectives and parenthesis have their standard
 %interpretation.
 %
@@ -100,14 +100,23 @@ $E(p_i)_{i\in\mathbb{N}}@t$.
 The event $\mK^t(p)$ denotes that the adversary knows a parameter $p$ at
 time $t$.
 %
-Intuitively, the event $\mK^t(p)$ evaluate to true when $p$ is in
+Intuitively, $\mK^t(p)$ evaluates to true when $p$ is in
 the closure of the
 parameters the adversary observed from interacting with parties using the
 protocol, under the Dolev-Yao message deduction operations and
 the advanced adversary capabilities up until time $t$.
 %
-For a more precise definition, we refer to~\cite{DBLP:conf/cav/MeierSCB13}.
+For a more precise definition of knowledge management, we refer to~\cite{DBLP:conf/cav/MeierSCB13}.
 %
+
+An example of a formula is
+\[
+    \forall t, k, k'\mLogicDot \mK^{t}(k) \land \mK^{t}(k')\ \rightarrow\ 
+\mK^{t}(k),
+\]
+expressing that if there is a time $t$ when the adversary knows both $k$ and
+$k'$, then it is true that the adversary knows only $k$ at the same point in
+time.
 
 An initiator $I$ considers the
 protocol run started when it sends a message \mMsgone{} (event type \mIStart)
