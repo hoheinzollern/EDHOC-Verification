@@ -61,27 +61,31 @@ Constrained IoT devices are becoming ubiquitous in society
 and there is a need for secure communication protocols that respect the
 constraints under which these devices operate.
 %
-EDHOC is an authenticated key establishment protocol for constrained IoT
-devices that was proposed in 2016, and is currently being standardized by the
-Internet Engineering Task Force (IETF).
+\mEdhoc{} is an authenticated key establishment protocol for constrained IoT
+devices, currently being standardized by the Internet Engineering Task
+Force (IETF).
 %
-A version of \mEdhoc{} with two key establishment methods was formally analyzed
-in 2018 by Bruni~et~al.~\cite{DBLP:conf/secsr/BruniJPS18}.
+A rudimentary version of \mEdhoc{} with only two key establishment methods was
+formally analyzed in 2018.
 %
-Since then, the protocol has been significantly modified and several new key
+Since then, the protocol has evolved significantly and several new key
 establishment methods have been added.
 %
-In this paper, we formally analyze all methods of \mEdhoc{} in an enhanced
-symbolic Dolev-Yao model using the \mTamarin{} tool.
+In this paper, we present a formal analysis of all \mEdhoc{} methods in an
+enhanced symbolic Dolev-Yao model using the \mTamarin{} tool.
 %
-We show that not all methods of \mEdhoc{} satisfy the authentication notion
+We show that not all methods satisfy the authentication notion
 injective agreement, but that all do satisfy a notion of implicit
 authentication, as well as Perfect Forward Secrecy (PFS) of the session key material.
 %
-In the course of our analysis, we also identified other improvements to the
-design and specification of \mEdhoc, which we have communicated to
-the designers, and which they have incorporated in newer versions of the
-standard.
+We identify other weaknesses to which we propose improvements
+%
+For example, we found that \mEdhoc{} allows a party to establish session key
+material with a trusted but compromised peer, even though the intention was to
+establish key material with a different peer.
+%
+We communicated our findings and proposals to the IETF, which
+has incorporated some of these in newer versions of the standard.
 }
 %
 
@@ -161,25 +165,6 @@ establishment methods, which is important especially since the
 \mSpec{}~\cite{our-analysis-selander-lake-edhoc-00} lacks a clear description
 of the intended security model and overall security goals.
 %
-The standardization process is ongoing, with the authors releasing newer
-versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail
-about how these versions differ from the one analyzed here).
-%
-
-%-------------------------------------------------------------------------- sub
-\subsection{Contributions}
-\label{sec:contributions}
-In this paper, we formally analyze the \mEdhoc{} protocol (with its four key
-establishment methods) using the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
-%
-We analyze the protocol as provided in the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.
-%
-
-We give an explicit adversary model for the protocol and verify
-properties such as session key material and entity authentication, and perfect
-forward secrecy, for all four methods.
-%
 We perform the analysis in a symbolic Dolev-Yao model.
 In this framework, we model messages as terms in an algebra, with operations such
 as encryption, modelled as functions on these terms.
@@ -192,10 +177,26 @@ A symbolic model like this, while slightly severe an abstraction, still allows
 us to analyze \mEdhoc{} for logical flaws without incurring the complexity of
 a computational model.
 %
-
-We provide a common \mTamarin{} model using M4 macros, from which
-individual methods are derived.
+The standardization process is ongoing, with the authors releasing newer
+versions of the \mSpec{} (see Section~\ref{sec:newdrafts} for more detail
+about how these versions differ from the one analyzed here).
 %
+
+%-------------------------------------------------------------------------- sub
+\subsection{Contributions}
+\label{sec:contributions}
+In this paper, we formally analyze the \mEdhoc{} protocol (with its four key
+establishment methods) using the \mTamarin{} tool~\cite{DBLP:conf/cav/MeierSCB13}.
+%
+We present a formal model we constructed of the protocol as given in the
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.
+%
+
+We give an explicit adversary model for the protocol and verify
+properties such as session key material and entity authentication, and perfect
+forward secrecy, for all four methods.
+%
+
 The model itself is valuable as a basis for verifying further updates in the
 ongoing standardization.
 %
@@ -207,18 +208,24 @@ specification and construct the model.
 Termination requires a hand-crafted proof oracle to guide \mTamarin{}.
 %
 
-During the analysis we identified that not all \mEdhoc{}'s key establishment
-methods fulfill injective agreement on the session key material, and none
-on the initiator's identity.
+We show that not all \mEdhoc{}'s key establishment
+methods provide authentication according to the injective agreement definition
+on the session key material, and none on the initiator's identity.
 %
-However, we did show that all methods fulfill an implicit agreement property on
+However, we show that all methods fulfill an implicit agreement property on
 the session key material and the initiator's identity.
-
-We identified a number of subtleties and ambiguities in the specification.
 %
-We discuss remedies for the identified issues and
-communicated this to the specification authors, who incorporated some of our
-suggestions and currently consider how to deal with the remaining ones.
+We identify a number of subtleties, ambiguities and weaknesses in the
+specification.
+%
+For example, the authentication policy requirements allows situations where a
+party establishes session key material with a trusted but compromised peer, even
+though the intention was to establish it with a different trusted party.
+%
+We provide remedies for the identified issues and have
+communicated these to the IETF and the specification authors, who incorporated
+some of our suggestions and currently consider how to deal with the remaining
+ones.
 %
 
 \subsection{Comparison with Related Work}
