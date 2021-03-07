@@ -100,6 +100,9 @@ $E(p_i)_{i\in\mathbb{N}}@t$.
 The event $\mK^t(p)$ denotes that the adversary knows a parameter $p$ at
 time $t$.
 %
+Parameters are terms in a term algebra of protocol specific operations and
+generic operations, e.g., tuples $\langle\cdot\rangle$.
+%
 Intuitively, $\mK^t(p)$ evaluates to true when $p$ is in
 the closure of the
 parameters the adversary observed from interacting with parties using the
@@ -108,15 +111,15 @@ the advanced adversary capabilities up until time $t$.
 %
 For a more precise definition of knowledge management, we refer to~\cite{DBLP:conf/cav/MeierSCB13}.
 %
-
 An example of a formula is
 \[
-    \forall t, k, k'\mLogicDot \mK^{t}(k) \land \mK^{t}(k')\ \rightarrow\ 
-\mK^{t}(k),
+    \forall t, k, k'\mLogicDot \mK^{t}(\langle k, k'\rangle)\ \rightarrow\ 
+\mK^{t}(k) \land \mK^{t}(k'),
 \]
-expressing that if there is a time $t$ when the adversary knows both $k$ and
-$k'$, then it is true that the adversary knows only $k$ at the same point in
-time.
+expressing that if there is a time $t$ when the adversary knows the tuple
+$\langle k, k'\rangle$, then it is true that the adversary knows both
+$k$ and $k'$ at the same point in time.
+%
 
 An initiator $I$ considers the
 protocol run started when it sends a message \mMsgone{} (event type \mIStart)
@@ -317,6 +320,11 @@ For the initiator role we define injective agreement by
 The property captures that for an initiator $I$, either the injective agreement
 property as described above holds, or the long-term key of the believed
 responder $R$ has been compromised before $I$ completed its role.
+%
+Had the adversary compromised $R$'s long-term key, they could have generated a
+message of their liking (different to what $R$ agreed on), and signed this or
+computed a $\mathit{MAC}_R$ based on \mPubE{I}, \mPriv{R} and their own chosen
+ephemeral key pair $\langle\mPrivE{R},\ \mPubE{R}\rangle$.
 %
 Note that this places no restrictions on the reveals of the ephemeral
 keys, or the reveal of the initiator's long-term key.

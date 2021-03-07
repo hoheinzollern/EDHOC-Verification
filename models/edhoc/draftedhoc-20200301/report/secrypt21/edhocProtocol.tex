@@ -8,6 +8,9 @@ as the initiator $I$ and the responder $R$.
 %
 We do this to avoid confusing roles with the parties taking them on.
 %
+Values in the analysis are subscripted with $I$ and $R$ when necessary to
+distinguish which role is associated with the values.
+%
 
 %------------------------------------------------------------------------- sub
 \subsection{Preliminaries}
@@ -20,10 +23,11 @@ party controlling the key pair.
 %
 When irrelevant, we drop the subscript or parts thereof.
 %
-Static key pairs are long-term keys used for authentication.
+Ephemeral key pairs are generated fresh for each instantiation of the protocol
+and static key pairs are long-term keys used for authentication.
 %
-They are suitable for either regular signatures or challenge-response
-signatures.
+Static key pairs are suitable for either regular signatures or
+challenge-response signatures.
 %
 When a party uses regular signatures for authentication, we say that they use
 the \emph{signature based authentication method}, or \mSig{} for short.
@@ -39,31 +43,39 @@ from~\cite{DBLP:conf/crypto/Krawczyk05}.
 %
 
 \mEdhoc{} relies on \mCose{}~\cite{rfc8152} for elliptic curve operations and
-transforming points into bit strings, and we therefore abstract those as
+transforming points into bitstrings, and we therefore abstract those as
 follows.
 %
-Signature operations using party $A$'s key pair are denoted \mSign{A}$(\cdot)$
-and \mVf{A}$(\cdot)$.
+Signatures and verification thereof using party $A$'s key pair are
+denoted \mSign{A}$(\cdot)$ and \mVf{A}$(\cdot)$ respectively.
 %
 The DH-primitive combining a private key $d$ and a point $P$ is denoted
 $\mDH(d,P)$.
 %
-We abuse notation and let $\mDH(\cdot)$ denote both the resulting point
-and the corresponding bit string.
+We abuse notation and let these function symbols denote operations on both
+points and the corresponding bitstrings.
 %
 
 %------------------------------------------------------------------------- sub
 \subsection{Framework Structure}
 \label{sec:framework}
-\subsubsection{Protocol Pattern}
-\mEdhoc{}'s overall goal is to establish an \mOscore{} security context,
-including session key material denoted \mSessKey{}, and optionally transfer
+\mEdhoc{}'s goal is to establish an \mOscore{} security context,
+including session key material \mbox{denoted \mSessKey{}}, and optionally transfer
 application data \mADone{}, \mADtwo{} and \mADthree{}.
 %
-To accomplish this, the \mEdhoc{}
-specification~\cite{our-analysis-selander-lake-edhoc-00} gives
+To accomplish this, the
+\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00} gives
 a three-message protocol pattern, shown in Figure~\ref{fig:edhocFramework}.
 %
+We first describe this pattern and the parts that are common to all key
+establishment methods.
+%
+Then we describe authentication and derivation of keys in more detail.
+%
+The latter is what differentiate the key establishment methods from each other.
+%
+
+\subsubsection{Protocol Pattern}
 The first two messages negotiate authentication methods \mMethod{} and a
 ciphersuite \mSuites{}.
 %
@@ -73,18 +85,21 @@ party should use.
 These may differ, leading to four possible combinations:
 \mSigSig{}, \mSigStat{}, \mStatSig{} and \mStatStat{}.
 %
-We refer to these combinations of authentication methods simply as
+We refer to these \emph{combinations} of authentication methods simply as
 \emph{methods} to align with the \mSpec{} terminology.
+%
+The first authentication method in a combination is the one proposed for the
+initiator and the last is the one proposed for the responder.
 %
 The responder $R$ may reject the choice of method
 or cipher suite with an error message, resulting in negotiation across
 multiple \mEdhoc{} sessions.
 %
-Our analysis excludes multiple sessions.
+Our analysis excludes error messages.
 %
 
 \mEdhoc{}'s first two messages also exchange connection identifiers \mCi{} and
-\mCr{}, and ephemeral public keys, \mGx{} and \mGy{}.
+\mCr{}, and public ephemeral keys, \mGx{} and \mGy{}.
 %
 The connection identifiers \mCi{} and \mCr{}, described in Section 3.1 of the
 \mSpec{}, deserve some elaboration.
@@ -117,8 +132,8 @@ We verify that the parties agree on the established values.
 The two last messages provide identification and authentication.
 %
 Parties exchange identifiers for their long-term keys, \mIdcredi{} and \mIdcredr{},
-as well as information to authenticate that they control the corresponding
-long-term keys, \mAuthi{} and \mAuthr{}.
+as well as information elements, \mAuthi{} and \mAuthr{}, to authenticate
+that the parties control the corresponding long-term keys.
 %
 The content of \mAuthi{} and \mAuthr{} depends on the authentication method
 associated with the corresponding long-term key.
@@ -135,6 +150,7 @@ and compute
 \mAuthi{} based on the signature based authentication method \mSig{}.
 %
 
+\subsubsection{Authentication}
 Regardless of whether \mStat{} or \mSig{} is used to compute \mAuthr{}, a
 MAC is first computed over \mIdcredr{}, \mCredr{}, a transcript hash of the
 information exchanged so far, and \mADtwo{} if included.
@@ -145,7 +161,7 @@ Encryption with Additional Data (AEAD) algorithm from the ciphersuite
 %
 The MAC key is derived from the ephemeral key material
 \mGx{}, \mGy{}, \mX{} and \mY{}, where $I$
-compute $\mDH(\mX,\ \mGy)$ and $R$ compute $\mDH(\mY,\ \mGx)$, both resulting in
+computes $\mDH(\mX,\ \mGy)$ and $R$ computes $\mDH(\mY,\ \mGx)$, both resulting in
 the same output in the usual DH way.
 %
 
@@ -156,7 +172,8 @@ In case $R$ uses the \mStat{} authentication method, \mAuthr{} is simply the
 MAC itself.
 %
 However, when using \mStat{}, the key for the MAC is derived, not only from the
-ephemeral key material, but also from $\langle\mPriv{R},\ \mPub{R}\rangle$.
+ephemeral key material, but also from $R$'s long-term key
+$\langle\mPriv{R},\ \mPub{R}\rangle$.
 %
 For those familiar with \mOptls, this corresponds to the 1-RTT semi-static
 pattern computing the MAC key \textsf{sfk} for the \textsf{sfin}
@@ -259,7 +276,9 @@ derivations as shown in Figure~\ref{fig:kdfdiagram}.
 %
 
 Successful protocol execution establishes the session key material \mSessKey{}
-for \mOscore{}, which can be considered a set that always includes \mGxy{}.
+for \mOscore{}.
+%
+\mSessKey{} can be considered a set that always includes \mGxy{}.
 %
 If the initiator uses the \mStat{} authentication method, \mSessKey{} also
 includes

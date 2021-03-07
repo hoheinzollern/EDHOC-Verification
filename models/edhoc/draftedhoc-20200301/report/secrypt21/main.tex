@@ -108,7 +108,7 @@ Constrained devices, on the other hand, which operate under severe
 bandwidth and energy consumption restrictions, have received much less
 attention.
 %
-These devices may be simple sensors which only relay environment
+These devices may be simple sensors, which only relay environment
 measurements to a server every hour, but need to function autonomously without
 maintenance for long periods of time.
 %
@@ -151,7 +151,7 @@ variant of challenge-response signatures in the style of
 \mEdhoc{} is therefore a framework of several key establishment methods.
 %
 In May 2018, the core based on challenge-response signatures was replaced by
-one based on \mSigma{} (SIGn-and-MAc)~\cite{bruni-analysis-selander-ace-cose-ecdhe-08}.
+one based on \mSigma{} (SIGn-and-MAc)~\cite{sigma,bruni-analysis-selander-ace-cose-ecdhe-08}.
 %
 Since then the protocol has undergone significant changes.
 %
@@ -164,6 +164,7 @@ establishment methods, which is important especially since the
 \mSpec{}~\cite{our-analysis-selander-lake-edhoc-00} lacks a clear description
 of the intended security model and overall security goals.
 %
+
 We perform the analysis in a symbolic Dolev-Yao model.
 In this framework, we model messages as terms in an algebra, with operations such
 as encryption, modelled as functions on these terms.
@@ -211,8 +212,8 @@ We show that not all \mEdhoc{}'s key establishment
 methods provide authentication according to the injective agreement definition
 on the session key material, and none on the initiator's identity.
 %
-However, we show that all methods fulfill an implicit agreement property on
-the session key material and the initiator's identity.
+However, we show that all methods fulfill an implicit agreement property
+covering the session key material and the initiator's identity.
 %
 We identify a number of subtleties, ambiguities and weaknesses in the
 specification.
@@ -250,9 +251,9 @@ Combining two protocols, which individually provide unilateral authentication,
 is not guaranteed to result in a secure mutual authentication
 protocol~\cite{DBLP:conf/ccs/Krawczyk16}.
 %
-Consequently, although the framework is similar to the one analyzed by Bruni
-et~al., the cryptographic underpinnings have increased in complexity more than
-twofold, and is using mechanisms which have not previously been formally analyzed.
+Consequently, even though the framework is similar to the one analyzed by Bruni
+et~al., the cryptographic underpinnings have significantly increased in
+complexity, and is using mechanisms which have not previously been formally analyzed.
 %
 The set of properties we check for is also different.
 %
@@ -480,7 +481,7 @@ Otherwise, this is a problem.
 
 We identified three alternatives for resolving this.
 %
-One alternative is to include $P_I$, or its hash, in the first and
+One alternative is to include \mIdcredi{}, or its hash, in the first and
 second messages.
 %
 This would, however, increase message sizes and prevent initiator identity
