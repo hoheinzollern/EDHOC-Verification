@@ -31,27 +31,21 @@
 
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
-% \author{Karl Norrman\inst{1,2}\textsuperscript{(\Letter)}\orcidID{0000-0003-0164-1478}
-% \and
-%     Vaishnavi Sundararajan\inst{3}
-% \and
-%     Alessandro Bruni\inst{4}
-% }
-\author{
-    \authorname{
-        Karl Norrman\sup{1,2}%\orcidAuthor{0000-0003-0164-1478}
-        , Vaishnavi Sundararajan\sup{3} and
-        Alessandro Bruni\sup{4}
-    }
-    %
-    \affiliation{\sup{1}KTH Royal Institute of Technology, Stockholm, Sweden}
-    \affiliation{\sup{2}Ericsson Research, Security, Stockholm, Sweden}
-    \affiliation{\sup{3}University of California Santa Cruz, USA}
-    \affiliation{\sup{4}IT University of Copenhagen, Copenhagen, Denmark}
-    %
-    \email{karl.norrman@ericsson.com, vasundar@ucsc.edu, brun@itu.dk}
-}
-%\author{}
+%\author{
+%    \authorname{
+%        Karl Norrman\sup{1,2}%\orcidAuthor{0000-0003-0164-1478}
+%        , Vaishnavi Sundararajan\sup{3} and
+%        Alessandro Bruni\sup{4}
+%    }
+%    %
+%    \affiliation{\sup{1}KTH Royal Institute of Technology, Stockholm, Sweden}
+%    \affiliation{\sup{2}Ericsson Research, Security, Stockholm, Sweden}
+%    \affiliation{\sup{3}University of California Santa Cruz, USA}
+%    \affiliation{\sup{4}IT University of Copenhagen, Copenhagen, Denmark}
+%    %
+%    \email{karl.norrman@ericsson.com, vasundar@ucsc.edu, brun@itu.dk}
+%}
+\author{}
 
 \keywords{Formal Verification, Symbolic Dolev-Yao Model,
           Authenticated Key Establishment, Protocols, IoT.}
@@ -449,10 +443,6 @@ confidentiality of an ongoing session.
 %
 Secure modules provide value in other ways, for example, by allowing
 constructions with Post-Compromise Security (PCS) guarantees.
-%
-It would be wasteful to not consider secure modules for long-term key storage
-as part of the security, since it could otherwise make use of many good
-properties of the re-used cryptographic cores, like \mOptls.
 %
 We discussed this with the authors, and
 the latest version of the \mSpec{}~\cite{latest-ietf-lake-edhoc-05} includes
