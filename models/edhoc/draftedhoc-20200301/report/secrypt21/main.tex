@@ -138,7 +138,7 @@ protocol.
 A \emph{key establishment method} is a core with some such details added.
 }
 and a second based on a
-variant of challenge-response signatures in the style of 
+variant of challenge-response signatures in the style of
 \mOptls{}~\cite{DBLP:conf/eurosp/KrawczykW16}.
 %
 \mEdhoc{} is therefore a framework of several key establishment methods.
@@ -224,7 +224,7 @@ ones.
 %-------------------------------------------------------------------------- sub
 \subsection{Comparison with Related Work}
 The May 2018 version of \mEdhoc{} was formally analyzed by
-Bruni et~al.~\cite{DBLP:conf/secsr/BruniJPS18} using the \mProverif{}
+\cite{DBLP:conf/secsr/BruniJPS18} using the \mProverif{}
 tool~\cite{DBLP:conf/csfw/Blanchet01}.
 %
 Their analysis covered a pre-shared key authenticated core and one
@@ -304,16 +304,16 @@ sub-optimal trade-offs and design decisions.
 difficult to predict today.
 %
 However, this does not
-prevent one from collecting \emph{typical} use cases and user stories
+prevent collecting \emph{typical} use cases and user stories
 to identify more specific security goals that will be important in most cases.
 %
 
-While constructing our model, we came up with simple user stories to identify
+While constructing our model, we made up simple user stories to identify
 security properties of interest.
 %
 Several of these revealed subtleties and undefined aspects of \mEdhoc{}.
 %
-We informed the \mEdhoc{} authors, who then addressed these aspects in the
+We informed the \mEdhoc{} authors, who addressed these aspects in the
 \mSpec{}.
 %
 
@@ -330,15 +330,15 @@ different methods relate to (non)-repudiation.
 
 \subsubsection{Unintended Peer Authentication}
 Section~3.2 of the \mSpec{} states that parties must be configured
-with a policy restricting the set of peers they can run \mEdhoc{} with.
+with a policy restricting the set of peers they run \mEdhoc{} with.
 %
 However, the initiator is not required to verify that the \mIdcredr{} received
-in the second message is the same as the one intended at initialization.
+in the second message is the same as the one intended.
 %
-The following thought experiment shows why such a policy is insufficient.
+The following attack scenario is therefore possible.
 %
 
-Assume that someone has configured all devices in their home to be in the
+Suppose someone has configured all devices in their home to be in the
 allowed set of devices, but that one of the devices ($A$) is compromised.
 %
 If another device $B$, initiates a connection to a third device $C$, the
@@ -353,7 +353,7 @@ intended $C$.
 The obvious solution is for the initiator to match \mIdcredr{} to the intended
 identity indicated by the application, which we included in our model.
 %
-We have communicated this situation to the \mEdhoc{} authors and they are considering
+We have communicated this to the \mEdhoc{} authors and they are considering
 how to resolve the issue.
 %
 
@@ -434,7 +434,7 @@ A second alternative is to not derive the session key material from $P_I$.
 Doing so, however, deviates from the design of \mOptls{} (and similar protocols
 from which the \mStat{}-based methods are derived), where the inclusion of
 $P_I$ plays a crucial part in the security proof of resistance against
-compromise of the initiator's ephemeral key.
+initiator ephemeral key compromise.
 %
 The third alternative is to include a fourth message from responder to initiator,
 carrying a MAC based on a key derived from session key material including $P_I$.
@@ -455,6 +455,7 @@ on all of $P_e, P_I$ and $P_R$, where applicable.
 %-------------------------------------------------------------------------- sec
 \section{\uppercase{Conclusions and Future Work}}
 \label{sec:conclusions}
+\label{sec:newdrafts}
 We formally modeled all four
 methods of the \mEdhoc{} \mSpec{} using \mTamarin.
 %
@@ -465,7 +466,7 @@ The properties are shown in Table~\ref{tab:props}.
 %
 Mutual injective agreement covers the parameters $S_P$:
 responder identity, roles, session key material (except for $P_I$ when
-initiator uses the \mStat{} authentication 
+initiator uses the \mStat{} authentication
 method), context identifiers \mCi{} and \mCr, and cipher suites \mSuites.
 %
 The responder in addition is ensured agreement on the initiators identity and
@@ -509,13 +510,12 @@ enable easier verification.
 We verified each method in isolation, and leave as future work to verify whether
 the methods are secure under composition.
 
-\subsection{Newer Versions of the Specification} \label{sec:newdrafts}
-In this work, we have analyzed the version of the \mEdhoc{} protocol as
-presented in the July 2020 version of the
-\mSpec{}~\cite{our-analysis-selander-lake-edhoc-00}.
+%\subsection{Newer Versions of the Specification}
+%\label{sec:newdrafts}
+In this work, we have analyzed the \mEdhoc{} version as of July
+2020~\cite{our-analysis-selander-lake-edhoc-00}.
 %
-We are aware that there have been new versions since,
-with the most recent version as
+There are newer versions, with the most recent version as
 of February 2021~\cite{latest-ietf-lake-edhoc-05}.
 %
 However, the changes to the protocol over these versions are not

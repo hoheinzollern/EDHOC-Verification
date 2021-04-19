@@ -386,9 +386,10 @@ as multi-set rewrite rules that define a transition relation.
 The elements of the multi-sets are called facts and represent the global system
 state.
 %
-Rules are equipped with event annotations called actions. Sequences of actions make up the execution trace.
+Rules are equipped with event annotations called actions.
 %
-These actions allow the user to check logic formulas on models.
+Sequences of actions make up the execution trace, over which
+logic formulas are defined and verified.
 %
 
 Multi-set rewrite rules with actions are written\\ $ l \ifarrow[e] r $,
@@ -400,8 +401,7 @@ set of function symbols, variables and names.
 \mTamarin{} checks equality of these terms under an equational theory $E$.
 %
 For example, one can write $ dec(enc(x,y),y) =_E x $
-to denote that symmetric decryption reverses the encryption operation under
-this theory.
+to denote that symmetric decryption reverses the encryption operation under $E$.
 %
 The equational theory $E$ is fixed per model, and hence we omit the subscript.
 %
@@ -492,7 +492,7 @@ The latter equation is not used by honest parties.
 %
 
 \subsubsection{Protocol Environment and Adversary Model}
-We model the binding between a party's identity and their longt-term
+We model the binding between a party's identity and their long-term
 key pairs using the following rules.
 %
 \begin{small}
@@ -510,11 +510,11 @@ rule registerLTK_STAT:
 \end{verbatim}
 \end{small}
 %
-The rules \mT{registerLTK\_SIG} and \mT{registerLTK\_STAT} register a longt-term
-key pair for the \mSig{}- and \mStat{}-based methods respectively.
+The two rules register long-term
+key pairs for the \mSig{}- and \mStat{}-based methods respectively.
 %
 The fact \verb|Fr(~ltk)| creates a fresh term \mT{ltk}, representing a long-term
-secret key, which is not known to the adversary.
+secret key, not known to the adversary.
 %
 The fact \verb|Out(<$A, pk(~ltk)>)| sends the identity of the party
 owning the long-term key and the corresponding public key to the adversary.
@@ -526,8 +526,8 @@ Consequently, an adversary cannot register additional long-term keys for an
 identity.
 %
 In line with the \mEdhoc{} \mSpec{}, this models an external mechanism
-ensuring that long term keys are bound to correct identities, e.g., as
-managed by a certificate authority.
+ensuring that long term keys are bound to correct identities, e.g.,
+a certificate authority.
 %
 
 We rely on \mTamarin's{} built-in message deduction rules for a Dolev-Yao adversary.
