@@ -1,5 +1,5 @@
 % !TEX TS-program = pdflatexmk
-\documentclass[a4paper,twoside,draft]{article}
+\documentclass[a4paper,twoside]{article}
 
 \usepackage{epsfig}
 \usepackage{subcaption}
@@ -15,7 +15,6 @@
 
 \usepackage[scaled=0.8]{helvet}    % Less huge \textsf{functionName}
 \usepackage[misc,geometry]{ifsym} % for letter symbol
-\usepackage{soul}           % \hl for highlighting text; \st for strike-through
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{tikz}
@@ -23,6 +22,12 @@
 \usetikzlibrary{shapes,chains}
 \usetikzlibrary{positioning}
 \usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
 \usepackage[nospace]{cite}
 
 \usepackage{SCITEPRESS}     % Please add other packages that you may need BEFORE the SCITEPRESS.sty package.
@@ -31,21 +36,18 @@
 
 \begin{document}
 \title{Formal Analysis of EDHOC Key Establishment for Constrained IoT Devices}
-%\author{
-%    \authorname{
-%        Karl Norrman\sup{1,2}%\orcidAuthor{0000-0003-0164-1478}
-%        , Vaishnavi Sundararajan\sup{3} and
-%        Alessandro Bruni\sup{4}
-%    }
-%    %
-%    \affiliation{\sup{1}KTH Royal Institute of Technology, Stockholm, Sweden}
-%    \affiliation{\sup{2}Ericsson Research, Security, Stockholm, Sweden}
-%    \affiliation{\sup{3}University of California Santa Cruz, USA}
-%    \affiliation{\sup{4}IT University of Copenhagen, Copenhagen, Denmark}
-%    %
-%    \email{karl.norrman@ericsson.com, vasundar@ucsc.edu, brun@itu.dk}
-%}
-\author{}
+\author{
+    \authorname{
+        Karl Norrman\sup{1,2}\orcidAuthor{0000-0003-0164-1478}
+        , Vaishnavi Sundararajan\sup{3} and
+        Alessandro Bruni\sup{4}
+    }
+    %
+    \affiliation{\sup{1}KTH Royal Institute of Technology, Stockholm, Sweden, \sup{2}Ericsson Research, Security, Stockholm, Sweden}
+    \affiliation{\sup{3}University of California Santa Cruz, USA, \sup{4}IT University of Copenhagen, Copenhagen, Denmark}
+    %
+    \email{karl.norrman@ericsson.com, vasundar@ucsc.edu, brun@itu.dk}
+}
 
 \keywords{Formal Verification, Symbolic Dolev-Yao Model,
           Authenticated Key Establishment, Protocols, IoT.}
@@ -87,14 +89,11 @@ has incorporated some of these in newer versions of the standard.
 \section{\uppercase{Introduction}}
 \label{sec:introduction}
 
-%-------------------------------------------------------------------------- sub
-%\subsection{Background and motivation}
-%\label{sec:motivation}
 As IoT devices become more prevalent and get involved in progressively sensitive
 functions in society, the need to secure their communications
 becomes increasingly important.
 %
-Most of the security analysis of IoT devices have focused on computationally
+Most security analysis has focused on computationally
 strong devices, such as cars and web-cameras, where existing protocols like
 \mDandTls{} suffice.
 %
@@ -136,7 +135,7 @@ pre-shared Diffie-Hellman (DH) cryptographic core%
 without encodings or application specific details required by an industrial
 protocol.
 %
-By a \emph{key establishment method} we mean a core with some such details added.
+A \emph{key establishment method} is a core with some such details added.
 }
 and a second based on a
 variant of challenge-response signatures in the style of 
@@ -222,6 +221,7 @@ some of our suggestions and currently consider how to deal with the remaining
 ones.
 %
 
+%-------------------------------------------------------------------------- sub
 \subsection{Comparison with Related Work}
 The May 2018 version of \mEdhoc{} was formally analyzed by
 Bruni et~al.~\cite{DBLP:conf/secsr/BruniJPS18} using the \mProverif{}
@@ -276,41 +276,8 @@ We discuss them below.
 %
 
 %-------------------------------------------------------------------------- sub
-%\subsection{Security Claim Justification}
-%\label{sec:securityClaims}
-%The \mSpec{} makes detailed claims about security properties that \mEdhoc{}
-%enjoys, which the authors assume hold because they reuse cryptographic cores
-%from existing academic protocols.
-%%
-%Specifically, in Section~8.1 of~\cite{selander-lake-edhoc-01}, the authors
-%claim that ``EDHOC inherits its security properties from the theoretical
-%\mbox{SIGMA-I}''.
-%%
-%The intention is the same for the other reused cryptographic
-%cores based on \mOptls{} and \mNoise{}, but since the \mSpec{} is still work in
-%progress, it is not yet written down~\cite{personalCommunication}.
-%%
-%
-%While it is good practice to reuse well-studied academic components in
-%industrial standards, it is important to justify that changes made to these
-%components preserve security properties.
-%%
-%Some properties have been verified~\cite{DBLP:conf/secsr/BruniJPS18} and this paper verifies more, but until some justification is provided, security
-%claims may benefit from a note of caution.
-
-%-------------------------------------------------------------------------- sub
 \subsection{Unclear Intended Use}
 \label{sec:unclearProtocolUse}
-%Formal verification methodologies often clash with industrial standard
-%development practices; this is true also in our case.
-%%
-%The most important reason for the clash is that formal verification aims to
-%verify whether well-specified and detailed security goals are met, whereas
-%industrial standards are developed with a clear abstract goal,
-%but one that lacks specificity.
-%%
-%Instead the goals are there typically made more specific by listing resistance
-%to attacks as these are discovered throughout the work.
 %
 The \mEdhoc{} \mSpec{} lists several security goals, but they are
 imprecise and difficult to interpret due to lack of context and intended usage
@@ -351,7 +318,6 @@ We informed the \mEdhoc{} authors, who then addressed these aspects in the
 %
 
 \subsubsection{(Non-)Repudiation}
-%\runhead{(Non)-repudiation}
 An access control solution for a nuclear power-plant may need to log who is
 passing through a door, whereas it may be undesirable for, say, a coffee
 machine to log a list of users along with their coffee preferences.
@@ -363,7 +329,6 @@ In response, the authors of the \mSpec{} added a paragraph discussing how
 different methods relate to (non)-repudiation.
 
 \subsubsection{Unintended Peer Authentication}
-%\runhead{Unintended Peer Authentication}
 Section~3.2 of the \mSpec{} states that parties must be configured
 with a policy restricting the set of peers they can run \mEdhoc{} with.
 %
@@ -394,24 +359,11 @@ how to resolve the issue.
 
 %------------------------------------------------------------------------- sub
 \subsection{Unclear Security Model}
-%When designing a security protocol, the attacker's capabilities must be
-%considered so that it is possible to determine whether the protocol is
-%sufficiently secure.
-%%
-%That is, a security model in which the protocol is deemed
-%secure needs to be defined at least on a high level.
-%
 We argue that the \mSpec{} gives too little information about what capabilities
 an adversary is assumed to have, and that this leads to unclear design goals and
 potentially sub-optimal design.
 %
-%Let us explore this via an example.
-%
 
-%It is conceivable that IoT devices deployed in a hostile environments can be
-%hardened by equipping them with a TEE, but \mEdhoc{} is not %intentionally
-%designed to take advantage of this.
-%
 Even though \mEdhoc{} incorporates cryptographic cores from different academic
 security protocols, its design does not take into account the adversary models
 for which these protocols were designed.
@@ -500,54 +452,11 @@ enjoy a common, but weaker, property: mutual implicit agreement
 on all of $P_e, P_I$ and $P_R$, where applicable.
 %
 
-%-------------------------------------------------------------------------- sub
-%\subsection{Cipher Suite Negotiation}
-%\label{sec:ciphersuiteNegotiation}
-%%\knote{If we are tight on space, we can consider removing this section since we
-%%    don't verify any negotiation. We did have impact on the \mEdhoc{} \mSpec
-%%    with this though.
-%%}
-%%
-%
-%Cipher suite negotiation in \mEdhoc{} spans one or more executions of the
-%protocol.
-%%
-%As part of the first message, the initiator proposes an ordered list of cipher suites they support (see Section~\ref{sec:edhoc}, Figure~\ref{fig:edhocFramework}). The responder either accepts the highest entry in this list (if they also support that suite) or makes a counter-proposal, namely the highest entry which they do support. If there is no such entry the responder rejects the suite entirely, and the protocol does not continue. 
-%%
-%If a run terminates due to the proposed cipher suites being rejected by the
-%responder, the initiator maintains state and initiates a new run, proposing
-%an updated set of cipher suites.
-%%
-%%Our model does not cover this, and we leave it for future work.
-%%Maintaining state between protocol runs 
-%This implicitly creates a long-lived
-%meta-session covering multiple \mEdhoc{} sessions.
-%%
-%%Such a meta-session is presumably controlled by the underlying application.
-%%
-%
-%However, the time for which the initiator should
-%remember a rejected cipher suite for a given responder is not specified.
-%%
-%From a security perspective, remembering the rejected cipher suite for the
-%next \mEdhoc{} run in the same meta-session would be sufficient.
-%%
-%If the responder is updated with a new cipher suite before the next such
-%session, this could be taken into account. On the other hand, caching the
-%rejected cipher suite between meta-sessions would reduce the number of
-%round-trips for subsequent runs, should the responder not have been updated.
-%%
-%This needs to be clearly specified, and we have conveyed this to the authors of the \mSpec.
-
 %-------------------------------------------------------------------------- sec
 \section{\uppercase{Conclusions and Future Work}}
 \label{sec:conclusions}
-%
-%\subsection{Summary}
 We formally modeled all four
 methods of the \mEdhoc{} \mSpec{} using \mTamarin.
-%, four of which
-%constitute the methods of the present version of the \mSpec{}.
 %
 We formulated several important security properties and identified precise
 adversary models in which we verified these.
@@ -614,90 +523,19 @@ particularly significant for our analysis.
 %
 
 %-------------------------------------------------------------------------- ack
-% Should be a run-in heading.  subsubsection works in llncs2e document class
-%\runhead{Acknowledgments} This work was partially supported by
-%the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
-%the Knut and Alice Wallenberg Foundation.
-%%
-%We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
-%clarifications regarding the specification.
-%%
-%We appreciate the helpful comments from the reviewers of SSR2020.
+\section*{ACKNOWLEDGEMENTS}
+This work was partially supported by
+the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by
+the Knut and Alice Wallenberg Foundation.
 %
-
-
-%\vnote{We need to fix the link for the code repository.}
+We are grateful to G\"oran Selander, John Mattsson and Francesca Palombini for
+clarifications regarding the specification.
+%
 
 %-------------------------------------------------------------------------- bib
 \bibliographystyle{apalike}
-\bibliography{refv}
-
-\if 0
-\appendix
-
-\section{\uppercase{Message Sequence Chart for \mStatSig}}
-\label{sec:mscstatsig}
-\begin{figure}[ht]
-\centering
-\scalebox{.7}{
-\tikzset{>=latex, every msg/.style={draw=thick}, every node/.style={fill=none,text=black}}
-\begin{tikzpicture}
-    \node (ini) at (0, 0) {Initiator};
-    \draw [very thick] (0, -0.5) -- (0,-13.3);
-    \draw [very thick] (9, -0.5) -- (9,-13.3);
-    \node[below=0.5em of ini,fill=white,text=black] {$
-    \begin{array}{c}
-    \text{Knows}\ $g$,\ \mCredi,\ \mLtki,\ \mIdcredi,\ 
-    \mIdcredr, \mADone,\ \mADthree
-    \end{array}
-    $};
-    \node (res) at (9,0) {Responder};
-    \node[below=0.5em of res,fill=white] {$
-    \begin{array}{c}
-    \text{Knows}\ $g$,\ \mCredr,\ \mLtkr,\ \mIdcredr,\
-    \mIdcredi, \mADtwo
-    \end{array}$};
-    \action{3em}{ini}{Generates \mMethod,\ \mSuites,\ \mCi,\ $x$\\$\mGx = g^{x}$};
-    \msg{7em}{ini}{res}{\mMsgone: \mMethod, \mSuites, \mGx, \mCi, \mADone};
-    \action{7.5em}{res}{$
-      \begin{array}{c}
-        \text{Generates } \mCr,\ $y$\\
-        \mGy = g^{y}\\
-        \mTHtwo = \mHash(\mMsgone, \langle \mCi, \mGy, \mCr \rangle)\\
-        \mPRKthree = \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, g^{xy}) \\
-        \mKtwom = \mHkdfExpand(\mPRKthree, \mTHtwo) \\
-        \mMactwo = \mAead(\mKtwom; \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle; \textrm{``\phantom{}''}) \\
-        \mSigtwo = \mSign(\langle \langle \mIdcredr, \mTHtwo, \mCredr, \mADtwo \rangle, \mMactwo \rangle, \mLtkr)\\
-        \mKtwoe = \mHkdfExpand(\mPRKtwo, \mTHtwo)
-      \end{array}$};
-    \msg{20.7em}{res}{ini}{\mMsgtwo: \mCi, \mGy, \mCr, $\overbrace{\mKtwoe\ \mXor\ \langle \mIdcredr, \mSigtwo, \mADtwo \rangle}^{\mCipher}$};
-    \action{21.3em}{ini}{$
-      \begin{array}{c}
-        \mPRKthree = \mPRKtwo = \mHkdfExtract(\textrm{``\phantom{}''}, g^{xy}) \\
-        \mGiy = \mGy^{\mLtki} \\
-        \mPRKfour = \mHkdfExtract(\mPRKthree, \mGiy) \\
-        \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
-        \mKthreem = \mHkdfExpand(\mPRKfour, \mTHthree) \\
-        \mMacthree = \mAead(\mKthreem; \langle \mIdcredi, \mTHthree, \mCredi, \mADthree \rangle; \textrm{``\phantom{}''}) \\
-        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree) \\
-      \end{array}$};
-    \msg{32em}{ini}{res}{$\mMsgthree: \mCr, \mAead(\mKthreeae; \mTHthree; \langle \mIdcredi, \mMacthree, \mADthree \rangle$)};
-    \action{32.5em}{res}{$
-    \begin{array}{c}
-       \mGiy = \mCredi^{y} \\
-       \mPRKfour = \mHkdfExtract(\mPRKthree, \mGiy) \\
-       \mTHthree = \mHash(\mTHtwo, \mCipher, \mCr)\\
-        \mKthreem = \mHkdfExpand(\mPRKfour, \mTHthree) \\
-        \mKthreeae = \mHkdfExpand(\mPRKthree, \mTHthree)
-    \end{array}$};
-    \draw [line width=1mm] (-2,-13.3) -- (2,-13.3);
-    \draw [line width=1mm] (7,-13.3) -- (11,-13.3);
-    \end{tikzpicture}}
-\caption{The \mStatSig{} method of \mEdhoc. \mCredr{} and \mLtkr{} must be signature keys.}
-\label{fig:edhocstatsig}
-\end{figure}
-
-
-\fi
+{\small
+    \bibliography{refComp}
+}
 
 \end{document}
