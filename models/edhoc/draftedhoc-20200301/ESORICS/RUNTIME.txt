@@ -1,9 +1,0 @@
-all:
-real   42m7,789s
-user    61m46,526s
-sys 6m29,078s
-
-only auth and pfs (no sanity checks):
-real    32m52,372s
-user    48m19,192s
-sys 4m46,662s
